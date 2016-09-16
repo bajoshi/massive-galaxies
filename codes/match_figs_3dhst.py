@@ -83,11 +83,17 @@ if __name__ == '__main__':
     mt.match(threed_s_ra, threed_s_dec, gs2_ra, gs2_dec, lim=0.3*1/3600)
 
     print "Single matches GS2 - ", num_single_matches, "out of", len(gs2cat)
+
+    # find offset and take it out
     raoff, decoff = mt.findoffset(deltaRA, deltaDEC)
     gs2_ra += raoff
+
+    # match again
     deltaRA, deltaDEC, threed_gs2_ra_matches, threed_gs2_dec_matches, figs_gs2_ra_matches, figs_gs2_dec_matches, num_single_matches = \
     mt.match(threed_s_ra, threed_s_dec, gs2_ra, gs2_dec, lim=0.3*1/3600)
     print "Single matches GS2 - ", num_single_matches, "out of", len(gs2cat)
+
+    # check that offset is gone
     raoff, decoff = mt.findoffset(deltaRA, deltaDEC)
     mt.plot_diff(deltaRA, deltaDEC, name='gs2')
 
