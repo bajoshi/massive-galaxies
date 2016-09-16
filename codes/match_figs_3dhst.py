@@ -15,7 +15,7 @@ import matching as mt
 if __name__ == '__main__':
     
     # Read 3D-HST catalog
-    threed_hst_cat = fits.open('/Users/bhavinjoshi/Documents/3D-HST/3dhst.v4.1.5.master.fits')
+    threed_hst_cat = fits.open(home + '/Documents/3D-HST/3dhst.v4.1.5.master.fits')
 
     # Make intermediate catalogs for 3DHST
     threed_goodsn = np.where(threed_hst_cat[1].data['field'] == 'goodsn')[0]

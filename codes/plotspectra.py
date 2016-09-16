@@ -8,14 +8,16 @@ import sys
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+print sys.path
 
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = massive_galaxies_dir + "figures/"
 savefits_dir = home + "/Desktop/FIGS/new_codes/"
-stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-dir/"
+stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
+print sys.path
 import grid_coadd as gd
 
 if __name__ == '__main__':
