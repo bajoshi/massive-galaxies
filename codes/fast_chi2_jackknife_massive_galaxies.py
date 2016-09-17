@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+import numpy.ma as ma
 from astropy.io import fits
 
 import os
@@ -22,11 +23,16 @@ import grid_coadd as gd
 import fast_chi2_jackknife as fcj
 import create_fsps_miles_libraries as ct
 
-def find_matches_in_ferreras2009(pears_ids, ferreras_ids):
+def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
+
+    pears_ids = pears_cat['pearsid']
+    ferreras_ids = ferreras_cat['id']
 
     for i in range(len(pears_ids[massive_galaxies_indices])):
         if pears_ids[massive_galaxies_indices][i] in ferreras_ids:
-            print pears_ids[massive_galaxies_indices][i], np.where(ferreras_ids == pears_ids[massive_galaxies_indices][i])[0]
+            ferreras_ind = np.where(ferreras_ids == pears_ids[massive_galaxies_indices][i])[0]
+            print pears_cat['mstar'][massive_galaxies_indices][i], ferreras_prop_cat['mstar'][ferreras_ind]
+            print pears_cat['threedzphot'][massive_galaxies_indices][i], ferreras_cat['z'][ferreras_ind]
         else:
             print pears_ids[massive_galaxies_indices][i], " did not match."
 
@@ -126,10 +132,13 @@ if __name__ == '__main__':
     massive_galaxies_indices = np.where(stellarmass >= 11.0)[0]
 
     # Match with Ferreras et al. 2009
-    #ferreras_cat = np.genfromtxt('/Users/baj/Desktop/FIGS/new_codes/ferreras_2009_ETG_cat.txt', dtype=None,\
+    #ferreras_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_cat.txt', dtype=None,\
     #                             names=['id', 'ra', 'dec', 'z'], usecols=(0,1,2,5), skip_header=23)
+    #ferreras_prop_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_prop_cat.txt', dtype=None,\
+    #                             names=['id', 'mstar'], usecols=(0,1), skip_header=23)    
     #
-    #find_matches_in_ferreras2009(pears_id, ferreras_cat['id'])
+    #find_matches_in_ferreras2009(cat, ferreras_prop_cat, ferreras_cat)
+    #sys.exit(0)
     # There are 12 galaxies that matched using ids
     # Also match using RA and DEC
     # Also match colors, stellar masses, and redshifts given in the Ferreras et al. 2009 paper
@@ -137,7 +146,7 @@ if __name__ == '__main__':
     # Loop over all spectra 
     for u in range(len(pears_id[massive_galaxies_indices])):
 
-        print "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
+        print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
 
         redshift = photz[massive_galaxies_indices][u]
         lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
@@ -147,15 +156,14 @@ if __name__ == '__main__':
         # This will be different for each galaxy because they are all at different redshifts so when unredshifterd the lam grid is different for each.
 
         # Create consolidated fits files for faster array comparisons
-        create_model_fits('bc03', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
-        create_model_fits('miles', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
-        create_model_fits('fsps', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
+        #create_model_fits('bc03', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
+        #create_model_fits('miles', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
+        #create_model_fits('fsps', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
 
-        """
         # Open fits files with comparison spectra
-        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(pearsid) + '.fits', memmap=False)
-        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(pearsid) + '.fits', memmap=False)
-        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(pearsid) + '.fits', memmap=False)        
+        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
+        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
+        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)        
 
         # Find number of extensions in each
         bc03_extens = fcj.get_total_extensions(bc03_spec)
@@ -167,16 +175,18 @@ if __name__ == '__main__':
         for i in range(bc03_extens):
             comp_spec_bc03[i] = bc03_spec[i+1].data
     
-        comp_spec_miles = np.zeros([miles_extens, len(resampling_lam_grid)], dtype=np.float64)
+        comp_spec_miles = ma.zeros([miles_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(miles_extens):
             comp_spec_miles[i] = miles_spec[i+1].data
+            mask_indices = np.isnan(miles_spec[i+1].data)
+            comp_spec_miles[i] = ma.masked_array(comp_spec_miles[i], mask = mask_indices)
     
         comp_spec_fsps = np.zeros([fsps_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(fsps_extens):
             comp_spec_fsps[i] = fsps_spec[i+1].data
 
         # Get random samples by jackknifing
-        num_samp_to_draw = 1
+        num_samp_to_draw = 1e4
         print "Running over", int(num_samp_to_draw), "random jackknifed samples."
         resampled_spec = ma.empty((len(flam_em), num_samp_to_draw))
         for i in range(len(flam_em)):
@@ -189,18 +199,21 @@ if __name__ == '__main__':
         # Files to save distribution of best params in
         f_ages_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_bc03.txt', 'wa')
         f_logtau_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_logtau_bc03.txt', 'wa')
-        f_tauv_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_tauv_bc03.txt', 'wa')      
+        f_tauv_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_tauv_bc03.txt', 'wa')
+        f_exten_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_exten_bc03.txt', 'wa')
     
         f_ages_miles = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_miles.txt', 'wa')
         f_metals_miles = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_metals_miles.txt', 'wa')
+        f_exten_miles = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_exten_miles.txt', 'wa')
     
         f_ages_fsps = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_fsps.txt', 'wa')
         f_logtau_fsps = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_logtau_fsps.txt', 'wa')
+        f_exten_fsps = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_exten_fsps.txt', 'wa')
 
         # Run the actual fitting function
-        ages_bc03, metals_bc03, tau_bc03, tauv_bc03 = fcj.fit_chi2(flam_em, ferr, comp_spec_bc03, bc03_extens, resampled_spec, num_samp_to_draw, 'bc03')
-        ages_miles, metals_miles = fcj.fit_chi2(flam_em, ferr, comp_spec_miles, miles_extens, resampled_spec, num_samp_to_draw, 'miles')
-        ages_fsps, metals_fsps, tau_fsps = fcj.fit_chi2(flam_em, ferr, comp_spec_fsps, fsps_extens, resampled_spec, num_samp_to_draw, 'fsps')
+        ages_bc03, metals_bc03, tau_bc03, tauv_bc03, exten_bc03 = fcj.fit_chi2(flam_em, ferr, comp_spec_bc03, bc03_extens, resampled_spec, num_samp_to_draw, 'bc03', bc03_spec)
+        ages_miles, metals_miles, exten_miles = fcj.fit_chi2(flam_em, ferr, comp_spec_miles, miles_extens, resampled_spec, num_samp_to_draw, 'miles', miles_spec)
+        ages_fsps, metals_fsps, tau_fsps, exten_fsps = fcj.fit_chi2(flam_em, ferr, comp_spec_fsps, fsps_extens, resampled_spec, num_samp_to_draw, 'fsps', fsps_spec)
 
         logtau_bc03 = np.log10(tau_bc03)
         logtau_fsps = np.log10(tau_fsps)
@@ -216,12 +229,18 @@ if __name__ == '__main__':
         for k in range(len(tauv_bc03)):
             f_tauv_bc03.write(str(tauv_bc03[k]) + ' ')
 
+        for k in range(len(exten_bc03)):
+            f_exten_bc03.write(str(exten_bc03[k]) + ' ')
+
         ### MILES ###
         for k in range(len(ages_miles)):
             f_ages_miles.write(str(ages_miles[k]) + ' ')
 
         for k in range(len(metals_miles)):
             f_metals_miles.write(str(metals_miles[k]) + ' ')
+
+        for k in range(len(exten_miles)):
+            f_exten_miles.write(str(exten_miles[k]) + ' ')
 
         ### FSPS ###
         for k in range(len(ages_fsps)):
@@ -230,17 +249,22 @@ if __name__ == '__main__':
         for k in range(len(logtau_fsps)):
             f_logtau_fsps.write(str(logtau_fsps[k]) + ' ')
 
+        for k in range(len(exten_fsps)):
+            f_exten_fsps.write(str(exten_fsps[k]) + ' ')
+
         # Close all files to write them -- 
         f_ages_bc03.close()
         f_logtau_bc03.close()
         f_tauv_bc03.close()
+        f_exten_bc03.close()
     
         f_ages_miles.close()
         f_metals_miles.close()
+        f_exten_miles.close()
     
         f_ages_fsps.close()
         f_logtau_fsps.close()
-        """
+        f_exten_fsps.close()
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
