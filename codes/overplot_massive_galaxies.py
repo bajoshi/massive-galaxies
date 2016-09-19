@@ -28,9 +28,9 @@ import fast_chi2_jackknife as fcj
 def get_mass_weighted_ages(library, ages, logtau, pearsid):
 
     # its just a 1d array.
-    # These two lines are included so that it behaves with arrays with just one element
-    ages = np.array([ages])
-    logtau = np.array([logtau])
+    # These two lines are included so that it behaves with arrays of just one element
+    #ages = np.array([ages])
+    #logtau = np.array([logtau])
 
     # the previous array called ages (also called by the same name in an argument for this function)
     # is actually formation time i.e. age of the oldest star
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     gs = gridspec.GridSpec(15,15)
     gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.00, hspace=0.2)
 
-    num_jackknife_samps = 1
+    num_jackknife_samps = 10
     # Loop over all spectra 
     for u in range(len(pears_id[massive_galaxies_indices])):
 
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         mass_wht_ages_fsps = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_mass_weighted_ages_fsps.txt', usecols=range(int(num_jackknife_samps)))
 
         # If you need to make the mass-weighted ages files, just after running the chi2 fitting code, run the next two lines.
-        # Make sure to comment out the rest of the code below it.
+        # Make sure to comment out the rest of the code below it and the lines above that read the mass_wht_ages files.
         #get_mass_weighted_ages('bc03', ages_bc03, logtau_bc03, pears_id[massive_galaxies_indices][u])
         #get_mass_weighted_ages('fsps', ages_fsps, logtau_fsps, pears_id[massive_galaxies_indices][u])
 
@@ -128,6 +128,17 @@ if __name__ == '__main__':
         miles_extens = fcj.get_total_extensions(miles_spec)
         fsps_extens = fcj.get_total_extensions(fsps_spec)
     
+        # Convolve model spectra with the line spread function for each galaxy
+        # and also
+        # set up numpy comparison spectra arrays for faster array computations at the same time
+        lsf_path = massive_galaxies_dir + "north_lsfs/"
+        filename = lsf_path + 'n' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
+        if os.path.isfile(filename):
+            lsf = np.loadtxt(filename)
+        #else:
+        #    filename = lsf_path + 's' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
+        # Remove the try except blocks below once you have both north and south lsfs
+
         # Make multi-dimensional arrays of parameters for all SPS libraries 
         # This is done to make access to the fits headers easier because
         # there is no way to directly search the headers for all extensions in a fits file simultaneously.
@@ -172,10 +183,10 @@ if __name__ == '__main__':
 
         # Find the best fit parameters and plot them after matching
         #### BC03 ####
-        best_age = stats.mode(ages_bc03)[0]
-        best_tau = 10**stats.mode(logtau_bc03)[0]
-        best_tauv = stats.mode(tauv_bc03)[0]
-        best_mass_wht_age = stats.mode(mass_wht_ages_bc03)[0]
+        best_age = np.median(ages_bc03)
+        best_tau = 10**np.median(logtau_bc03)
+        best_tauv = np.median(tauv_bc03)
+        best_mass_wht_age = np.median(mass_wht_ages_bc03)
 
         best_age_err = np.std(ages_bc03) * 10**best_age / (1e9 * 0.434)
         # the number 0.434 is (1 / ln(10)) 
@@ -187,6 +198,11 @@ if __name__ == '__main__':
         for j in range(bc03_extens):
             if np.allclose(bc03_params[j], np.array([best_age, best_tau, best_tauv]).reshape(3)):
                 currentspec = bc03_spec[j+1].data
+
+                try:
+                    currentspec = np.convolve(currentspec, lsf)
+                except NameError, e:
+                    print e
 
                 alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 
@@ -270,8 +286,8 @@ if __name__ == '__main__':
         del best_age, best_tau, best_tauv
 
         #### MILES ####
-        best_age = stats.mode(ages_miles)[0]
-        best_metal = stats.mode(metals_miles)[0]
+        best_age = np.median(ages_miles)
+        best_metal = np.median(metals_miles)
 
         best_age_err = np.std(ages_miles) * 10**best_age / (1e9 * 0.434)
         best_metal_err = np.std(metals_miles)
@@ -281,6 +297,11 @@ if __name__ == '__main__':
                 currentspec = miles_spec[j+1].data
                 mask_indices = np.isnan(miles_spec[j+1].data)
                 currentspec = ma.masked_array(currentspec, mask = mask_indices)
+
+                try:
+                    currentspec = np.convolve(currentspec, lsf)
+                except NameError, e:
+                    print e
 
                 alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 
@@ -333,9 +354,9 @@ if __name__ == '__main__':
         del best_age, best_metal
 
         #### FSPS ####
-        best_age = stats.mode(ages_fsps)[0]
-        best_tau = 10**stats.mode(logtau_fsps)[0]
-        best_mass_wht_age = stats.mode(mass_wht_ages_fsps)[0]
+        best_age = np.median(ages_fsps)
+        best_tau = 10**np.median(logtau_fsps)
+        best_mass_wht_age = np.median(mass_wht_ages_fsps)
 
         best_age_err = np.std(ages_fsps) * 10**best_age / (1e9 * 0.434)
         best_tau_err = np.std(logtau_fsps) * best_tau / 0.434
@@ -344,6 +365,11 @@ if __name__ == '__main__':
         for j in range(fsps_extens):
             if np.allclose(fsps_params[j], np.array([best_age, best_tau]).reshape(2)):
                 currentspec = fsps_spec[j+1].data
+
+                try:
+                    currentspec = np.convolve(currentspec, lsf)
+                except NameError, e:
+                    print e
 
                 alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 

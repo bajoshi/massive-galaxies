@@ -146,5 +146,6 @@ if __name__ == '__main__':
         ax.tick_params('both', width=1, length=4.7, which='major')
 
         plt.show()
+        del fig, ax
 
     sys.exit(0)

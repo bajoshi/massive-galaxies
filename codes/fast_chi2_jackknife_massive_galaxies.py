@@ -90,7 +90,7 @@ def create_model_fits(libname, lam_grid, pearsid):
                         hdr['METAL'] = str(metal_val)
                         hdr['TAU_GYR'] = str(float(tauval)/1e4)
                         hdr['TAUV'] = str(float(tauVarrval)/10)
-                        hdulist.append(fits.ImageHDU(data = currentspec[i], header=hdr))
+                        hdulist.append(fits.ImageHDU(data=currentspec[i], header=hdr))
 
         hdulist.writeto(savefits_dir + final_fits_name, clobber=True)
 
@@ -163,27 +163,49 @@ if __name__ == '__main__':
         # Open fits files with comparison spectra
         bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
         miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
-        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)        
+        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
 
         # Find number of extensions in each
         bc03_extens = fcj.get_total_extensions(bc03_spec)
         miles_extens = fcj.get_total_extensions(miles_spec)
         fsps_extens = fcj.get_total_extensions(fsps_spec)
-    
-        # set up numpy comparison spectra arrays for faster array computations
+
+        # Convolve model spectra with the line spread function for each galaxy
+        # and also
+        # set up numpy comparison spectra arrays for faster array computations at the same time
+        lsf_path = massive_galaxies_dir + "north_lsfs/"
+        filename = lsf_path + 'n' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
+        if os.path.isfile(filename):
+            lsf = np.loadtxt(filename)
+        #else:
+        #    filename = lsf_path + 's' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
+        # Remove the try except blocks below once you have both north and south lsfs
+
         comp_spec_bc03 = np.zeros([bc03_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(bc03_extens):
             comp_spec_bc03[i] = bc03_spec[i+1].data
+            try:
+                comp_spec_bc03[i] = np.convolve(comp_spec_bc03[i], lsf)
+            except NameError:
+                pass
     
         comp_spec_miles = ma.zeros([miles_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(miles_extens):
             comp_spec_miles[i] = miles_spec[i+1].data
             mask_indices = np.isnan(miles_spec[i+1].data)
             comp_spec_miles[i] = ma.masked_array(comp_spec_miles[i], mask = mask_indices)
+            try:
+                comp_spec_miles[i] = np.convolve(comp_spec_miles[i], lsf)
+            except NameError:
+                pass
     
         comp_spec_fsps = np.zeros([fsps_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(fsps_extens):
             comp_spec_fsps[i] = fsps_spec[i+1].data
+            try:
+                comp_spec_fsps[i] = np.convolve(comp_spec_fsps[i], lsf)
+            except NameError:
+                pass
 
         # Get random samples by jackknifing
         num_samp_to_draw = 1e4
