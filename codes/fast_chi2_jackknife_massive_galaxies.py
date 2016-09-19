@@ -193,7 +193,7 @@ if __name__ == '__main__':
         for i in range(miles_extens):
             comp_spec_miles[i] = miles_spec[i+1].data
             mask_indices = np.isnan(miles_spec[i+1].data)
-            comp_spec_miles[i] = ma.masked_array(comp_spec_miles[i], mask = mask_indices)
+            comp_spec_miles[i] = ma.masked_array(comp_spec_miles[i], mask=mask_indices)
             try:
                 comp_spec_miles[i] = np.convolve(comp_spec_miles[i], lsf)
             except NameError:

@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # Find indices for massive galaxies
     massive_galaxies_indices = np.where(stellarmass >= 11.0)[0]
 
-    num_jackknife_samps = 1e4
+    num_jackknife_samps = 10
     # Loop over all spectra 
     for u in range(len(pears_id[massive_galaxies_indices])):
 
@@ -90,8 +90,19 @@ if __name__ == '__main__':
         quenching_times_fsps = 10**ages_fsps - 10**mass_wht_ages_fsps
         quenching_times_fsps = np.log10(quenching_times_fsps)
 
-        print '{:1.2e}'.format(10**np.median(mass_wht_ages_bc03)), '{:1.2e}'.format(10**np.median(quenching_times_bc03)), '{:1.2e}'.format(10**np.median(mass_wht_ages_bc03) / 10**np.median(quenching_times_bc03))
-        print '{:1.2e}'.format(10**np.median(mass_wht_ages_fsps)), '{:1.2e}'.format(10**np.median(quenching_times_fsps)), '{:1.2e}'.format(10**np.median(mass_wht_ages_fsps) / 10**np.median(quenching_times_fsps))
+        #print '{:1.2e}'.format(10**np.median(mass_wht_ages_bc03)), '{:1.2e}'.format(10**np.median(quenching_times_bc03)), '{:1.2e}'.format(10**np.median(mass_wht_ages_bc03) / 10**np.median(quenching_times_bc03))
+        #print '{:1.2e}'.format(10**np.median(mass_wht_ages_fsps)), '{:1.2e}'.format(10**np.median(quenching_times_fsps)), '{:1.2e}'.format(10**np.median(mass_wht_ages_fsps) / 10**np.median(quenching_times_fsps))
+
+        e_foldings_bc03 = 10**np.median(mass_wht_ages_bc03) / (10**np.median(logtau_bc03)*1e9)
+        e_foldings_fsps = 10**np.median(mass_wht_ages_fsps) / (10**np.median(logtau_fsps)*1e9)
+        if e_foldings_bc03 > 3.0:
+            print '{:1.2e}'.format(10**np.median(mass_wht_ages_bc03)), '{:1.2e}'.format(10**np.median(logtau_bc03)*1e9), '{:1.2e}'.format(e_foldings_bc03), "Quenched"
+        else:
+        	print '{:1.2e}'.format(10**np.median(mass_wht_ages_bc03)), '{:1.2e}'.format(10**np.median(logtau_bc03)*1e9), '{:1.2e}'.format(e_foldings_bc03), "Not Quenched"
+        if e_foldings_fsps > 3.0:
+            print '{:1.2e}'.format(10**np.median(mass_wht_ages_fsps)), '{:1.2e}'.format(10**np.median(logtau_fsps)*1e9), '{:1.2e}'.format(e_foldings_fsps), "Quenched"
+        else:
+        	print '{:1.2e}'.format(10**np.median(mass_wht_ages_fsps)), '{:1.2e}'.format(10**np.median(logtau_fsps)*1e9), '{:1.2e}'.format(e_foldings_fsps), "Not Quenched"
 
         """
         # --------------------------- Histogram plots ------------------------------
