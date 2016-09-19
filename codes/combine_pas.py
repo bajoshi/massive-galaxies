@@ -36,8 +36,7 @@ def add_position_angle(lam, flux, fluxerr, old_flux, old_fluxerr, lam_grid):
 
     return old_flux, old_fluxerr
 
-
-def combine_all_position_angles(pears_index):
+def combine_all_position_angles_pears(pears_index):
 
     # PEARS data path
     data_path = home + "/Documents/PEARS/data_spectra_only/"
@@ -138,7 +137,7 @@ if __name__ == '__main__':
         for j in range(fits_extens):
             ax.plot(fitsfile[j+1].data['LAMBDA'], fitsfile[j+1].data['FLUX'], 'b')
 
-        lam_obs, combined_spec, combined_spec_err = combine_all_position_angles(pears_id[massive_galaxies_indices][u])
+        lam_obs, combined_spec, combined_spec_err = combine_all_position_angles_pears(pears_id[massive_galaxies_indices][u])
         ax.plot(lam_obs, combined_spec, 'k')
         ax.fill_between(lam_obs, combined_spec + combined_spec_err, combined_spec - combined_spec_err, color='lightgray')
 
