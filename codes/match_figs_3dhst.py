@@ -15,11 +15,8 @@ import matching as mt
 if __name__ == '__main__':
     
     # Read 3D-HST catalog
-    threed_hst_cat = fits.open(home + '/Documents/3D-HST/3dhst.v4.1.5.master.fits')
-
-    # Make intermediate catalogs for 3DHST
-    threed_goodsn = np.where(threed_hst_cat[1].data['field'] == 'goodsn')[0]
-    threed_goodss = np.where(threed_hst_cat[1].data['field'] == 'goodss')[0]
+    threed_ncat = fits.open(home + '/Desktop/FIGS/new_codes/goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat.FITS')
+    threed_scat = fits.open(home + '/Desktop/FIGS/new_codes/goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat.FITS')
 
     # Read in FIGS catalogs # latest version v1.2
     gn1cat = np.genfromtxt(massive_galaxies_dir + 'GN1_prelim_science_v1.2.cat', dtype=None,\
@@ -39,10 +36,10 @@ if __name__ == '__main__':
     # Total: 25628
 
     # Create arrays for ra and dec for both catalogs
-    threed_n_ra = threed_hst_cat[1].data['ra'][threed_goodsn]
-    threed_n_dec = threed_hst_cat[1].data['dec'][threed_goodsn]
-    threed_s_ra = threed_hst_cat[1].data['ra'][threed_goodss]
-    threed_s_dec = threed_hst_cat[1].data['dec'][threed_goodss]
+    threed_n_ra = threed_ncat[1].data['ra']
+    threed_n_dec = threed_ncat[1].data['dec']
+    threed_s_ra = threed_scat[1].data['ra']
+    threed_s_dec = threed_scat[1].data['dec']
 
     gn1_ra = gn1cat['ra']
     gn1_dec = gn1cat['dec']
