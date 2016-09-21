@@ -279,7 +279,7 @@ def plot_diff(delRA, delDEC, inarcseconds=True, name='field'):
         delRA *= 3600
         delDEC *= 3600
     
-    ax.plot(delRA, delDEC, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax.plot(delRA, delDEC, 'o', markersize=1, color='k', markeredgecolor='k')
     
     ax.axhline(y=0, linestyle='--', color='k')
     ax.axvline(x=0, linestyle='--', color='k')
