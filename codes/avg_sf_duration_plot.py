@@ -35,24 +35,25 @@ if __name__ == '__main__':
 
     for k in range(len(stellarmass_massive)):
         if massive_galaxies_props['libname'][k] == 'bc03':
-            #ax.errorbar(stellarmass_massive[k], avg_sf_time_massive[k], yerr=avg_sf_time_massive_err[k], fmt='x', markersize=5, color='r', markeredgecolor='r')
+            ax.errorbar(stellarmass_massive[k], avg_sf_time_massive[k], yerr=avg_sf_time_massive_err[k], fmt='x', markersize=5, color='r', markeredgecolor='r')
             ax.plot(stellarmass_massive[k], avg_sf_time_massive[k], 'x', markersize=5, color='r', markeredgecolor='r')
         elif massive_galaxies_props['libname'][k] == 'fsps':
-            #ax.errorbar(stellarmass_massive[k], avg_sf_time_massive[k], yerr=avg_sf_time_massive_err[k], fmt='x', markersize=5, color='g', markeredgecolor='g')
+            ax.errorbar(stellarmass_massive[k], avg_sf_time_massive[k], yerr=avg_sf_time_massive_err[k], fmt='x', markersize=5, color='g', markeredgecolor='g')
             ax.plot(stellarmass_massive[k], avg_sf_time_massive[k], 'x', markersize=5, color='g', markeredgecolor='g')
 
     for k in range(len(stellarmass_stacks)):
         if stacked_galaxies_props['libname'][k] == 'bc03':
-            #ax.errorbar(stellarmass_stacks[k], avg_sf_time_stacks[k], yerr=avg_sf_time_stacked_err[k], fmt='o', markersize=5, color='r', markeredgecolor='r')
+            ax.errorbar(stellarmass_stacks[k], avg_sf_time_stacks[k], yerr=avg_sf_time_stacked_err[k], fmt='o', markersize=5, color='r', markeredgecolor='r')
             ax.plot(stellarmass_stacks[k], avg_sf_time_stacks[k], 'o', markersize=5, color='r', markeredgecolor='r')
         elif stacked_galaxies_props['libname'][k] == 'fsps':
-            #ax.errorbar(stellarmass_stacks[k], avg_sf_time_stacks[k], yerr=avg_sf_time_stacked_err[k], fmt='o', markersize=5, color='g', markeredgecolor='g')
+            ax.errorbar(stellarmass_stacks[k], avg_sf_time_stacks[k], yerr=avg_sf_time_stacked_err[k], fmt='o', markersize=5, color='g', markeredgecolor='g')
             ax.plot(stellarmass_stacks[k], avg_sf_time_stacks[k], 'o', markersize=5, color='g', markeredgecolor='g')
 
     ax.set_xscale('log')
     ax.set_yscale('log')
 
-    ax.set_xlim(1e9,1e12)
+    ax.set_xlim(1e7,1e12)
     ax.set_ylim(1e7,1e10)
 
-    plt.show()
+    fig.savefig(massive_figures_dir + 'avg_sf_mstar.eps', dpi=300)
+
