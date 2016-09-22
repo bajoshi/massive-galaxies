@@ -1,0 +1,8 @@
+# The redshift is from 3dhst
+# figs_id mstar threed_z redshift_type
+301140 11.05 1.2623 photo_z
+400763 11.53 1.6973 photo_z
+401201 11.13 1.2907 spectro_z
+100008 11.09 1.6296 photo_z
+100659 11.15 1.223 spectro_z
+102821 11.14 1.553 spectro_z

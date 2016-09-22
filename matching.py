@@ -62,6 +62,8 @@ def match(ra1, dec1, ra2, dec2, lim=0.1*1/3600):
     cat1_dec_matches = []
     cat2_ra_matches = []
     cat2_dec_matches = []
+    cat1_indices = []
+    cat2_indices = []
     single_count = 0
     
     # Find out which catalog is smaller and loop over that cat
@@ -78,11 +80,14 @@ def match(ra1, dec1, ra2, dec2, lim=0.1*1/3600):
                     cat1_dec_matches.append(dec1[i])
                     cat2_ra_matches.append(cat2_ramatch)
                     cat2_dec_matches.append(cat2_decmatch)
+                    cat1_indices.append(i)
+                    cat2_indices.append(index_array)
                     single_count += 1
                 
                 elif len(index_array) > 1:
                     continue
                     print 'Invalid Area of code...'
+                    # This part for multiple matches not tested yet.
                     min_index = np.argmin(angular_difference(ra1[i], dec1[i], ra2[index_array], dec2[index_array]))
                     cat2_ramatch = ra2[index_array][min_index]
                     cat2_decmatch = dec2[index_array][min_index]
@@ -92,6 +97,8 @@ def match(ra1, dec1, ra2, dec2, lim=0.1*1/3600):
                     cat1_dec_matches.append(dec1[i])
                     cat2_ra_matches.append(cat2_ramatch)
                     cat2_dec_matches.append(cat2_decmatch)
+                    cat1_indices.append(i)
+                    cat2_indices.append(index_array[min_index])
             else:
                 continue
     elif len(ra1) > len(ra2):
@@ -107,11 +114,14 @@ def match(ra1, dec1, ra2, dec2, lim=0.1*1/3600):
                     cat1_dec_matches.append(cat1_decmatch)
                     cat2_ra_matches.append(ra2[i])
                     cat2_dec_matches.append(dec2[i])
+                    cat1_indices.append(index_array)
+                    cat2_indices.append(i)
                     single_count += 1
                 
                 elif len(index_array) > 1:
                     continue
                     print 'Invalid Area of code...'
+                    # This part for multiple matches not tested yet.
                     min_index = np.argmin(angular_difference(ra2[i], dec2[i], ra1[index_array], dec1[index_array]))
                     cat1_ramatch = ra1[index_array][min_index]
                     cat1_decmatch = dec1[index_array][min_index]
@@ -121,6 +131,8 @@ def match(ra1, dec1, ra2, dec2, lim=0.1*1/3600):
                     cat1_dec_matches.append(cat1_decmatch)
                     cat2_ra_matches.append(ra2[i])
                     cat2_dec_matches.append(dec2[i])
+                    cat1_indices.append(index_array[min_index])
+                    cat2_indices.append(i)
             else:
                 continue
 
@@ -131,7 +143,7 @@ def match(ra1, dec1, ra2, dec2, lim=0.1*1/3600):
     cat2_ra_matches = np.asarray(cat2_ra_matches, dtype=np.float128)
     cat2_dec_matches = np.asarray(cat2_dec_matches, dtype=np.float128)
 
-    return delRA, delDEC, cat1_ra_matches, cat1_dec_matches, cat2_ra_matches, cat2_dec_matches, single_count
+    return delRA, delDEC, cat1_ra_matches, cat1_dec_matches, cat2_ra_matches, cat2_dec_matches, cat1_indices, cat2_indices, single_count
 
 def findoffset(delRA, delDEC):
     """
@@ -221,8 +233,9 @@ def plot_diff_hist(delRA, delDEC, fig, ax):
     binsize_dec = 2*iqr_dec*np.power(len(delDEC), -1/3)  # Freedman-Diaconis Rule
     totalbins_dec = int(np.floor((max(delDEC) - min(delDEC))/binsize_dec))
 
-    ax.hist(delRA, totalbins_ra, histtype='bar', align='mid', alpha=0.5, label='RA')
-    ax.hist(delDEC, totalbins_dec, histtype='bar', align='mid', alpha=0.5, label='DEC')
+    ax.hist(delRA, totalbins_ra, histtype='steps', color='b', align='mid', alpha=0.5, label='RA')
+    ax.hist(delDEC, totalbins_dec, histtype='steps', color='r', align='mid', alpha=0.5, label='DEC')
+
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')
     ax.tick_params('both', width=1, length=4.7, which='major')
@@ -276,10 +289,9 @@ def plot_diff(delRA, delDEC, inarcseconds=True, name='field'):
     ax.set_ylabel(r'$\Delta \mathrm{DEC}$')
     
     if inarcseconds:
-        delRA *= 3600
-        delDEC *= 3600
-    
-    ax.plot(delRA, delDEC, 'o', markersize=1, color='k', markeredgecolor='k')
+        ax.plot(delRA*3600, delDEC*3600, 'o', markersize=1, color='k', markeredgecolor='k')
+    else:
+        ax.plot(delRA, delDEC, 'o', markersize=1, color='k', markeredgecolor='k')
     
     ax.axhline(y=0, linestyle='--', color='k')
     ax.axvline(x=0, linestyle='--', color='k')

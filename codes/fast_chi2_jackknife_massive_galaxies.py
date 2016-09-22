@@ -118,6 +118,7 @@ if __name__ == '__main__':
 
     # PEARS data path
     data_path = home + "/Documents/PEARS/data_spectra_only/"
+    lsf_path = massive_galaxies_dir + "north_lsfs/"
 
     # Read pears + 3dhst catalog
     cat = np.genfromtxt(home + '/Desktop/FIGS/new_codes/color_stellarmass.txt',
@@ -173,7 +174,6 @@ if __name__ == '__main__':
         # Convolve model spectra with the line spread function for each galaxy
         # and also
         # set up numpy comparison spectra arrays for faster array computations at the same time
-        lsf_path = massive_galaxies_dir + "north_lsfs/"
         filename = lsf_path + 'n' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
         if os.path.isfile(filename):
             lsf = np.loadtxt(filename)
