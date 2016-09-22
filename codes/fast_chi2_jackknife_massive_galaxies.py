@@ -21,7 +21,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
 import fast_chi2_jackknife as fcj
-import create_fsps_miles_libraries as ct
+#import create_fsps_miles_libraries as ct
 
 def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
@@ -31,10 +31,19 @@ def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
     for i in range(len(pears_ids[massive_galaxies_indices])):
         if pears_ids[massive_galaxies_indices][i] in ferreras_ids:
             ferreras_ind = np.where(ferreras_ids == pears_ids[massive_galaxies_indices][i])[0]
-            print pears_cat['mstar'][massive_galaxies_indices][i], ferreras_prop_cat['mstar'][ferreras_ind]
-            print pears_cat['threedzphot'][massive_galaxies_indices][i], ferreras_cat['z'][ferreras_ind]
+            print ferreras_cat['ra'][ferreras_ind], ',', ferreras_cat['dec'][ferreras_ind], ferreras_ids[ferreras_ind], pears_ids[massive_galaxies_indices][i], " matched."
+            #print pears_cat['mstar'][massive_galaxies_indices][i], ferreras_prop_cat['mstar'][ferreras_ind]
+            #print pears_cat['threedzphot'][massive_galaxies_indices][i], ferreras_cat['z'][ferreras_ind]
         else:
-            print pears_ids[massive_galaxies_indices][i], " did not match."
+            data_path = home + "/Documents/PEARS/data_spectra_only/"
+            # Get the correct filename and the number of extensions
+            filename = data_path + 'h_pears_n_id' + str(pears_ids[massive_galaxies_indices][i]) + '.fits'
+            if not os.path.isfile(filename):
+                filename = data_path + 'h_pears_s_id' + str(pears_ids[massive_galaxies_indices][i]) + '.fits'
+
+            fitsfile = fits.open(filename)
+            print fitsfile[0].header['ra'], ',', fitsfile[0].header['dec'], " did not match."
+            #print pears_ids[massive_galaxies_indices][i], " did not match."
 
     return None
 
@@ -133,13 +142,13 @@ if __name__ == '__main__':
     massive_galaxies_indices = np.where(stellarmass >= 11.0)[0]
 
     # Match with Ferreras et al. 2009
-    #ferreras_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_cat.txt', dtype=None,\
-    #                             names=['id', 'ra', 'dec', 'z'], usecols=(0,1,2,5), skip_header=23)
-    #ferreras_prop_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_prop_cat.txt', dtype=None,\
-    #                             names=['id', 'mstar'], usecols=(0,1), skip_header=23)    
-    #
-    #find_matches_in_ferreras2009(cat, ferreras_prop_cat, ferreras_cat)
-    #sys.exit(0)
+    ferreras_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_cat.txt', dtype=None,\
+                                 names=['id', 'ra', 'dec', 'z'], usecols=(0,1,2,5), skip_header=23)
+    ferreras_prop_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_prop_cat.txt', dtype=None,\
+                                 names=['id', 'mstar'], usecols=(0,1), skip_header=23)    
+    
+    find_matches_in_ferreras2009(cat, ferreras_prop_cat, ferreras_cat)
+    sys.exit(0)
     # There are 12 galaxies that matched using ids
     # Also match using RA and DEC
     # Also match colors, stellar masses, and redshifts given in the Ferreras et al. 2009 paper
