@@ -15,7 +15,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
 if __name__ == '__main__':
 
-    massive_galaxies_props = np.genfromtxt(massive_galaxies_dir + 'pears_massive_galaxy_specs.txt', dtype=None, names=True)
+    massive_galaxies_props = np.genfromtxt(massive_galaxies_dir + 'pears_massive_galaxy_props.txt', dtype=None, names=True)
     stacked_galaxies_props = np.genfromtxt(stacking_analysis_dir + 'stack_props.txt', dtype=None, names=True)
 
     stellarmass_stacks = 10**stacked_galaxies_props['logmstar']
@@ -24,11 +24,26 @@ if __name__ == '__main__':
     avg_sf_time_stacks = 10**stacked_galaxies_props['formtime'] - 10**stacked_galaxies_props['mass_wht_age']
     avg_sf_time_massive = 10**massive_galaxies_props['formtime'] - 10**massive_galaxies_props['mass_wht_age']
 
+    avg_sf_time_stacked_err = np.log(10) * (10**stacked_galaxies_props['formtime'] * stacked_galaxies_props['formtime_err'] - 10**stacked_galaxies_props['mass_wht_age'] * stacked_galaxies_props['mass_wht_age_err'])
+    avg_sf_time_massive_err = np.log(10) * (10**massive_galaxies_props['formtime'] * massive_galaxies_props['formtime_err'] - 10**massive_galaxies_props['mass_wht_age'] * massive_galaxies_props['mass_wht_age_err'])
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.plot(stellarmass_massive, avg_sf_time_massive, 'x', markersize=5, color='k', markeredgecolor='k')
-    ax.plot(stellarmass_stacks, avg_sf_time_stacks, 'o', markersize=5, color='k', markeredgecolor='k')
+    ax.set_xlabel(r'$\mathrm{log(M_*/M_\odot)}$')
+    ax.set_ylabel(r'$\left< t_{SF} \right>$')
+
+    for k in range(len(stellarmass_massive)):
+        if massive_galaxies_props['libname'][k] == 'bc03':
+            ax.errorbar(stellarmass_massive[k], avg_sf_time_massive[k], yerr=avg_sf_time_massive_err[k], fmt='x', markersize=5, color='r', markeredgecolor='r')
+        elif massive_galaxies_props['libname'][k] == 'fsps':
+            ax.errorbar(stellarmass_massive[k], avg_sf_time_massive[k], yerr=avg_sf_time_massive_err[k], fmt='x', markersize=5, color='g', markeredgecolor='g')
+
+    for k in range(len(stellarmass_stacks)):
+        if stacked_galaxies_props['libname'][k] == 'bc03':
+            ax.errorbar(stellarmass_stacks[k], avg_sf_time_stacks[k], yerr=avg_sf_time_stacked_err[k], fmt='o', markersize=5, color='r', markeredgecolor='r')
+        elif stacked_galaxies_props['libname'][k] == 'fsps':
+            ax.errorbar(stellarmass_stacks[k], avg_sf_time_stacks[k], yerr=avg_sf_time_stacked_err[k], fmt='o', markersize=5, color='g', markeredgecolor='g')
 
     ax.set_xscale('log')
     ax.set_yscale('log')

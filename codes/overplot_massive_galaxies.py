@@ -195,11 +195,15 @@ if __name__ == '__main__':
         best_tauv_err = np.std(tauv_bc03)
         best_mass_wht_age_err = np.std(mass_wht_ages_bc03) * 10**best_mass_wht_age / (1e9 * 0.434)
 
-        print 'bc03', best_age, best_tau, best_mass_wht_age, stellarmass[massive_galaxies_indices][u]
+        print 'bc03', best_age, best_age_err, best_tau, best_tau_err, best_mass_wht_age, best_mass_wht_age_err, stellarmass[massive_galaxies_indices][u]
 
         for j in range(bc03_extens):
             if np.allclose(bc03_params[j], np.array([best_age, best_tau, best_tauv]).reshape(3)):
+                print 'bc03'
                 currentspec = bc03_spec[j+1].data
+                print flam_em
+                print ferr
+                print currentspec
 
                 #try:
                 #    currentspec = np.convolve(currentspec, lsf)
@@ -366,7 +370,7 @@ if __name__ == '__main__':
         best_tau_err = np.std(logtau_fsps) * best_tau / 0.434
         best_mass_wht_age_err = np.std(mass_wht_ages_fsps) * 10**best_mass_wht_age / (1e9 * 0.434)
 
-        print 'fsps', best_age, best_tau, best_mass_wht_age, stellarmass[massive_galaxies_indices][u]
+        print 'fsps', best_age, best_age_err, best_tau, best_tau_err, best_mass_wht_age, best_mass_wht_age_err, stellarmass[massive_galaxies_indices][u]
 
         for j in range(fsps_extens):
             if np.allclose(fsps_params[j], np.array([best_age, best_tau]).reshape(2)):
