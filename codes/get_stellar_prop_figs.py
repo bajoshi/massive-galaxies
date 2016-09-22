@@ -79,9 +79,9 @@ if __name__ == '__main__':
     stellarmass_gn2, redshift_gn2, redshift_type_gn2, use_phot_gn2 = get_stellar_masses_redshifts(gn2_mat, 'gn2', threed_cat)
     stellarmass_gs1, redshift_gs1, redshift_type_gs1, use_phot_gs1 = get_stellar_masses_redshifts(gs1_mat, 'gs1', threed_cat)
 
-    stellarmass_gn1_indices = np.where(stellarmass_gn1 >= 11.0)[0]
-    stellarmass_gn2_indices = np.where(stellarmass_gn2 >= 11.0)[0]
-    stellarmass_gs1_indices = np.where(stellarmass_gs1 >= 11.0)[0]
+    stellarmass_gn1_indices = np.where(stellarmass_gn1 >= 10.5)[0]
+    stellarmass_gn2_indices = np.where(stellarmass_gn2 >= 10.5)[0]
+    stellarmass_gs1_indices = np.where(stellarmass_gs1 >= 10.5)[0]
 
     # print len(stellarmass_gn1_indices) + len(stellarmass_gn2_indices) + len(stellarmass_gs1_indices)
     # total 68 galaxies with stellar mass >10^11 M_sol in GN1, GN2, and GS1 combined over all redshifts.
