@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # Loop over all spectra 
     for u in range(len(pears_id[massive_galaxies_indices])):
 
-        print "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
+        #print "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
 
         redshift = photz[massive_galaxies_indices][u]
         lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
@@ -131,10 +131,10 @@ if __name__ == '__main__':
         # Convolve model spectra with the line spread function for each galaxy
         # and also
         # set up numpy comparison spectra arrays for faster array computations at the same time
-        lsf_path = massive_galaxies_dir + "north_lsfs/"
-        filename = lsf_path + 'n' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
-        if os.path.isfile(filename):
-            lsf = np.loadtxt(filename)
+        #lsf_path = massive_galaxies_dir + "north_lsfs/"
+        #filename = lsf_path + 'n' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
+        #if os.path.isfile(filename):
+        #    lsf = np.loadtxt(filename)
         #else:
         #    filename = lsf_path + 's' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
         # Remove the try except blocks below once you have both north and south lsfs
@@ -195,14 +195,16 @@ if __name__ == '__main__':
         best_tauv_err = np.std(tauv_bc03)
         best_mass_wht_age_err = np.std(mass_wht_ages_bc03) * 10**best_mass_wht_age / (1e9 * 0.434)
 
+        print 'bc03', best_age, best_tau, best_mass_wht_age, stellarmass[massive_galaxies_indices][u]
+
         for j in range(bc03_extens):
             if np.allclose(bc03_params[j], np.array([best_age, best_tau, best_tauv]).reshape(3)):
                 currentspec = bc03_spec[j+1].data
 
-                try:
-                    currentspec = np.convolve(currentspec, lsf)
-                except NameError, e:
-                    print e
+                #try:
+                #    currentspec = np.convolve(currentspec, lsf)
+                #except NameError, e:
+                #    print e
 
                 alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 
@@ -292,16 +294,18 @@ if __name__ == '__main__':
         best_age_err = np.std(ages_miles) * 10**best_age / (1e9 * 0.434)
         best_metal_err = np.std(metals_miles)
 
+        #print 'miles', best_age, best_metal, stellarmass[massive_galaxies_indices][u]
+
         for j in range(miles_extens):
             if np.allclose(miles_params[j], np.array([best_age, best_metal]).reshape(2)):
                 currentspec = miles_spec[j+1].data
                 mask_indices = np.isnan(miles_spec[j+1].data)
                 currentspec = ma.masked_array(currentspec, mask = mask_indices)
 
-                try:
-                    currentspec = np.convolve(currentspec, lsf)
-                except NameError, e:
-                    print e
+                #try:
+                #    currentspec = np.convolve(currentspec, lsf)
+                #except NameError, e:
+                #    print e
 
                 alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 
@@ -362,14 +366,16 @@ if __name__ == '__main__':
         best_tau_err = np.std(logtau_fsps) * best_tau / 0.434
         best_mass_wht_age_err = np.std(mass_wht_ages_fsps) * 10**best_mass_wht_age / (1e9 * 0.434)
 
+        print 'fsps', best_age, best_tau, best_mass_wht_age, stellarmass[massive_galaxies_indices][u]
+
         for j in range(fsps_extens):
             if np.allclose(fsps_params[j], np.array([best_age, best_tau]).reshape(2)):
                 currentspec = fsps_spec[j+1].data
 
-                try:
-                    currentspec = np.convolve(currentspec, lsf)
-                except NameError, e:
-                    print e
+                #try:
+                #    currentspec = np.convolve(currentspec, lsf)
+                #except NameError, e:
+                #    print e
 
                 alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 
