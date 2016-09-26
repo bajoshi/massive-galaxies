@@ -21,7 +21,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
 import fast_chi2_jackknife as fcj
-#import create_fsps_miles_libraries as ct
+import create_fsps_miles_libraries as ct
 
 def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
@@ -139,7 +139,9 @@ if __name__ == '__main__':
     photz = cat['threedzphot']
 
     # Find indices for massive galaxies
-    massive_galaxies_indices = np.where(stellarmass >= 10.0)[0]
+    massive_galaxies_indices = np.where(stellarmass >= 10.5)[0]
+    print len(massive_galaxies_indices)
+    sys.exit(0)
 
     # Match with Ferreras et al. 2009
     #ferreras_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_cat.txt', dtype=None,\
