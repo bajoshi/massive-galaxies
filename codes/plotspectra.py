@@ -7,7 +7,7 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+#import matplotlib.gridspec as gridspec
 print sys.path
 
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
@@ -35,8 +35,9 @@ if __name__ == '__main__':
     photz = cat['threedzphot']
 
     # Find indices for massive galaxies
-    massive_galaxies_indices = np.where(stellarmass >= 11.0)[0]
+    massive_galaxies_indices = np.where(stellarmass >= 10.0)[0]
 
+    """
     # Create grid for making grid plots
     gs = gridspec.GridSpec(9, 18)
     gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
@@ -66,8 +67,27 @@ if __name__ == '__main__':
 
         ax.set_xlim(2500, 6000)
 
-    fig.savefig(massive_figures_dir + 'massive_galaxies_spectra.eps', dpi=300)
+    fig.savefig(massive_figures_dir + 'massive_galaxies_spectra.eps', dpi=150)
     #plt.show()
+    """
+
+    for u in range(len(pears_id[massive_galaxies_indices])):
+
+        redshift = photz[massive_galaxies_indices][u]
+        lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        ax.set_xlabel(r'$\lambda\ [\AA]$')
+        ax.set_ylabel(r'$f_{\lambda}\ [\mathrm{erg/s/cm^2/\AA}] $')
+
+        ax.plot(lam_em, flam_em, color='k')
+        ax.fill_between(lam_em, flam_em + ferr, flam_em - ferr, color='lightgray')
+
+        ax.set_xlim(2500, 6000)
+
+        fig.savefig(savefits_dir + 'massive-galaxy-spectra/' + str(pears_id[massive_galaxies_indices][u]) + '.eps', dpi=150)
 
     sys.exit(0)
 

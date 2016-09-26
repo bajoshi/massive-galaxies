@@ -139,16 +139,16 @@ if __name__ == '__main__':
     photz = cat['threedzphot']
 
     # Find indices for massive galaxies
-    massive_galaxies_indices = np.where(stellarmass >= 11.0)[0]
+    massive_galaxies_indices = np.where(stellarmass >= 10.0)[0]
 
     # Match with Ferreras et al. 2009
-    ferreras_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_cat.txt', dtype=None,\
-                                 names=['id', 'ra', 'dec', 'z'], usecols=(0,1,2,5), skip_header=23)
-    ferreras_prop_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_prop_cat.txt', dtype=None,\
-                                 names=['id', 'mstar'], usecols=(0,1), skip_header=23)    
-    
-    find_matches_in_ferreras2009(cat, ferreras_prop_cat, ferreras_cat)
-    sys.exit(0)
+    #ferreras_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_cat.txt', dtype=None,\
+    #                             names=['id', 'ra', 'dec', 'z'], usecols=(0,1,2,5), skip_header=23)
+    #ferreras_prop_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_prop_cat.txt', dtype=None,\
+    #                             names=['id', 'mstar'], usecols=(0,1), skip_header=23)    
+    #
+    #find_matches_in_ferreras2009(cat, ferreras_prop_cat, ferreras_cat)
+    #sys.exit(0)
     # There are 12 galaxies that matched using ids
     # Also match using RA and DEC
     # Also match colors, stellar masses, and redshifts given in the Ferreras et al. 2009 paper
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     # Loop over all spectra 
     for u in range(len(pears_id[massive_galaxies_indices])):
 
-        print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
+        #print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
 
         redshift = photz[massive_galaxies_indices][u]
         lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
@@ -166,10 +166,11 @@ if __name__ == '__main__':
         # This will be different for each galaxy because they are all at different redshifts so when unredshifterd the lam grid is different for each.
 
         # Create consolidated fits files for faster array comparisons
-        #create_model_fits('bc03', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
-        #create_model_fits('miles', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
-        #create_model_fits('fsps', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
-
+        create_model_fits('bc03', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
+        create_model_fits('miles', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
+        create_model_fits('fsps', resampling_lam_grid, pears_id[massive_galaxies_indices][u])
+        
+        """
         # Open fits files with comparison spectra
         bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
         miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
@@ -296,6 +297,7 @@ if __name__ == '__main__':
         f_ages_fsps.close()
         f_logtau_fsps.close()
         f_exten_fsps.close()
+        """
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
