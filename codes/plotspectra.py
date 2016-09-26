@@ -36,6 +36,8 @@ if __name__ == '__main__':
 
     # Find indices for massive galaxies
     massive_galaxies_indices = np.where(stellarmass >= 10.0)[0]
+    print len(massive_galaxies_indices)
+    sys.exit(0)
 
     """
     # Create grid for making grid plots
