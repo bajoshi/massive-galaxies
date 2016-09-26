@@ -17,7 +17,6 @@ savefits_dir = home + "/Desktop/FIGS/new_codes/"
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
-print sys.path
 import grid_coadd as gd
 
 if __name__ == '__main__':
@@ -36,8 +35,6 @@ if __name__ == '__main__':
 
     # Find indices for massive galaxies
     massive_galaxies_indices = np.where(stellarmass >= 10.0)[0]
-    print len(massive_galaxies_indices)
-    sys.exit(0)
 
     """
     # Create grid for making grid plots
