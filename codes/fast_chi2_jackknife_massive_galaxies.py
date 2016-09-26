@@ -15,7 +15,7 @@ import matplotlib.gridspec as gridspec
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = massive_galaxies_dir + "figures/"
-savefits_dir = home + "/Desktop/FIGS/new_codes/"
+savefits_dir = home + "/Desktop/FIGS/new_codes/fits_comp_spectra/"
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
@@ -139,9 +139,9 @@ if __name__ == '__main__':
     photz = cat['threedzphot']
 
     # Find indices for massive galaxies
-    massive_galaxies_indices = np.where(stellarmass >= 10.5)[0]
-    print len(massive_galaxies_indices)
-    sys.exit(0)
+    massive_galaxies_indices = np.where(stellarmass >= 10.5)[0] 
+    # 112 massive galaxies with log(M/M_sol)>10^10.5
+    # 17 massive galaxies with log(M/M_sol)>11
 
     # Match with Ferreras et al. 2009
     #ferreras_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_cat.txt', dtype=None,\
