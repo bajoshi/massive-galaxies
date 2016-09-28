@@ -149,7 +149,7 @@ if __name__ == '__main__':
 
     # Find indices for massive galaxies
     massive_galaxies_indices = np.where(stellarmass >= 10.5)[0] 
-    # 112 massive galaxies with log(M/M_sol)>10^10.5
+    # 102 massive galaxies with log(M/M_sol)>10^10.5
     # 17 massive galaxies with log(M/M_sol)>11
 
     # Match with Ferreras et al. 2009
@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
         # define resampling grid for model spectra. i.e. resampling_lam_grid = lam_em
         # This will be different for each galaxy because they are all at different redshifts
-        # so when unredshifterd the lam grid is different for each.
+        # so when unredshifted the lam grid is different for each.
         create_models(lam_em, pears_id[massive_galaxies_indices][u])
         
         """
