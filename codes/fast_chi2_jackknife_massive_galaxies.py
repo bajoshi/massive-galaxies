@@ -119,8 +119,11 @@ def create_models(resampling_lam_grid, pearsid):
 
     # Create consolidated fits files for faster array comparisons
     create_model_fits('bc03', resampling_lam_grid, pearsid)
+    print "BCO3 library saved for PEARS ID:", pearsid
     create_model_fits('miles', resampling_lam_grid, pearsid)
+    print "MILES library saved for PEARS ID:", pearsid
     create_model_fits('fsps', resampling_lam_grid, pearsid)
+    print "FSPS library saved for PEARS ID:", pearsid
 
     return None
 
@@ -167,7 +170,7 @@ if __name__ == '__main__':
     # Loop over all spectra 
     for u in range(len(pears_id[massive_galaxies_indices])):
 
-        #print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
+        print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
 
         redshift = photz[massive_galaxies_indices][u]
         lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
