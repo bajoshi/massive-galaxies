@@ -86,7 +86,7 @@ if __name__ == '__main__':
     gs = gridspec.GridSpec(15,15)
     gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.00, hspace=0.2)
 
-    num_jackknife_samps = 10
+    num_jackknife_samps = 1e3
     # Loop over all spectra 
     for u in range(len(pears_id[massive_galaxies_indices])):
 

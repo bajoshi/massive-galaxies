@@ -176,6 +176,7 @@ if __name__ == '__main__':
         redshift = photz[massive_galaxies_indices][u]
         lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
 
+        resampling_lam_grid = lam_em
         # define resampling grid for model spectra. i.e. resampling_lam_grid = lam_em
         # This will be different for each galaxy because they are all at different redshifts
         # so when unredshifted the lam grid is different for each.
