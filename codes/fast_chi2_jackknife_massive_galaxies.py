@@ -171,6 +171,7 @@ if __name__ == '__main__':
     for u in range(len(pears_id[massive_galaxies_indices])):
 
         print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
+        print "At --", dt.now()
 
         redshift = photz[massive_galaxies_indices][u]
         lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
@@ -178,9 +179,12 @@ if __name__ == '__main__':
         # define resampling grid for model spectra. i.e. resampling_lam_grid = lam_em
         # This will be different for each galaxy because they are all at different redshifts
         # so when unredshifted the lam grid is different for each.
-        create_models(lam_em, pears_id[massive_galaxies_indices][u])
-        
-        """
+        #create_models(lam_em, pears_id[massive_galaxies_indices][u])
+
+        # Skip galaxy if it was already analyzed before i.e. these are the galaxies with M > 10^11 M_sol
+        if os.path.isfile(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_bc03.txt'):
+            continue
+
         # Open fits files with comparison spectra
         bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
         miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
@@ -228,7 +232,7 @@ if __name__ == '__main__':
                 pass
 
         # Get random samples by jackknifing
-        num_samp_to_draw = 1e4
+        num_samp_to_draw = 1e3
         print "Running over", int(num_samp_to_draw), "random jackknifed samples."
         resampled_spec = ma.empty((len(flam_em), num_samp_to_draw))
         for i in range(len(flam_em)):
@@ -307,7 +311,6 @@ if __name__ == '__main__':
         f_ages_fsps.close()
         f_logtau_fsps.close()
         f_exten_fsps.close()
-        """
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
