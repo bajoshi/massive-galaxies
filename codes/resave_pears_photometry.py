@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = massive_galaxies_dir + "figures/"
-savefits_dir = home + "/Desktop/FIGS/new_codes/fits_comp_spectra/"
+save_dir = home + "/Desktop/FIGS/new_codes/"
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
@@ -45,6 +45,21 @@ if __name__ == '__main__':
     # Find indices for massive galaxies
     massive_galaxies_indices = np.where(stellarmass >= 10.5)[0] 
 
+    # Create empty lists to be containers for holding data on the matched pairs
+    ids = []
+    master_ra = []
+    master_dec = []
+    broadband_cat_ra = []
+    broadband_cat_dec = []
+    broadband_cat_bmag = []
+    broadband_cat_bmagerr = []
+    broadband_cat_vmag = []
+    broadband_cat_vmagerr = []
+    broadband_cat_imag = []
+    broadband_cat_imagerr = []
+    broadband_cat_zmag = []
+    broadband_cat_zmagerr = []
+
     # Read PEARS spectrum and the galaxy's coordinates
     for u in range(len(pears_id[massive_galaxies_indices])):
 
@@ -70,19 +85,75 @@ if __name__ == '__main__':
         dec = fitsfile[0].header['DEC']
 
         if field == 'north':
-            print ra, dec
-            print np.where(np.isclose(north_pears_cat['ALPHA_J2000'], ra, rtol=1e-7, atol=1e-8))[0]
-            sys.exit(0)
+            idx = np.where(np.isclose(north_pears_cat['ALPHA_J2000'], ra, rtol=1e-5, atol=1e-5) & np.isclose(north_pears_cat['DELTA_J2000'], dec, rtol=1e-5, atol=1e-5))[0]
+            ang_dist = np.sqrt((north_pears_cat['ALPHA_J2000'][idx] - ra)**2 + (north_pears_cat['DELTA_J2000'][idx] - dec)**2)
+            match_idx = np.argmin(ang_dist)
+            #print pearsid, match_idx, ra, north_pears_cat['ALPHA_J2000'][idx][match_idx], dec, north_pears_cat['DELTA_J2000'][idx][match_idx]
 
+            ids.append(pearsid)
+            master_ra.append(ra)
+            master_dec.append(dec)
+            broadband_cat_ra.append(north_pears_cat['ALPHA_J2000'][idx][match_idx])
+            broadband_cat_dec.append(north_pears_cat['DELTA_J2000'][idx][match_idx])
+            broadband_cat_bmag.append(north_pears_cat['MAG_AUTO_b'][idx][match_idx])
+            broadband_cat_bmagerr.append(north_pears_cat['MAGERR_AUTO_b'][idx][match_idx])
+            broadband_cat_vmag.append(north_pears_cat['MAG_AUTO_v'][idx][match_idx])
+            broadband_cat_vmagerr.append(north_pears_cat['MAGERR_AUTO_v'][idx][match_idx])
+            broadband_cat_imag.append(north_pears_cat['MAG_AUTO_i'][idx][match_idx])
+            broadband_cat_imagerr.append(north_pears_cat['MAGERR_AUTO_i'][idx][match_idx])
+            broadband_cat_zmag.append(north_pears_cat['MAG_AUTO_z'][idx][match_idx])
+            broadband_cat_zmagerr.append(north_pears_cat['MAGERR_AUTO_z'][idx][match_idx])
 
+        elif field == 'south':
+            idx = np.where(np.isclose(south_pears_cat['ALPHA_J2000'], ra, rtol=1e-5, atol=1e-5) & np.isclose(south_pears_cat['DELTA_J2000'], dec, rtol=1e-5, atol=1e-5))[0]
+            ang_dist = np.sqrt((south_pears_cat['ALPHA_J2000'][idx] - ra)**2 + (south_pears_cat['DELTA_J2000'][idx] - dec)**2)
+            match_idx = np.argmin(ang_dist)            
+            #print pearsid, match_idx, ra, south_pears_cat['ALPHA_J2000'][idx][match_idx], dec, south_pears_cat['DELTA_J2000'][idx][match_idx]
 
-        #    idx = np.where((north_pears_cat['ALPHA_J2000'] == ra) & (north_pears_cat['DELTA_J2000'] == dec))[0]
-        #    print pearsid, idx, ra, north_pears_cat['ALPHA_J2000'][idx], dec, north_pears_cat['DELTA_J2000'][idx]
-        #elif field == 'south':
-        #    idx = np.where((south_pears_cat['ALPHA_J2000'] == ra) & (south_pears_cat['DELTA_J2000'] == dec))[0]
-        #    print pearsid, idx, ra, south_pears_cat['ALPHA_J2000'][idx], dec, south_pears_cat['DELTA_J2000'][idx]
+            ids.append(pearsid)
+            master_ra.append(ra)
+            master_dec.append(dec)
+            broadband_cat_ra.append(south_pears_cat['ALPHA_J2000'][idx][match_idx])
+            broadband_cat_dec.append(south_pears_cat['DELTA_J2000'][idx][match_idx])
+            broadband_cat_bmag.append(south_pears_cat['MAG_AUTO_b'][idx][match_idx])
+            broadband_cat_bmagerr.append(south_pears_cat['MAGERR_AUTO_b'][idx][match_idx])
+            broadband_cat_vmag.append(south_pears_cat['MAG_AUTO_v'][idx][match_idx])
+            broadband_cat_vmagerr.append(south_pears_cat['MAGERR_AUTO_v'][idx][match_idx])
+            broadband_cat_imag.append(south_pears_cat['MAG_AUTO_i'][idx][match_idx])
+            broadband_cat_imagerr.append(south_pears_cat['MAGERR_AUTO_i'][idx][match_idx])
+            broadband_cat_zmag.append(south_pears_cat['MAG_AUTO_z'][idx][match_idx])
+            broadband_cat_zmagerr.append(south_pears_cat['MAGERR_AUTO_z'][idx][match_idx])
+    
+    # Convert lists to arrays for saving to txt file
+    ids = np.asarray(ids)
+    master_ra = np.asarray(master_ra)
+    master_dec = np.asarray(master_dec)
+    broadband_cat_ra = np.asarray(broadband_cat_ra)
+    broadband_cat_dec = np.asarray(broadband_cat_dec)
+    broadband_cat_bmag = np.asarray(broadband_cat_bmag)
+    broadband_cat_bmagerr = np.asarray(broadband_cat_bmagerr)
+    broadband_cat_vmag = np.asarray(broadband_cat_vmag)
+    broadband_cat_vmagerr = np.asarray(broadband_cat_vmagerr)
+    broadband_cat_imag = np.asarray(broadband_cat_imag)
+    broadband_cat_imagerr = np.asarray(broadband_cat_imagerr)
+    broadband_cat_zmag = np.asarray(broadband_cat_zmag)
+    broadband_cat_zmagerr = np.asarray(broadband_cat_zmagerr)
 
+    print len(ids)
 
+    # Save to a txt file
+    data = np.array(zip(ids, master_ra, master_dec, broadband_cat_ra, broadband_cat_dec,\
+     broadband_cat_bmag, broadband_cat_bmagerr, broadband_cat_vmag, broadband_cat_vmagerr,\
+      broadband_cat_imag, broadband_cat_imagerr, broadband_cat_zmag, broadband_cat_zmagerr),\
+                    dtype=[('ids', int), ('master_ra', float), ('master_dec', float),\
+                     ('broadband_cat_ra', float), ('broadband_cat_dec', float), ('broadband_cat_bmag', float), ('broadband_cat_bmagerr', float),\
+                     ('broadband_cat_vmag', float), ('broadband_cat_vmagerr', float), ('broadband_cat_imag', float), ('broadband_cat_imagerr', float),\
+                     ('broadband_cat_zmag', float), ('broadband_cat_zmagerr', float)])
+    np.savetxt(save_dir + 'pears_broadband_massive_galaxies.txt', data, fmt=['%d', '%.6f', '%.6f', '%.6f', '%.6f', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f'], delimiter=' ',\
+               header='Broadband data from matches with master broadband cat. This is for galaxies with M > 10^10.5 M_sol.' + '\n' + \
+               'ids, master_ra, master_dec, broadband_cat_ra, broadband_cat_dec, broadband_cat_bmag, broadband_cat_bmagerr, broadband_cat_vmag, broadband_cat_vmagerr, broadband_cat_imag, broadband_cat_imagerr, broadband_cat_zmag, broadband_cat_zmagerr')
+
+    # Make regions file from matches and confirm by eye
 
 
 
