@@ -1,0 +1,4481 @@
+/Users/baj/anaconda/lib/python2.7/site-packages/numpy/core/_methods.py:59: RuntimeWarning: Mean of empty slice.
+  warnings.warn("Mean of empty slice.", RuntimeWarning)
+/Users/baj/anaconda/lib/python2.7/site-packages/numpy/core/_methods.py:70: RuntimeWarning: invalid value encountered in true_divide
+  ret = ret.dtype.type(ret / rcount)
+Starting at -- 2016-09-28 10:53:07.310874
+
+Currently working with PEARS object id:  35156
+BCO3 library saved for PEARS ID: 35156
+MILES library saved for PEARS ID: 35156
+FSPS library saved for PEARS ID: 35156
+
+Currently working with PEARS object id:  37044
+BCO3 library saved for PEARS ID: 37044
+MILES library saved for PEARS ID: 37044
+FSPS library saved for PEARS ID: 37044
+
+Currently working with PEARS object id:  36105
+BCO3 library saved for PEARS ID: 36105
+MILES library saved for PEARS ID: 36105
+FSPS library saved for PEARS ID: 36105
+
+Currently working with PEARS object id:  41388
+BCO3 library saved for PEARS ID: 41388
+MILES library saved for PEARS ID: 41388
+FSPS library saved for PEARS ID: 41388
+
+Currently working with PEARS object id:  40991
+BCO3 library saved for PEARS ID: 40991
+MILES library saved for PEARS ID: 40991
+FSPS library saved for PEARS ID: 40991
+
+Currently working with PEARS object id:  41913
+BCO3 library saved for PEARS ID: 41913
+MILES library saved for PEARS ID: 41913
+FSPS library saved for PEARS ID: 41913
+
+Currently working with PEARS object id:  43618
+BCO3 library saved for PEARS ID: 43618
+MILES library saved for PEARS ID: 43618
+FSPS library saved for PEARS ID: 43618
+
+Currently working with PEARS object id:  44562
+BCO3 library saved for PEARS ID: 44562
+MILES library saved for PEARS ID: 44562
+FSPS library saved for PEARS ID: 44562
+
+Currently working with PEARS object id:  44078
+BCO3 library saved for PEARS ID: 44078
+MILES library saved for PEARS ID: 44078
+FSPS library saved for PEARS ID: 44078
+
+Currently working with PEARS object id:  44756
+BCO3 library saved for PEARS ID: 44756
+MILES library saved for PEARS ID: 44756
+FSPS library saved for PEARS ID: 44756
+
+Currently working with PEARS object id:  45026
+BCO3 library saved for PEARS ID: 45026
+MILES library saved for PEARS ID: 45026
+FSPS library saved for PEARS ID: 45026
+
+Currently working with PEARS object id:  46766
+BCO3 library saved for PEARS ID: 46766
+MILES library saved for PEARS ID: 46766
+FSPS library saved for PEARS ID: 46766
+
+Currently working with PEARS object id:  48189
+BCO3 library saved for PEARS ID: 48189
+MILES library saved for PEARS ID: 48189
+FSPS library saved for PEARS ID: 48189
+
+Currently working with PEARS object id:  48650
+BCO3 library saved for PEARS ID: 48650
+MILES library saved for PEARS ID: 48650
+FSPS library saved for PEARS ID: 48650
+
+Currently working with PEARS object id:  53471
+BCO3 library saved for PEARS ID: 53471
+MILES library saved for PEARS ID: 53471
+FSPS library saved for PEARS ID: 53471
+
+Currently working with PEARS object id:  53708
+BCO3 library saved for PEARS ID: 53708
+MILES library saved for PEARS ID: 53708
+FSPS library saved for PEARS ID: 53708
+
+Currently working with PEARS object id:  54405
+BCO3 library saved for PEARS ID: 54405
+MILES library saved for PEARS ID: 54405
+FSPS library saved for PEARS ID: 54405
+
+Currently working with PEARS object id:  61291
+BCO3 library saved for PEARS ID: 61291
+MILES library saved for PEARS ID: 61291
+FSPS library saved for PEARS ID: 61291
+
+Currently working with PEARS object id:  62107
+BCO3 library saved for PEARS ID: 62107
+MILES library saved for PEARS ID: 62107
+FSPS library saved for PEARS ID: 62107
+
+Currently working with PEARS object id:  65404
+BCO3 library saved for PEARS ID: 65404
+MILES library saved for PEARS ID: 65404
+FSPS library saved for PEARS ID: 65404
+
+Currently working with PEARS object id:  76098
+BCO3 library saved for PEARS ID: 76098
+MILES library saved for PEARS ID: 76098
+FSPS library saved for PEARS ID: 76098
+
+Currently working with PEARS object id:  80411
+BCO3 library saved for PEARS ID: 80411
+MILES library saved for PEARS ID: 80411
+FSPS library saved for PEARS ID: 80411
+
+Currently working with PEARS object id:  79185
+BCO3 library saved for PEARS ID: 79185
+MILES library saved for PEARS ID: 79185
+FSPS library saved for PEARS ID: 79185
+
+Currently working with PEARS object id:  82368
+BCO3 library saved for PEARS ID: 82368
+MILES library saved for PEARS ID: 82368
+FSPS library saved for PEARS ID: 82368
+
+Currently working with PEARS object id:  83503
+BCO3 library saved for PEARS ID: 83503
+MILES library saved for PEARS ID: 83503
+FSPS library saved for PEARS ID: 83503
+
+Currently working with PEARS object id:  85073
+BCO3 library saved for PEARS ID: 85073
+MILES library saved for PEARS ID: 85073
+FSPS library saved for PEARS ID: 85073
+
+Currently working with PEARS object id:  87585
+BCO3 library saved for PEARS ID: 87585
+MILES library saved for PEARS ID: 87585
+FSPS library saved for PEARS ID: 87585
+
+Currently working with PEARS object id:  87368
+BCO3 library saved for PEARS ID: 87368
+MILES library saved for PEARS ID: 87368
+FSPS library saved for PEARS ID: 87368
+
+Currently working with PEARS object id:  88679
+BCO3 library saved for PEARS ID: 88679
+MILES library saved for PEARS ID: 88679
+FSPS library saved for PEARS ID: 88679
+
+Currently working with PEARS object id:  93602
+BCO3 library saved for PEARS ID: 93602
+MILES library saved for PEARS ID: 93602
+FSPS library saved for PEARS ID: 93602
+
+Currently working with PEARS object id:  98209
+BCO3 library saved for PEARS ID: 98209
+MILES library saved for PEARS ID: 98209
+FSPS library saved for PEARS ID: 98209
+
+Currently working with PEARS object id:  102600
+BCO3 library saved for PEARS ID: 102600
+MILES library saved for PEARS ID: 102600
+FSPS library saved for PEARS ID: 102600
+
+Currently working with PEARS object id:  114628
+BCO3 library saved for PEARS ID: 114628
+MILES library saved for PEARS ID: 114628
+FSPS library saved for PEARS ID: 114628
+
+Currently working with PEARS object id:  119191
+BCO3 library saved for PEARS ID: 119191
+MILES library saved for PEARS ID: 119191
+FSPS library saved for PEARS ID: 119191
+
+Currently working with PEARS object id:  119879
+BCO3 library saved for PEARS ID: 119879
+MILES library saved for PEARS ID: 119879
+FSPS library saved for PEARS ID: 119879
+
+Currently working with PEARS object id:  120498
+BCO3 library saved for PEARS ID: 120498
+MILES library saved for PEARS ID: 120498
+FSPS library saved for PEARS ID: 120498
+
+Currently working with PEARS object id:  123290
+BCO3 library saved for PEARS ID: 123290
+MILES library saved for PEARS ID: 123290
+FSPS library saved for PEARS ID: 123290
+
+Currently working with PEARS object id:  123538
+BCO3 library saved for PEARS ID: 123538
+MILES library saved for PEARS ID: 123538
+FSPS library saved for PEARS ID: 123538
+
+Currently working with PEARS object id:  125086
+BCO3 library saved for PEARS ID: 125086
+MILES library saved for PEARS ID: 125086
+FSPS library saved for PEARS ID: 125086
+
+Currently working with PEARS object id:  124386
+BCO3 library saved for PEARS ID: 124386
+MILES library saved for PEARS ID: 124386
+FSPS library saved for PEARS ID: 124386
+
+Currently working with PEARS object id:  125934
+BCO3 library saved for PEARS ID: 125934
+MILES library saved for PEARS ID: 125934
+FSPS library saved for PEARS ID: 125934
+
+Currently working with PEARS object id:  9378
+BCO3 library saved for PEARS ID: 9378
+MILES library saved for PEARS ID: 9378
+FSPS library saved for PEARS ID: 9378
+
+Currently working with PEARS object id:  13499
+BCO3 library saved for PEARS ID: 13499
+MILES library saved for PEARS ID: 13499
+FSPS library saved for PEARS ID: 13499
+
+Currently working with PEARS object id:  14555
+BCO3 library saved for PEARS ID: 14555
+MILES library saved for PEARS ID: 14555
+FSPS library saved for PEARS ID: 14555
+
+Currently working with PEARS object id:  17022
+BCO3 library saved for PEARS ID: 17022
+MILES library saved for PEARS ID: 17022
+FSPS library saved for PEARS ID: 17022
+
+Currently working with PEARS object id:  18260
+BCO3 library saved for PEARS ID: 18260
+MILES library saved for PEARS ID: 18260
+FSPS library saved for PEARS ID: 18260
+
+Currently working with PEARS object id:  21592
+BCO3 library saved for PEARS ID: 21592
+MILES library saved for PEARS ID: 21592
+FSPS library saved for PEARS ID: 21592
+
+Currently working with PEARS object id:  23142
+BCO3 library saved for PEARS ID: 23142
+MILES library saved for PEARS ID: 23142
+FSPS library saved for PEARS ID: 23142
+
+Currently working with PEARS object id:  23172
+BCO3 library saved for PEARS ID: 23172
+MILES library saved for PEARS ID: 23172
+FSPS library saved for PEARS ID: 23172
+
+Currently working with PEARS object id:  26158
+BCO3 library saved for PEARS ID: 26158
+MILES library saved for PEARS ID: 26158
+FSPS library saved for PEARS ID: 26158
+
+Currently working with PEARS object id:  30010
+BCO3 library saved for PEARS ID: 30010
+MILES library saved for PEARS ID: 30010
+FSPS library saved for PEARS ID: 30010
+
+Currently working with PEARS object id:  30676
+BCO3 library saved for PEARS ID: 30676
+MILES library saved for PEARS ID: 30676
+FSPS library saved for PEARS ID: 30676
+
+Currently working with PEARS object id:  36121
+BCO3 library saved for PEARS ID: 36121
+MILES library saved for PEARS ID: 36121
+FSPS library saved for PEARS ID: 36121
+
+Currently working with PEARS object id:  37429
+BCO3 library saved for PEARS ID: 37429
+MILES library saved for PEARS ID: 37429
+FSPS library saved for PEARS ID: 37429
+
+Currently working with PEARS object id:  41478
+BCO3 library saved for PEARS ID: 41478
+MILES library saved for PEARS ID: 41478
+FSPS library saved for PEARS ID: 41478
+
+Currently working with PEARS object id:  47740
+BCO3 library saved for PEARS ID: 47740
+MILES library saved for PEARS ID: 47740
+FSPS library saved for PEARS ID: 47740
+
+Currently working with PEARS object id:  49771
+BCO3 library saved for PEARS ID: 49771
+MILES library saved for PEARS ID: 49771
+FSPS library saved for PEARS ID: 49771
+
+Currently working with PEARS object id:  55434
+BCO3 library saved for PEARS ID: 55434
+MILES library saved for PEARS ID: 55434
+FSPS library saved for PEARS ID: 55434
+
+Currently working with PEARS object id:  61235
+BCO3 library saved for PEARS ID: 61235
+MILES library saved for PEARS ID: 61235
+FSPS library saved for PEARS ID: 61235
+
+Currently working with PEARS object id:  61172
+BCO3 library saved for PEARS ID: 61172
+MILES library saved for PEARS ID: 61172
+FSPS library saved for PEARS ID: 61172
+
+Currently working with PEARS object id:  65620
+BCO3 library saved for PEARS ID: 65620
+MILES library saved for PEARS ID: 65620
+FSPS library saved for PEARS ID: 65620
+
+Currently working with PEARS object id:  90791
+BCO3 library saved for PEARS ID: 90791
+MILES library saved for PEARS ID: 90791
+FSPS library saved for PEARS ID: 90791
+
+Currently working with PEARS object id:  91095
+BCO3 library saved for PEARS ID: 91095
+MILES library saved for PEARS ID: 91095
+FSPS library saved for PEARS ID: 91095
+
+Currently working with PEARS object id:  91651
+BCO3 library saved for PEARS ID: 91651
+MILES library saved for PEARS ID: 91651
+FSPS library saved for PEARS ID: 91651
+
+Currently working with PEARS object id:  95110
+BCO3 library saved for PEARS ID: 95110
+MILES library saved for PEARS ID: 95110
+FSPS library saved for PEARS ID: 95110
+
+Currently working with PEARS object id:  97568
+BCO3 library saved for PEARS ID: 97568
+MILES library saved for PEARS ID: 97568
+FSPS library saved for PEARS ID: 97568
+
+Currently working with PEARS object id:  103918
+BCO3 library saved for PEARS ID: 103918
+MILES library saved for PEARS ID: 103918
+FSPS library saved for PEARS ID: 103918
+
+Currently working with PEARS object id:  105547
+BCO3 library saved for PEARS ID: 105547
+MILES library saved for PEARS ID: 105547
+FSPS library saved for PEARS ID: 105547
+
+Currently working with PEARS object id:  107136
+BCO3 library saved for PEARS ID: 107136
+MILES library saved for PEARS ID: 107136
+FSPS library saved for PEARS ID: 107136
+
+Currently working with PEARS object id:  106067
+BCO3 library saved for PEARS ID: 106067
+MILES library saved for PEARS ID: 106067
+FSPS library saved for PEARS ID: 106067
+
+Currently working with PEARS object id:  109151
+BCO3 library saved for PEARS ID: 109151
+MILES library saved for PEARS ID: 109151
+FSPS library saved for PEARS ID: 109151
+
+Currently working with PEARS object id:  109794
+BCO3 library saved for PEARS ID: 109794
+MILES library saved for PEARS ID: 109794
+FSPS library saved for PEARS ID: 109794
+
+Currently working with PEARS object id:  110870
+BCO3 library saved for PEARS ID: 110870
+MILES library saved for PEARS ID: 110870
+FSPS library saved for PEARS ID: 110870
+
+Currently working with PEARS object id:  112789
+BCO3 library saved for PEARS ID: 112789
+MILES library saved for PEARS ID: 112789
+FSPS library saved for PEARS ID: 112789
+
+Currently working with PEARS object id:  115288
+BCO3 library saved for PEARS ID: 115288
+MILES library saved for PEARS ID: 115288
+FSPS library saved for PEARS ID: 115288
+
+Currently working with PEARS object id:  115446
+BCO3 library saved for PEARS ID: 115446
+MILES library saved for PEARS ID: 115446
+FSPS library saved for PEARS ID: 115446
+
+Currently working with PEARS object id:  116349
+BCO3 library saved for PEARS ID: 116349
+MILES library saved for PEARS ID: 116349
+FSPS library saved for PEARS ID: 116349
+
+Currently working with PEARS object id:  119016
+BCO3 library saved for PEARS ID: 119016
+MILES library saved for PEARS ID: 119016
+FSPS library saved for PEARS ID: 119016
+
+Currently working with PEARS object id:  111741
+BCO3 library saved for PEARS ID: 111741
+MILES library saved for PEARS ID: 111741
+FSPS library saved for PEARS ID: 111741
+
+Currently working with PEARS object id:  113298
+BCO3 library saved for PEARS ID: 113298
+MILES library saved for PEARS ID: 113298
+FSPS library saved for PEARS ID: 113298
+
+Currently working with PEARS object id:  112093
+BCO3 library saved for PEARS ID: 112093
+MILES library saved for PEARS ID: 112093
+FSPS library saved for PEARS ID: 112093
+
+Currently working with PEARS object id:  114230
+BCO3 library saved for PEARS ID: 114230
+MILES library saved for PEARS ID: 114230
+FSPS library saved for PEARS ID: 114230
+
+Currently working with PEARS object id:  117725
+BCO3 library saved for PEARS ID: 117725
+MILES library saved for PEARS ID: 117725
+FSPS library saved for PEARS ID: 117725
+
+Currently working with PEARS object id:  119193
+BCO3 library saved for PEARS ID: 119193
+MILES library saved for PEARS ID: 119193
+FSPS library saved for PEARS ID: 119193
+
+Currently working with PEARS object id:  119489
+BCO3 library saved for PEARS ID: 119489
+MILES library saved for PEARS ID: 119489
+FSPS library saved for PEARS ID: 119489
+
+Currently working with PEARS object id:  121095
+BCO3 library saved for PEARS ID: 121095
+MILES library saved for PEARS ID: 121095
+FSPS library saved for PEARS ID: 121095
+
+Currently working with PEARS object id:  123472
+BCO3 library saved for PEARS ID: 123472
+MILES library saved for PEARS ID: 123472
+FSPS library saved for PEARS ID: 123472
+
+Currently working with PEARS object id:  126958
+BCO3 library saved for PEARS ID: 126958
+MILES library saved for PEARS ID: 126958
+FSPS library saved for PEARS ID: 126958
+
+Currently working with PEARS object id:  131165
+BCO3 library saved for PEARS ID: 131165
+MILES library saved for PEARS ID: 131165
+FSPS library saved for PEARS ID: 131165
+
+Currently working with PEARS object id:  133150
+BCO3 library saved for PEARS ID: 133150
+MILES library saved for PEARS ID: 133150
+FSPS library saved for PEARS ID: 133150
+
+Currently working with PEARS object id:  133694
+BCO3 library saved for PEARS ID: 133694
+MILES library saved for PEARS ID: 133694
+FSPS library saved for PEARS ID: 133694
+
+Currently working with PEARS object id:  9378
+BCO3 library saved for PEARS ID: 9378
+MILES library saved for PEARS ID: 9378
+FSPS library saved for PEARS ID: 9378
+
+Currently working with PEARS object id:  13499
+BCO3 library saved for PEARS ID: 13499
+MILES library saved for PEARS ID: 13499
+FSPS library saved for PEARS ID: 13499
+
+Currently working with PEARS object id:  14555
+BCO3 library saved for PEARS ID: 14555
+MILES library saved for PEARS ID: 14555
+FSPS library saved for PEARS ID: 14555
+
+Currently working with PEARS object id:  21592
+BCO3 library saved for PEARS ID: 21592
+MILES library saved for PEARS ID: 21592
+FSPS library saved for PEARS ID: 21592
+
+Currently working with PEARS object id:  23142
+BCO3 library saved for PEARS ID: 23142
+MILES library saved for PEARS ID: 23142
+FSPS library saved for PEARS ID: 23142
+
+Currently working with PEARS object id:  23172
+BCO3 library saved for PEARS ID: 23172
+MILES library saved for PEARS ID: 23172
+FSPS library saved for PEARS ID: 23172
+
+Currently working with PEARS object id:  26158
+BCO3 library saved for PEARS ID: 26158
+MILES library saved for PEARS ID: 26158
+FSPS library saved for PEARS ID: 26158
+
+Currently working with PEARS object id:  30010
+BCO3 library saved for PEARS ID: 30010
+MILES library saved for PEARS ID: 30010
+FSPS library saved for PEARS ID: 30010
+
+Currently working with PEARS object id:  30676
+BCO3 library saved for PEARS ID: 30676
+MILES library saved for PEARS ID: 30676
+FSPS library saved for PEARS ID: 30676
+
+Currently working with PEARS object id:  31899
+BCO3 library saved for PEARS ID: 31899
+MILES library saved for PEARS ID: 31899
+FSPS library saved for PEARS ID: 31899
+
+Currently working with PEARS object id:  65620
+BCO3 library saved for PEARS ID: 65620
+MILES library saved for PEARS ID: 65620
+FSPS library saved for PEARS ID: 65620
+
+Currently working with PEARS object id:  74133
+BCO3 library saved for PEARS ID: 74133
+MILES library saved for PEARS ID: 74133
+FSPS library saved for PEARS ID: 74133
+
+Currently working with PEARS object id:  74060
+BCO3 library saved for PEARS ID: 74060
+MILES library saved for PEARS ID: 74060
+FSPS library saved for PEARS ID: 74060
+
+Currently working with PEARS object id:  73974
+BCO3 library saved for PEARS ID: 73974
+MILES library saved for PEARS ID: 73974
+FSPS library saved for PEARS ID: 73974
+
+Currently working with PEARS object id:  76094
+BCO3 library saved for PEARS ID: 76094
+MILES library saved for PEARS ID: 76094
+FSPS library saved for PEARS ID: 76094
+
+Currently working with PEARS object id:  77522
+BCO3 library saved for PEARS ID: 77522
+MILES library saved for PEARS ID: 77522
+FSPS library saved for PEARS ID: 77522
+
+Currently working with PEARS object id:  78415
+BCO3 library saved for PEARS ID: 78415
+MILES library saved for PEARS ID: 78415
+FSPS library saved for PEARS ID: 78415
+
+Currently working with PEARS object id:  81011
+BCO3 library saved for PEARS ID: 81011
+MILES library saved for PEARS ID: 81011
+FSPS library saved for PEARS ID: 81011
+
+Currently working with PEARS object id:  83248
+BCO3 library saved for PEARS ID: 83248
+MILES library saved for PEARS ID: 83248
+FSPS library saved for PEARS ID: 83248
+
+Currently working with PEARS object id:  88222
+BCO3 library saved for PEARS ID: 88222
+MILES library saved for PEARS ID: 88222
+FSPS library saved for PEARS ID: 88222
+
+Currently working with PEARS object id:  90546
+BCO3 library saved for PEARS ID: 90546
+MILES library saved for PEARS ID: 90546
+FSPS library saved for PEARS ID: 90546
+Total time taken -- 48987.5749631 seconds.
+Starting at -- 2016-09-29 10:22:46.763979
+
+Currently working with PEARS object id:  35156
+At -- 2016-09-29 10:22:46.801050
+Traceback (most recent call last):
+  File "fast_chi2_jackknife_massive_galaxies.py", line 208, in <module>
+    comp_spec_bc03 = np.zeros([bc03_extens, len(resampling_lam_grid)], dtype=np.float64)
+NameError: name 'resampling_lam_grid' is not defined
+Starting at -- 2016-09-29 12:24:06.449233
+
+Currently working with PEARS object id:  35156
+At -- 2016-09-29 12:24:06.469160
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 210.527364969 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.0177438763046
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0116661294005
+Tau_v: Median +- std dev =  0.04 +- 0.0103536225544
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  7
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 31.9606211185 seconds.
+Ages: Median +- std dev =  9.60205999133 +- 0.0723140919496
+Metals: Median +- std dev =  0.000107406359274 +- 0.000108295216682
+Unique elements in jackknifed runs for MILES --
+Ages -  5
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6424911022 seconds.
+Ages: Median +- std dev =  9.7 +- 0.00474104418878
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 0.0292994393936
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  37044
+At -- 2016-09-29 12:28:51.931737
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 224.408082008 seconds.
+Ages: Median +- std dev =  9.00654733799 +- 0.0201008885016
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0251 +- 0.0200469199308
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  4
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.6488871574 seconds.
+Ages: Median +- std dev =  8.90308998699 +- 0.119982428793
+Metals: Median +- std dev =  0.0502377286302 +- 0.017490922712
+Unique elements in jackknifed runs for MILES --
+Ages -  8
+Metals -  5
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.684347868 seconds.
+Ages: Median +- std dev =  9.05 +- 0.0141660686148
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0250112402622
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  5
+
+Currently working with PEARS object id:  36105
+At -- 2016-09-29 12:33:42.804153
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.388246059 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.0477184409574
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.2511 +- 0.154589453531
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  7
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.8322300911 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0219893548192
+Metals: Median +- std dev =  0.0112468265038 +- 0.00458039317062
+Unique elements in jackknifed runs for MILES --
+Ages -  6
+Metals -  4
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7448058128 seconds.
+Ages: Median +- std dev =  9.7 +- 0.0351510668401
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.251188643151 +- 0.121855945289
+Unique elements in jackknifed runs for FSPS --
+Ages -  5
+Metals -  1
+Tau -  8
+
+Currently working with PEARS object id:  41388
+At -- 2016-09-29 12:38:30.209622
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.138731956 seconds.
+Ages: Median +- std dev =  9.22530928173 +- 0.00878767005629
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0251 +- 0.0201444663955
+Tau_v: Median +- std dev =  0.19 +- 0.00846108740057
+Unique elements in jackknifed runs for BC03 --
+Ages -  6
+Metals -  1
+Tau -  6
+Tau_v -  5
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.0364749432 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.125463448425
+Metals: Median +- std dev =  0.00893367184302 +- 0.00114706351939
+Unique elements in jackknifed runs for MILES --
+Ages -  10
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6420910358 seconds.
+Ages: Median +- std dev =  9.4 +- 0.0241402154091
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.0823751931423
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  9
+
+Currently working with PEARS object id:  40991
+At -- 2016-09-29 12:43:16.459318
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 218.898741007 seconds.
+Ages: Median +- std dev =  9.69897000434 +- 0.153793488132
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.487146669093
+Tau_v: Median +- std dev =  0.18 +- 0.019662632072
+Unique elements in jackknifed runs for BC03 --
+Ages -  8
+Metals -  1
+Tau -  9
+Tau_v -  8
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.2058069706 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.0171951660776
+Metals: Median +- std dev =  0.00893367184302 +- 0.000400910477832
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7107908726 seconds.
+Ages: Median +- std dev =  9.55 +- 0.0530559845823
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.270600818695
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  6
+
+Currently working with PEARS object id:  41913
+At -- 2016-09-29 12:48:02.468319
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.421877146 seconds.
+Ages: Median +- std dev =  9.74036270971 +- 0.0537662094583
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.536674752387
+Tau_v: Median +- std dev =  0.08 +- 0.0173919262878
+Unique elements in jackknifed runs for BC03 --
+Ages -  14
+Metals -  1
+Tau -  3
+Tau_v -  12
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.8137559891 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0013386554193
+Metals: Median +- std dev =  0.00109908174772 +- 4.88706172369e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.889316082 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0138772295506
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.0292994393936
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  43618
+At -- 2016-09-29 12:52:50.112286
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 218.644385099 seconds.
+Ages: Median +- std dev =  9.79588000845 +- 0.134613227752
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.448901514651
+Tau_v: Median +- std dev =  0.19 +- 0.0196128503793
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  6
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.794834137 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0092488612497
+Metals: Median +- std dev =  0.00893367184302 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8730449677 seconds.
+Ages: Median +- std dev =  9.55 +- 0.0249711833921
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.158489319246 +- 0.110509857646
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  44562
+At -- 2016-09-29 12:57:36.350734
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.022479773 seconds.
+Ages: Median +- std dev =  9.72015929282 +- 0.0330007316462
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.227621697359
+Tau_v: Median +- std dev =  0.0 +- 0.00238461736973
+Unique elements in jackknifed runs for BC03 --
+Ages -  8
+Metals -  1
+Tau -  3
+Tau_v -  3
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.8352370262 seconds.
+Ages: Median +- std dev =  9.60205999133 +- 0.0208181436916
+Metals: Median +- std dev =  0.000107406359274 +- 3.32048493885e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.0953359604 seconds.
+Ages: Median +- std dev =  9.85 +- 0.0232456447534
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  10.0 +- 1.80246644009
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  44078
+At -- 2016-09-29 13:02:25.591098
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.146008968 seconds.
+Ages: Median +- std dev =  9.32221929473 +- 0.0394032811096
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0398 +- 0.0912717555953
+Tau_v: Median +- std dev =  0.1 +- 0.00830033734254
+Unique elements in jackknifed runs for BC03 --
+Ages -  6
+Metals -  1
+Tau -  6
+Tau_v -  7
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.6163527966 seconds.
+Ages: Median +- std dev =  9.65321251378 +- 0.144507608464
+Metals: Median +- std dev =  0.0112468265038 +- 0.00111803645136
+Unique elements in jackknifed runs for MILES --
+Ages -  5
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.743696928 seconds.
+Ages: Median +- std dev =  9.6 +- 0.0224596861064
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.0760084643085
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  6
+
+Currently working with PEARS object id:  44756
+At -- 2016-09-29 13:07:13.486710
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.668154001 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.0140227954776
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1584 +- 0.145907241315
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  9
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1770009995 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0688920029334
+Metals: Median +- std dev =  0.0502377286302 +- 0.00231453390626
+Unique elements in jackknifed runs for MILES --
+Ages -  6
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7769169807 seconds.
+Ages: Median +- std dev =  9.85 +- 0.0103652062208
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.398107170553 +- 0.140756871582
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  8
+
+Currently working with PEARS object id:  45026
+At -- 2016-09-29 13:12:00.254955
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.094556093 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.157814825443
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.387989893605
+Tau_v: Median +- std dev =  0.1 +- 0.0582939027686
+Unique elements in jackknifed runs for BC03 --
+Ages -  9
+Metals -  1
+Tau -  7
+Tau_v -  19
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1182870865 seconds.
+Ages: Median +- std dev =  9.60205999133 +- 0.158045241864
+Metals: Median +- std dev =  0.0112468265038 +- 0.00280624348397
+Unique elements in jackknifed runs for MILES --
+Ages -  12
+Metals -  4
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8019840717 seconds.
+Ages: Median +- std dev =  9.55 +- 0.0446765878285
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.0999899393981
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  6
+
+Currently working with PEARS object id:  46766
+At -- 2016-09-29 13:16:46.388772
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.35456109 seconds.
+Ages: Median +- std dev =  9.15654915133 +- 0.0242554091919
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0398 +- 0.024686446082
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  7
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.9667019844 seconds.
+Ages: Median +- std dev =  9.35218251811 +- 0.127690364435
+Metals: Median +- std dev =  0.0112468265038 +- 0.00274718204087
+Unique elements in jackknifed runs for MILES --
+Ages -  15
+Metals -  5
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.600785017 seconds.
+Ages: Median +- std dev =  9.4 +- 0.00828009661779
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.0555270223656
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  7
+
+Currently working with PEARS object id:  48189
+At -- 2016-09-29 13:21:34.182076
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.158905029 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.0670536750301
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.249931727835
+Tau_v: Median +- std dev =  0.19 +- 0.032090420689
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  3
+Tau_v -  11
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.9370501041 seconds.
+Ages: Median +- std dev =  9.17609125906 +- 0.157448596492
+Metals: Median +- std dev =  0.0112468265038 +- 0.0100245881737
+Unique elements in jackknifed runs for MILES --
+Ages -  9
+Metals -  5
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5367569923 seconds.
+Ages: Median +- std dev =  9.45 +- 0.0331849363417
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.0770079566186
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  48650
+At -- 2016-09-29 13:26:21.038197
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.282531977 seconds.
+Ages: Median +- std dev =  9.47712125472 +- 0.0504976484299
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.0938260764306
+Tau_v: Median +- std dev =  0.09 +- 0.0209509880435
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  3
+Tau_v -  13
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.5183691978 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.00665264535792
+Metals: Median +- std dev =  0.00219295639229 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6737201214 seconds.
+Ages: Median +- std dev =  9.5 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  53471
+At -- 2016-09-29 13:31:08.541880
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 218.813091993 seconds.
+Ages: Median +- std dev =  9.34242268082 +- 0.0261783084522
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0158 +- 0.0723011572548
+Tau_v: Median +- std dev =  0.14 +- 0.0106274361913
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  6
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.4352490902 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0482425547227
+Metals: Median +- std dev =  0.00893367184302 +- 0.000973450677866
+Unique elements in jackknifed runs for MILES --
+Ages -  6
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8356149197 seconds.
+Ages: Median +- std dev =  9.55 +- 0.022300448426
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.158489319246 +- 0.0946694040381
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  7
+
+Currently working with PEARS object id:  53708
+At -- 2016-09-29 13:35:54.918602
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 218.919157982 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.00914804872051
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.19 +- 0.00634034699366
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.7550849915 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.090518367851
+Metals: Median +- std dev =  0.0043755232479 +- 0.00185980841442
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6455550194 seconds.
+Ages: Median +- std dev =  9.75 +- 0.0244752936652
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.143154326483
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  54405
+At -- 2016-09-29 13:40:39.467503
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.518682957 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.00489079724158
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.0
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.7322409153 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.00289820917531
+Metals: Median +- std dev =  0.000324362019472 +- 2.69148026652e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.9885950089 seconds.
+Ages: Median +- std dev =  9.85 +- 3.5527136788e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  3.98107170553 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  61291
+At -- 2016-09-29 13:45:28.117466
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.415727139 seconds.
+Ages: Median +- std dev =  9.30102999566 +- 0.0209705195002
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.063 +- 0.0253381817404
+Tau_v: Median +- std dev =  0.19 +- 0.00508124984625
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  7
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1064338684 seconds.
+Ages: Median +- std dev =  9.51188336098 +- 0.059876101909
+Metals: Median +- std dev =  0.0112468265038 +- 0.00113726078933
+Unique elements in jackknifed runs for MILES --
+Ages -  5
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.889619112 seconds.
+Ages: Median +- std dev =  9.5 +- 0.0193333261494
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.251188643151 +- 0.0695660705856
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  7
+
+Currently working with PEARS object id:  62107
+At -- 2016-09-29 13:50:14.651832
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.970160007 seconds.
+Ages: Median +- std dev =  9.20655063711 +- 0.0340583799165
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0695293044245
+Tau_v: Median +- std dev =  0.19 +- 0.00202425294862
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  9
+Tau_v -  3
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.0076301098 seconds.
+Ages: Median +- std dev =  9.35218251811 +- 0.050870318845
+Metals: Median +- std dev =  0.0112468265038 +- 0.0021902031746
+Unique elements in jackknifed runs for MILES --
+Ages -  8
+Metals -  5
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5899829865 seconds.
+Ages: Median +- std dev =  9.4 +- 0.0183030052177
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.158489319246 +- 0.0516914677034
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  6
+
+Currently working with PEARS object id:  65404
+At -- 2016-09-29 13:55:01.521239
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 218.401989937 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.0224613208707
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.047713938319
+Tau_v: Median +- std dev =  0.03 +- 0.00966790566772
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  2
+Tau_v -  5
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1412649155 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.00163868975501
+Metals: Median +- std dev =  0.00109908174772 +- 3.18737773458e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8279101849 seconds.
+Ages: Median +- std dev =  9.85 +- 0.0467458821716
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.288887444843
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  76098
+At -- 2016-09-29 13:59:47.135706
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.061364889 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.00286714925377
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1584 +- 0.0431339983214
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  2
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 26.589206934 seconds.
+Ages: Median +- std dev =  9.65321251378 +- 0.103476786232
+Metals: Median +- std dev =  0.0229630724299 +- 0.0117456068504
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  4
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7721629143 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0252545045487
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.131811536249
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  5
+
+Currently working with PEARS object id:  80411
+At -- 2016-09-29 14:04:34.772805
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.241469145 seconds.
+Ages: Median +- std dev =  9.36172783602 +- 0.0096909759293
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.00944490965071
+Tau_v: Median +- std dev =  0.17 +- 0.0133316315581
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  5
+Tau_v -  6
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.6045799255 seconds.
+Ages: Median +- std dev =  9.81291335664 +- 0.0370365150817
+Metals: Median +- std dev =  0.0112468265038 +- 0.00126263792605
+Unique elements in jackknifed runs for MILES --
+Ages -  6
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.79783988 seconds.
+Ages: Median +- std dev =  9.55 +- 0.00866588137468
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0417332039525
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  8
+
+Currently working with PEARS object id:  79185
+At -- 2016-09-29 14:09:22.314047
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.940459013 seconds.
+Ages: Median +- std dev =  9.75966785436 +- 0.0521699940455
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.285497419444
+Tau_v: Median +- std dev =  0.02 +- 0.0307797270943
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  2
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.4659321308 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.024669589162
+Metals: Median +- std dev =  0.00893367184302 +- 0.000562010903645
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7323889732 seconds.
+Ages: Median +- std dev =  9.75 +- 0.0111013512691
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  82368
+At -- 2016-09-29 14:14:10.824114
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.45934701 seconds.
+Ages: Median +- std dev =  9.47712125472 +- 0.0368633357779
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.0978335428204
+Tau_v: Median +- std dev =  0.09 +- 0.0320440883784
+Unique elements in jackknifed runs for BC03 --
+Ages -  11
+Metals -  1
+Tau -  3
+Tau_v -  20
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.515609026 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0475722367787
+Metals: Median +- std dev =  0.000324362019472 +- 0.000268384297987
+Unique elements in jackknifed runs for MILES --
+Ages -  9
+Metals -  4
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.0715699196 seconds.
+Ages: Median +- std dev =  9.5 +- 0.0569599640098
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.113034891167
+Unique elements in jackknifed runs for FSPS --
+Ages -  7
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  83503
+At -- 2016-09-29 14:18:59.913384
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.820400953 seconds.
+Ages: Median +- std dev =  9.43933271404 +- 0.0204064583057
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.019392398756
+Tau_v: Median +- std dev =  0.19 +- 0.00612169094287
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  3
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.2698531151 seconds.
+Ages: Median +- std dev =  9.30102999566 +- 0.0342882298876
+Metals: Median +- std dev =  0.0112468265038 +- 0.00323740852348
+Unique elements in jackknifed runs for MILES --
+Ages -  5
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5846500397 seconds.
+Ages: Median +- std dev =  9.3 +- 0.0158296399201
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.0304576064211
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  5
+
+Currently working with PEARS object id:  85073
+At -- 2016-09-29 14:23:49.582327
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.372143984 seconds.
+Ages: Median +- std dev =  9.30102999566 +- 0.0271933322679
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.3981 +- 0.0533840676097
+Tau_v: Median +- std dev =  0.16 +- 0.0328584707496
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  3
+Tau_v -  16
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1591520309 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00219295639229 +- 0.000418420992855
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5889599323 seconds.
+Ages: Median +- std dev =  9.2 +- 0.0238235177923
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.111912247986
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  5
+
+Currently working with PEARS object id:  87585
+At -- 2016-09-29 14:28:37.589225
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.020357132 seconds.
+Ages: Median +- std dev =  9.41497334797 +- 0.0162006171711
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0398 +- 0.0354369042124
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  6
+Metals -  1
+Tau -  8
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.6908302307 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0102527095307
+Metals: Median +- std dev =  0.0112468265038 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8028728962 seconds.
+Ages: Median +- std dev =  9.65 +- 0.0256081529986
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.104284053105
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  9
+
+Currently working with PEARS object id:  87368
+At -- 2016-09-29 14:33:25.170590
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.932684183 seconds.
+Ages: Median +- std dev =  9.60205999133 +- 0.016629319977
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.0569784836527
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.8716590405 seconds.
+Ages: Median +- std dev =  9.81291335664 +- 0.0292001924984
+Metals: Median +- std dev =  0.0112468265038 +- 0.000623947475691
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5786149502 seconds.
+Ages: Median +- std dev =  9.75 +- 0.0459141590362
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.398107170553 +- 0.134479730207
+Unique elements in jackknifed runs for FSPS --
+Ages -  5
+Metals -  1
+Tau -  6
+
+Currently working with PEARS object id:  88679
+At -- 2016-09-29 14:38:12.673706
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.347136974 seconds.
+Ages: Median +- std dev =  9.38021124171 +- 0.00595362338871
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0251 +- 0.0161073273699
+Tau_v: Median +- std dev =  0.1 +- 0.0152120872992
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  5
+Tau_v -  11
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.3663139343 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0166661229333
+Metals: Median +- std dev =  0.00893367184302 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5168588161 seconds.
+Ages: Median +- std dev =  9.5 +- 0.0180054852753
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.0616655381198
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  8
+
+Currently working with PEARS object id:  93602
+At -- 2016-09-29 14:43:01.221341
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.889431953 seconds.
+Ages: Median +- std dev =  9.20655063711 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.2511 +- 1.11022302463e-16
+Tau_v: Median +- std dev =  0.17 +- 0.0066584983292
+Unique elements in jackknifed runs for BC03 --
+Ages -  1
+Metals -  1
+Tau -  1
+Tau_v -  5
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.3469479084 seconds.
+Ages: Median +- std dev =  9.17609125906 +- 0.0283591487628
+Metals: Median +- std dev =  0.0112468265038 +- 0.000947058264478
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7100698948 seconds.
+Ages: Median +- std dev =  9.1 +- 3.5527136788e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0251188643151 +- 0.00698583803816
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  4
+
+Currently working with PEARS object id:  98209
+At -- 2016-09-29 14:47:47.979179
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.103916883 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.0
+Tau_v: Median +- std dev =  0.01 +- 0.00600213295421
+Unique elements in jackknifed runs for BC03 --
+Ages -  1
+Metals -  1
+Tau -  1
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.6486749649 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00109908174772 +- 6.90442029741e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8106489182 seconds.
+Ages: Median +- std dev =  9.75 +- 0.00446766158074
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 0.0414149207971
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  102600
+At -- 2016-09-29 14:52:36.903013
+Traceback (most recent call last):
+  File "fast_chi2_jackknife_massive_galaxies.py", line 213, in <module>
+    comp_spec_bc03[i] = np.convolve(comp_spec_bc03[i], lsf)
+ValueError: could not broadcast input array from shape (179) into shape (88)
+Starting at -- 2016-09-30 06:13:40.930345
+
+Currently working with PEARS object id:  35156
+At -- 2016-09-30 06:13:40.958553
+
+Currently working with PEARS object id:  37044
+At -- 2016-09-30 06:13:41.280451
+
+Currently working with PEARS object id:  36105
+At -- 2016-09-30 06:13:41.487894
+
+Currently working with PEARS object id:  41388
+At -- 2016-09-30 06:13:41.622069
+
+Currently working with PEARS object id:  40991
+At -- 2016-09-30 06:13:41.745577
+
+Currently working with PEARS object id:  41913
+At -- 2016-09-30 06:13:41.862856
+
+Currently working with PEARS object id:  43618
+At -- 2016-09-30 06:13:41.978492
+
+Currently working with PEARS object id:  44562
+At -- 2016-09-30 06:13:42.088750
+
+Currently working with PEARS object id:  44078
+At -- 2016-09-30 06:13:42.220580
+
+Currently working with PEARS object id:  44756
+At -- 2016-09-30 06:13:42.337821
+
+Currently working with PEARS object id:  45026
+At -- 2016-09-30 06:13:42.446962
+
+Currently working with PEARS object id:  46766
+At -- 2016-09-30 06:13:42.546680
+
+Currently working with PEARS object id:  48189
+At -- 2016-09-30 06:13:42.659668
+
+Currently working with PEARS object id:  48650
+At -- 2016-09-30 06:13:42.809627
+
+Currently working with PEARS object id:  53471
+At -- 2016-09-30 06:13:42.930498
+
+Currently working with PEARS object id:  53708
+At -- 2016-09-30 06:13:43.089284
+
+Currently working with PEARS object id:  54405
+At -- 2016-09-30 06:13:43.205523
+
+Currently working with PEARS object id:  61291
+At -- 2016-09-30 06:13:43.341274
+
+Currently working with PEARS object id:  62107
+At -- 2016-09-30 06:13:43.498632
+
+Currently working with PEARS object id:  65404
+At -- 2016-09-30 06:13:43.677817
+
+Currently working with PEARS object id:  76098
+At -- 2016-09-30 06:13:43.893311
+
+Currently working with PEARS object id:  80411
+At -- 2016-09-30 06:13:44.006977
+
+Currently working with PEARS object id:  79185
+At -- 2016-09-30 06:13:44.130660
+
+Currently working with PEARS object id:  82368
+At -- 2016-09-30 06:13:44.273472
+
+Currently working with PEARS object id:  83503
+At -- 2016-09-30 06:13:44.406216
+
+Currently working with PEARS object id:  85073
+At -- 2016-09-30 06:13:44.514785
+
+Currently working with PEARS object id:  87585
+At -- 2016-09-30 06:13:44.631995
+
+Currently working with PEARS object id:  87368
+At -- 2016-09-30 06:13:44.756445
+
+Currently working with PEARS object id:  88679
+At -- 2016-09-30 06:13:44.873849
+
+Currently working with PEARS object id:  93602
+At -- 2016-09-30 06:13:45.017941
+
+Currently working with PEARS object id:  98209
+At -- 2016-09-30 06:13:45.113338
+
+Currently working with PEARS object id:  102600
+At -- 2016-09-30 06:13:45.267860
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 209.472071886 seconds.
+Ages: Median +- std dev =  9.57403128255 +- 0.0168726285058
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0520964575901
+Tau_v: Median +- std dev =  0.0 +- 0.00460325971459
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  2
+Tau_v -  3
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 31.772952795 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0545682636981
+Metals: Median +- std dev =  0.00109908174772 +- 0.000271891556507
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7624769211 seconds.
+Ages: Median +- std dev =  9.85 +- 0.00499599839872
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.0292994393936
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  114628
+At -- 2016-09-30 06:18:28.574750
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.21016407 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 0.00846229864344
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.0653847212658
+Tau_v: Median +- std dev =  0.0 +- 0.000994987437107
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  2
+Tau_v -  2
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.6202399731 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00109908174772 +- 2.16840434497e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.9260418415 seconds.
+Ages: Median +- std dev =  9.85 +- 3.5527136788e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  119191
+At -- 2016-09-30 06:23:17.303218
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.110136986 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.0592733408087
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.114439117288
+Tau_v: Median +- std dev =  0.03 +- 0.021174132804
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  3
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.249396801 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0792755732471
+Metals: Median +- std dev =  0.0043755232479 +- 0.00101203217382
+Unique elements in jackknifed runs for MILES --
+Ages -  7
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6983628273 seconds.
+Ages: Median +- std dev =  9.65 +- 0.0346882905315
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.128709542476
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  119879
+At -- 2016-09-30 06:28:04.641069
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.327253103 seconds.
+Ages: Median +- std dev =  9.2552725051 +- 0.0649499381389
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.2511 +- 0.107630169151
+Tau_v: Median +- std dev =  0.19 +- 0.0112670138014
+Unique elements in jackknifed runs for BC03 --
+Ages -  6
+Metals -  1
+Tau -  5
+Tau_v -  7
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.0498321056 seconds.
+Ages: Median +- std dev =  9.30102999566 +- 0.0471574383694
+Metals: Median +- std dev =  0.0112468265038 +- 0.0020871832512
+Unique elements in jackknifed runs for MILES --
+Ages -  6
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6861460209 seconds.
+Ages: Median +- std dev =  9.3 +- 0.0680470241818
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.0637159117271
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  4
+
+Currently working with PEARS object id:  120498
+At -- 2016-09-30 06:32:55.120173
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.751441002 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 0.0409215712739
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.291200491742
+Tau_v: Median +- std dev =  0.19 +- 0.00393466644075
+Unique elements in jackknifed runs for BC03 --
+Ages -  6
+Metals -  1
+Tau -  2
+Tau_v -  7
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.0383069515 seconds.
+Ages: Median +- std dev =  9.47712125472 +- 0.268746965829
+Metals: Median +- std dev =  0.00893367184302 +- 0.0122036746928
+Unique elements in jackknifed runs for MILES --
+Ages -  12
+Metals -  7
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.1914269924 seconds.
+Ages: Median +- std dev =  9.65 +- 0.0817715720773
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.239426639444
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  123290
+At -- 2016-09-30 06:37:45.542511
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.919142008 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.0399624759086
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.222626772093
+Tau_v: Median +- std dev =  0.03 +- 0.0156396930916
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  3
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.7884550095 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0236356571729
+Metals: Median +- std dev =  0.000324362019472 +- 2.27700559774e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7257618904 seconds.
+Ages: Median +- std dev =  9.65 +- 0.0675482050095
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 0.416218932046
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  123538
+At -- 2016-09-30 06:42:36.528326
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.253306866 seconds.
+Ages: Median +- std dev =  9.65321248907 +- 0.0683907242055
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.292034271277
+Tau_v: Median +- std dev =  0.03 +- 0.0138859317296
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  7
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.3580520153 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.0043755232479 +- 0.000838514803978
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7110669613 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0246097541637
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  125086
+At -- 2016-09-30 06:47:25.377834
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.334892035 seconds.
+Ages: Median +- std dev =  9.20655063711 +- 0.0768459438938
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0251 +- 0.184355739953
+Tau_v: Median +- std dev =  0.08 +- 0.0389025243397
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  6
+Tau_v -  13
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.7930269241 seconds.
+Ages: Median +- std dev =  9.35218251811 +- 0.0513095642942
+Metals: Median +- std dev =  0.0112468265038 +- 0.0033529758847
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.686424017 seconds.
+Ages: Median +- std dev =  9.25 +- 0.021533172084
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0398107170553 +- 0.0284144293799
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  7
+
+Currently working with PEARS object id:  124386
+At -- 2016-09-30 06:52:14.568916
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.979445219 seconds.
+Ages: Median +- std dev =  9.74036270971 +- 0.0144916823782
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.0922353354198
+Tau_v: Median +- std dev =  0.0 +- 0.00109087121146
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  2
+Tau_v -  3
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.5621578693 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.000947046440553
+Metals: Median +- std dev =  0.00109908174772 +- 0.000541395019174
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.652766943 seconds.
+Ages: Median +- std dev =  9.75 +- 0.0359020890757
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 0.33280993841
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  125934
+At -- 2016-09-30 06:57:02.181111
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.516593933 seconds.
+Ages: Median +- std dev =  9.69897000434 +- 0.0844299482565
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  3.981 +- 17.2747825394
+Tau_v: Median +- std dev =  0.13 +- 0.0250047995393
+Unique elements in jackknifed runs for BC03 --
+Ages -  16
+Metals -  1
+Tau -  9
+Tau_v -  13
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.0465679169 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.000947046440553
+Metals: Median +- std dev =  0.000324362019472 +- 0.000182225913812
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  4
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.562027216 seconds.
+Ages: Median +- std dev =  9.6 +- 0.0675877022838
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 0.280779773946
+Unique elements in jackknifed runs for FSPS --
+Ages -  7
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  9378
+At -- 2016-09-30 07:01:50.365694
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.823095083 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 0.0190098133678
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.218424098375
+Tau_v: Median +- std dev =  0.13 +- 0.0423945173342
+Unique elements in jackknifed runs for BC03 --
+Ages -  6
+Metals -  1
+Tau -  2
+Tau_v -  11
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.5313079357 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.0043755232479 +- 0.00076627681267
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6088590622 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  13499
+At -- 2016-09-30 07:06:39.688333
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.912834883 seconds.
+Ages: Median +- std dev =  9.43933271404 +- 0.00558371119144
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.018483750944
+Tau_v: Median +- std dev =  0.02 +- 0.00228855849827
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1555089951 seconds.
+Ages: Median +- std dev =  9.69897000434 +- 0.021319982611
+Metals: Median +- std dev =  0.000324362019472 +- 4.772975216e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6462039948 seconds.
+Ages: Median +- std dev =  9.7 +- 0.0441766623909
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.276215216233
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  14555
+At -- 2016-09-30 07:11:28.539915
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.430658102 seconds.
+Ages: Median +- std dev =  9.75966785436 +- 0.0584232155585
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.236934951426
+Tau_v: Median +- std dev =  0.19 +- 0.00556631835238
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.5687110424 seconds.
+Ages: Median +- std dev =  9.74036268949 +- 0.0454362309209
+Metals: Median +- std dev =  0.00893367184302 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6678550243 seconds.
+Ages: Median +- std dev =  9.75 +- 0.117792189894
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.424643383933
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  10
+
+Currently working with PEARS object id:  17022
+At -- 2016-09-30 07:16:16.604855
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.749256849 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.00282126879952
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.8381099701 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.0043755232479 +- 0.00020612261222
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7923359871 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  18260
+At -- 2016-09-30 07:21:05.989092
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.572091103 seconds.
+Ages: Median +- std dev =  9.79588000845 +- 0.0029882349818
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.0414152228534
+Tau_v: Median +- std dev =  0.0 +- 0.00603548672437
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  2
+Tau_v -  3
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.9305200577 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.0043755232479 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.9059438705 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  21592
+At -- 2016-09-30 07:25:52.762355
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.645812988 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0274659336501
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.100936636679
+Tau_v: Median +- std dev =  0.12 +- 0.0577615477632
+Unique elements in jackknifed runs for BC03 --
+Ages -  8
+Metals -  1
+Tau -  2
+Tau_v -  20
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.3749980927 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.00565591061871
+Metals: Median +- std dev =  0.0043755232479 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8333940506 seconds.
+Ages: Median +- std dev =  9.85 +- 3.5527136788e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  23142
+At -- 2016-09-30 07:30:39.910863
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.880886078 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 0.0203576159558
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.132917060271
+Tau_v: Median +- std dev =  0.08 +- 0.0104744259986
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  2
+Tau_v -  8
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.4852130413 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0129221416312
+Metals: Median +- std dev =  0.00219295639229 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7811739445 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0353437052387
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 0.137815283936
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  23172
+At -- 2016-09-30 07:35:27.561116
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.586688995 seconds.
+Ages: Median +- std dev =  9.30102999566 +- 0.199552660948
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.063 +- 0.583574655414
+Tau_v: Median +- std dev =  0.19 +- 0.00259807621135
+Unique elements in jackknifed runs for BC03 --
+Ages -  8
+Metals -  1
+Tau -  8
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.4001250267 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0259913064802
+Metals: Median +- std dev =  0.00893367184302 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6601178646 seconds.
+Ages: Median +- std dev =  9.55 +- 0.0105819421658
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.063095734448 +- 0.0632879042412
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  6
+
+Currently working with PEARS object id:  26158
+At -- 2016-09-30 07:40:14.130533
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.928497791 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0102185093633
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.15 +- 0.0203846903337
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  1
+Tau_v -  15
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.5648500919 seconds.
+Ages: Median +- std dev =  9.65321251378 +- 0.0854238827824
+Metals: Median +- std dev =  0.00893367184302 +- 0.0015074659527
+Unique elements in jackknifed runs for MILES --
+Ages -  7
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5973069668 seconds.
+Ages: Median +- std dev =  9.75 +- 0.0168058769483
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0649924817703
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  4
+
+Currently working with PEARS object id:  30010
+At -- 2016-09-30 07:45:01.642050
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 224.148361921 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.0175467103093
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.054558498326
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  6
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.1461491585 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.0282507508925 +- 0.002447681153
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.8796539307 seconds.
+Ages: Median +- std dev =  9.85 +- 3.5527136788e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  30676
+At -- 2016-09-30 07:49:53.235255
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.537169933 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.00252344052239
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.3666911125 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00219295639229 +- 0.000437799191771
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7195580006 seconds.
+Ages: Median +- std dev =  9.8 +- 0.00544426303553
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  36121
+At -- 2016-09-30 07:54:38.820344
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.71904397 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.0163451826885
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.3981 +- 0.0807502094687
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  5
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 26.3193237782 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.105459858142
+Metals: Median +- std dev =  0.0112468265038 +- 0.00556953165386
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7792971134 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0148657324071
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.398107170553 +- 0.0990753392037
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  37429
+At -- 2016-09-30 07:59:29.998153
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 224.422325134 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0307541156603
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.304461292382
+Tau_v: Median +- std dev =  0.08 +- 0.0316303904497
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  2
+Tau_v -  16
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.8213009834 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0447640193978
+Metals: Median +- std dev =  0.0043755232479 +- 0.000804168527636
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8652169704 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0113008849211
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  41478
+At -- 2016-09-30 08:04:22.814763
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.697086811 seconds.
+Ages: Median +- std dev =  9.52797569411 +- 0.0771800059871
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.520602254419
+Tau_v: Median +- std dev =  0.16 +- 0.0268447387769
+Unique elements in jackknifed runs for BC03 --
+Ages -  12
+Metals -  1
+Tau -  4
+Tau_v -  10
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.8358831406 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0289708747113
+Metals: Median +- std dev =  0.000647187313859 +- 0.000180570540213
+Unique elements in jackknifed runs for MILES --
+Ages -  6
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6672439575 seconds.
+Ages: Median +- std dev =  9.35 +- 0.0639377822574
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.118617795739
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  47740
+At -- 2016-09-30 08:09:12.092603
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.221061945 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.0142382655945
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0
+Tau_v: Median +- std dev =  0.03 +- 0.00873562247353
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.6956031322 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.00631834934129
+Metals: Median +- std dev =  0.000324362019472 +- 5.0401082932e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6064178944 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0645130800691
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.398687927029
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  49771
+At -- 2016-09-30 08:13:58.007336
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.053920031 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.00533849555804
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  3.981 +- 8.881784197e-16
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.8401679993 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0419804780451
+Metals: Median +- std dev =  0.000324362019472 +- 6.53749722854e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.1167550087 seconds.
+Ages: Median +- std dev =  9.85 +- 0.0132951118837
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  3.98107170553 +- 0.19532982596
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  55434
+At -- 2016-09-30 08:18:46.550299
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 224.087260008 seconds.
+Ages: Median +- std dev =  9.39794000867 +- 0.0390483646877
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.132399656569
+Tau_v: Median +- std dev =  0.1 +- 0.0307224201521
+Unique elements in jackknifed runs for BC03 --
+Ages -  8
+Metals -  1
+Tau -  3
+Tau_v -  15
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.8923020363 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.00509958954558
+Metals: Median +- std dev =  0.000647187313859 +- 0.00021262796006
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.496270895 seconds.
+Ages: Median +- std dev =  9.45 +- 0.0191556127545
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.0127345843145
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  61235
+At -- 2016-09-30 08:23:37.077249
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.254740953 seconds.
+Ages: Median +- std dev =  9.38021124171 +- 0.0873400184368
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.3981 +- 0.14533657662
+Tau_v: Median +- std dev =  0.19 +- 0.022413779244
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  8
+Tau_v -  10
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.5134119987 seconds.
+Ages: Median +- std dev =  9.17609125906 +- 0.0346444872046
+Metals: Median +- std dev =  0.0502377286302 +- 0.0080165853212
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.4908289909 seconds.
+Ages: Median +- std dev =  9.3 +- 0.0716365653839
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.158489319246 +- 0.104687773954
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  8
+
+Currently working with PEARS object id:  61172
+At -- 2016-09-30 08:28:25.731598
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.884979963 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.000825775582801
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.19 +- 0.000546900356555
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  2
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.7226970196 seconds.
+Ages: Median +- std dev =  9.65321251378 +- 0.109832049493
+Metals: Median +- std dev =  0.00893367184302 +- 0.00226982527931
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5911040306 seconds.
+Ages: Median +- std dev =  9.5 +- 0.124599357944
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.465174512278
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  8
+
+Currently working with PEARS object id:  65620
+At -- 2016-09-30 08:33:12.419100
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.141429901 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0418250581041
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.197949401108
+Tau_v: Median +- std dev =  0.11 +- 0.0169966937961
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1516449451 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.0251445165237
+Metals: Median +- std dev =  0.00893367184302 +- 0.000406059156934
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7206599712 seconds.
+Ages: Median +- std dev =  9.85 +- 0.00920597631976
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 0.0261310484479
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  90791
+At -- 2016-09-30 08:38:01.619458
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 225.975337029 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 0.0190143842289
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.0
+Tau_v: Median +- std dev =  0.1 +- 0.0339439405491
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  1
+Tau_v -  8
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.7013549805 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00219295639229 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7771949768 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  91095
+At -- 2016-09-30 08:42:53.425060
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.398955822 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 0.000833473895082
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.0
+Tau_v: Median +- std dev =  0.0 +- 0.000631189353522
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  2
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.2574658394 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00109908174772 +- 2.16840434497e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.0200049877 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  91651
+At -- 2016-09-30 08:47:43.525742
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.685112953 seconds.
+Ages: Median +- std dev =  9.67669362133 +- 0.0626201585974
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.3615419865
+Tau_v: Median +- std dev =  0.04 +- 0.0214120877076
+Unique elements in jackknifed runs for BC03 --
+Ages -  10
+Metals -  1
+Tau -  4
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1277768612 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00109908174772 +- 2.16840434497e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8771359921 seconds.
+Ages: Median +- std dev =  9.85 +- 0.047671689712
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.294608893714
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  95110
+At -- 2016-09-30 08:52:32.248296
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.907716036 seconds.
+Ages: Median +- std dev =  9.36172783602 +- 0.0475125728875
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.3981 +- 0.0753922289353
+Tau_v: Median +- std dev =  0.17 +- 0.0172643882023
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  4
+Tau_v -  10
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.6863570213 seconds.
+Ages: Median +- std dev =  9.60205999133 +- 0.142323939295
+Metals: Median +- std dev =  0.0043755232479 +- 0.00264920674348
+Unique elements in jackknifed runs for MILES --
+Ages -  18
+Metals -  5
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6143689156 seconds.
+Ages: Median +- std dev =  9.3 +- 0.0447301911465
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.251188643151 +- 0.109963156417
+Unique elements in jackknifed runs for FSPS --
+Ages -  5
+Metals -  1
+Tau -  8
+
+Currently working with PEARS object id:  97568
+At -- 2016-09-30 08:57:21.882857
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.36322403 seconds.
+Ages: Median +- std dev =  9.75966785436 +- 0.0209729649579
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  63.095 +- 2.13162820728e-14
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  10
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.0844528675 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.00189124675947
+Metals: Median +- std dev =  0.000107406359274 +- 2.71050543121e-20
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7058079243 seconds.
+Ages: Median +- std dev =  8.95 +- 0.111092652772
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  63.095734448 +- 2.13162820728e-14
+Unique elements in jackknifed runs for FSPS --
+Ages -  10
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  103918
+At -- 2016-09-30 09:02:12.419292
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.595030069 seconds.
+Ages: Median +- std dev =  8.00654305316 +- 0.0745097045833
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  63.095 +- 7.27753403288
+Tau_v: Median +- std dev =  0.19 +- 0.0222563159575
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  6
+Tau_v -  13
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 28.0797598362 seconds.
+Ages: Median +- std dev =  8.17609125906 +- 0.543043709735
+Metals: Median +- std dev =  0.000107406359274 +- 0.000756752972736
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.5865819454 seconds.
+Ages: Median +- std dev =  8.1 +- 0.117239487802
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  63.095734448 +- 25.7149536019
+Unique elements in jackknifed runs for FSPS --
+Ages -  14
+Metals -  1
+Tau -  16
+
+Currently working with PEARS object id:  105547
+At -- 2016-09-30 09:07:03.894366
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.632369995 seconds.
+Ages: Median +- std dev =  9.60205999133 +- 0.171675579891
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.433604597628
+Tau_v: Median +- std dev =  0.18 +- 0.0363283635745
+Unique elements in jackknifed runs for BC03 --
+Ages -  11
+Metals -  1
+Tau -  9
+Tau_v -  12
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.2325189114 seconds.
+Ages: Median +- std dev =  9.51188336098 +- 0.0469232604204
+Metals: Median +- std dev =  0.00893367184302 +- 0.000622299974505
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7385551929 seconds.
+Ages: Median +- std dev =  9.6 +- 0.089041507175
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.307757836475
+Unique elements in jackknifed runs for FSPS --
+Ages -  5
+Metals -  1
+Tau -  9
+
+Currently working with PEARS object id:  107136
+At -- 2016-09-30 09:11:51.873121
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.264262915 seconds.
+Ages: Median +- std dev =  9.39794000867 +- 0.0536840110298
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.261928879993
+Tau_v: Median +- std dev =  0.17 +- 0.0227525471102
+Unique elements in jackknifed runs for BC03 --
+Ages -  6
+Metals -  1
+Tau -  3
+Tau_v -  12
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1546559334 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.0426476370061
+Metals: Median +- std dev =  0.000324362019472 +- 0.000122662992154
+Unique elements in jackknifed runs for MILES --
+Ages -  5
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5376770496 seconds.
+Ages: Median +- std dev =  9.4 +- 0.0100294566154
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  106067
+At -- 2016-09-30 09:16:42.237871
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 224.115182877 seconds.
+Ages: Median +- std dev =  9.81291333954 +- 0.00140218316753
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.0
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.8581540585 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.0
+Metals: Median +- std dev =  0.000647187313859 +- 0.0
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.0963709354 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  109151
+At -- 2016-09-30 09:21:34.280458
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.760420084 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 0.0213763157369
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.267927056013
+Tau_v: Median +- std dev =  0.15 +- 0.0351891119524
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  15
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.6020550728 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0364205013497
+Metals: Median +- std dev =  0.0043755232479 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7048740387 seconds.
+Ages: Median +- std dev =  9.7 +- 0.0748264492008
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.259453232598
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  109794
+At -- 2016-09-30 09:26:21.683578
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.039680958 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0330092392967
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.370102936048
+Tau_v: Median +- std dev =  0.0 +- 0.0333641484231
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  7
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.4795589447 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00219295639229 +- 6.89843060495e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.688462019 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  110870
+At -- 2016-09-30 09:31:06.999404
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.792718172 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.0
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  1
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.628524065 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00109908174772 +- 2.16840434497e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.9925689697 seconds.
+Ages: Median +- std dev =  9.75 +- 0.00944404574322
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 0.0875456655324
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  112789
+At -- 2016-09-30 09:35:52.916395
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.460337877 seconds.
+Ages: Median +- std dev =  9.79588000845 +- 0.000760991589028
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.8078768253 seconds.
+Ages: Median +- std dev =  9.74036268949 +- 0.0152166099695
+Metals: Median +- std dev =  0.00893367184302 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7360479832 seconds.
+Ages: Median +- std dev =  9.55 +- 0.0153113519978
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.158489319246 +- 0.0727893356522
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  7
+
+Currently working with PEARS object id:  115288
+At -- 2016-09-30 09:40:37.749745
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.052067995 seconds.
+Ages: Median +- std dev =  9.22530928173 +- 0.00631755741611
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0158 +- 0.0125318653935
+Tau_v: Median +- std dev =  0.0 +- 0.000773563184233
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  5
+Tau_v -  3
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.9523620605 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0541093363398
+Metals: Median +- std dev =  0.00219295639229 +- 0.00118918498943
+Unique elements in jackknifed runs for MILES --
+Ages -  8
+Metals -  5
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6160678864 seconds.
+Ages: Median +- std dev =  9.4 +- 0.0837469999463
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.398107170553 +- 0.21415807986
+Unique elements in jackknifed runs for FSPS --
+Ages -  5
+Metals -  1
+Tau -  6
+
+Currently working with PEARS object id:  115446
+At -- 2016-09-30 09:45:27.597849
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 218.665395021 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.0173384087227
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0
+Tau_v: Median +- std dev =  0.01 +- 0.00624332443495
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.6225600243 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.000107406359274 +- 2.71050543121e-20
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6379430294 seconds.
+Ages: Median +- std dev =  9.75 +- 0.0727331423768
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.449487541588
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  116349
+At -- 2016-09-30 09:50:12.811319
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.096547842 seconds.
+Ages: Median +- std dev =  8.00654305316 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  63.095 +- 2.13162820728e-14
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  1
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 27.0431110859 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.697974843018
+Metals: Median +- std dev =  0.0502377286302 +- 0.0205946566027
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 40.6300668716 seconds.
+Ages: Median +- std dev =  8.05 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  63.095734448 +- 2.13162820728e-14
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  119016
+At -- 2016-09-30 09:55:25.842285
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.281369925 seconds.
+Ages: Median +- std dev =  9.41497334797 +- 0.0540083366297
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.184016247746
+Tau_v: Median +- std dev =  0.08 +- 0.03457848464
+Unique elements in jackknifed runs for BC03 --
+Ages -  6
+Metals -  1
+Tau -  2
+Tau_v -  12
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.7181060314 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.0353071094557
+Metals: Median +- std dev =  0.000647187313859 +- 0.000160570783189
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5955820084 seconds.
+Ages: Median +- std dev =  9.4 +- 0.00386134691526
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.63095734448 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  111741
+At -- 2016-09-30 10:00:15.682099
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.306536198 seconds.
+Ages: Median +- std dev =  9.43933271404 +- 0.00957540002895
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 3.33066907388e-16
+Tau_v: Median +- std dev =  0.0 +- 0.00567548235836
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  3
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.6262049675 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.023592358906
+Metals: Median +- std dev =  0.000324362019472 +- 5.42101086243e-20
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5863821507 seconds.
+Ages: Median +- std dev =  9.55 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  113298
+At -- 2016-09-30 10:05:02.595219
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.273890018 seconds.
+Ages: Median +- std dev =  9.22530928173 +- 0.0329252605894
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.2511 +- 0.114532397362
+Tau_v: Median +- std dev =  0.19 +- 0.00823210787101
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  2
+Tau_v -  5
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.9859011173 seconds.
+Ages: Median +- std dev =  9.17609125906 +- 0.0331264137145
+Metals: Median +- std dev =  0.0229630724299 +- 0.00308595775902
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5937638283 seconds.
+Ages: Median +- std dev =  9.1 +- 0.0134758116639
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.00679514125091
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  112093
+At -- 2016-09-30 10:09:52.685839
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 224.27188611 seconds.
+Ages: Median +- std dev =  9.10654786098 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  1
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.1318368912 seconds.
+Ages: Median +- std dev =  9.17609125906 +- 0.0311111045868
+Metals: Median +- std dev =  0.0502377286302 +- 0.00596735599095
+Unique elements in jackknifed runs for MILES --
+Ages -  5
+Metals -  4
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6513500214 seconds.
+Ages: Median +- std dev =  9.65 +- 0.0326298942689
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.251188643151 +- 0.0724112530478
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  8
+
+Currently working with PEARS object id:  114230
+At -- 2016-09-30 10:14:43.997480
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.328150988 seconds.
+Ages: Median +- std dev =  9.10654786098 +- 0.0258440380569
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0186898881741
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  7
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.8484010696 seconds.
+Ages: Median +- std dev =  9.17609125906 +- 0.0269667042748
+Metals: Median +- std dev =  0.0502377286302 +- 1.38777878078e-17
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7641401291 seconds.
+Ages: Median +- std dev =  9.1 +- 0.102290945347
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0730888623384
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  4
+
+Currently working with PEARS object id:  117725
+At -- 2016-09-30 10:19:33.384176
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.745391846 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.00283905341007
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.01 +- 0.00550249943208
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  3
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 26.0978958607 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.0043755232479 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8726391792 seconds.
+Ages: Median +- std dev =  9.85 +- 3.5527136788e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  119193
+At -- 2016-09-30 10:24:24.624947
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.562798977 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.0043174026199
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.0
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.635461092 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.00109908174772 +- 2.16840434497e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.0069282055 seconds.
+Ages: Median +- std dev =  9.85 +- 0.00158034806293
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.51188643151 +- 0.0
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  119489
+At -- 2016-09-30 10:29:14.219858
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.63361001 seconds.
+Ages: Median +- std dev =  9.81291333954 +- 0.0083026729994
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  3.981 +- 8.881784197e-16
+Tau_v: Median +- std dev =  0.0 +- 0.0
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  1
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.8124690056 seconds.
+Ages: Median +- std dev =  9.69897000434 +- 0.00226376742673
+Metals: Median +- std dev =  0.000324362019472 +- 5.42101086243e-20
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.3695449829 seconds.
+Ages: Median +- std dev =  9.85 +- 3.5527136788e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  3.98107170553 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  121095
+At -- 2016-09-30 10:34:03.012747
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.291132927 seconds.
+Ages: Median +- std dev =  9.84509804001 +- 0.0446103648684
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.354589314509
+Tau_v: Median +- std dev =  0.19 +- 0.0169711254783
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  2
+Tau_v -  8
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.168610096 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.0294409684873
+Metals: Median +- std dev =  0.0043755232479 +- 0.000484588826649
+Unique elements in jackknifed runs for MILES --
+Ages -  5
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7309310436 seconds.
+Ages: Median +- std dev =  9.65 +- 0.0938817873711
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.28706038204
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  3
+
+Currently working with PEARS object id:  123472
+At -- 2016-09-30 10:38:53.597974
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.401578903 seconds.
+Ages: Median +- std dev =  9.22530928173 +- 0.121730736556
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0398 +- 0.247546939772
+Tau_v: Median +- std dev =  0.13 +- 0.0266774136677
+Unique elements in jackknifed runs for BC03 --
+Ages -  14
+Metals -  1
+Tau -  10
+Tau_v -  13
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.017786026 seconds.
+Ages: Median +- std dev =  9.51188336098 +- 0.206938477724
+Metals: Median +- std dev =  0.0112468265038 +- 0.00339555177477
+Unique elements in jackknifed runs for MILES --
+Ages -  10
+Metals -  4
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.2826430798 seconds.
+Ages: Median +- std dev =  9.35 +- 0.0438542757322
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.1 +- 0.0769047149535
+Unique elements in jackknifed runs for FSPS --
+Ages -  6
+Metals -  1
+Tau -  10
+
+Currently working with PEARS object id:  126958
+At -- 2016-09-30 10:43:44.609775
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.096786022 seconds.
+Ages: Median +- std dev =  9.79588000845 +- 0.0091375033202
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.0585112530715
+Tau_v: Median +- std dev =  0.0 +- 0.00761377698649
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  2
+Tau_v -  4
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 26.1397697926 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.0043755232479 +- 0.00104170191458
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.8147830963 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  131165
+At -- 2016-09-30 10:48:35.802996
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 220.459660053 seconds.
+Ages: Median +- std dev =  9.38021124171 +- 0.079026173469
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.3981 +- 0.122145375282
+Tau_v: Median +- std dev =  0.19 +- 0.0102352332655
+Unique elements in jackknifed runs for BC03 --
+Ages -  8
+Metals -  1
+Tau -  4
+Tau_v -  6
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.7295389175 seconds.
+Ages: Median +- std dev =  9.35218251811 +- 0.151916751627
+Metals: Median +- std dev =  0.0112468265038 +- 0.0023876348149
+Unique elements in jackknifed runs for MILES --
+Ages -  9
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6402349472 seconds.
+Ages: Median +- std dev =  9.25 +- 0.00682623615179
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0167745173991
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  4
+
+Currently working with PEARS object id:  133150
+At -- 2016-09-30 10:53:22.624605
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.008090019 seconds.
+Ages: Median +- std dev =  9.34242268082 +- 0.0207115420991
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.3981 +- 0.0301489796842
+Tau_v: Median +- std dev =  0.04 +- 0.0127785914717
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  2
+Tau_v -  8
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.8131117821 seconds.
+Ages: Median +- std dev =  9.81291335664 +- 0.0317582772817
+Metals: Median +- std dev =  0.000324362019472 +- 0.000173851377997
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6126570702 seconds.
+Ages: Median +- std dev =  9.35 +- 0.022002499858
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.398107170553 +- 0.0341552394584
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  133694
+At -- 2016-09-30 10:58:10.334563
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.511667967 seconds.
+Ages: Median +- std dev =  9.41497334797 +- 0.0160171326016
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0393137353574
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  8
+Metals -  1
+Tau -  9
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.2177081108 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0581264253375
+Metals: Median +- std dev =  0.0112468265038 +- 0.00331915271044
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.668970108 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0183765475539
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.398107170553 +- 0.136235855682
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  5
+
+Currently working with PEARS object id:  9378
+At -- 2016-09-30 11:02:55.946639
+
+Currently working with PEARS object id:  13499
+At -- 2016-09-30 11:02:56.095747
+
+Currently working with PEARS object id:  14555
+At -- 2016-09-30 11:02:56.227920
+
+Currently working with PEARS object id:  21592
+At -- 2016-09-30 11:02:56.330191
+
+Currently working with PEARS object id:  23142
+At -- 2016-09-30 11:02:56.447130
+
+Currently working with PEARS object id:  23172
+At -- 2016-09-30 11:02:56.561772
+
+Currently working with PEARS object id:  26158
+At -- 2016-09-30 11:02:56.678419
+
+Currently working with PEARS object id:  30010
+At -- 2016-09-30 11:02:56.787552
+
+Currently working with PEARS object id:  30676
+At -- 2016-09-30 11:02:56.919823
+
+Currently working with PEARS object id:  31899
+At -- 2016-09-30 11:02:57.110256
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.241876841 seconds.
+Ages: Median +- std dev =  9.51188334387 +- 0.00469520352172
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0
+Tau_v: Median +- std dev =  0.03 +- 0.00421027315028
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  1
+Tau_v -  5
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.7502949238 seconds.
+Ages: Median +- std dev =  9.69897000434 +- 0.0399306765558
+Metals: Median +- std dev =  0.000324362019472 +- 4.04166908431e-05
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6798269749 seconds.
+Ages: Median +- std dev =  9.65 +- 3.5527136788e-15
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  65620
+At -- 2016-09-30 11:07:42.847516
+
+Currently working with PEARS object id:  74133
+At -- 2016-09-30 11:07:42.999717
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.087332964 seconds.
+Ages: Median +- std dev =  9.77815125038 +- 0.00864318322025
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.19 +- 0.00159135162676
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  1
+Tau_v -  2
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.9404470921 seconds.
+Ages: Median +- std dev =  9.74036268949 +- 0.0590439275312
+Metals: Median +- std dev =  0.00893367184302 +- 0.00173194652056
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  2
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7336571217 seconds.
+Ages: Median +- std dev =  9.75 +- 0.12362600859
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.488181304314
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  7
+
+Currently working with PEARS object id:  74060
+At -- 2016-09-30 11:12:28.190401
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.70384717 seconds.
+Ages: Median +- std dev =  9.36172783602 +- 0.00307212901324
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.0251 +- 0.0189940809915
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  2
+Metals -  1
+Tau -  5
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.5924808979 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.00196430648095
+Metals: Median +- std dev =  0.0112468265038 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6520171165 seconds.
+Ages: Median +- std dev =  9.65 +- 0.0331945402137
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.158489319246 +- 0.179333066492
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  11
+
+Currently working with PEARS object id:  73974
+At -- 2016-09-30 11:17:15.475318
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.364095926 seconds.
+Ages: Median +- std dev =  9.20655063711 +- 0.00502940473729
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.019154555359
+Tau_v: Median +- std dev =  0.17 +- 0.0170358563037
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  6
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.4923329353 seconds.
+Ages: Median +- std dev =  9.81291335664 +- 0.202807470002
+Metals: Median +- std dev =  0.0043755232479 +- 0.00260455574659
+Unique elements in jackknifed runs for MILES --
+Ages -  13
+Metals -  6
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5926988125 seconds.
+Ages: Median +- std dev =  9.3 +- 0.0279197063022
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.0333062164115
+Unique elements in jackknifed runs for FSPS --
+Ages -  4
+Metals -  1
+Tau -  7
+
+Currently working with PEARS object id:  76094
+At -- 2016-09-30 11:22:05.113032
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.520305157 seconds.
+Ages: Median +- std dev =  9.81291333954 +- 0.0170781860061
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 2.22044604925e-16
+Tau_v: Median +- std dev =  0.11 +- 0.03913075389
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  1
+Tau_v -  13
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.8568959236 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 1.7763568394e-15
+Metals: Median +- std dev =  0.0043755232479 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  1
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.9471209049 seconds.
+Ages: Median +- std dev =  9.75 +- 0.0108885260711
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.0 +- 0.0636862477488
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  2
+
+Currently working with PEARS object id:  77522
+At -- 2016-09-30 11:26:52.801534
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 222.091336966 seconds.
+Ages: Median +- std dev =  9.79588000845 +- 0.0176301873418
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.0710838773281
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  3
+Metals -  1
+Tau -  2
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.6909139156 seconds.
+Ages: Median +- std dev =  9.74036268949 +- 0.0183571726417
+Metals: Median +- std dev =  0.00893367184302 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.743983984 seconds.
+Ages: Median +- std dev =  9.55 +- 0.0106883113727
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.251188643151 +- 0.0649035300837
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  6
+
+Currently working with PEARS object id:  78415
+At -- 2016-09-30 11:31:40.624354
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 219.804749012 seconds.
+Ages: Median +- std dev =  9.34242268082 +- 0.0905137257519
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.307569343139
+Tau_v: Median +- std dev =  0.09 +- 0.0180203190871
+Unique elements in jackknifed runs for BC03 --
+Ages -  7
+Metals -  1
+Tau -  6
+Tau_v -  13
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.5471000671 seconds.
+Ages: Median +- std dev =  9.74036268949 +- 0.0195245571156
+Metals: Median +- std dev =  0.00893367184302 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  2
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5713238716 seconds.
+Ages: Median +- std dev =  9.5 +- 0.0234558628066
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.01 +- 0.100841781348
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  7
+
+Currently working with PEARS object id:  81011
+At -- 2016-09-30 11:36:25.480197
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.273823023 seconds.
+Ages: Median +- std dev =  9.8603379989 +- 0.048539379039
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  2.5118 +- 0.374907039886
+Tau_v: Median +- std dev =  0.14 +- 0.0145077599925
+Unique elements in jackknifed runs for BC03 --
+Ages -  5
+Metals -  1
+Tau -  2
+Tau_v -  9
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 25.4785509109 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.0973831872066
+Metals: Median +- std dev =  0.0043755232479 +- 8.67361737988e-19
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.7716388702 seconds.
+Ages: Median +- std dev =  9.8 +- 0.0
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.58489319246 +- 4.4408920985e-16
+Unique elements in jackknifed runs for FSPS --
+Ages -  1
+Metals -  1
+Tau -  1
+
+Currently working with PEARS object id:  83248
+At -- 2016-09-30 11:41:16.251352
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 221.905656099 seconds.
+Ages: Median +- std dev =  9.79588000845 +- 0.0173578156603
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  1.5848 +- 0.0671744051671
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  3
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 23.438024044 seconds.
+Ages: Median +- std dev =  9.87506126339 +- 0.00717350705511
+Metals: Median +- std dev =  0.00893367184302 +- 1.73472347598e-18
+Unique elements in jackknifed runs for MILES --
+Ages -  3
+Metals -  1
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 16.341053009 seconds.
+Ages: Median +- std dev =  9.55 +- 0.104723146916
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.063095734448 +- 0.39378040494
+Unique elements in jackknifed runs for FSPS --
+Ages -  2
+Metals -  1
+Tau -  9
+
+Currently working with PEARS object id:  88222
+At -- 2016-09-30 11:46:04.328277
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 224.72282815 seconds.
+Ages: Median +- std dev =  9.43933271404 +- 0.0878928257627
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.129972048808
+Tau_v: Median +- std dev =  0.19 +- 2.77555756156e-17
+Unique elements in jackknifed runs for BC03 --
+Ages -  10
+Metals -  1
+Tau -  3
+Tau_v -  1
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.6730191708 seconds.
+Ages: Median +- std dev =  9.30102999566 +- 0.0255214951997
+Metals: Median +- std dev =  0.0112468265038 +- 0.0022170976332
+Unique elements in jackknifed runs for MILES --
+Ages -  6
+Metals -  5
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.5752291679 seconds.
+Ages: Median +- std dev =  9.25 +- 0.0562751943577
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.251188643151 +- 0.107020949096
+Unique elements in jackknifed runs for FSPS --
+Ages -  6
+Metals -  1
+Tau -  9
+
+Currently working with PEARS object id:  90546
+At -- 2016-09-30 11:50:55.959825
+Running over 1000 random jackknifed samples.
+
+
+--------- bc03 ---------
+Total computational time taken to get chi2 values -- 223.049153805 seconds.
+Ages: Median +- std dev =  9.54406804435 +- 0.0423116352032
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.6309 +- 0.125734769621
+Tau_v: Median +- std dev =  0.16 +- 0.0171849905441
+Unique elements in jackknifed runs for BC03 --
+Ages -  4
+Metals -  1
+Tau -  2
+Tau_v -  6
+
+
+--------- miles ---------
+Total computational time taken to get chi2 values -- 24.719782114 seconds.
+Ages: Median +- std dev =  9.35218251811 +- 0.0937455528861
+Metals: Median +- std dev =  0.0229630724299 +- 0.0124478030422
+Unique elements in jackknifed runs for MILES --
+Ages -  4
+Metals -  3
+
+
+--------- fsps ---------
+Total computational time taken to get chi2 values -- 15.6968197823 seconds.
+Ages: Median +- std dev =  9.45 +- 0.0189142803194
+Metals: Median +- std dev =  0.02 +- 0.0
+Tau: Median +- std dev =  0.398107170553 +- 0.033561445809
+Unique elements in jackknifed runs for FSPS --
+Ages -  3
+Metals -  1
+Tau -  5
+Total time taken -- 20524.82974 seconds.
