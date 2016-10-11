@@ -21,7 +21,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
 import fast_chi2_jackknife as fcj
-import create_fsps_miles_libraries as ct
+#import create_fsps_miles_libraries as ct
 
 def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     # Loop over all spectra 
     for u in range(len(pears_id[massive_galaxies_indices])):
 
-        print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
+        print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u], "with log(M/M_sol) =", stellarmass[massive_galaxies_indices][u]
         print "At --", dt.now()
 
         redshift = photz[massive_galaxies_indices][u]
@@ -277,7 +277,7 @@ if __name__ == '__main__':
             f_tauv_bc03.write(str(tauv_bc03[k]) + ' ')
 
         for k in range(len(exten_bc03)):
-            f_exten_bc03.write(str(exten_bc03[k]) + ' ')
+            f_exten_bc03.write(str(int(exten_bc03[k])) + ' ')
 
         ### MILES ###
         for k in range(len(ages_miles)):
@@ -287,7 +287,7 @@ if __name__ == '__main__':
             f_metals_miles.write(str(metals_miles[k]) + ' ')
 
         for k in range(len(exten_miles)):
-            f_exten_miles.write(str(exten_miles[k]) + ' ')
+            f_exten_miles.write(str(int(exten_miles[k])) + ' ')
 
         ### FSPS ###
         for k in range(len(ages_fsps)):
@@ -297,7 +297,7 @@ if __name__ == '__main__':
             f_logtau_fsps.write(str(logtau_fsps[k]) + ' ')
 
         for k in range(len(exten_fsps)):
-            f_exten_fsps.write(str(exten_fsps[k]) + ' ')
+            f_exten_fsps.write(str(int(exten_fsps[k])) + ' ')
 
         # Close all files to write them -- 
         f_ages_bc03.close()

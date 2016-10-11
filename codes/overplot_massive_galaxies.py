@@ -3,7 +3,6 @@ from __future__ import division
 import numpy as np
 import numpy.ma as ma
 from astropy.io import fits
-from scipy import stats
 
 import sys
 import os
@@ -18,7 +17,7 @@ from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, AnchoredText
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = massive_galaxies_dir + "figures/"
-savefits_dir = home + "/Desktop/FIGS/new_codes/"
+savefits_dir = home + "/Desktop/FIGS/new_codes/fits_comp_spectra/"
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
@@ -57,7 +56,29 @@ def get_mass_weighted_ages(library, ages, logtau, pearsid):
     return None
 
 if __name__ == '__main__':
-    
+  
+    """
+    Command line parameter(s):
+    run_mode: string
+        The run_mode parameter decides if you just want to get mass weighted ages or if you want to run the 
+        code to overplot best fit spectra.
+        If you would like to just get mass weighted ages then on the command line give it 'get mass weighted ages'. 
+        Give it exactly that!
+
+        The running mode also decides if you want to find the best fitting spectrum in the model library by
+        looping over all spectra in the model library and finding which one has the closest parameters 
+        to the best fit ones (each best fit parameter is the median over all jackknifed runs) or if you
+        want to find the best fitting spectrum by just taking the median of all the best fit extension 
+        numbers which were saved for each jackknife run.
+        Doing some testing it seems like these two numbers are very close.
+        The first described way is what I call the 'normal' way and that is the string that the 
+        program expects on the command line if you wish to do the matching that way.
+        The second way is faster (I suspect more faster if you have a larger number of jackkife runs) and 
+        if you want to do the matching that way then you can
+        literally give it any other string than 'normal' (except for 'get mass weighted ages').
+    """
+    run_mode = sys.argv[1]
+
     # Start time
     start = time.time()
     dt = datetime.datetime
@@ -76,7 +97,7 @@ if __name__ == '__main__':
     photz = cat['threedzphot']
 
     # Find indices for massive galaxies
-    massive_galaxies_indices = np.where(stellarmass >= 11.0)[0]
+    massive_galaxies_indices = np.where(stellarmass >= 10.5)[0]
 
     # Create pdf file to plot figures in
     pdfname = massive_figures_dir + 'overplot_all_sps_massive_galaxies.pdf'
@@ -88,82 +109,92 @@ if __name__ == '__main__':
 
     num_jackknife_samps = 1e3
     # Loop over all spectra 
-    for u in range(len(pears_id[massive_galaxies_indices])):
+    pears_unique_ids, pears_unique_ids_indices = np.unique(pears_id[massive_galaxies_indices], return_index=True)
+    for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
+        redshift = photz[massive_galaxies_indices][count]
+        print "Currently working with PEARS object id: ", current_pears_index, "with log(M/M_sol) =", stellarmass[massive_galaxies_indices][count], "at redshift", redshift
 
-        #print "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u]
-
-        redshift = photz[massive_galaxies_indices][u]
-        lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
-
+        lam_em, flam_em, ferr, specname = gd.fileprep(current_pears_index, redshift)
+        
         resampling_lam_grid = lam_em 
 
         # Read files with params from jackknife runs
         #### BC03 ####
-        ages_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_bc03.txt', usecols=range(int(num_jackknife_samps)))
-        logtau_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_logtau_bc03.txt', usecols=range(int(num_jackknife_samps)))
-        tauv_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_tauv_bc03.txt', usecols=range(int(num_jackknife_samps)))
-        mass_wht_ages_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_mass_weighted_ages_bc03.txt', usecols=range(int(num_jackknife_samps)))
+        ages_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_bc03.txt', usecols=range(int(num_jackknife_samps)))
+        logtau_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_logtau_bc03.txt', usecols=range(int(num_jackknife_samps)))
+        tauv_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_tauv_bc03.txt', usecols=range(int(num_jackknife_samps)))
+        exten_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_bc03.txt', usecols=range(int(num_jackknife_samps)))
     
         #### MILES ####
-        ages_miles = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_miles.txt', usecols=range(int(num_jackknife_samps)))
-        metals_miles = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_metals_miles.txt', usecols=range(int(num_jackknife_samps)))
+        ages_miles = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_miles.txt', usecols=range(int(num_jackknife_samps)))
+        metals_miles = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_metals_miles.txt', usecols=range(int(num_jackknife_samps)))
+        exten_miles = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_miles.txt', usecols=range(int(num_jackknife_samps)))
     
         #### FSPS ####
-        ages_fsps = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_fsps.txt', usecols=range(int(num_jackknife_samps)))
-        logtau_fsps = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_logtau_fsps.txt', usecols=range(int(num_jackknife_samps)))
-        mass_wht_ages_fsps = np.loadtxt(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_mass_weighted_ages_fsps.txt', usecols=range(int(num_jackknife_samps)))
+        ages_fsps = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_fsps.txt', usecols=range(int(num_jackknife_samps)))
+        logtau_fsps = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_logtau_fsps.txt', usecols=range(int(num_jackknife_samps)))
+        exten_fsps = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_fsps.txt', usecols=range(int(num_jackknife_samps)))
 
-        # If you need to make the mass-weighted ages files, just after running the chi2 fitting code, run the next two lines.
-        # Make sure to comment out the rest of the code below it and the lines above that read the mass_wht_ages files.
-        #get_mass_weighted_ages('bc03', ages_bc03, logtau_bc03, pears_id[massive_galaxies_indices][u])
-        #get_mass_weighted_ages('fsps', ages_fsps, logtau_fsps, pears_id[massive_galaxies_indices][u])
-
+        # To get massweighted ages
+        if run_mode == 'get mass weighted ages':
+            get_mass_weighted_ages('bc03', ages_bc03, logtau_bc03, current_pears_index)
+            get_mass_weighted_ages('fsps', ages_fsps, logtau_fsps, current_pears_index)
+            print "Computed and saved mass weighted ages in", savefits_dir  
+            print "Done."
+            sys.exit(0)
+        elif run_mode != 'get mass weighted ages':
+            mass_wht_ages_bc03 = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_mass_weighted_ages_bc03.txt', usecols=range(int(num_jackknife_samps)))
+            mass_wht_ages_fsps = np.loadtxt(savefits_dir + 'jackknife' + str(current_pears_index) + '_mass_weighted_ages_fsps.txt', usecols=range(int(num_jackknife_samps)))
+    
         # Open fits files with comparison spectra
-        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
-        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
-        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)    
+        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(current_pears_index) + '.fits', memmap=False)
+        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(current_pears_index) + '.fits', memmap=False)
+        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(current_pears_index) + '.fits', memmap=False)  
 
         # Find number of extensions in each
         bc03_extens = fcj.get_total_extensions(bc03_spec)
         miles_extens = fcj.get_total_extensions(miles_spec)
         fsps_extens = fcj.get_total_extensions(fsps_spec)
-    
+
         # Convolve model spectra with the line spread function for each galaxy
         # and also
         # set up numpy comparison spectra arrays for faster array computations at the same time
         #lsf_path = massive_galaxies_dir + "north_lsfs/"
-        #filename = lsf_path + 'n' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
+        #filename = lsf_path + 'n' + str(current_pears_index) + '_avg_lsf.txt'
         #if os.path.isfile(filename):
         #    lsf = np.loadtxt(filename)
         #else:
-        #    filename = lsf_path + 's' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
+        #    filename = lsf_path + 's' + str(current_pears_index) + '_avg_lsf.txt'
         # Remove the try except blocks below once you have both north and south lsfs
 
         # Make multi-dimensional arrays of parameters for all SPS libraries 
         # This is done to make access to the fits headers easier because
         # there is no way to directly search the headers for all extensions in a fits file simultaneously.
         # Once the numpy arrays have the header values in them the arrays can easily be searched by using np.where
-        bc03_params = np.empty([bc03_extens, 3])  # the 3 is because the BC03 param space is 3D, in this case (metallicity fixed to solar)
-        for i in range(bc03_extens):
-            age = float(bc03_spec[i+1].header['LOG_AGE'])
-            tau = float(bc03_spec[i+1].header['TAU_GYR'])
-            tauv = float(bc03_spec[i+1].header['TAUV'])
+
+        if run_mode == 'normal':
+
+            bc03_params = np.empty([bc03_extens, 3])  # the 3 is because the BC03 param space is 3D, in this case (metallicity fixed to solar)
+            for i in range(bc03_extens):
+                age = float(bc03_spec[i+1].header['LOG_AGE'])
+                tau = float(bc03_spec[i+1].header['TAU_GYR'])
+                tauv = float(bc03_spec[i+1].header['TAUV'])
     
-            bc03_params[i] = np.array([age, tau, tauv])
+                bc03_params[i] = np.array([age, tau, tauv])
     
-        miles_params = np.empty([miles_extens, 2])  # the 2 is because the MILES param space is 2D, in this case
-        for i in range(miles_extens):
-            age = float(miles_spec[i+1].header['LOG_AGE'])
-            z = float(miles_spec[i+1].header['METAL'])
+            miles_params = np.empty([miles_extens, 2])  # the 2 is because the MILES param space is 2D, in this case
+            for i in range(miles_extens):
+                age = float(miles_spec[i+1].header['LOG_AGE'])
+                z = float(miles_spec[i+1].header['METAL'])
     
-            miles_params[i] = np.array([age, z])
+                miles_params[i] = np.array([age, z])
     
-        fsps_params = np.empty([fsps_extens, 2])  # the 2 is because the FSPS param space is 2D, in this case (metallicity fixed to solar)
-        for i in range(fsps_extens):
-            age = float(fsps_spec[i+1].header['LOG_AGE'])
-            tau = float(fsps_spec[i+1].header['TAU_GYR'])
+            fsps_params = np.empty([fsps_extens, 2])  # the 2 is because the FSPS param space is 2D, in this case (metallicity fixed to solar)
+            for i in range(fsps_extens):
+                age = float(fsps_spec[i+1].header['LOG_AGE'])
+                tau = float(fsps_spec[i+1].header['TAU_GYR'])
     
-            fsps_params[i] = np.array([age, tau])
+                fsps_params[i] = np.array([age, tau])
 
         # Make figure and axes and plot stacked spectrum with errors from bootstrap
         fig = plt.figure()
@@ -187,6 +218,7 @@ if __name__ == '__main__':
         best_tau = 10**np.median(logtau_bc03)
         best_tauv = np.median(tauv_bc03)
         best_mass_wht_age = np.median(mass_wht_ages_bc03)
+        best_exten = int(np.median(exten_bc03))
 
         best_age_err = np.std(ages_bc03) * 10**best_age / (1e9 * 0.434)
         # the number 0.434 is (1 / ln(10)) 
@@ -195,169 +227,172 @@ if __name__ == '__main__':
         best_tauv_err = np.std(tauv_bc03)
         best_mass_wht_age_err = np.std(mass_wht_ages_bc03) * 10**best_mass_wht_age / (1e9 * 0.434)
 
-        print 'bc03', best_age, best_age_err, best_tau, best_tau_err, best_mass_wht_age, best_mass_wht_age_err, stellarmass[massive_galaxies_indices][u]
+        #print 'bc03', best_age, best_age_err, best_tau, best_tau_err, best_mass_wht_age, best_mass_wht_age_err, stellarmass[massive_galaxies_indices][count]
 
-        for j in range(bc03_extens):
-            if np.allclose(bc03_params[j], np.array([best_age, best_tau, best_tauv]).reshape(3)):
-                print 'bc03'
-                currentspec = bc03_spec[j+1].data
-                print flam_em
-                print ferr
-                print currentspec
+        if run_mode == 'normal':
+            for j in range(bc03_extens):
+                if np.allclose(bc03_params[j], np.array([best_age, best_tau, best_tauv]).reshape(3)):
+                    best_exten = j + 1       
 
-                #try:
-                #    currentspec = np.convolve(currentspec, lsf)
-                #except NameError, e:
-                #    print e
+        currentspec = bc03_spec[best_exten].data
 
-                alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
+        #try:
+        #    currentspec = np.convolve(currentspec, lsf)
+        #except NameError, e:
+        #    print e
 
-                # Plot best fit parameters as anchored text boxes
-                redshiftbox = TextArea(r'$z$ = ' + str(redshift), textprops=dict(color='k', size=9))
-                anc_redsfihtbox = AnchoredOffsetbox(loc=2, child=redshiftbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.03, 0.75),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_redsfihtbox)                
+        alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 
-                stellarmassbox = TextArea(r'$\mathrm{M}_* = 10^{' + str(stellarmass[massive_galaxies_indices][u]) + r'}$' + r' $\mathrm{M}_\odot$', textprops=dict(color='k', size=9))
-                anc_stellarmassbox = AnchoredOffsetbox(loc=2, child=stellarmassbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.03, 0.7),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_stellarmassbox)   
+        # Plot best fit parameters as anchored text boxes
+        redshiftbox = TextArea(r'$z$ = ' + str(redshift), textprops=dict(color='k', size=9))
+        anc_redsfihtbox = AnchoredOffsetbox(loc=2, child=redshiftbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.03, 0.75),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_redsfihtbox)                
 
-                pearsidbox = TextArea(str(pears_id[massive_galaxies_indices][u]), textprops=dict(color='k', size=9))
-                anc_pearsidbox = AnchoredOffsetbox(loc=2, child=pearsidbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.03, 0.65),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_pearsidbox)   
+        stellarmassbox = TextArea(r'$\mathrm{M}_* = 10^{' + str(stellarmass[massive_galaxies_indices][count]) + r'}$' + r' $\mathrm{M}_\odot$', textprops=dict(color='k', size=9))
+        anc_stellarmassbox = AnchoredOffsetbox(loc=2, child=stellarmassbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.03, 0.7),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_stellarmassbox)   
 
-                labelbox = TextArea("BC03", textprops=dict(color='r', size=8))
-                anc_labelbox = AnchoredOffsetbox(loc=2, child=labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.03, 0.95),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_labelbox)
+        pearsidbox = TextArea(str(current_pears_index), textprops=dict(color='k', size=9))
+        anc_pearsidbox = AnchoredOffsetbox(loc=2, child=pearsidbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.03, 0.65),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_pearsidbox)   
 
-                agebox = TextArea(r"$\left<t\right>_M$ = " + "{:.2f}".format(float(10**best_mass_wht_age/1e9)) + r" $\pm$ " + "{:.2f}".format(float(best_mass_wht_age_err)) + " Gyr",
-                 textprops=dict(color='r', size=8))
-                anc_agebox = AnchoredOffsetbox(loc=2, child=agebox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.03, 0.9),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_agebox)
+        labelbox = TextArea("BC03", textprops=dict(color='r', size=8))
+        anc_labelbox = AnchoredOffsetbox(loc=2, child=labelbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.03, 0.95),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_labelbox)
 
-                metalbox = TextArea("Z = " + "{:.2f}".format(0.02), textprops=dict(color='r', size=8))  # because metallicity is fixed to solar
-                anc_metalbox = AnchoredOffsetbox(loc=2, child=metalbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.03, 0.8),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_metalbox)
+        agebox = TextArea(r"$\left<t\right>_M$ = " + "{:.2f}".format(float(10**best_mass_wht_age/1e9)) + r" $\pm$ " + "{:.2f}".format(float(best_mass_wht_age_err)) + " Gyr",
+         textprops=dict(color='r', size=8))
+        anc_agebox = AnchoredOffsetbox(loc=2, child=agebox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.03, 0.9),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_agebox)
 
-                taubox = TextArea(r"$\tau$ = " + "{:.2f}".format(float(best_tau)) + r" $\pm$ " + "{:.2f}".format(float(best_tau_err)) + " Gyr",
-                 textprops=dict(color='r', size=8))
-                anc_taubox = AnchoredOffsetbox(loc=2, child=taubox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.03, 0.85),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_taubox)
+        metalbox = TextArea("Z = " + "{:.2f}".format(0.02), textprops=dict(color='r', size=8))  # because metallicity is fixed to solar
+        anc_metalbox = AnchoredOffsetbox(loc=2, child=metalbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.03, 0.8),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_metalbox)
 
-                #tauvbox = TextArea(r"$A_v$ = " + "{:.2f}".format(float(best_tauv)) + r" $\pm$ " + "{:.2f}".format(float(best_tauv_err)),
-                # textprops=dict(color='r', size=8))
-                #anc_tauvbox = AnchoredOffsetbox(loc=2, child=tauvbox, pad=0.0, frameon=False,\
-                #                                     bbox_to_anchor=(0.03, 0.75),\
-                #                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                #ax1.add_artist(anc_tauvbox)
+        taubox = TextArea(r"$\tau$ = " + "{:.2f}".format(float(best_tau)) + r" $\pm$ " + "{:.2f}".format(float(best_tau_err)) + " Gyr",
+         textprops=dict(color='r', size=8))
+        anc_taubox = AnchoredOffsetbox(loc=2, child=taubox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.03, 0.85),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_taubox)
 
-                # Plot the best fit spectrum
-                ax1.plot(resampling_lam_grid, alpha * currentspec, color='r')
-                ax1.set_xlim(2500, 6000)
-                ax1.xaxis.set_ticklabels([])
-                ax1.yaxis.set_tick_params(labelsize=9)
+        #tauvbox = TextArea(r"$A_v$ = " + "{:.2f}".format(float(best_tauv)) + r" $\pm$ " + "{:.2f}".format(float(best_tauv_err)),
+        # textprops=dict(color='r', size=8))
+        #anc_tauvbox = AnchoredOffsetbox(loc=2, child=tauvbox, pad=0.0, frameon=False,\
+        #                                     bbox_to_anchor=(0.03, 0.75),\
+        #                                     bbox_transform=ax1.transAxes, borderpad=0.0)
+        #ax1.add_artist(anc_tauvbox)
 
-                ax1.minorticks_on()
-                ax1.tick_params('both', width=1, length=3, which='minor')
-                ax1.tick_params('both', width=1, length=4.7, which='major')
+        # Plot the best fit spectrum
+        ax1.plot(resampling_lam_grid, alpha * currentspec, color='r')
+        ax1.set_xlim(2500, 6000)
+        ax1.xaxis.set_ticklabels([])
+        ax1.yaxis.set_tick_params(labelsize=9)
+
+        ax1.minorticks_on()
+        ax1.tick_params('both', width=1, length=3, which='minor')
+        ax1.tick_params('both', width=1, length=4.7, which='major')
                 
-                # Plot the residual
-                ax2.plot(resampling_lam_grid, flam_em - alpha * currentspec, '-', color='r', drawstyle='steps-mid')
+        # Plot the residual
+        ax2.plot(resampling_lam_grid, flam_em - alpha * currentspec, '-', color='r', drawstyle='steps-mid')
 
-                ax2.set_ylim(-1e-17, 1e-17)
-                ax2.set_xlim(2500, 6000)
-                ax2.yaxis.get_major_formatter().set_powerlimits((0, 1))
-                ax2.xaxis.set_tick_params(labelsize=10)
+        ax2.set_ylim(-1e-17, 1e-17)
+        ax2.set_xlim(2500, 6000)
+        ax2.yaxis.get_major_formatter().set_powerlimits((0, 1))
+        ax2.xaxis.set_tick_params(labelsize=10)
 
-                ax2.axhline(y=0.0, color='k', linestyle='--')
-                ax2.grid(True)
+        ax2.axhline(y=0.0, color='k', linestyle='--')
+        ax2.grid(True)
                 
-                ax2.minorticks_on()
-                ax2.tick_params('both', width=1, length=3, which='minor')
-                ax2.tick_params('both', width=1, length=4.7, which='major')
+        ax2.minorticks_on()
+        ax2.tick_params('both', width=1, length=3, which='minor')
+        ax2.tick_params('both', width=1, length=4.7, which='major')
 
         del best_age, best_tau, best_tauv
 
         #### MILES ####
         best_age = np.median(ages_miles)
         best_metal = np.median(metals_miles)
+        best_exten = int(np.median(exten_miles))
 
         best_age_err = np.std(ages_miles) * 10**best_age / (1e9 * 0.434)
         best_metal_err = np.std(metals_miles)
 
-        #print 'miles', best_age, best_metal, stellarmass[massive_galaxies_indices][u]
+        #print 'miles', best_age, best_metal, stellarmass[massive_galaxies_indices][count]
 
-        for j in range(miles_extens):
-            if np.allclose(miles_params[j], np.array([best_age, best_metal]).reshape(2)):
-                currentspec = miles_spec[j+1].data
-                mask_indices = np.isnan(miles_spec[j+1].data)
-                currentspec = ma.masked_array(currentspec, mask = mask_indices)
+        if run_mode == 'normal':
+            for j in range(miles_extens):
+                if np.allclose(miles_params[j], np.array([best_age, best_metal]).reshape(2)):
+                    best_exten = j + 1
 
-                #try:
-                #    currentspec = np.convolve(currentspec, lsf)
-                #except NameError, e:
-                #    print e
+        currentspec = miles_spec[best_exten].data
+        mask_indices = np.isnan(miles_spec[best_exten].data)
+        currentspec = ma.masked_array(currentspec, mask = mask_indices)
 
-                alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
+        #try:
+        #    currentspec = np.convolve(currentspec, lsf)
+        #except NameError, e:
+        #    print e
 
-                # Plot best fit parameters as anchored text boxes
-                labelbox = TextArea("MILES", textprops=dict(color='b', size=8))
-                anc_labelbox = AnchoredOffsetbox(loc=2, child=labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.28, 0.95),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_labelbox)
+        alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 
-                agebox = TextArea(r"$t$ = " + "{:.2f}".format(float(10**best_age/1e9)) + r" $\pm$ " + "{:.2f}".format(float(best_age_err)) + " Gyr",
-                 textprops=dict(color='b', size=8))
-                anc_agebox = AnchoredOffsetbox(loc=2, child=agebox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.28, 0.9),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_agebox)
+        # Plot best fit parameters as anchored text boxes
+        labelbox = TextArea("MILES", textprops=dict(color='b', size=8))
+        anc_labelbox = AnchoredOffsetbox(loc=2, child=labelbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.28, 0.95),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_labelbox)
 
-                metalbox = TextArea("Z = " + "{:.2f}".format(float(best_metal)) + r" $\pm$ " + "{:.2f}".format(float(best_metal_err)),
-                 textprops=dict(color='b', size=8))
-                anc_metalbox = AnchoredOffsetbox(loc=2, child=metalbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.28, 0.85),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_metalbox)
+        agebox = TextArea(r"$t$ = " + "{:.2f}".format(float(10**best_age/1e9)) + r" $\pm$ " + "{:.2f}".format(float(best_age_err)) + " Gyr",
+         textprops=dict(color='b', size=8))
+        anc_agebox = AnchoredOffsetbox(loc=2, child=agebox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.28, 0.9),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_agebox)
 
-                # Plot the best fit spectrum
-                ax1.plot(resampling_lam_grid, alpha * currentspec, color='b')
-                ax1.set_xlim(2500, 6000)
-                ax1.xaxis.set_ticklabels([])
-                ax1.yaxis.set_tick_params(labelsize=9)
+        metalbox = TextArea("Z = " + "{:.2f}".format(float(best_metal)) + r" $\pm$ " + "{:.2f}".format(float(best_metal_err)),
+         textprops=dict(color='b', size=8))
+        anc_metalbox = AnchoredOffsetbox(loc=2, child=metalbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.28, 0.85),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_metalbox)
 
-                ax1.minorticks_on()
-                ax1.tick_params('both', width=1, length=3, which='minor')
-                ax1.tick_params('both', width=1, length=4.7, which='major')
+        # Plot the best fit spectrum
+        ax1.plot(resampling_lam_grid, alpha * currentspec, color='b')
+        ax1.set_xlim(2500, 6000)
+        ax1.xaxis.set_ticklabels([])
+        ax1.yaxis.set_tick_params(labelsize=9)
+
+        ax1.minorticks_on()
+        ax1.tick_params('both', width=1, length=3, which='minor')
+        ax1.tick_params('both', width=1, length=4.7, which='major')
                 
-                # Plot the residual
-                ax2.plot(resampling_lam_grid, flam_em - alpha * currentspec, '-', color='b', drawstyle='steps-mid')
+        # Plot the residual
+        ax2.plot(resampling_lam_grid, flam_em - alpha * currentspec, '-', color='b', drawstyle='steps-mid')
                 
-                ax2.set_ylim(-1e-17, 1e-17)
-                ax2.set_xlim(2500, 6000)
-                ax2.yaxis.get_major_formatter().set_powerlimits((0, 1))
-                ax2.xaxis.set_tick_params(labelsize=10)
+        ax2.set_ylim(-1e-17, 1e-17)
+        ax2.set_xlim(2500, 6000)
+        ax2.yaxis.get_major_formatter().set_powerlimits((0, 1))
+        ax2.xaxis.set_tick_params(labelsize=10)
 
-                ax2.axhline(y=0.0, color='k', linestyle='--')
-                ax2.grid(True)
+        ax2.axhline(y=0.0, color='k', linestyle='--')
+        ax2.grid(True)
                 
-                ax2.minorticks_on()
-                ax2.tick_params('both', width=1, length=3, which='minor')
-                ax2.tick_params('both', width=1, length=4.7, which='major')
+        ax2.minorticks_on()
+        ax2.tick_params('both', width=1, length=3, which='minor')
+        ax2.tick_params('both', width=1, length=4.7, which='major')
 
         del best_age, best_metal
 
@@ -365,88 +400,92 @@ if __name__ == '__main__':
         best_age = np.median(ages_fsps)
         best_tau = 10**np.median(logtau_fsps)
         best_mass_wht_age = np.median(mass_wht_ages_fsps)
+        best_exten = int(np.median(exten_fsps))
 
         best_age_err = np.std(ages_fsps) * 10**best_age / (1e9 * 0.434)
         best_tau_err = np.std(logtau_fsps) * best_tau / 0.434
         best_mass_wht_age_err = np.std(mass_wht_ages_fsps) * 10**best_mass_wht_age / (1e9 * 0.434)
 
-        print 'fsps', best_age, best_age_err, best_tau, best_tau_err, best_mass_wht_age, best_mass_wht_age_err, stellarmass[massive_galaxies_indices][u]
+        #print 'fsps', best_age, best_age_err, best_tau, best_tau_err, best_mass_wht_age, best_mass_wht_age_err, stellarmass[massive_galaxies_indices][count]
 
-        for j in range(fsps_extens):
-            if np.allclose(fsps_params[j], np.array([best_age, best_tau]).reshape(2)):
-                currentspec = fsps_spec[j+1].data
+        if run_mode == 'normal':
+            for j in range(fsps_extens):
+                if np.allclose(fsps_params[j], np.array([best_age, best_tau]).reshape(2)):
+                    best_exten = j + 1
+        
+        currentspec = fsps_spec[best_exten].data
 
-                #try:
-                #    currentspec = np.convolve(currentspec, lsf)
-                #except NameError, e:
-                #    print e
+        #try:
+        #    currentspec = np.convolve(currentspec, lsf)
+        #except NameError, e:
+        #    print e
 
-                alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
+        alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
 
-                # Plot best fit parameters as anchored text boxes
-                labelbox = TextArea("FSPS", textprops=dict(color='g', size=8))
-                anc_labelbox = AnchoredOffsetbox(loc=2, child=labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.53, 0.95),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_labelbox)
+        # Plot best fit parameters as anchored text boxes
+        labelbox = TextArea("FSPS", textprops=dict(color='g', size=8))
+        anc_labelbox = AnchoredOffsetbox(loc=2, child=labelbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.53, 0.95),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_labelbox)
 
-                agebox = TextArea(r"$\left<t\right>_M$ = " + "{:.2f}".format(float(10**best_mass_wht_age/1e9)) + r" $\pm$ " + "{:.2f}".format(float(best_mass_wht_age_err)) + " Gyr",
-                 textprops=dict(color='g', size=8))
-                anc_agebox = AnchoredOffsetbox(loc=2, child=agebox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.53, 0.9),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_agebox)
+        agebox = TextArea(r"$\left<t\right>_M$ = " + "{:.2f}".format(float(10**best_mass_wht_age/1e9)) + r" $\pm$ " + "{:.2f}".format(float(best_mass_wht_age_err)) + " Gyr",
+         textprops=dict(color='g', size=8))
+        anc_agebox = AnchoredOffsetbox(loc=2, child=agebox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.53, 0.9),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_agebox)
 
-                metalbox = TextArea("Z = " + "{:.2f}".format(0.02), textprops=dict(color='r', size=8))  # because metallicity is fixed to solar
-                anc_metalbox = AnchoredOffsetbox(loc=2, child=metalbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.03, 0.8),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
+        metalbox = TextArea("Z = " + "{:.2f}".format(0.02), textprops=dict(color='r', size=8))  # because metallicity is fixed to solar
+        anc_metalbox = AnchoredOffsetbox(loc=2, child=metalbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.03, 0.8),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
 
-                taubox = TextArea(r"$\tau$ = " + "{:.2f}".format(float(best_tau)) + r" $\pm$ " + "{:.2f}".format(float(best_tau_err)) + " Gyr",
-                 textprops=dict(color='g', size=8))
-                anc_taubox = AnchoredOffsetbox(loc=2, child=taubox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.53, 0.85),\
-                                                     bbox_transform=ax1.transAxes, borderpad=0.0)
-                ax1.add_artist(anc_taubox)
+        taubox = TextArea(r"$\tau$ = " + "{:.2f}".format(float(best_tau)) + r" $\pm$ " + "{:.2f}".format(float(best_tau_err)) + " Gyr",
+         textprops=dict(color='g', size=8))
+        anc_taubox = AnchoredOffsetbox(loc=2, child=taubox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.53, 0.85),\
+                                             bbox_transform=ax1.transAxes, borderpad=0.0)
+        ax1.add_artist(anc_taubox)
 
-                # Plot the best fit spectrum
-                ax1.plot(resampling_lam_grid, alpha * currentspec, color='g')
-                ax1.set_xlim(2500, 6000)
-                ax1.xaxis.set_ticklabels([])
-                ax1.yaxis.set_tick_params(labelsize=9)
+        # Plot the best fit spectrum
+        ax1.plot(resampling_lam_grid, alpha * currentspec, color='g')
+        ax1.set_xlim(2500, 6000)
+        ax1.xaxis.set_ticklabels([])
+        ax1.yaxis.set_tick_params(labelsize=9)
 
-                ax1.minorticks_on()
-                ax1.tick_params('both', width=1, length=3, which='minor')
-                ax1.tick_params('both', width=1, length=4.7, which='major')
+        ax1.minorticks_on()
+        ax1.tick_params('both', width=1, length=3, which='minor')
+        ax1.tick_params('both', width=1, length=4.7, which='major')
                 
-                # Plot the residual
-                ax2.plot(resampling_lam_grid, flam_em - alpha * currentspec, '-', color='g', drawstyle='steps-mid')
+        # Plot the residual
+        ax2.plot(resampling_lam_grid, flam_em - alpha * currentspec, '-', color='g', drawstyle='steps-mid')
                 
-                ax2.set_ylim(-1e-17, 1e-17)
-                ax2.set_xlim(2500, 6000)
-                ax2.yaxis.get_major_formatter().set_powerlimits((0, 1))
-                ax2.xaxis.set_tick_params(labelsize=10)
+        ax2.set_ylim(-1e-17, 1e-17)
+        ax2.set_xlim(2500, 6000)
+        ax2.yaxis.get_major_formatter().set_powerlimits((0, 1))
+        ax2.xaxis.set_tick_params(labelsize=10)
 
-                ax2.get_yaxis().set_ticklabels(['-1', '-0.5', '0.0', '0.5', ''], fontsize=8, rotation=45)
+        ax2.get_yaxis().set_ticklabels(['-1', '-0.5', '0.0', '0.5', ''], fontsize=8, rotation=45)
 
-                ax2.axhline(y=0.0, color='k', linestyle='--')
-                ax2.grid(True)
+        ax2.axhline(y=0.0, color='k', linestyle='--')
+        ax2.grid(True)
 
-                ax2.minorticks_on()
-                ax2.tick_params('both', width=1, length=3, which='minor')
-                ax2.tick_params('both', width=1, length=4.7, which='major')
+        ax2.minorticks_on()
+        ax2.tick_params('both', width=1, length=3, which='minor')
+        ax2.tick_params('both', width=1, length=4.7, which='major')
 
-                # Get the residual tick label to show that the axis ticks are multiplied by 10^-18 
-                resid_labelbox = TextArea(r"$\times 1 \times 10^{-17}$", textprops=dict(color='k', size=8))
-                anc_resid_labelbox = AnchoredOffsetbox(loc=2, child=resid_labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.01, 0.98),\
-                                                     bbox_transform=ax2.transAxes, borderpad=0.0)
-                ax2.add_artist(anc_resid_labelbox)
+        # Get the residual tick label to show that the axis ticks are multiplied by 10^-18 
+        resid_labelbox = TextArea(r"$\times 1 \times 10^{-17}$", textprops=dict(color='k', size=8))
+        anc_resid_labelbox = AnchoredOffsetbox(loc=2, child=resid_labelbox, pad=0.0, frameon=False,\
+                                             bbox_to_anchor=(0.01, 0.98),\
+                                             bbox_transform=ax2.transAxes, borderpad=0.0)
+        ax2.add_artist(anc_resid_labelbox)
 
         del best_age, best_tau
 
         pdf.savefig(bbox_inches='tight')
-
+        
     pdf.close()
 
     # total run time
