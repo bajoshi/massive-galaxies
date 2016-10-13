@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     ####### ------------------- without lsf ------------------- #######
     # Read in the model spectra
-    bc03_spec = fits.open('/Users/baj/Desktop/FIGS/new_codes/fits_comp_spectra/all_comp_spectra_bc03_solar_' + str(current_pears_index) + '.fits')
+    bc03_spec = fits.open(home + '/Desktop/FIGS/new_codes/fits_comp_spectra/all_comp_spectra_bc03_solar_' + str(current_pears_index) + '.fits')
     bc03_extens = fcj.get_total_extensions(bc03_spec)
 
     # Find the extension for the best fit
