@@ -72,9 +72,9 @@ def create_bc03_lib_main(lam_grid, pearsid):
     field = specname.split('_')[2]
 
     if field == 'n':
-        lsf = np.loadtxt('/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt')
+        lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt')
     elif field == 's':
-        lsf = np.loadtxt('/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
+        lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
 
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
     example = fits.open(home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/bc2003_hr_m62_tauV0_csp_tau100_salp.fits')
