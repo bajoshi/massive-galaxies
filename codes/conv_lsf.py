@@ -7,6 +7,7 @@ from astropy.io import fits
 
 import os
 import sys
+import time
 
 import matplotlib.pyplot as plt
 
@@ -25,6 +26,9 @@ import fast_chi2_jackknife as fcj
 from fast_chi2_jackknife_massive_galaxies import create_bc03_lib_main
 
 if __name__ == '__main__':
+
+    # starting time
+    start = time.time()
 
     # Read the matched galaxies catalog between 3DHST and PEARS
     cat = np.genfromtxt(home + '/Desktop/FIGS/new_codes/color_stellarmass.txt', dtype=None, names=True, skip_header=2)
@@ -49,9 +53,9 @@ if __name__ == '__main__':
     
     ####### ------------------- with lsf ------------------- #######
     resampling_lam_grid = lam_em
-    if not os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits'):
-        # create model library that is adapted to the specific galaxy
-        create_bc03_lib_main(resampling_lam_grid, current_pears_index)
+    #if not os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits'):
+    #    # create model library that is adapted to the specific galaxy
+    create_bc03_lib_main(resampling_lam_grid, current_pears_index)
 
     # read in the model libraries
     bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits')
@@ -105,5 +109,8 @@ if __name__ == '__main__':
 
     # put it on the the plot
     ax.plot(lam_em, alpha * currentspec, color='r')
+
+    # total time taken
+    print "total time taken", time.time() - start, "seconds."
 
     plt.show()
