@@ -19,6 +19,8 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = massive_galaxies_dir + "figures/"
 savefits_dir = home + "/Desktop/FIGS/new_codes/fits_comp_spectra/"
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
+new_codes_dir = home + "/Desktop/FIGS/new_codes/"
+lsf_dir = new_codes_dir
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
@@ -88,8 +90,7 @@ if __name__ == '__main__':
     data_path = home + "/Documents/PEARS/data_spectra_only/"
 
     # Read pears + 3dhst catalog
-    cat = np.genfromtxt(home + '/Desktop/FIGS/new_codes/color_stellarmass.txt',
-                       dtype=None, names=True, skip_header=2)
+    cat = np.genfromtxt(home + '/Desktop/FIGS/new_codes/color_stellarmass.txt', dtype=None, names=True, skip_header=2)
 
     pears_id = cat['pearsid']
     ur_color = cat['urcol']

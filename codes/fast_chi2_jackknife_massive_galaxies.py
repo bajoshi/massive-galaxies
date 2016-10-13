@@ -3,6 +3,7 @@ from __future__ import division
 import numpy as np
 import numpy.ma as ma
 from astropy.io import fits
+from astropy.convolution import convolve_fft
 
 import os
 import sys
@@ -21,7 +22,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
 import fast_chi2_jackknife as fcj
-#import create_fsps_miles_libraries as ct
+import create_fsps_miles_libraries as ct
 
 def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
@@ -47,75 +48,112 @@ def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
     return None
 
+def create_bc03_lib_main(lam_grid, pearsid):
+
+    cspout = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/'
+    metals = ['m62']  # fixed at solar
+
+    final_fits_name = 'all_comp_spectra_bc03_solar_withlsf_' + str(pearsid) + '.fits'
+
+    # find the corresponding LSF
+    pears_data_path = home + "/Documents/PEARS/data_spectra_only/"
+
+    filename_n = pears_data_path + 'h_pears_n_id' + str(pearsid) + '.fits'
+    filename_s = pears_data_path + 'h_pears_s_id' + str(pearsid) + '.fits'
+    if (os.path.isfile(filename_n)) and (os.path.isfile(filename_s)):
+        print "this galaxy's id repeats in SOUTH and NORTH. Pick another galaxy for now."
+        sys.exit(0)
+    if not os.path.isfile(filename_n):
+        filename = pears_data_path + 'h_pears_s_id' + str(pearsid) + '.fits'
+    else:
+        filename = filename_n
+
+    specname = os.path.basename(filename)
+    field = specname.split('_')[2]
+
+    if field == 'n':
+        lsf = np.loadtxt('/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt')
+    elif field == 's':
+        lsf = np.loadtxt('/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
+
+    # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
+    example = fits.open(home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/bc2003_hr_m62_tauV0_csp_tau100_salp.fits')
+    ages = example[2].data[1:]
+    age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
+    total_ages = int(len(age_ind))
+    
+    # FITS file where the reduced number of spectra will be saved
+    hdu = fits.PrimaryHDU()
+    hdulist = fits.HDUList(hdu)
+    
+    # read in BC03 spectra
+    # I've restricted tauV, tau, lambda, and ages in distinguishing spectra
+    tauVarr = np.arange(0.0, 2.0, 0.1)
+    logtauarr = np.arange(-2, 2, 0.2)
+    tauarr = np.empty(len(logtauarr)).astype(np.str)
+    
+    for i in range(len(logtauarr)):
+        tauarr[i] = str(int(float(str(10**logtauarr[i])[0:6])*10000))
+    
+    # Read in each individual spectrum and convolve it first and then chop and resample it
+    # The convolution has to be done first otherwise the ends of the spectra look weird
+    # because of the way convolution is done by astropy.convolution.convolve_fft
+    # So i'll convolve first to get the correct result from convolution at the ends of hte spectra (that I want)
+    for metallicity in metals:
+        metalfolder = metallicity + '/'
+        for tauVarrval in tauVarr:
+            for tauval in tauarr:
+                filename = cspout + metalfolder + 'bc2003_hr_' + metallicity + '_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp.fits'
+                #print filename
+                h = fits.open(filename, memmap=False)
+                currentlam = h[1].data
+    
+                # define and initialize numpy array so that you can resample all the spectra at once.
+                # It also does the convolution in the for loop below because 
+                # I wasn't sure if I gave a 2D array to convolve_fft if it would convolve each row separately.
+                # I thought that it might think of the 2D ndarray as an image and convolve it that way which I don't want.
+                currentspec = np.zeros([total_ages, len(currentlam)], dtype=np.float64)
+                for i in range(total_ages):
+                    currentspec[i] = h[age_ind[i]+3].data
+                    currentspec[i] = convolve_fft(currentspec[i], lsf)
+
+                currentspec = ct.resample(currentlam, currentspec, lam_grid, total_ages)
+                currentlam = lam_grid
+
+                for i in range(total_ages):
+                    hdr = fits.Header()
+                    hdr['LOG_AGE'] = str(np.log10(ages[age_ind[i]]))
+
+                    metal_val = 0.02
+
+                    hdr['METAL'] = str(metal_val)
+                    hdr['TAU_GYR'] = str(float(tauval)/1e4)
+                    hdr['TAUV'] = str(float(tauVarrval)/10)
+                    hdulist.append(fits.ImageHDU(data=currentspec[i], header=hdr))
+
+    hdulist.writeto(savefits_dir + final_fits_name, clobber=True)
+
+    return None
+
 def create_model_fits(libname, lam_grid, pearsid):
 
     if libname == 'bc03':
 
-        cspout = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/'
-        metals = ['m62']  # fixed at solar
-        final_fits_name = 'all_comp_spectra_bc03_solar_' + str(pearsid) + '.fits'
-
-        # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
-        example = fits.open(home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/bc2003_hr_m62_tauV0_csp_tau100_salp.fits')
-        ages = example[2].data[1:]
-        age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
-        total_ages = int(len(age_ind))
-    
-        # FITS file where the reduced number of spectra will be saved
-        hdu = fits.PrimaryHDU()
-        hdulist = fits.HDUList(hdu)
-    
-        # read in BC03 spectra
-        # I've restricted tauV, tau, lambda, and ages in distinguishing spectra
-        tauVarr = np.arange(0.0, 2.0, 0.1)
-        logtauarr = np.arange(-2, 2, 0.2)
-        tauarr = np.empty(len(logtauarr)).astype(np.str)
-    
-        for i in range(len(logtauarr)):
-            tauarr[i] = str(int(float(str(10**logtauarr[i])[0:6])*10000))
-    
-        for metallicity in metals:
-            metalfolder = metallicity + '/'
-            for tauVarrval in tauVarr:
-                for tauval in tauarr:
-                    filename = cspout + metalfolder + 'bc2003_hr_' + metallicity + '_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp.fits'
-                    #print filename
-                    h = fits.open(filename, memmap=False)
-                    currentlam = h[1].data
-    
-                    currentspec = np.zeros([total_ages, len(currentlam)], dtype=np.float64)
-                    for i in range(total_ages):
-                        currentspec[i] = h[age_ind[i]+3].data
-
-                    currentspec = ct.resample(currentlam, currentspec, lam_grid, total_ages)
-                    currentlam = lam_grid
-
-                    for i in range(total_ages):
-                        hdr = fits.Header()
-                        hdr['LOG_AGE'] = str(np.log10(ages[age_ind[i]]))
-
-                        metal_val = 0.02
-
-                        hdr['METAL'] = str(metal_val)
-                        hdr['TAU_GYR'] = str(float(tauval)/1e4)
-                        hdr['TAUV'] = str(float(tauVarrval)/10)
-                        hdulist.append(fits.ImageHDU(data=currentspec[i], header=hdr))
-
-        hdulist.writeto(savefits_dir + final_fits_name, clobber=True)
+        create_bc03_lib_main(lam_grid, final_fits_name, pearsid)
 
     if libname == 'miles':
 
         final_fits_name = 'all_comp_spectra_miles_' + str(pearsid) + '.fits'
-        ct.create_miles_lib_main(lam_grid, final_fits_name)
+        ct.create_miles_lib_main(lam_grid, final_fits_name, pearsid)
 
     if libname == 'fsps':
 
         final_fits_name = 'all_comp_spectra_fsps_' + str(pearsid) + '.fits'
-        ct.create_fsps_lib_main(lam_grid, final_fits_name, np.array([0.02]))  # metallicity fixed at solar
+        ct.create_fsps_lib_main(lam_grid, final_fits_name, pearsid, np.array([0.02]))  # metallicity fixed at solar
 
     return None
 
-def create_models(resampling_lam_grid, pearsid):
+def create_models_wrapper(resampling_lam_grid, pearsid):
 
     # Create consolidated fits files for faster array comparisons
     create_model_fits('bc03', resampling_lam_grid, pearsid)
@@ -180,7 +218,7 @@ if __name__ == '__main__':
         # define resampling grid for model spectra. i.e. resampling_lam_grid = lam_em
         # This will be different for each galaxy because they are all at different redshifts
         # so when unredshifted the lam grid is different for each.
-        #create_models(lam_em, pears_id[massive_galaxies_indices][u])
+        #create_models_wrapper(lam_em, pears_id[massive_galaxies_indices][u])
 
         # Skip galaxy if it was already analyzed before i.e. these are the galaxies with M > 10^11 M_sol
         if os.path.isfile(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_bc03.txt'):
@@ -233,8 +271,8 @@ if __name__ == '__main__':
             #    pass
 
         # Get random samples by jackknifing
-        num_samp_to_draw = 1e3
-        print "Running over", int(num_samp_to_draw), "random jackknifed samples."
+        num_samp_to_draw = int(1e3)
+        print "Running over", num_samp_to_draw, "random jackknifed samples."
         resampled_spec = ma.empty((len(flam_em), num_samp_to_draw))
         for i in range(len(flam_em)):
             if flam_em[i] is not ma.masked:
