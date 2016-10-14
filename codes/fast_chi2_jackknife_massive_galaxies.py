@@ -76,7 +76,7 @@ def create_bc03_lib_main(lam_grid, pearsid):
     elif field == 's':
         lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
 
-    lsf *= 40
+    interplsf = np.interp(np.linspace(0,len(lsf),len(lsf)*24), xp=np.arange(len(lsf)), fp=lsf)
 
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
     example = fits.open(home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/bc2003_hr_m62_tauV0_csp_tau100_salp.fits')
@@ -117,7 +117,7 @@ def create_bc03_lib_main(lam_grid, pearsid):
                 currentspec = np.zeros([total_ages, len(currentlam)], dtype=np.float64)
                 for i in range(total_ages):
                     currentspec[i] = h[age_ind[i]+3].data
-                    currentspec[i] = convolve_fft(currentspec[i], lsf)
+                    currentspec[i] = convolve_fft(currentspec[i], interplsf)
 
                 currentspec = ct.resample(currentlam, currentspec, lam_grid, total_ages)
                 currentlam = lam_grid
