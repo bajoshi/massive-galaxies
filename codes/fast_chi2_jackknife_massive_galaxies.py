@@ -85,7 +85,7 @@ def create_bc03_lib_main(lam_grid, pearsid, redshift):
     cspout = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/'
     metals = ['m62']  # fixed at solar
 
-    final_fits_name = 'all_comp_spectra_bc03_solar_withlsf_' + str(pearsid) + '.fits'
+    final_fitsname = 'all_comp_spectra_bc03_solar_withlsf_' + str(pearsid) + '.fits'
 
     interplsf = get_interplsf(pearsid, redshift)
 
@@ -144,7 +144,7 @@ def create_bc03_lib_main(lam_grid, pearsid, redshift):
                     hdr['TAUV'] = str(float(tauVarrval)/10)
                     hdulist.append(fits.ImageHDU(data=currentspec[i], header=hdr))
 
-    hdulist.writeto(savefits_dir + final_fits_name, clobber=True)
+    hdulist.writeto(savefits_dir + final_fitsname, clobber=True)
 
     return None
 
