@@ -18,6 +18,7 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = massive_galaxies_dir + "figures/"
 savefits_dir = home + "/Desktop/FIGS/new_codes/fits_comp_spectra/"
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
+new_codes_dir = home + "/Desktop/FIGS/new_codes/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
@@ -48,12 +49,7 @@ def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
     return None
 
-def create_bc03_lib_main(lam_grid, pearsid):
-
-    cspout = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/'
-    metals = ['m62']  # fixed at solar
-
-    final_fits_name = 'all_comp_spectra_bc03_solar_withlsf_' + str(pearsid) + '.fits'
+def get_interplsf(pearsid, redshift):
 
     # find the corresponding LSF
     pears_data_path = home + "/Documents/PEARS/data_spectra_only/"
@@ -76,7 +72,22 @@ def create_bc03_lib_main(lam_grid, pearsid):
     elif field == 's':
         lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
 
-    interplsf = np.interp(np.linspace(0,len(lsf),len(lsf)*24), xp=np.arange(len(lsf)), fp=lsf)
+    # Interpolate the LSF to the rest frame delta lambda grid of the galaxy
+    dlam_obs = 24
+    dlam_em = dlam_obs / (1+redshift)
+    interppoints = np.linspace(0, len(lsf), int(len(lsf)*dlam_em))
+    interplsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
+
+    return interplsf
+
+def create_bc03_lib_main(lam_grid, pearsid, redshift):
+
+    cspout = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/'
+    metals = ['m62']  # fixed at solar
+
+    final_fits_name = 'all_comp_spectra_bc03_solar_withlsf_' + str(pearsid) + '.fits'
+
+    interplsf = get_interplsf(pearsid, redshift)
 
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
     example = fits.open(home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/bc2003_hr_m62_tauV0_csp_tau100_salp.fits')
@@ -137,32 +148,30 @@ def create_bc03_lib_main(lam_grid, pearsid):
 
     return None
 
-def create_model_fits(libname, lam_grid, pearsid):
+def create_model_fits(libname, lam_grid, pearsid, redshift):
 
     if libname == 'bc03':
 
-        create_bc03_lib_main(lam_grid, final_fits_name, pearsid)
+        create_bc03_lib_main(lam_grid, pearsid, redshift)
 
     if libname == 'miles':
 
-        final_fits_name = 'all_comp_spectra_miles_' + str(pearsid) + '.fits'
-        ct.create_miles_lib_main(lam_grid, final_fits_name, pearsid)
+        ct.create_miles_lib_main(lam_grid, pearsid, redshift)
 
     if libname == 'fsps':
 
-        final_fits_name = 'all_comp_spectra_fsps_' + str(pearsid) + '.fits'
-        ct.create_fsps_lib_main(lam_grid, final_fits_name, pearsid, np.array([0.02]))  # metallicity fixed at solar
+        ct.create_fsps_lib_main(lam_grid, pearsid, redshift, np.array([0.02]))  # metallicity fixed at solar
 
     return None
 
-def create_models_wrapper(resampling_lam_grid, pearsid):
+def create_models_wrapper(resampling_lam_grid, pearsid, redshift):
 
     # Create consolidated fits files for faster array comparisons
-    create_model_fits('bc03', resampling_lam_grid, pearsid)
+    create_model_fits('bc03', resampling_lam_grid, pearsid, redshift)
     print "BCO3 library saved for PEARS ID:", pearsid
-    create_model_fits('miles', resampling_lam_grid, pearsid)
+    create_model_fits('miles', resampling_lam_grid, pearsid, redshift)
     print "MILES library saved for PEARS ID:", pearsid
-    create_model_fits('fsps', resampling_lam_grid, pearsid)
+    create_model_fits('fsps', resampling_lam_grid, pearsid, redshift)
     print "FSPS library saved for PEARS ID:", pearsid
 
     return None
@@ -208,23 +217,25 @@ if __name__ == '__main__':
     # Also match colors, stellar masses, and redshifts given in the Ferreras et al. 2009 paper
 
     # Loop over all spectra 
-    for u in range(len(pears_id[massive_galaxies_indices])):
+    pears_unique_ids, pears_unique_ids_indices = np.unique(pears_id[massive_galaxies_indices], return_index=True)
+    for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
+        redshift = photz[massive_galaxies_indices][count]
 
-        print "\n", "Currently working with PEARS object id: ", pears_id[massive_galaxies_indices][u], "with log(M/M_sol) =", stellarmass[massive_galaxies_indices][u]
+        print "Currently working with PEARS object id: ", current_pears_index, "with log(M/M_sol) =", stellarmass[massive_galaxies_indices][count], "at redshift", redshift
         print "At --", dt.now()
 
-        redshift = photz[massive_galaxies_indices][u]
-        lam_em, flam_em, ferr, specname = gd.fileprep(pears_id[massive_galaxies_indices][u], redshift)
-
-        resampling_lam_grid = lam_em
+        lam_em, flam_em, ferr, specname = gd.fileprep(current_pears_index, redshift)
+        
+        resampling_lam_grid = lam_em 
         # define resampling grid for model spectra. i.e. resampling_lam_grid = lam_em
         # This will be different for each galaxy because they are all at different redshifts
         # so when unredshifted the lam grid is different for each.
-        #create_models_wrapper(lam_em, pears_id[massive_galaxies_indices][u])
+        create_models_wrapper(lam_em, current_pears_index, redshift)
 
+        """
         # Skip galaxy if it was already analyzed before i.e. these are the galaxies with M > 10^11 M_sol
-        if os.path.isfile(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_bc03.txt'):
-            continue
+        #if os.path.isfile(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_bc03.txt'):
+        #    continue
 
         # Open fits files with comparison spectra
         bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
@@ -352,7 +363,7 @@ if __name__ == '__main__':
         f_ages_fsps.close()
         f_logtau_fsps.close()
         f_exten_fsps.close()
-
+        """
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
     sys.exit(0)

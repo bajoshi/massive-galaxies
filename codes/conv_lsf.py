@@ -54,8 +54,8 @@ if __name__ == '__main__':
     ####### ------------------- with lsf ------------------- #######
     resampling_lam_grid = lam_em
     #if not os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits'):
-    #    # create model library that is adapted to the specific galaxy
-    create_bc03_lib_main(resampling_lam_grid, current_pears_index)
+    #    create model library that is adapted to the specific galaxy
+    create_bc03_lib_main(resampling_lam_grid, current_pears_index, redshift)
 
     # read in the model libraries
     bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits')
@@ -113,4 +113,6 @@ if __name__ == '__main__':
     # total time taken
     print "total time taken", time.time() - start, "seconds."
 
-    plt.show()
+    fig.savefig(home + '/Desktop/lsf_difference_pearsid_s65620.eps', dpi=300)
+
+    sys.exit(0)
