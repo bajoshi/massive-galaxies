@@ -230,58 +230,31 @@ if __name__ == '__main__':
         # define resampling grid for model spectra. i.e. resampling_lam_grid = lam_em
         # This will be different for each galaxy because they are all at different redshifts
         # so when unredshifted the lam grid is different for each.
-        create_models_wrapper(lam_em, current_pears_index, redshift)
-
-        """
-        # Skip galaxy if it was already analyzed before i.e. these are the galaxies with M > 10^11 M_sol
-        #if os.path.isfile(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_bc03.txt'):
-        #    continue
+        #create_models_wrapper(lam_em, current_pears_index, redshift)
 
         # Open fits files with comparison spectra
-        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
-        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
-        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(pears_id[massive_galaxies_indices][u]) + '.fits', memmap=False)
+        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(current_pears_index) + '.fits', memmap=False)
+        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(current_pears_index) + '.fits', memmap=False)
+        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(current_pears_index) + '.fits', memmap=False)
 
         # Find number of extensions in each
         bc03_extens = fcj.get_total_extensions(bc03_spec)
         miles_extens = fcj.get_total_extensions(miles_spec)
         fsps_extens = fcj.get_total_extensions(fsps_spec)
 
-        # Convolve model spectra with the line spread function for each galaxy
-        # and also
-        # set up numpy comparison spectra arrays for faster array computations at the same time
-        #filename = lsf_path + 'n' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
-        #if os.path.isfile(filename):
-        #    lsf = np.loadtxt(filename)
-        #else:
-        #    filename = lsf_path + 's' + str(pears_id[massive_galaxies_indices][u]) + '_avg_lsf.txt'
-        # Remove the try except blocks below once you have both north and south lsfs
-
         comp_spec_bc03 = np.zeros([bc03_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(bc03_extens):
             comp_spec_bc03[i] = bc03_spec[i+1].data
-            #try:
-            #    comp_spec_bc03[i] = np.convolve(comp_spec_bc03[i], lsf)
-            #except NameError:
-            #    pass
     
         comp_spec_miles = ma.zeros([miles_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(miles_extens):
             comp_spec_miles[i] = miles_spec[i+1].data
             mask_indices = np.isnan(miles_spec[i+1].data)
             comp_spec_miles[i] = ma.masked_array(comp_spec_miles[i], mask=mask_indices)
-            #try:
-            #    comp_spec_miles[i] = np.convolve(comp_spec_miles[i], lsf)
-            #except NameError:
-            #    pass
     
         comp_spec_fsps = np.zeros([fsps_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(fsps_extens):
             comp_spec_fsps[i] = fsps_spec[i+1].data
-            #try:
-            #    comp_spec_fsps[i] = np.convolve(comp_spec_fsps[i], lsf)
-            #except NameError:
-            #    pass
 
         # Get random samples by jackknifing
         num_samp_to_draw = int(1e3)
@@ -295,18 +268,18 @@ if __name__ == '__main__':
         resampled_spec = resampled_spec.T
 
         # Files to save distribution of best params in
-        f_ages_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_bc03.txt', 'wa')
-        f_logtau_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_logtau_bc03.txt', 'wa')
-        f_tauv_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_tauv_bc03.txt', 'wa')
-        f_exten_bc03 = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_exten_bc03.txt', 'wa')
+        f_ages_bc03 = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_bc03.txt', 'wa')
+        f_logtau_bc03 = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_logtau_bc03.txt', 'wa')
+        f_tauv_bc03 = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_tauv_bc03.txt', 'wa')
+        f_exten_bc03 = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_bc03.txt', 'wa')
     
-        f_ages_miles = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_miles.txt', 'wa')
-        f_metals_miles = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_metals_miles.txt', 'wa')
-        f_exten_miles = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_exten_miles.txt', 'wa')
+        f_ages_miles = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_miles.txt', 'wa')
+        f_metals_miles = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_metals_miles.txt', 'wa')
+        f_exten_miles = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_miles.txt', 'wa')
     
-        f_ages_fsps = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_ages_fsps.txt', 'wa')
-        f_logtau_fsps = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_logtau_fsps.txt', 'wa')
-        f_exten_fsps = open(savefits_dir + 'jackknife' + str(pears_id[massive_galaxies_indices][u]) + '_exten_fsps.txt', 'wa')
+        f_ages_fsps = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_fsps.txt', 'wa')
+        f_logtau_fsps = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_logtau_fsps.txt', 'wa')
+        f_exten_fsps = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_fsps.txt', 'wa')
 
         # Run the actual fitting function
         ages_bc03, metals_bc03, tau_bc03, tauv_bc03, exten_bc03 = fcj.fit_chi2(flam_em, ferr, comp_spec_bc03, bc03_extens, resampled_spec, num_samp_to_draw, 'bc03', bc03_spec)
@@ -363,7 +336,7 @@ if __name__ == '__main__':
         f_ages_fsps.close()
         f_logtau_fsps.close()
         f_exten_fsps.close()
-        """
+        
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
     sys.exit(0)
