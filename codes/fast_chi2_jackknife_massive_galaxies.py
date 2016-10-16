@@ -233,9 +233,9 @@ if __name__ == '__main__':
         #create_models_wrapper(lam_em, current_pears_index, redshift)
 
         # Open fits files with comparison spectra
-        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_' + str(current_pears_index) + '.fits', memmap=False)
-        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_' + str(current_pears_index) + '.fits', memmap=False)
-        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_' + str(current_pears_index) + '.fits', memmap=False)
+        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
+        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
+        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
 
         # Find number of extensions in each
         bc03_extens = fcj.get_total_extensions(bc03_spec)
@@ -336,7 +336,7 @@ if __name__ == '__main__':
         f_ages_fsps.close()
         f_logtau_fsps.close()
         f_exten_fsps.close()
-        
+
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
     sys.exit(0)
