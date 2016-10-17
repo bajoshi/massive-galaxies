@@ -41,8 +41,8 @@ def get_mass_weighted_ages(library, ages, logtau, pearsid):
 
     for j in range(len(ages)):
         formtime = 10**ages[j]
-        timearr = np.arange(timestep, formtime, timestep) # in years
-        tau = 10**logtau[j] * 10**9 # in years
+        timearr = np.arange(timestep, formtime, timestep)  # in years
+        tau = 10**logtau[j] * 10**9  # in years
         n_arr = np.log10(formtime - timearr) * np.exp(-timearr/tau) * timestep
         d_arr = np.exp(-timearr/tau) * timestep
         

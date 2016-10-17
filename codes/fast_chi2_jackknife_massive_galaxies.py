@@ -67,10 +67,16 @@ def get_interplsf(pearsid, redshift):
     specname = os.path.basename(filename)
     field = specname.split('_')[2]
 
-    if field == 'n':
-        lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt')
-    elif field == 's':
-        lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
+    # This exception handler makes sure that the lsf exists before trying to use it so that the program execution is not stopped.
+    try:
+        if field == 'n':
+            lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt')
+        elif field == 's':
+            lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
+    except IOError as e:
+    	print e
+    	print "Moving on to next galaxy for now."
+    	return None
 
     # Interpolate the LSF to the rest frame delta lambda grid of the galaxy
     dlam_obs = 24
@@ -233,13 +239,17 @@ if __name__ == '__main__':
         # define resampling grid for model spectra. i.e. resampling_lam_grid = lam_em
         # This will be different for each galaxy because they are all at different redshifts
         # so when unredshifted the lam grid is different for each.
-        create_models_wrapper(lam_em, current_pears_index, redshift)
+        #create_models_wrapper(lam_em, current_pears_index, redshift)
 
-        """
         # Open fits files with comparison spectra
-        bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
-        miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
-        fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
+        try:
+            bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
+            miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
+            fsps_spec = fits.open(savefits_dir + 'all_comp_spectra_fsps_withlsf_' + str(current_pears_index) + '.fits', memmap=False)        	
+        except IOError as e:
+        	print e
+        	print "LSF was not taken into account for this galaxy. Moving on to next galaxy for now."
+        	continue
 
         # Find number of extensions in each
         bc03_extens = fcj.get_total_extensions(bc03_spec)
@@ -340,7 +350,6 @@ if __name__ == '__main__':
         f_ages_fsps.close()
         f_logtau_fsps.close()
         f_exten_fsps.close()
-        """
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."

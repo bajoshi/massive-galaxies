@@ -4479,3 +4479,290 @@ Ages -  3
 Metals -  1
 Tau -  5
 Total time taken -- 20524.82974 seconds.
+/Users/baj/anaconda/lib/python2.7/site-packages/numpy/core/_methods.py:59: RuntimeWarning: Mean of empty slice.
+  warnings.warn("Mean of empty slice.", RuntimeWarning)
+/Users/baj/anaconda/lib/python2.7/site-packages/numpy/core/_methods.py:70: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+Starting at -- 2016-10-15 09:35:21.125233
+Currently working with PEARS object id:  9378 with log(M/M_sol) = 10.65 at redshift 0.69
+At -- 2016-10-15 09:35:21.169985
+BCO3 library saved for PEARS ID: 9378
+MILES library saved for PEARS ID: 9378
+FSPS library saved for PEARS ID: 9378
+Currently working with PEARS object id:  13499 with log(M/M_sol) = 10.66 at redshift 1.01
+At -- 2016-10-15 09:44:09.323099
+BCO3 library saved for PEARS ID: 13499
+MILES library saved for PEARS ID: 13499
+FSPS library saved for PEARS ID: 13499
+Currently working with PEARS object id:  14555 with log(M/M_sol) = 10.69 at redshift 0.63
+At -- 2016-10-15 09:51:34.654007
+BCO3 library saved for PEARS ID: 14555
+MILES library saved for PEARS ID: 14555
+FSPS library saved for PEARS ID: 14555
+Currently working with PEARS object id:  17022 with log(M/M_sol) = 10.5 at redshift 0.73
+At -- 2016-10-15 09:58:54.159991
+BCO3 library saved for PEARS ID: 17022
+MILES library saved for PEARS ID: 17022
+FSPS library saved for PEARS ID: 17022
+Currently working with PEARS object id:  18260 with log(M/M_sol) = 11.19 at redshift 0.66
+At -- 2016-10-15 10:06:13.520519
+BCO3 library saved for PEARS ID: 18260
+MILES library saved for PEARS ID: 18260
+FSPS library saved for PEARS ID: 18260
+Currently working with PEARS object id:  21592 with log(M/M_sol) = 10.61 at redshift 0.68
+At -- 2016-10-15 10:13:34.536326
+BCO3 library saved for PEARS ID: 21592
+MILES library saved for PEARS ID: 21592
+FSPS library saved for PEARS ID: 21592
+Currently working with PEARS object id:  23142 with log(M/M_sol) = 10.67 at redshift 0.66
+At -- 2016-10-15 10:20:54.910111
+BCO3 library saved for PEARS ID: 23142
+MILES library saved for PEARS ID: 23142
+FSPS library saved for PEARS ID: 23142
+Currently working with PEARS object id:  23172 with log(M/M_sol) = 10.64 at redshift 0.67
+At -- 2016-10-15 10:28:24.927516
+BCO3 library saved for PEARS ID: 23172
+MILES library saved for PEARS ID: 23172
+FSPS library saved for PEARS ID: 23172
+Currently working with PEARS object id:  26158 with log(M/M_sol) = 10.77 at redshift 0.66
+At -- 2016-10-15 10:35:43.405528
+BCO3 library saved for PEARS ID: 26158
+MILES library saved for PEARS ID: 26158
+FSPS library saved for PEARS ID: 26158
+Currently working with PEARS object id:  30010 with log(M/M_sol) = 10.99 at redshift 0.68
+At -- 2016-10-15 10:43:02.108354
+BCO3 library saved for PEARS ID: 30010
+MILES library saved for PEARS ID: 30010
+FSPS library saved for PEARS ID: 30010
+Currently working with PEARS object id:  30676 with log(M/M_sol) = 10.87 at redshift 0.68
+At -- 2016-10-15 10:50:22.201237
+BCO3 library saved for PEARS ID: 30676
+MILES library saved for PEARS ID: 30676
+FSPS library saved for PEARS ID: 30676
+Currently working with PEARS object id:  31899 with log(M/M_sol) = 10.79 at redshift 1.16
+At -- 2016-10-15 10:57:42.718153
+BCO3 library saved for PEARS ID: 31899
+MILES library saved for PEARS ID: 31899
+FSPS library saved for PEARS ID: 31899
+Currently working with PEARS object id:  35156 with log(M/M_sol) = 10.83 at redshift 1.2
+At -- 2016-10-15 11:05:00.834321
+BCO3 library saved for PEARS ID: 35156
+MILES library saved for PEARS ID: 35156
+FSPS library saved for PEARS ID: 35156
+Currently working with PEARS object id:  36105 with log(M/M_sol) = 10.83 at redshift 0.91
+At -- 2016-10-15 11:12:22.354852
+BCO3 library saved for PEARS ID: 36105
+MILES library saved for PEARS ID: 36105
+FSPS library saved for PEARS ID: 36105
+Currently working with PEARS object id:  36121 with log(M/M_sol) = 11.21 at redshift 0.78
+At -- 2016-10-15 11:19:40.730763
+BCO3 library saved for PEARS ID: 36121
+MILES library saved for PEARS ID: 36121
+FSPS library saved for PEARS ID: 36121
+Currently working with PEARS object id:  37044 with log(M/M_sol) = 10.69 at redshift 1.23
+At -- 2016-10-15 11:27:02.242686
+BCO3 library saved for PEARS ID: 37044
+MILES library saved for PEARS ID: 37044
+FSPS library saved for PEARS ID: 37044
+Currently working with PEARS object id:  37429 with log(M/M_sol) = 10.79 at redshift 0.78
+At -- 2016-10-15 11:33:59.459185
+BCO3 library saved for PEARS ID: 37429
+MILES library saved for PEARS ID: 37429
+FSPS library saved for PEARS ID: 37429
+Currently working with PEARS object id:  40991 with log(M/M_sol) = 11.42 at redshift 0.99
+At -- 2016-10-15 11:41:17.183777
+BCO3 library saved for PEARS ID: 40991
+MILES library saved for PEARS ID: 40991
+FSPS library saved for PEARS ID: 40991
+Currently working with PEARS object id:  41388 with log(M/M_sol) = 10.57 at redshift 0.99
+At -- 2016-10-15 11:48:39.265176
+BCO3 library saved for PEARS ID: 41388
+MILES library saved for PEARS ID: 41388
+FSPS library saved for PEARS ID: 41388
+Currently working with PEARS object id:  41478 with log(M/M_sol) = 10.57 at redshift 1.13
+At -- 2016-10-15 11:55:35.314175
+BCO3 library saved for PEARS ID: 41478
+MILES library saved for PEARS ID: 41478
+FSPS library saved for PEARS ID: 41478
+Currently working with PEARS object id:  41913 with log(M/M_sol) = 10.68 at redshift 1.1
+At -- 2016-10-15 12:02:31.615719
+this galaxy's id repeats in SOUTH and NORTH. Pick another galaxy for now.
+/Users/baj/anaconda/lib/python2.7/site-packages/numpy/core/_methods.py:59: RuntimeWarning: Mean of empty slice.
+  warnings.warn("Mean of empty slice.", RuntimeWarning)
+/Users/baj/anaconda/lib/python2.7/site-packages/numpy/core/_methods.py:70: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+Starting at -- 2016-10-16 22:12:25.871854
+Currently working with PEARS object id:  9378 with log(M/M_sol) = 10.65 at redshift 0.69
+At -- 2016-10-16 22:12:25.919003
+BCO3 library saved for PEARS ID: 9378
+MILES library saved for PEARS ID: 9378
+FSPS library saved for PEARS ID: 9378
+Currently working with PEARS object id:  13499 with log(M/M_sol) = 10.66 at redshift 1.01
+At -- 2016-10-16 22:20:10.289941
+BCO3 library saved for PEARS ID: 13499
+MILES library saved for PEARS ID: 13499
+FSPS library saved for PEARS ID: 13499
+Currently working with PEARS object id:  14555 with log(M/M_sol) = 10.69 at redshift 0.63
+At -- 2016-10-16 22:27:26.716144
+BCO3 library saved for PEARS ID: 14555
+MILES library saved for PEARS ID: 14555
+FSPS library saved for PEARS ID: 14555
+Currently working with PEARS object id:  17022 with log(M/M_sol) = 10.5 at redshift 0.73
+At -- 2016-10-16 22:34:41.499548
+BCO3 library saved for PEARS ID: 17022
+MILES library saved for PEARS ID: 17022
+FSPS library saved for PEARS ID: 17022
+Currently working with PEARS object id:  18260 with log(M/M_sol) = 11.19 at redshift 0.66
+At -- 2016-10-16 22:41:57.778909
+BCO3 library saved for PEARS ID: 18260
+MILES library saved for PEARS ID: 18260
+FSPS library saved for PEARS ID: 18260
+Currently working with PEARS object id:  21592 with log(M/M_sol) = 10.61 at redshift 0.68
+At -- 2016-10-16 22:49:20.654107
+BCO3 library saved for PEARS ID: 21592
+MILES library saved for PEARS ID: 21592
+FSPS library saved for PEARS ID: 21592
+Currently working with PEARS object id:  23142 with log(M/M_sol) = 10.67 at redshift 0.66
+At -- 2016-10-16 22:56:35.988241
+BCO3 library saved for PEARS ID: 23142
+MILES library saved for PEARS ID: 23142
+FSPS library saved for PEARS ID: 23142
+Currently working with PEARS object id:  23172 with log(M/M_sol) = 10.64 at redshift 0.67
+At -- 2016-10-16 23:03:53.010548
+BCO3 library saved for PEARS ID: 23172
+MILES library saved for PEARS ID: 23172
+FSPS library saved for PEARS ID: 23172
+Currently working with PEARS object id:  26158 with log(M/M_sol) = 10.77 at redshift 0.66
+At -- 2016-10-16 23:11:08.985468
+BCO3 library saved for PEARS ID: 26158
+MILES library saved for PEARS ID: 26158
+FSPS library saved for PEARS ID: 26158
+Currently working with PEARS object id:  30010 with log(M/M_sol) = 10.99 at redshift 0.68
+At -- 2016-10-16 23:18:24.465729
+BCO3 library saved for PEARS ID: 30010
+MILES library saved for PEARS ID: 30010
+FSPS library saved for PEARS ID: 30010
+Currently working with PEARS object id:  30676 with log(M/M_sol) = 10.87 at redshift 0.68
+At -- 2016-10-16 23:25:40.769882
+BCO3 library saved for PEARS ID: 30676
+MILES library saved for PEARS ID: 30676
+FSPS library saved for PEARS ID: 30676
+Currently working with PEARS object id:  31899 with log(M/M_sol) = 10.79 at redshift 1.16
+At -- 2016-10-16 23:32:57.681763
+BCO3 library saved for PEARS ID: 31899
+MILES library saved for PEARS ID: 31899
+FSPS library saved for PEARS ID: 31899
+Currently working with PEARS object id:  35156 with log(M/M_sol) = 10.83 at redshift 1.2
+At -- 2016-10-16 23:40:10.634347
+BCO3 library saved for PEARS ID: 35156
+MILES library saved for PEARS ID: 35156
+FSPS library saved for PEARS ID: 35156
+Currently working with PEARS object id:  36105 with log(M/M_sol) = 10.83 at redshift 0.91
+At -- 2016-10-16 23:47:23.775924
+BCO3 library saved for PEARS ID: 36105
+MILES library saved for PEARS ID: 36105
+FSPS library saved for PEARS ID: 36105
+Currently working with PEARS object id:  36121 with log(M/M_sol) = 11.21 at redshift 0.78
+At -- 2016-10-16 23:54:39.163741
+BCO3 library saved for PEARS ID: 36121
+MILES library saved for PEARS ID: 36121
+FSPS library saved for PEARS ID: 36121
+Currently working with PEARS object id:  37044 with log(M/M_sol) = 10.69 at redshift 1.23
+At -- 2016-10-17 00:01:58.926457
+BCO3 library saved for PEARS ID: 37044
+MILES library saved for PEARS ID: 37044
+FSPS library saved for PEARS ID: 37044
+Currently working with PEARS object id:  37429 with log(M/M_sol) = 10.79 at redshift 0.78
+At -- 2016-10-17 00:08:54.843435
+BCO3 library saved for PEARS ID: 37429
+MILES library saved for PEARS ID: 37429
+FSPS library saved for PEARS ID: 37429
+Currently working with PEARS object id:  40991 with log(M/M_sol) = 11.42 at redshift 0.99
+At -- 2016-10-17 00:16:11.622949
+BCO3 library saved for PEARS ID: 40991
+MILES library saved for PEARS ID: 40991
+FSPS library saved for PEARS ID: 40991
+Currently working with PEARS object id:  41388 with log(M/M_sol) = 10.57 at redshift 0.99
+At -- 2016-10-17 00:23:37.039316
+BCO3 library saved for PEARS ID: 41388
+MILES library saved for PEARS ID: 41388
+FSPS library saved for PEARS ID: 41388
+Currently working with PEARS object id:  41478 with log(M/M_sol) = 10.57 at redshift 1.13
+At -- 2016-10-17 00:30:33.194572
+BCO3 library saved for PEARS ID: 41478
+MILES library saved for PEARS ID: 41478
+FSPS library saved for PEARS ID: 41478
+Currently working with PEARS object id:  41913 with log(M/M_sol) = 10.68 at redshift 1.1
+At -- 2016-10-17 00:37:27.968471
+this galaxy's id repeats in SOUTH and NORTH. Moving on to next galaxy for now.
+BCO3 library saved for PEARS ID: 41913
+this galaxy's id repeats in SOUTH and NORTH. Moving on to next galaxy for now.
+MILES library saved for PEARS ID: 41913
+this galaxy's id repeats in SOUTH and NORTH. Moving on to next galaxy for now.
+FSPS library saved for PEARS ID: 41913
+Currently working with PEARS object id:  43618 with log(M/M_sol) = 10.91 at redshift 0.74
+At -- 2016-10-17 00:37:28.402290
+BCO3 library saved for PEARS ID: 43618
+MILES library saved for PEARS ID: 43618
+FSPS library saved for PEARS ID: 43618
+Currently working with PEARS object id:  44078 with log(M/M_sol) = 10.85 at redshift 0.98
+At -- 2016-10-17 00:44:46.389115
+BCO3 library saved for PEARS ID: 44078
+MILES library saved for PEARS ID: 44078
+FSPS library saved for PEARS ID: 44078
+Currently working with PEARS object id:  44562 with log(M/M_sol) = 11.17 at redshift 1.11
+At -- 2016-10-17 00:52:00.965119
+BCO3 library saved for PEARS ID: 44562
+MILES library saved for PEARS ID: 44562
+FSPS library saved for PEARS ID: 44562
+Currently working with PEARS object id:  44756 with log(M/M_sol) = 10.78 at redshift 0.99
+At -- 2016-10-17 00:59:16.133880
+BCO3 library saved for PEARS ID: 44756
+MILES library saved for PEARS ID: 44756
+FSPS library saved for PEARS ID: 44756
+Currently working with PEARS object id:  45026 with log(M/M_sol) = 10.7 at redshift 0.97
+At -- 2016-10-17 01:06:11.888546
+BCO3 library saved for PEARS ID: 45026
+MILES library saved for PEARS ID: 45026
+FSPS library saved for PEARS ID: 45026
+Currently working with PEARS object id:  46766 with log(M/M_sol) = 10.59 at redshift 1.02
+At -- 2016-10-17 01:13:27.870001
+BCO3 library saved for PEARS ID: 46766
+MILES library saved for PEARS ID: 46766
+FSPS library saved for PEARS ID: 46766
+Currently working with PEARS object id:  47740 with log(M/M_sol) = 10.68 at redshift 1.09
+At -- 2016-10-17 01:20:23.946362
+BCO3 library saved for PEARS ID: 47740
+MILES library saved for PEARS ID: 47740
+FSPS library saved for PEARS ID: 47740
+Currently working with PEARS object id:  48189 with log(M/M_sol) = 10.56 at redshift 0.99
+At -- 2016-10-17 01:27:39.486837
+BCO3 library saved for PEARS ID: 48189
+MILES library saved for PEARS ID: 48189
+FSPS library saved for PEARS ID: 48189
+Currently working with PEARS object id:  48650 with log(M/M_sol) = 10.51 at redshift 0.93
+At -- 2016-10-17 01:34:34.160557
+BCO3 library saved for PEARS ID: 48650
+MILES library saved for PEARS ID: 48650
+FSPS library saved for PEARS ID: 48650
+Currently working with PEARS object id:  49771 with log(M/M_sol) = 10.66 at redshift 0.61
+At -- 2016-10-17 01:41:29.409389
+Traceback (most recent call last):
+  File "fast_chi2_jackknife_massive_galaxies.py", line 236, in <module>
+    create_models_wrapper(lam_em, current_pears_index, redshift)
+  File "fast_chi2_jackknife_massive_galaxies.py", line 173, in create_models_wrapper
+    create_model_fits('bc03', resampling_lam_grid, pearsid, redshift)
+  File "fast_chi2_jackknife_massive_galaxies.py", line 158, in create_model_fits
+    create_bc03_lib_main(lam_grid, pearsid, redshift)
+  File "fast_chi2_jackknife_massive_galaxies.py", line 90, in create_bc03_lib_main
+    interplsf = get_interplsf(pearsid, redshift)
+  File "fast_chi2_jackknife_massive_galaxies.py", line 73, in get_interplsf
+    lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
+  File "/Users/baj/anaconda/lib/python2.7/site-packages/numpy/lib/npyio.py", line 803, in loadtxt
+    fh = iter(open(fname, 'U'))
+IOError: [Errno 2] No such file or directory: '/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s49771_avg_lsf.txt'
+
+
+
+
+
