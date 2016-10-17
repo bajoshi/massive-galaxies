@@ -57,8 +57,8 @@ def get_interplsf(pearsid, redshift):
     filename_n = pears_data_path + 'h_pears_n_id' + str(pearsid) + '.fits'
     filename_s = pears_data_path + 'h_pears_s_id' + str(pearsid) + '.fits'
     if (os.path.isfile(filename_n)) and (os.path.isfile(filename_s)):
-        print "this galaxy's id repeats in SOUTH and NORTH. Pick another galaxy for now."
-        sys.exit(0)
+        print "this galaxy's id repeats in SOUTH and NORTH. Moving on to next galaxy for now."
+        return None
     if not os.path.isfile(filename_n):
         filename = pears_data_path + 'h_pears_s_id' + str(pearsid) + '.fits'
     else:
@@ -88,6 +88,9 @@ def create_bc03_lib_main(lam_grid, pearsid, redshift):
     final_fitsname = 'all_comp_spectra_bc03_solar_withlsf_' + str(pearsid) + '.fits'
 
     interplsf = get_interplsf(pearsid, redshift)
+
+    if interplsf is None:
+        return None
 
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
     example = fits.open(home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/bc2003_hr_m62_tauV0_csp_tau100_salp.fits')
@@ -230,8 +233,9 @@ if __name__ == '__main__':
         # define resampling grid for model spectra. i.e. resampling_lam_grid = lam_em
         # This will be different for each galaxy because they are all at different redshifts
         # so when unredshifted the lam grid is different for each.
-        #create_models_wrapper(lam_em, current_pears_index, redshift)
+        create_models_wrapper(lam_em, current_pears_index, redshift)
 
+        """
         # Open fits files with comparison spectra
         bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
         miles_spec = fits.open(savefits_dir + 'all_comp_spectra_miles_withlsf_' + str(current_pears_index) + '.fits', memmap=False)
@@ -336,6 +340,7 @@ if __name__ == '__main__':
         f_ages_fsps.close()
         f_logtau_fsps.close()
         f_exten_fsps.close()
+        """
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
