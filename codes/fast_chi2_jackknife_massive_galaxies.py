@@ -229,8 +229,7 @@ if __name__ == '__main__':
     pears_unique_ids, pears_unique_ids_indices = np.unique(pears_id[massive_galaxies_indices], return_index=True)
     for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
         redshift = photz[massive_galaxies_indices][count]
-
-        print "Currently working with PEARS object id: ", current_pears_index, "with log(M/M_sol) =", stellarmass[massive_galaxies_indices][count], "at redshift", redshift
+        print "\n", "Currently working with PEARS object id: ", current_pears_index, "with log(M/M_sol) =", stellarmass[massive_galaxies_indices][count], "at redshift", redshift
         print "At --", dt.now()
 
         lam_em, flam_em, ferr, specname = gd.fileprep(current_pears_index, redshift)
@@ -282,23 +281,29 @@ if __name__ == '__main__':
         resampled_spec = resampled_spec.T
 
         # Files to save distribution of best params in
-        f_ages_bc03 = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_bc03.txt', 'wa')
-        f_logtau_bc03 = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_logtau_bc03.txt', 'wa')
-        f_tauv_bc03 = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_tauv_bc03.txt', 'wa')
-        f_exten_bc03 = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_bc03.txt', 'wa')
+        f_ages_bc03 = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_ages_bc03.txt', 'wa')
+        f_logtau_bc03 = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_logtau_bc03.txt', 'wa')
+        f_tauv_bc03 = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_tauv_bc03.txt', 'wa')
+        f_exten_bc03 = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_exten_bc03.txt', 'wa')
+        f_chi2_bc03 = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_chi2_bc03.txt', 'wa')
+        f_alpha_bc03 = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_alpha_bc03.txt', 'wa')
     
-        f_ages_miles = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_miles.txt', 'wa')
-        f_metals_miles = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_metals_miles.txt', 'wa')
-        f_exten_miles = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_miles.txt', 'wa')
+        f_ages_miles = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_ages_miles.txt', 'wa')
+        f_metals_miles = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_metals_miles.txt', 'wa')
+        f_exten_miles = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_exten_miles.txt', 'wa')
+        f_chi2_miles = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_chi2_miles.txt', 'wa')
+        f_alpha_miles = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_alpha_miles.txt', 'wa')
     
-        f_ages_fsps = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_ages_fsps.txt', 'wa')
-        f_logtau_fsps = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_logtau_fsps.txt', 'wa')
-        f_exten_fsps = open(savefits_dir + 'jackknife' + str(current_pears_index) + '_exten_fsps.txt', 'wa')
+        f_ages_fsps = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_ages_fsps.txt', 'wa')
+        f_logtau_fsps = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_logtau_fsps.txt', 'wa')
+        f_exten_fsps = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_exten_fsps.txt', 'wa')
+        f_chi2_fsps = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_chi2_fsps.txt', 'wa')
+        f_alpha_fsps = open(savefits_dir + 'jackknife_withlsf_' + str(current_pears_index) + '_alpha_fsps.txt', 'wa')
 
         # Run the actual fitting function
-        ages_bc03, metals_bc03, tau_bc03, tauv_bc03, exten_bc03 = fcj.fit_chi2(flam_em, ferr, comp_spec_bc03, bc03_extens, resampled_spec, num_samp_to_draw, 'bc03', bc03_spec)
-        ages_miles, metals_miles, exten_miles = fcj.fit_chi2(flam_em, ferr, comp_spec_miles, miles_extens, resampled_spec, num_samp_to_draw, 'miles', miles_spec)
-        ages_fsps, metals_fsps, tau_fsps, exten_fsps = fcj.fit_chi2(flam_em, ferr, comp_spec_fsps, fsps_extens, resampled_spec, num_samp_to_draw, 'fsps', fsps_spec)
+        ages_bc03, metals_bc03, tau_bc03, tauv_bc03, exten_bc03, chi2_bc03, alpha_bc03 = fcj.fit_chi2(flam_em, ferr, comp_spec_bc03, bc03_extens, resampled_spec, num_samp_to_draw, 'bc03', bc03_spec)
+        ages_miles, metals_miles, exten_miles, chi2_miles, alpha_miles = fcj.fit_chi2(flam_em, ferr, comp_spec_miles, miles_extens, resampled_spec, num_samp_to_draw, 'miles', miles_spec)
+        ages_fsps, metals_fsps, tau_fsps, exten_fsps, chi2_fsps, alpha_fsps = fcj.fit_chi2(flam_em, ferr, comp_spec_fsps, fsps_extens, resampled_spec, num_samp_to_draw, 'fsps', fsps_spec)
 
         logtau_bc03 = np.log10(tau_bc03)
         logtau_fsps = np.log10(tau_fsps)
@@ -317,6 +322,12 @@ if __name__ == '__main__':
         for k in range(len(exten_bc03)):
             f_exten_bc03.write(str(int(exten_bc03[k])) + ' ')
 
+        for k in range(len(chi2_bc03)):
+            f_chi2_bc03.write(str(int(chi2_bc03[k])) + ' ')
+
+        for k in range(len(alpha_bc03)):
+            f_alpha_bc03.write(str(int(alpha_bc03[k])) + ' ')
+
         ### MILES ###
         for k in range(len(ages_miles)):
             f_ages_miles.write(str(ages_miles[k]) + ' ')
@@ -326,6 +337,12 @@ if __name__ == '__main__':
 
         for k in range(len(exten_miles)):
             f_exten_miles.write(str(int(exten_miles[k])) + ' ')
+
+        for k in range(len(chi2_miles)):
+            f_chi2_miles.write(str(int(chi2_miles[k])) + ' ')
+
+        for k in range(len(alpha_miles)):
+            f_alpha_miles.write(str(int(alpha_miles[k])) + ' ')
 
         ### FSPS ###
         for k in range(len(ages_fsps)):
@@ -337,19 +354,31 @@ if __name__ == '__main__':
         for k in range(len(exten_fsps)):
             f_exten_fsps.write(str(int(exten_fsps[k])) + ' ')
 
+        for k in range(len(chi2_fsps)):
+            f_chi2_fsps.write(str(int(chi2_fsps[k])) + ' ')
+
+        for k in range(len(alpha_fsps)):
+            f_alpha_fsps.write(str(int(alpha_fsps[k])) + ' ')
+
         # Close all files to write them -- 
         f_ages_bc03.close()
         f_logtau_bc03.close()
         f_tauv_bc03.close()
         f_exten_bc03.close()
+        f_chi2_bc03.close()
+        f_alpha_bc03.close()
     
         f_ages_miles.close()
         f_metals_miles.close()
         f_exten_miles.close()
-    
+        f_chi2_miles.close()
+        f_alpha_miles.close()    
+
         f_ages_fsps.close()
         f_logtau_fsps.close()
         f_exten_fsps.close()
+        f_chi2_fsps.close()
+        f_alpha_fsps.close()
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
