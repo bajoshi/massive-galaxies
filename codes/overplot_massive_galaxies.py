@@ -132,7 +132,7 @@ if __name__ == '__main__':
     photz = cat['threedzphot']
 
     # Find indices for massive galaxies
-    massive_galaxies_indices = np.where(stellarmass >= 11)[0]
+    massive_galaxies_indices = np.where(stellarmass >= 10.5)[0]
 
     # Create pdf file to plot figures in
     pdfname = massive_figures_dir + 'overplot_all_sps_massive_galaxies.pdf'
@@ -360,25 +360,25 @@ if __name__ == '__main__':
         # Plot best fit parameters as anchored text boxes
         redshiftbox = TextArea(r'$z$ = ' + str(redshift), textprops=dict(color='k', size=9))
         anc_redshiftbox = AnchoredOffsetbox(loc=2, child=redshiftbox, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.03, 0.6),\
+                                             bbox_to_anchor=(0.03, 0.65),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_redshiftbox)                
 
-        form_redshiftbox = TextArea(r'$\mathrm{z_{formation}}$ = ' + str(best_form_redshift), textprops=dict(color='r', size=9))
+        form_redshiftbox = TextArea(r'$\mathrm{z_{formation}}$ = ' + "{:.2f}".format(float(best_form_redshift)), textprops=dict(color='r', size=9))
         anc_form_redshiftbox = AnchoredOffsetbox(loc=2, child=form_redshiftbox, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.03, 0.75),\
+                                             bbox_to_anchor=(0.03, 0.8),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_form_redshiftbox) 
 
         stellarmassbox = TextArea(r'$\mathrm{M}_* = 10^{' + str(stellarmass[massive_galaxies_indices][count]) + r'}$' + r' $\mathrm{M}_\odot$', textprops=dict(color='k', size=9))
         anc_stellarmassbox = AnchoredOffsetbox(loc=2, child=stellarmassbox, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.03, 0.55),\
+                                             bbox_to_anchor=(0.03, 0.6),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_stellarmassbox)   
 
         pearsidbox = TextArea(str(current_pears_index), textprops=dict(color='k', size=9))
         anc_pearsidbox = AnchoredOffsetbox(loc=2, child=pearsidbox, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.03, 0.5),\
+                                             bbox_to_anchor=(0.03, 0.55),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_pearsidbox)   
 
@@ -395,11 +395,11 @@ if __name__ == '__main__':
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_agebox)
 
-        metalbox = TextArea("Z = " + "{:.2f}".format(0.02), textprops=dict(color='r', size=8))  # because metallicity is fixed to solar
-        anc_metalbox = AnchoredOffsetbox(loc=2, child=metalbox, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.03, 0.8),\
-                                             bbox_transform=ax1.transAxes, borderpad=0.0)
-        ax1.add_artist(anc_metalbox)
+        #metalbox = TextArea("Z = " + "{:.2f}".format(0.02), textprops=dict(color='r', size=8))  # because metallicity is fixed to solar
+        #anc_metalbox = AnchoredOffsetbox(loc=2, child=metalbox, pad=0.0, frameon=False,\
+        #                                     bbox_to_anchor=(0.03, 0.8),\
+        #                                     bbox_transform=ax1.transAxes, borderpad=0.0)
+        #ax1.add_artist(anc_metalbox)
 
         taubox = TextArea(r"$\tau$ = " + "{:.2f}".format(float(best_tau)) + r" $\pm$ " + "{:.2f}".format(float(best_tau_err)) + " Gyr",
          textprops=dict(color='r', size=8))
@@ -408,15 +408,15 @@ if __name__ == '__main__':
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_taubox)
 
-        chi2box = TextArea(r'$\mathrm{\chi^2_{red}}$ = ' + str(best_chi2), textprops=dict(color='r', size=9))
+        chi2box = TextArea(r'$\mathrm{\chi^2_{red}}$ = ' + "{:.2f}".format(float(best_chi2/len(currentspec))), textprops=dict(color='r', size=9))
         anc_chi2box = AnchoredOffsetbox(loc=2, child=chi2box, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.03, 0.7),\
+                                             bbox_to_anchor=(0.03, 0.75),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_chi2box) 
 
         alphabox = TextArea(r'$\alpha$ = ' + str(best_alpha), textprops=dict(color='r', size=9))
         anc_alphabox = AnchoredOffsetbox(loc=2, child=alphabox, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.03, 0.65),\
+                                             bbox_to_anchor=(0.03, 0.7),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_alphabox) 
 
@@ -573,21 +573,21 @@ if __name__ == '__main__':
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_taubox)
 
-        form_redshiftbox = TextArea(r'$\mathrm{z_{formation}}$ = ' + str(best_form_redshift), textprops=dict(color='g', size=9))
+        form_redshiftbox = TextArea(r'$\mathrm{z_{formation}}$ = ' + "{:.2f}".format(float(best_form_redshift)), textprops=dict(color='g', size=9))
         anc_form_redshiftbox = AnchoredOffsetbox(loc=2, child=form_redshiftbox, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.28, 0.75),\
+                                             bbox_to_anchor=(0.28, 0.8),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_form_redshiftbox) 
 
-        chi2box = TextArea(r'$\mathrm{\chi^2_{red}}$ = ' + str(best_chi2), textprops=dict(color='g', size=9))
+        chi2box = TextArea(r'$\mathrm{\chi^2_{red}}$ = ' + "{:.2f}".format(float(best_chi2/len(currentspec))), textprops=dict(color='g', size=9))
         anc_chi2box = AnchoredOffsetbox(loc=2, child=chi2box, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.28, 0.7),\
+                                             bbox_to_anchor=(0.28, 0.75),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_chi2box) 
 
         alphabox = TextArea(r'$\alpha$ = ' + str(best_alpha), textprops=dict(color='g', size=9))
         anc_alphabox = AnchoredOffsetbox(loc=2, child=alphabox, pad=0.0, frameon=False,\
-                                             bbox_to_anchor=(0.28, 0.65),\
+                                             bbox_to_anchor=(0.28, 0.7),\
                                              bbox_transform=ax1.transAxes, borderpad=0.0)
         ax1.add_artist(anc_alphabox) 
 
@@ -626,6 +626,7 @@ if __name__ == '__main__':
         ax2.add_artist(anc_resid_labelbox)
 
         pdf.savefig(bbox_inches='tight')
+        plt.close()
         del fig, ax1, ax2
     
     best_age_bc03 = np.asarray(best_age_bc03)
