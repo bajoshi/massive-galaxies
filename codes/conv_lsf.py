@@ -4,6 +4,7 @@ from astropy.convolution import convolve, convolve_fft
 import numpy as np
 import numpy.ma as ma
 from astropy.io import fits
+from scipy.constants import c
 
 import os
 import sys
@@ -24,6 +25,7 @@ sys.path.append(massive_galaxies_dir + 'codes/')
 import grid_coadd as gd
 import fast_chi2_jackknife as fcj
 from fast_chi2_jackknife_massive_galaxies import create_bc03_lib_main
+import cosmology_calculator as cc
 
 if __name__ == '__main__':
 
@@ -53,9 +55,9 @@ if __name__ == '__main__':
     
     ####### ------------------- with lsf ------------------- #######
     resampling_lam_grid = lam_em
-    #if not os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits'):
-    #    create model library that is adapted to the specific galaxy
-    create_bc03_lib_main(resampling_lam_grid, current_pears_index, redshift)
+    if not os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits'):
+        # create model library that is adapted to the specific galaxy
+        create_bc03_lib_main(resampling_lam_grid, current_pears_index, redshift)
 
     # read in the model libraries
     bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_solar_withlsf_' + str(current_pears_index) + '.fits')
@@ -78,7 +80,10 @@ if __name__ == '__main__':
     resampled_spec = resampled_spec.T
 
     # Do the actual chi2 fitting
-    ages_bc03, metals_bc03, tau_bc03, tauv_bc03, exten_bc03 = fcj.fit_chi2(flam_em, ferr, comp_spec_bc03, bc03_extens, resampled_spec, num_samp_to_draw, 'bc03', bc03_spec)
+    ages_bc03, metals_bc03, tau_bc03, tauv_bc03, exten_bc03, chi2_bc03, alpha_bc03 = fcj.fit_chi2(flam_em, ferr, comp_spec_bc03, bc03_extens, resampled_spec, num_samp_to_draw, 'bc03', bc03_spec)
+
+    print "best age", np.median(ages_bc03)
+    print "best tau", np.median(tau_bc03)
 
     # find the extension that corresponds to the best fit and read in the data from the corresponding model
     best_exten = int(np.median(exten_bc03))
@@ -86,6 +91,15 @@ if __name__ == '__main__':
 
     # find vertical scaling factor that minimizes chi2
     alpha = np.sum(flam_em * currentspec / ferr**2) / np.sum(currentspec**2 / ferr**2)
+    best_alpha = np.median(alpha_bc03)
+    print best_alpha, alpha, stellarmass[massive_galaxies_indices][count]
+
+    mpc, H_0, omega_m0, omega_r0, omega_lam0, year = cc.get_cosmology_params()
+    dp = 1e-3*c*cc.proper_distance(H_0, omega_m0, omega_r0, omega_lam0, 1/(1+redshift))[0]  # in Mpc
+    dp = dp * 3.09e24  # in cm
+    dl = (1 + redshift)*dp
+    print alpha * (4*np.pi*dl**2) / 3.846e33
+    print 10**stellarmass[massive_galaxies_indices][count] / alpha
 
     # make the plot
     fig = plt.figure()
