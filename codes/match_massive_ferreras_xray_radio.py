@@ -101,9 +101,6 @@ if __name__ == '__main__':
     ax.set_ylim(1.4,2.8)
     #ax.set_xlim(7,12)
 
-    plt.show()
-    plt.close()
-
     # Read in Xray and radio catalogs
     # GOODS-S
     goodss_chandra = np.genfromtxt(home + '/Desktop/FIGS/x_ray_radio_sources_figs/goodss_chandra.txt',\
@@ -118,8 +115,112 @@ if __name__ == '__main__':
     goodsn_radio = np.genfromtxt(home + '/Desktop/FIGS/x_ray_radio_sources_figs/morrison2010ApJS188.178_GOODSN_radio.txt',\
                                  dtype=None, names=['hr','min','sec','deg','arcmin','arcsec'], usecols=(1,2,3,5,6,7), skip_header=33)
 
-
     # make ra dec lists for all catalogs
+
+    pearsra = cat['pearsra']
+    pearsdec = cat['pearsdec']
+
+    north_idx = np.where(pearsdec > 0)[0]
+    south_idx = np.where(pearsdec < 0)[0]
+
+    # GOODS-N Chandra ra dec lists
+    ra_goodsn_chandra = []
+    dec_goodsn_chandra = []
+    for i in range(len(goodsn_chandra)):
+        ra_hr = float(goodsn_chandra[i][0].split(' ')[0])
+        ra_min = float(goodsn_chandra[i][0].split(' ')[1])
+        ra_sec = float(goodsn_chandra[i][0].split(' ')[2])
     
+        dec_deg = float(goodsn_chandra[i][1].split(' ')[0])
+        dec_arcmin = float(goodsn_chandra[i][1].split(' ')[1])
+        dec_arcsec = float(goodsn_chandra[i][1].split(' ')[2])
+    
+        ra = 15 * ra_hr + (15 * ra_min / 60) + (15 * ra_sec / 3600)
+        dec = dec_deg + dec_arcmin/60 + dec_arcsec/3600
+    
+        ra_goodsn_chandra.append(ra)
+        dec_goodsn_chandra.append(dec)
+
+    ra_goodsn_chandra = np.asarray(ra_goodsn_chandra)
+    dec_goodsn_chandra = np.asarray(dec_goodsn_chandra)
+
+    # GOODS-S Chandra ra dec lists
+    ra_goodss_chandra = []
+    dec_goodss_chandra = []
+    for i in range(len(goodss_chandra)):
+        ra_hr = float(goodss_chandra[i][0].split(' ')[0])
+        ra_min = float(goodss_chandra[i][0].split(' ')[1])
+        ra_sec = float(goodss_chandra[i][0].split(' ')[2])
+        
+        dec_deg = float(goodss_chandra[i][1].split(' ')[0])
+        dec_arcmin = float(goodss_chandra[i][1].split(' ')[1])
+        dec_arcsec = float(goodss_chandra[i][1].split(' ')[2])
+        
+        ra = 15 * ra_hr + (15 * ra_min / 60) + (15 * ra_sec / 3600)
+        dec = dec_deg - dec_arcmin/60 - dec_arcsec/3600 # note the minus signs for the southern field
+        
+        ra_goodss_chandra.append(ra)
+        dec_goodss_chandra.append(dec)
+
+    ra_goodss_chandra = np.asarray(ra_goodss_chandra)
+    dec_goodss_chandra = np.asarray(dec_goodss_chandra)
+
+    # match chandra goodsn with pears
+    deltaRA, deltaDEC, goodsn_chandra_ra_matches, goodsn_chandra_dec_matches, pears_ra_matches, pears_dec_matches, num_single_matches = \
+    mt.match(ra_goodsn_chandra, dec_goodsn_chandra, pearsra[north_idx], pearsdec[north_idx], lim=0.3*1/3600)
+
+    print "Single matches for PEARS and CHANDRA GOODS-N - ", num_single_matches
+    mt.plot_diff(deltaRA, deltaDEC, name='goodsn_chandra_pears')
+
+    urcol_chandra_goodsn = np.zeros(len(pears_ra_matches))
+    stellarmass_chandra_goodsn = np.zeros(len(pears_ra_matches))
+
+    for i in range(len(pears_ra_matches)):
+
+        idx = np.where(pearsra == pears_ra_matches[i])[0]
+        if len(idx) > 1:
+            urcol_chandra_goodsn[i] = ur_color[idx][0]
+            stellarmass_chandra_goodsn[i] = stellarmass[idx][0]
+        else:
+            urcol_chandra_goodsn[i] = ur_color[idx]
+            stellarmass_chandra_goodsn[i] = stellarmass[idx]
+
+    print len(np.unique(pears_ra_matches))
+
+    # match chandra goodss with pears
+    deltaRA, deltaDEC, goodss_chandra_ra_matches, goodss_chandra_dec_matches, pears_ra_matches, pears_dec_matches, num_single_matches = \
+    mt.match(ra_goodss_chandra, dec_goodss_chandra, pearsra[south_idx], pearsdec[south_idx], lim=0.3*1/3600)
+
+    print "Single matches for PEARS and CHANDRA GOODS-S - ", num_single_matches
+    mt.plot_diff(deltaRA, deltaDEC, name='goodss_chandra_pears')
+
+    urcol_chandra_goodss = np.zeros(len(pears_ra_matches))
+    stellarmass_chandra_goodss = np.zeros(len(pears_ra_matches))
+
+    for i in range(len(pears_ra_matches)):
+
+        idx = np.where(pearsra == pears_ra_matches[i])[0]
+        if len(idx) > 1:
+            urcol_chandra_goodss[i] = ur_color[idx][0]
+            stellarmass_chandra_goodss[i] = stellarmass[idx][0]
+        else:
+            urcol_chandra_goodss[i] = ur_color[idx]
+            stellarmass_chandra_goodss[i] = stellarmass[idx]
+
+    print len(np.unique(pears_ra_matches))
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(stellarmass, ur_color, '.', markersize=5, color='k')
+    ax.plot(stellarmass_chandra_goodsn, urcol_chandra_goodsn, 'o', markersize=10, mfc='None', mec='gray')
+    ax.plot(stellarmass_chandra_goodss, urcol_chandra_goodss, 'o', markersize=10, mfc='None', mec='gray')
+    #ax.plot(stellarmass[indices_match], ur_color[indices_match], 'o', markersize=10, mfc='None', mec='r')
+
+    #ax.set_ylim(1.4,2.8)
+    #ax.set_xlim(7,12)
+
+    plt.show()
+    plt.close()
 
     sys.exit(0)
