@@ -149,14 +149,14 @@ def read_3dhst_cats():
     threed_ncat = fits.open(home + '/Desktop/FIGS/new_codes/goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat.FITS')
     threed_scat = fits.open(home + '/Desktop/FIGS/new_codes/goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat.FITS')
 
-    #threed_v415 = fits.open(home + '/Documents/3D-HST/3dhst.v4.1.5.master.fits')
+    threed_v41_phot = fits.open(home + '/Desktop/FIGS/new_codes/3dhst_master.phot.v4.1/3dhst_master.phot.v4.1.cat.fits')
 
-    return threed_ncat, threed_scat
+    return threed_ncat, threed_scat, threed_v41_phot
 
 if __name__ == '__main__':
     
     # Read 3dhst cats
-    threed_ncat, threed_scat = read_3dhst_cats()
+    threed_ncat, threed_scat, threed_v41_phot = read_3dhst_cats()
 
     # Read in FIGS catalogs # latest version v1.2
     gn1cat = np.genfromtxt(massive_galaxies_dir + 'GN1_prelim_science_v1.2.cat', dtype=None,\
