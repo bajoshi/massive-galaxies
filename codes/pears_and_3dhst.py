@@ -193,12 +193,12 @@ def match_south(req_range, field, threed_hst_cat):
                     dtype=[('pearsid_m', int), ('threed_field', '|S7'), ('threed_id_m', int), ('pearsra_m', float), ('pearsdec_m', float),\
                             ('threed_ra_m', float), ('threed_dec_m', float), ('separation_arcsec_m', float),
                             ('threed_zphot', float), ('threed_mass', float)])
-    
+
     np.savetxt(outdir + 'matches_' + field + '.txt', data,\
                fmt = ['%d', '%s', '%d', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.5f', '%.2f'], delimiter=' ',\
                header='The 3DHST ID is field specific!' + '\n' +\
                'tolerance used for matches is 0.1"' + '\n' +\
-               'These are only those matches for which the redshift range is 0.6 < z < 1.235' + '\n' +\
+               'These are only those matches for which the redshift range is 0.558 < z < 1.317' + '\n' +\
                'pearsid field threed_id pearsra pearsdec threedra threeddec separation_arcsec threed_zphot threed_mstellar')
 
     return None
