@@ -79,32 +79,54 @@ if __name__ == '__main__':
     stellarmass_gn2, redshift_gn2, redshift_type_gn2, use_phot_gn2 = get_stellar_masses_redshifts(gn2_mat, 'gn2', threed_cat)
     stellarmass_gs1, redshift_gs1, redshift_type_gs1, use_phot_gs1 = get_stellar_masses_redshifts(gs1_mat, 'gs1', threed_cat)
 
-    stellarmass_gn1_indices = np.where(stellarmass_gn1 >= 10.5)[0]
-    stellarmass_gn2_indices = np.where(stellarmass_gn2 >= 10.5)[0]
-    stellarmass_gs1_indices = np.where(stellarmass_gs1 >= 10.5)[0]
+    redshift_gn1_indices = np.where((redshift_gn1 >= 1.2) & (redshift_gn1 <= 1.8))[0]
+    redshift_gn2_indices = np.where((redshift_gn2 >= 1.2) & (redshift_gn2 <= 1.8))[0]
+    redshift_gs1_indices = np.where((redshift_gs1 >= 1.2) & (redshift_gs1 <= 1.8))[0]
+
+    stellarmass_gn1_indices = np.where(stellarmass_gn1[redshift_gn1_indices] >= 10.5)[0]
+    stellarmass_gn2_indices = np.where(stellarmass_gn2[redshift_gn2_indices] >= 10.5)[0]
+    stellarmass_gs1_indices = np.where(stellarmass_gs1[redshift_gs1_indices] >= 10.5)[0]
 
     # print len(stellarmass_gn1_indices) + len(stellarmass_gn2_indices) + len(stellarmass_gs1_indices)
+    # print stellarmass_gn1[redshift_gn1_indices][stellarmass_gn1_indices]
+    # print stellarmass_gn2[redshift_gn2_indices][stellarmass_gn2_indices]
+    # print stellarmass_gs1[redshift_gs1_indices][stellarmass_gs1_indices]
+    # sys.exit(0)
+
+    # total 7 galaxies with stellar mass >10^11 M_sol in GN1, GN2, and GS1 combined over redshift range 1.2 <= z <= 1.8.
+    # total 58 galaxies with stellar mass >10^10.5 M_sol in GN1, GN2, and GS1 combined over redshift range 1.2 <= z <= 1.8.
+
     # total 68 galaxies with stellar mass >10^11 M_sol in GN1, GN2, and GS1 combined over all redshifts.
+    # total 336 galaxies with stellar mass >10^10.5 M_sol in GN1, GN2, and GS1 combined over all redshifts.
 
     for i in range(len(stellarmass_gn1[stellarmass_gn1_indices])):
-        if (redshift_gn1[stellarmass_gn1_indices][i] >= 1.2) and (redshift_gn1[stellarmass_gn1_indices][i] <= 1.76):
+        if (redshift_gn1[stellarmass_gn1_indices][i] >= 1.2) and (redshift_gn1[stellarmass_gn1_indices][i] <= 1.8):
             if redshift_type_gn1[stellarmass_gn1_indices][i] == 'spectro_z':
                 print gn1_mat['figs_id'][stellarmass_gn1_indices][i], stellarmass_gn1[stellarmass_gn1_indices][i], redshift_gn1[stellarmass_gn1_indices][i], redshift_type_gn1[stellarmass_gn1_indices][i]
             elif (redshift_type_gn1[stellarmass_gn1_indices][i] == 'photo_z') and (use_phot_gn1[stellarmass_gn1_indices][i] != 0):
                 print gn1_mat['figs_id'][stellarmass_gn1_indices][i], stellarmass_gn1[stellarmass_gn1_indices][i], redshift_gn1[stellarmass_gn1_indices][i], redshift_type_gn1[stellarmass_gn1_indices][i]
 
     for i in range(len(stellarmass_gn2[stellarmass_gn2_indices])):
-        if (redshift_gn2[stellarmass_gn2_indices][i] >= 1.2) and (redshift_gn2[stellarmass_gn2_indices][i] <= 1.76):
+        if (redshift_gn2[stellarmass_gn2_indices][i] >= 1.2) and (redshift_gn2[stellarmass_gn2_indices][i] <= 1.8):
             if redshift_type_gn2[stellarmass_gn2_indices][i] == 'spectro_z':
                 print gn2_mat['figs_id'][stellarmass_gn2_indices][i], stellarmass_gn2[stellarmass_gn2_indices][i], redshift_gn2[stellarmass_gn2_indices][i], redshift_type_gn2[stellarmass_gn2_indices][i]
             elif (redshift_type_gn2[stellarmass_gn2_indices][i] == 'photo_z') and (use_phot_gn2[stellarmass_gn2_indices][i] != 0):
                 print gn2_mat['figs_id'][stellarmass_gn2_indices][i], stellarmass_gn2[stellarmass_gn2_indices][i], redshift_gn2[stellarmass_gn2_indices][i], redshift_type_gn2[stellarmass_gn2_indices][i]
 
     for i in range(len(stellarmass_gs1[stellarmass_gs1_indices])):
-        if (redshift_gs1[stellarmass_gs1_indices][i] >= 1.2) and (redshift_gs1[stellarmass_gs1_indices][i] <= 1.76):
+        if (redshift_gs1[stellarmass_gs1_indices][i] >= 1.2) and (redshift_gs1[stellarmass_gs1_indices][i] <= 1.8):
             if redshift_type_gs1[stellarmass_gs1_indices][i] == 'spectro_z':
                 print gs1_mat['figs_id'][stellarmass_gs1_indices][i], stellarmass_gs1[stellarmass_gs1_indices][i], redshift_gs1[stellarmass_gs1_indices][i],redshift_type_gs1[stellarmass_gs1_indices][i]
             elif (redshift_type_gs1[stellarmass_gs1_indices][i] == 'photo_z') and (use_phot_gs1[stellarmass_gs1_indices][i] != 0):
                 print gs1_mat['figs_id'][stellarmass_gs1_indices][i], stellarmass_gs1[stellarmass_gs1_indices][i], redshift_gs1[stellarmass_gs1_indices][i],redshift_type_gs1[stellarmass_gs1_indices][i]
+
+
+    # Read in FIGS spc files
+
+    gn1 = fits.open(home + '/Desktop/FIGS/spc_files/GN1_G102_2.combSPC.fits')
+    gn2 = fits.open(home + '/Desktop/FIGS/spc_files/GN2_G102_2.combSPC.fits')
+    gs1 = fits.open(home + '/Desktop/FIGS/spc_files/GS1_G102_2.combSPC.fits')
+    gs2 = fits.open(home + '/Desktop/FIGS/spc_files/GS2_G102_2.combSPC.fits')
+
 
     sys.exit(0)
