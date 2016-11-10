@@ -124,7 +124,7 @@ if __name__ == '__main__':
     data_path = home + "/Documents/PEARS/data_spectra_only/"
 
     # Read pears + 3dhst catalog
-    cat = np.genfromtxt(home + '/Desktop/FIGS/new_codes/color_stellarmass.txt', dtype=None, names=True, skip_header=2)
+    cat = np.genfromtxt(home + '/Desktop/FIGS/stacking-analysis-pears/color_stellarmass.txt', dtype=None, names=True, skip_header=2)
 
     pears_id = cat['pearsid']
     ur_color = cat['urcol']
