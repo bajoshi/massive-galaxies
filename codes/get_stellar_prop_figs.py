@@ -17,13 +17,20 @@ def get_stellar_masses_redshifts(figs_mat, field, threed_cat):
     redshift = []
     use_phot = []
     redshift_type = []
+    figsid = []
+    figsra = []
+    figsdec = []
 
     if (field == 'gn1') or (field == 'gn2'):
 
         threed_n_ind = np.where(threed_cat[1].data['field'] == 'GOODS-N')[0]
 
+        count = 0
         for i in figs_mat['threed_north_idv41']:
             index = np.where(threed_cat[1].data['id'][threed_n_ind] == i)[0]
+            figsid.append(figs_mat['figs_id'][count])
+            figsra.append(figs_mat['figs_ra'][count])
+            figsdec.append(figs_mat['figs_dec'][count])
             stellarmass.append(threed_cat[1].data['lmass'][threed_n_ind][index])
             if threed_cat[1].data['z_spec'][threed_n_ind][index] != -1.0: # i.e. use spectroscopic redshift if available
                 redshift.append(threed_cat[1].data['z_spec'][threed_n_ind][index])
@@ -33,12 +40,18 @@ def get_stellar_masses_redshifts(figs_mat, field, threed_cat):
                 redshift_type.append('photo_z')
             use_phot.append(threed_cat[1].data['use_phot'][threed_n_ind][index])
 
+            count += 1
+
     elif (field == 'gs1') or (field == 'gs2'):
 
         threed_s_ind = np.where(threed_cat[1].data['field'] == 'GOODS-S')[0]
 
+        count = 0
         for i in figs_mat['threed_south_idv41']:
             index = np.where(threed_cat[1].data['id'][threed_s_ind] == i)[0]
+            figsid.append(figs_mat['figs_id'][count])
+            figsra.append(figs_mat['figs_ra'][count])
+            figsdec.append(figs_mat['figs_dec'][count])
             stellarmass.append(threed_cat[1].data['lmass'][threed_s_ind][index])
             if threed_cat[1].data['z_spec'][threed_s_ind][index] != -1.0: # i.e. use spectroscopic redshift if available
                 redshift.append(threed_cat[1].data['z_spec'][threed_s_ind][index])
@@ -47,6 +60,8 @@ def get_stellar_masses_redshifts(figs_mat, field, threed_cat):
                 redshift.append(threed_cat[1].data['z_peak'][threed_s_ind][index])
                 redshift_type.append('photo_z')
             use_phot.append(threed_cat[1].data['use_phot'][threed_s_ind][index])
+
+            count += 1
 
     stellarmass = np.asarray(stellarmass)
     stellarmass = stellarmass.reshape(len(stellarmass))
@@ -60,7 +75,16 @@ def get_stellar_masses_redshifts(figs_mat, field, threed_cat):
     use_phot = np.asarray(use_phot)
     use_phot = use_phot.reshape(len(use_phot))
 
-    return stellarmass, redshift, redshift_type, use_phot
+    figsid = np.asarray(figsid)
+    figsid = figsid.reshape(len(figsid))
+
+    figsra = np.asarray(figsra)
+    figsra = figsra.reshape(len(figsra))    
+
+    figsdec = np.asarray(figsdec)
+    figsdec = figsdec.reshape(len(figsdec))
+
+    return stellarmass, redshift, redshift_type, use_phot, figsid, figsra, figsdec
 
 if __name__ == '__main__':
 
