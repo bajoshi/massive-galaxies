@@ -8,6 +8,7 @@ import os
 import glob
 
 import matplotlib.pyplot as plt
+from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, AnchoredText
 
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -16,7 +17,13 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 newcodes_dir = home + "/Desktop/FIGS/new_codes/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
+sys.path.append(massive_galaxies_dir)
 import dn4000_catalog as dct
+import cosmology_calculator as cc
+
+import astropy.units as u
+from astropy.cosmology import z_at_value
+from astropy.cosmology import Planck15
 
 def check_sdss():
 
@@ -252,7 +259,7 @@ if __name__ == '__main__':
         plt.setp(p, 'facecolor', c)
 
     # save figure
-    fig.savefig(massive_figures_dir + 'pears_dn4000_hist.eps', dpi=300)
+    fig.savefig(massive_figures_dir + 'pears_dn4000_hist.eps', dpi=300, bbox_inches='tight')
 
     # FIGS dn4000 histogram
     fig = plt.figure()
@@ -290,7 +297,7 @@ if __name__ == '__main__':
     #    plt.setp(p, 'facecolor', c)
 
     # save figure
-    fig.savefig(massive_figures_dir + 'figs_dn4000_hist.eps', dpi=300)    
+    fig.savefig(massive_figures_dir + 'figs_dn4000_hist.eps', dpi=300, bbox_inches='tight')    
 
     # dn4000 vs redshift 
     # This should include the big clud of SDSS points and 
@@ -325,14 +332,60 @@ if __name__ == '__main__':
      fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=7, elinewidth=0.5)
     ax.errorbar(redshift_figs_plot, dn4000_figs_plot, yerr=dn4000_err_figs_plot,\
      fmt='.', color='b', markeredgecolor='b', capsize=0, markersize=7, elinewidth=0.5)
-    ax.plot(redshift_sdss_plot, dn4000_sdss_plot, '.', markersize=1, color='slategray')
+    ax.plot(redshift_sdss_plot, dn4000_sdss_plot, '.', markersize=2, color='slategray')
     ax.plot(redshift_shels_plot, dn4000_shels_plot, '.', markersize=2, color='seagreen')
 
     ax.axhline(y=1, linewidth=1, linestyle='--', color='g')
 
+    # labels
+    figslabelbox = TextArea("FIGS", textprops=dict(color='blue', size=12))
+    anc_figslabelbox = AnchoredOffsetbox(loc=2, child=figslabelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.85, 0.97),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_figslabelbox)
+
+    pearslabelbox = TextArea("PEARS", textprops=dict(color='black', size=12))
+    anc_pearslabelbox = AnchoredOffsetbox(loc=2, child=pearslabelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.85, 0.92),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_pearslabelbox)
+
+    sdsslabelbox = TextArea("SDSS", textprops=dict(color='slategray', size=12))
+    anc_sdsslabelbox = AnchoredOffsetbox(loc=2, child=sdsslabelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.85, 0.87),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_sdsslabelbox)
+
+    shelslabelbox = TextArea("SHELS", textprops=dict(color='seagreen', size=12))
+    anc_shelslabelbox = AnchoredOffsetbox(loc=2, child=shelslabelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.85, 0.82),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_shelslabelbox)
+
+    ax.set_xlabel(r'$\mathrm{Redshift}$')
+    ax.set_ylabel(r'$\mathrm{D_n}(4000)$')
+
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True)
+
+    # parallel x axis for age of the Universe
+    # This solution came from 
+    # http://www.astropy.org/astropy-tutorials/edshift_plot.html
+    ax2 = ax.twiny()
+    ages = np.array([13, 12, 11, 10, 9, 8, 7, 6, 5, 4])*u.Gyr
+
+    ageticks = [z_at_value(Planck15.age, age) for age in ages]
+    ax2.set_xticks(ageticks)
+    ax2.set_xticklabels(['{:g}'.format(age) for age in ages.value])
+
     ax.set_xlim(0,1.85)
+    ax2.set_xlim(0,1.85)
+
+    ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$')
 
     # save the figure
-    fig.savefig(massive_figures_dir + 'dn4000_redshift.png', dpi=150)
+    fig.savefig(massive_figures_dir + 'dn4000_redshift.eps', dpi=300, bbox_inches='tight')
 
     sys.exit(0)
