@@ -358,12 +358,15 @@ if __name__ == '__main__':
     # Find indices for massive galaxies
     massive_galaxies_indices = np.where(stellarmass >= 7)[0]
 
-    dn4000_arr = np.zeros(len(pears_id))
-    dn4000_err_arr = np.zeros(len(pears_id))
-    d4000_arr = np.zeros(len(pears_id))
-    d4000_err_arr = np.zeros(len(pears_id))
-    pears_ra = np.zeros(len(pears_id))
-    pears_dec = np.zeros(len(pears_id))
+    pears_id_write = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
+    photz_write = np.zeros(len(np.unique(pears_id[massive_galaxies_indices]))) 
+    dn4000_arr = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
+    dn4000_err_arr = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
+    d4000_arr = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
+    d4000_err_arr = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
+    pears_ra = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
+    pears_dec = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
+    pearsfield = np.empty(len(np.unique(pears_id[massive_galaxies_indices])), dtype='|S7')
 
     # Loop over all spectra 
     pears_unique_ids, pears_unique_ids_indices = np.unique(pears_id[massive_galaxies_indices], return_index=True)
@@ -384,15 +387,19 @@ if __name__ == '__main__':
 
         dn4000_arr[i], dn4000_err_arr[i] = get_dn4000(lam_em, flam_em, ferr)
         d4000_arr[i], d4000_err_arr[i] = get_d4000(lam_em, flam_em, ferr)
+        pearsfield[i] = fieldname[massive_galaxies_indices][count]
+        pears_id_write[i] = current_pears_index
+        photz_write[i] = redshift
 
         i += 1
 
-    data = np.array(zip(pears_id, photz, pears_ra, pears_dec, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
-                dtype=[('pears_id', int), ('photz', float), ('pears_ra', float), ('pears_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
-    np.savetxt(stacking_analysis_dir + 'pears_4000break_catalog.txt', data, fmt=['%d', '%.3f', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
+    data = np.array(zip(pears_id_write, pearsfield, photz_write, pears_ra, pears_dec, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
+                dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('photz_write', float), ('pears_ra', float), ('pears_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
+    np.savetxt(stacking_analysis_dir + 'pears_4000break_catalog.txt', data, fmt=['%d', '%s', '%.3f', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
                header='Catalog for all galaxies that matched between 3DHST and PEARS. \n' +
-               'pears_id redshift ra dec dn4000 dn4000_err d4000 d4000_err')
+               'pears_id field redshift ra dec dn4000 dn4000_err d4000 d4000_err')
 
+    """
     # Read in FIGS spc files
     gn1 = fits.open(home + '/Desktop/FIGS/spc_files/GN1_G102_2.combSPC.fits')
     gn2 = fits.open(home + '/Desktop/FIGS/spc_files/GN2_G102_2.combSPC.fits')
@@ -410,5 +417,6 @@ if __name__ == '__main__':
     get_figs_dn4000('gn1', threed_cat, gn1_mat, gn1)
     get_figs_dn4000('gn2', threed_cat, gn2_mat, gn2)
     get_figs_dn4000('gs1', threed_cat, gs1_mat, gs1)
+    """
 
     sys.exit(0)

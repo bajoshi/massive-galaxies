@@ -115,7 +115,7 @@ if __name__ == '__main__':
     #print np.setdiff1d(np.arange(len(pears_cat)), pears_redshift_indices)  # [1136 2032 2265]
 
     # galaxies with significant breaks
-    sig_4000break_indices_pears = np.where(((pears_cat['dn4000'] / pears_cat['dn4000_err']) >= 5.0) &\
+    sig_4000break_indices_pears = np.where(((pears_cat['dn4000'] / pears_cat['dn4000_err']) >= 3.0) &\
         ((pears_cat['dn4000'] / pears_cat['dn4000_err']) <= 20.0))[0]
 
     # Galaxies with believable breaks; im calling them proper breaks
@@ -128,11 +128,11 @@ if __name__ == '__main__':
     #### FIGS ####
 
     # galaxies with significant breaks
-    sig_4000break_indices_gn1 = np.where(((gn1_cat['dn4000'] / gn1_cat['dn4000_err']) >= 5.0) &\
+    sig_4000break_indices_gn1 = np.where(((gn1_cat['dn4000'] / gn1_cat['dn4000_err']) >= 3.0) &\
         ((gn1_cat['dn4000'] / gn1_cat['dn4000_err']) <= 20.0))[0]
-    sig_4000break_indices_gn2 = np.where(((gn2_cat['dn4000'] / gn2_cat['dn4000_err']) >= 5.0) &\
+    sig_4000break_indices_gn2 = np.where(((gn2_cat['dn4000'] / gn2_cat['dn4000_err']) >= 3.0) &\
         ((gn2_cat['dn4000'] / gn2_cat['dn4000_err']) <= 20.0))[0]
-    sig_4000break_indices_gs1 = np.where(((gs1_cat['dn4000'] / gs1_cat['dn4000_err']) >= 5.0) &\
+    sig_4000break_indices_gs1 = np.where(((gs1_cat['dn4000'] / gs1_cat['dn4000_err']) >= 3.0) &\
         ((gs1_cat['dn4000'] / gs1_cat['dn4000_err']) <= 20.0))[0]
 
     # Galaxies with believable breaks
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     print len(sdss_use_indx)  # 869029
 
     # apply more cuts i.e. significance and break range
-    sig_4000break_indices_sdss = np.where(((dn4000_sdss[sdss_use_indx] / dn4000_err_sdss[sdss_use_indx]) >= 5.0) &\
+    sig_4000break_indices_sdss = np.where(((dn4000_sdss[sdss_use_indx] / dn4000_err_sdss[sdss_use_indx]) >= 3.0) &\
      ((dn4000_sdss[sdss_use_indx] / dn4000_err_sdss[sdss_use_indx]) <= 20.0))[0]
     dn4000_sdss_sig = dn4000_sdss[sdss_use_indx][sig_4000break_indices_sdss]
     dn4000_sdss_range_indx = np.where((dn4000_sdss_sig >= 0) & (dn4000_sdss_sig <= 3))[0]
@@ -332,10 +332,14 @@ if __name__ == '__main__':
      fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=7, elinewidth=0.5)
     ax.errorbar(redshift_figs_plot, dn4000_figs_plot, yerr=dn4000_err_figs_plot,\
      fmt='.', color='b', markeredgecolor='b', capsize=0, markersize=7, elinewidth=0.5)
-    ax.plot(redshift_sdss_plot, dn4000_sdss_plot, '.', markersize=2, color='slategray')
-    ax.plot(redshift_shels_plot, dn4000_shels_plot, '.', markersize=2, color='seagreen')
+    #ax.plot(redshift_sdss_plot, dn4000_sdss_plot, '.', markersize=2, color='slategray')
+    #ax.plot(redshift_shels_plot, dn4000_shels_plot, '.', markersize=2, color='seagreen')
 
-    ax.axhline(y=1, linewidth=1, linestyle='--', color='g')
+    # read in max break val at redshift text file and plot
+    max_break_at_z = np.genfromtxt(massive_galaxies_dir + 'max_break_at_redshift.txt', dtype=None, names=True)
+    ax.plot(max_break_at_z['redshift'], max_break_at_z['max_break'], '-', color='seagreen')
+
+    ax.axhline(y=1, linewidth=1, linestyle='--', color='r')
 
     # labels
     figslabelbox = TextArea("FIGS", textprops=dict(color='blue', size=12))
@@ -350,17 +354,17 @@ if __name__ == '__main__':
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_pearslabelbox)
 
-    sdsslabelbox = TextArea("SDSS", textprops=dict(color='slategray', size=12))
-    anc_sdsslabelbox = AnchoredOffsetbox(loc=2, child=sdsslabelbox, pad=0.0, frameon=False,\
-                                         bbox_to_anchor=(0.85, 0.87),\
-                                         bbox_transform=ax.transAxes, borderpad=0.0)
-    ax.add_artist(anc_sdsslabelbox)
+    #sdsslabelbox = TextArea("SDSS", textprops=dict(color='slategray', size=12))
+    #anc_sdsslabelbox = AnchoredOffsetbox(loc=2, child=sdsslabelbox, pad=0.0, frameon=False,\
+    #                                     bbox_to_anchor=(0.85, 0.87),\
+    #                                     bbox_transform=ax.transAxes, borderpad=0.0)
+    #ax.add_artist(anc_sdsslabelbox)
 
-    shelslabelbox = TextArea("SHELS", textprops=dict(color='seagreen', size=12))
-    anc_shelslabelbox = AnchoredOffsetbox(loc=2, child=shelslabelbox, pad=0.0, frameon=False,\
-                                         bbox_to_anchor=(0.85, 0.82),\
-                                         bbox_transform=ax.transAxes, borderpad=0.0)
-    ax.add_artist(anc_shelslabelbox)
+    #shelslabelbox = TextArea("SHELS", textprops=dict(color='seagreen', size=12))
+    #anc_shelslabelbox = AnchoredOffsetbox(loc=2, child=shelslabelbox, pad=0.0, frameon=False,\
+    #                                     bbox_to_anchor=(0.85, 0.82),\
+    #                                     bbox_transform=ax.transAxes, borderpad=0.0)
+    #ax.add_artist(anc_shelslabelbox)
 
     ax.set_xlabel(r'$\mathrm{Redshift}$')
     ax.set_ylabel(r'$\mathrm{D_n}(4000)$')
@@ -374,14 +378,14 @@ if __name__ == '__main__':
     # This solution came from 
     # http://www.astropy.org/astropy-tutorials/edshift_plot.html
     ax2 = ax.twiny()
-    ages = np.array([13, 12, 11, 10, 9, 8, 7, 6, 5, 4])*u.Gyr
+    ages = np.arange(3,9,0.5)*u.Gyr
 
     ageticks = [z_at_value(Planck15.age, age) for age in ages]
     ax2.set_xticks(ageticks)
     ax2.set_xticklabels(['{:g}'.format(age) for age in ages.value])
 
-    ax.set_xlim(0,1.85)
-    ax2.set_xlim(0,1.85)
+    ax.set_xlim(0.5,1.85)
+    ax2.set_xlim(0.5,1.85)
 
     ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$')
 

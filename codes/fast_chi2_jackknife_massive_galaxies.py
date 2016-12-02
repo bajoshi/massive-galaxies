@@ -49,29 +49,13 @@ def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
     return None
 
-def get_interplsf(pearsid, redshift):
-
-    # find the corresponding LSF
-    pears_data_path = home + "/Documents/PEARS/data_spectra_only/"
-
-    filename_n = pears_data_path + 'h_pears_n_id' + str(pearsid) + '.fits'
-    filename_s = pears_data_path + 'h_pears_s_id' + str(pearsid) + '.fits'
-    if (os.path.isfile(filename_n)) and (os.path.isfile(filename_s)):
-        print "this galaxy's id repeats in SOUTH and NORTH. Moving on to next galaxy for now."
-        return None
-    if not os.path.isfile(filename_n):
-        filename = pears_data_path + 'h_pears_s_id' + str(pearsid) + '.fits'
-    else:
-        filename = filename_n
-
-    specname = os.path.basename(filename)
-    field = specname.split('_')[2]
+def get_interplsf(pearsid, redshift, fieldforid):
 
     # This exception handler makes sure that the lsf exists before trying to use it so that the program execution is not stopped.
     try:
-        if field == 'n':
+        if fieldforid == 'GOODS-N':
             lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt')
-        elif field == 's':
+        elif fieldforid == 'GOODS-S':
             lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
     except IOError as e:
     	print e
@@ -100,7 +84,7 @@ def create_bc03_lib_main(lam_grid, pearsid, redshift):
 
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
     example = fits.open(home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/bc2003_hr_m62_tauV0_csp_tau100_salp.fits')
-    ages = example[2].data[1:]
+    ages = example[2].data
     age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
     total_ages = int(len(age_ind))
     
