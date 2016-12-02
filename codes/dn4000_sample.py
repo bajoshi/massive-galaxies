@@ -336,8 +336,10 @@ if __name__ == '__main__':
     #ax.plot(redshift_shels_plot, dn4000_shels_plot, '.', markersize=2, color='seagreen')
 
     # read in max break val at redshift text file and plot
-    max_break_at_z = np.genfromtxt(massive_galaxies_dir + 'max_break_at_redshift.txt', dtype=None, names=True)
-    ax.plot(max_break_at_z['redshift'], max_break_at_z['max_break'], '-', color='seagreen')
+    max_break_at_z_solar = np.genfromtxt(massive_galaxies_dir + 'max_break_at_redshift_solar.txt', dtype=None, names=True)
+    ax.plot(max_break_at_z_solar['redshift'], max_break_at_z_solar['max_break'], '-', color='seagreen')
+    max_break_at_z_highest_metals = np.genfromtxt(massive_galaxies_dir + 'max_break_at_redshift_highest_metals.txt', dtype=None, names=True)
+    ax.plot(max_break_at_z_highest_metals['redshift'], max_break_at_z_highest_metals['max_break'], '-', color='darkgoldenrod')
 
     ax.axhline(y=1, linewidth=1, linestyle='--', color='r')
 
@@ -366,6 +368,20 @@ if __name__ == '__main__':
     #                                     bbox_transform=ax.transAxes, borderpad=0.0)
     #ax.add_artist(anc_shelslabelbox)
 
+    # metallicity labels
+    solarmetals_labelbox = TextArea(r"$- \mathrm{Z}_\odot$", textprops=dict(color='seagreen', size=12))
+    anc_solarmetals_labelbox = AnchoredOffsetbox(loc=2, child=solarmetals_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.85, 0.87),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_solarmetals_labelbox)
+
+    highestmetals_labelbox = TextArea(r"$- 2.5\, \mathrm{Z}_\odot$", textprops=dict(color='darkgoldenrod', size=12))
+    anc_highestmetals_labelbox = AnchoredOffsetbox(loc=2, child=highestmetals_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.85, 0.82),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_highestmetals_labelbox)
+
+    # labels and minor ticks
     ax.set_xlabel(r'$\mathrm{Redshift}$')
     ax.set_ylabel(r'$\mathrm{D_n}(4000)$')
 
