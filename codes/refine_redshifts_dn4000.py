@@ -89,7 +89,7 @@ def create_bc03_lib(pearsid, redshift, field, lam_grid):
 
     return None
 
-def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec, nexten, spec_hdu, old_z):
+def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec, nexten, spec_hdu, old_z, pearsid):
 
     # first find best fit assuming old redshift is ok
     fitages = []
@@ -185,7 +185,7 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     x_fill = np.arange(4000,4101,1)
     ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
 
-    plt.show()
+    fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + 'refined_z_' + str(pearsid) + '.eps', dpi=150)
 
     sys.exit(0)
 
@@ -252,8 +252,10 @@ if __name__ == '__main__':
     all_pears_redshifts = pears_cat['redshift'][sig_4000break_indices_pears][prop_4000break_indices_pears]
 
     total_galaxies = len(all_pears_ids)
+    print total_galaxies
 
     for i in range(total_galaxies):
+        print i 
 
         current_id = all_pears_ids[i]
         current_redshift = all_pears_redshifts[i]
@@ -309,7 +311,7 @@ if __name__ == '__main__':
         # Run the actual fitting function
         ages_bc03, metals_bc03, refined_z = \
         fit_chi2_redshift(lam_em, orig_lam_grid_model, resampled_spec, ferr,\
-         num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift)
+         num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id)
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
