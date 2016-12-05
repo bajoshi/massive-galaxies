@@ -4,6 +4,7 @@ import numpy as np
 import numpy.ma as ma
 from astropy.io import fits
 from astropy.convolution import convolve_fft
+from astropy.cosmology import Planck15 as cosmo
 
 import os
 import sys
@@ -24,6 +25,7 @@ new_codes_dir = home + "/Desktop/FIGS/new_codes/"
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
 import create_fsps_miles_libraries as ct
+import fast_chi2_jackknife as fcj
 import fast_chi2_jackknife_massive_galaxies as fcjm
 
 def create_bc03_lib(pearsid, redshift, field, lam_grid):
@@ -44,6 +46,7 @@ def create_bc03_lib(pearsid, redshift, field, lam_grid):
     # FITS file where the reduced number of spectra will be saved
     hdu = fits.PrimaryHDU()
     hdulist = fits.HDUList(hdu)
+    hdulist.append(fits.ImageHDU(data=lam_grid))
     
     for filename in glob.glob(home + '/Documents/GALAXEV_BC03/bc03/models/Padova1994/salpeter/' + '*.fits'):
         
@@ -86,17 +89,117 @@ def create_bc03_lib(pearsid, redshift, field, lam_grid):
 
     return None
 
-def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, flam, ferr, comp_spec, nexten, resampled_spec, num_samp_to_draw, spec_hdu, old_z):
+def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec, nexten, spec_hdu, old_z):
 
-    delta_lam = 
-    step_array = np.arange(-400, 400, delta_lam)
+    # first find best fit assuming old redshift is ok
+    fitages = []
+    fitmetals = []
+    best_exten = []
+    bestalpha = []
 
-    for step in step_array:
+    for i in range(int(num_samp_to_draw)):  # loop over jackknife runs
+        if num_samp_to_draw == 1:
+            flam = resampled_spec
+        elif num_samp_to_draw > 1:
+            flam = resampled_spec[i]
+        orig_lam_grid_model_indx_low = np.where(orig_lam_grid_model == orig_lam_grid[0])[0][0]
+        orig_lam_grid_model_indx_high = np.where(orig_lam_grid_model == orig_lam_grid[-1])[0][0]
+        currentspec = comp_spec[:,orig_lam_grid_model_indx_low:orig_lam_grid_model_indx_high+1]
 
+        chi2 = np.zeros(nexten, dtype=np.float64)
+        alpha = np.sum(flam * currentspec / (ferr**2), axis=1) / np.sum(currentspec**2 / ferr**2, axis=1)
+        chi2 = np.sum(((flam - (alpha * currentspec.T).T) / ferr)**2, axis=1)
+        
+        bc03_spec = spec_hdu
+        # This is to get only physical ages
+        sortargs = np.argsort(chi2)
+        for k in range(len(chi2)):
+            best_age = float(bc03_spec[sortargs[k] + 2].header['LOG_AGE'])
+            age_at_z = cosmo.age(old_z).value * 1e9 # in yr
+            if (best_age < np.log10(age_at_z)) & (best_age > 9 + np.log10(0.1)):
+                fitages.append(best_age)
+                fitmetals.append(bc03_spec[sortargs[k] + 2].header['METAL'])
+                best_exten.append(sortargs[k] + 2)
+                bestalpha.append(alpha[sortargs[k]])
+                current_best_fit_model = currentspec[sortargs[k]]
+                current_best_fit_model_whole = comp_spec[sortargs[k]]
+                print "Old     Chi2", chi2[sortargs[k]]
+                break
 
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(orig_lam_grid, current_best_fit_model*bestalpha, '-', color='k')
+    ax.plot(orig_lam_grid, flam, '-', color='g')
+    #ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='mediumseagreen')
+    #ax.errorbar(orig_lam_grid, flam, yerr=ferr, fmt='-', color='g')
+    #sys.exit(0)
 
+    # now shift in wavelength space to get best fit on wavelength grid and correspongind redshift
+    low_lim_for_comp = 2500
+    high_lim_for_comp = 6500
+
+    start_low_indx = np.argmin(abs(orig_lam_grid_model - low_lim_for_comp))
+    start_high_indx = start_low_indx + len(current_best_fit_model) - 1
+
+    chi2_redshift_arr = []
+    count = 0 
+    while 1:
+        current_low_indx = start_low_indx + count
+        current_high_indx = start_high_indx + count
+
+        # do the fitting again for each shifted lam grid
+        current_best_fit_model_chopped = current_best_fit_model_whole[current_low_indx:current_high_indx+1]
+
+        alpha = np.sum(flam * current_best_fit_model_chopped / (ferr**2)) / np.sum(current_best_fit_model_chopped**2 / ferr**2)
+        chi2 = np.sum(((flam - (alpha * current_best_fit_model_chopped)) / ferr)**2)
+
+        chi2_redshift_arr.append(chi2)
+
+        count += 1
+        if orig_lam_grid_model[current_high_indx] >= high_lim_for_comp:
+            break
+
+    print "Refined Chi2", np.min(chi2_redshift_arr)
+    refined_chi2_indx = np.argmin(chi2_redshift_arr)
+
+    # plot the newer shifted spectrum
+    ax.plot(orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1],\
+     flam, '-', color='red')
+    #ax.fill_between(orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1],\
+    # flam + ferr, flam - ferr, color='lightred')
+    #ax.errorbar(orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1],\
+    # flam, yerr=ferr, fmt='-', color='red')
+
+    # shade region for dn4000 bands
+    arg3900 = np.argmin(abs(orig_lam_grid_model - 3900))
+    arg4050 = np.argmin(abs(orig_lam_grid_model - 4050))
+    bestalpha = bestalpha[0]
+
+    x_fill = np.arange(3850,3951,1)
+    y0_fill = np.ones(len(x_fill)) * \
+    (current_best_fit_model_whole[arg3900]*bestalpha - 3*0.05*current_best_fit_model_whole[arg3900]*bestalpha)
+    y1_fill = np.ones(len(x_fill)) * \
+    (current_best_fit_model_whole[arg4050]*bestalpha + 3*0.05*current_best_fit_model_whole[arg4050]*bestalpha)
+    ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
+
+    x_fill = np.arange(4000,4101,1)
+    ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
+
+    plt.show()
+
+    sys.exit(0)
 
     return None
+
+def get_avg_dlam(lam):
+
+    dlam = 0
+    for i in range(len(lam) - 1):
+        dlam += lam[i+1] - lam[i]
+
+    avg_dlam = dlam / (len(lam) - 1)
+
+    return avg_dlam
 
 if __name__ == '__main__':
     
@@ -131,13 +234,16 @@ if __name__ == '__main__':
 
     # galaxies with significant breaks
     sig_4000break_indices_pears = np.where(((pears_cat['dn4000'] / pears_cat['dn4000_err']) >= 3.0))[0]
+
+    #arg = np.where((pears_cat['field'] == 'GOODS-S') & (pears_cat['pears_id'] == 16836))[0]
+    #print pears_cat[arg]
     
     # there are 1226 galaxies with SNR on dn4000 greater than 3sigma
     # there are 492 galaxies with SNR on dn4000 greater than 3sigma and less than 20sigma
 
     # Galaxies with believable breaks; im calling them proper breaks
     prop_4000break_indices_pears = \
-    np.where((pears_cat['dn4000'][sig_4000break_indices_pears] >= 1.2) & (pears_cat['dn4000'][sig_4000break_indices_pears] <= 3.0))[0]
+    np.where((pears_cat['dn4000'][sig_4000break_indices_pears] >= 1.05) & (pears_cat['dn4000'][sig_4000break_indices_pears] <= 3.0))[0]
 
     # there are now 483 galaxies in this dn4000 range
 
@@ -149,16 +255,23 @@ if __name__ == '__main__':
 
     for i in range(total_galaxies):
 
-        print i
-
         current_id = all_pears_ids[i]
         current_redshift = all_pears_redshifts[i]
         current_field = all_pears_fields[i]
 
         lam_em, flam_em, ferr, specname = gd.fileprep(current_id, current_redshift, current_field)
-        resampling_lam_grid = lam_em 
  
-        #create_bc03_lib(current_id, current_redshift, current_field, lam_em)
+        # extend lam_grid to be able to move the lam_grid later 
+        avg_dlam = get_avg_dlam(lam_em)
+
+        lam_low_to_insert = np.arange(1500, lam_em[0], avg_dlam)
+        lam_high_to_append = np.arange(lam_em[-1] + avg_dlam, 7500, avg_dlam)
+
+        resampling_lam_grid = np.insert(lam_em, obj=0, values=lam_low_to_insert)
+        resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+
+        create_bc03_lib(current_id, current_redshift, current_field, resampling_lam_grid)
+        continue
 
         # Open fits files with comparison spectra
         try:
@@ -170,10 +283,14 @@ if __name__ == '__main__':
 
         # Find number of extensions in each
         bc03_extens = fcj.get_total_extensions(bc03_spec)
+        bc03_extens -= 1  # because the first extension is just the resampling grid for the model
+
+        # get lam grid for model and put in spectra for all ages in a properly shaped numpy array for faster computations
+        orig_lam_grid_model = bc03_spec[1].data
 
         comp_spec_bc03 = np.zeros([bc03_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(bc03_extens):
-            comp_spec_bc03[i] = bc03_spec[i+1].data        
+            comp_spec_bc03[i] = bc03_spec[i+2].data
 
         # Get random samples by jackknifing
         num_samp_to_draw = int(1)
@@ -190,7 +307,9 @@ if __name__ == '__main__':
             resampled_spec = resampled_spec.T
 
         # Run the actual fitting function
-        ages_bc03, metals_bc03, refined_z = fit_chi2_redshift()
+        ages_bc03, metals_bc03, refined_z = \
+        fit_chi2_redshift(lam_em, orig_lam_grid_model, resampled_spec, ferr,\
+         num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift)
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
