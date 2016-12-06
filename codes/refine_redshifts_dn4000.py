@@ -13,7 +13,7 @@ import time
 import datetime
 
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, AnchoredText
 
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -27,6 +27,7 @@ import grid_coadd as gd
 import create_fsps_miles_libraries as ct
 import fast_chi2_jackknife as fcj
 import fast_chi2_jackknife_massive_galaxies as fcjm
+import dn4000_catalog as dc
 
 def create_bc03_lib(pearsid, redshift, field, lam_grid):
 
@@ -89,7 +90,7 @@ def create_bc03_lib(pearsid, redshift, field, lam_grid):
 
     return None
 
-def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec, nexten, spec_hdu, old_z, pearsid):
+def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec, nexten, spec_hdu, old_z, pearsid, pearsfield):
 
     # first find best fit assuming old redshift is ok
     fitages = []
@@ -123,15 +124,16 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
                 bestalpha.append(alpha[sortargs[k]])
                 current_best_fit_model = currentspec[sortargs[k]]
                 current_best_fit_model_whole = comp_spec[sortargs[k]]
+                old_chi2 = chi2[sortargs[k]]
                 print "Old     Chi2", chi2[sortargs[k]]
                 break
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(orig_lam_grid, current_best_fit_model*bestalpha, '-', color='k')
-    ax.plot(orig_lam_grid, flam, '-', color='g')
-    #ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='mediumseagreen')
-    #ax.errorbar(orig_lam_grid, flam, yerr=ferr, fmt='-', color='g')
+    ax.plot(orig_lam_grid, flam, '-', color='royalblue')
+    #ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='lightskyblue')
+    #ax.errorbar(orig_lam_grid, flam, yerr=ferr, fmt='-', color='blue')
     #sys.exit(0)
 
     # now shift in wavelength space to get best fit on wavelength grid and correspongind redshift
@@ -160,15 +162,21 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
             break
 
     print "Refined Chi2", np.min(chi2_redshift_arr)
+    new_chi2 = np.min(chi2_redshift_arr)
     refined_chi2_indx = np.argmin(chi2_redshift_arr)
+    new_lam_grid = orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1]
+    new_dn4000, new_dn4000_err = dc.get_dn4000(new_lam_grid, flam, ferr)
+    new_d4000, new_d4000_err = dc.get_d4000(new_lam_grid, flam, ferr)
+
+    lam_obs = orig_lam_grid[0] * (1 + old_z)
+    new_z = (lam_obs / new_lam_grid[0]) - 1
+
+    print old_z, "{:.3}".format(new_z)
 
     # plot the newer shifted spectrum
-    ax.plot(orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1],\
-     flam, '-', color='red')
-    #ax.fill_between(orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1],\
-    # flam + ferr, flam - ferr, color='lightred')
-    #ax.errorbar(orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1],\
-    # flam, yerr=ferr, fmt='-', color='red')
+    ax.plot(new_lam_grid, flam, '-', color='red')
+    #ax.fill_between(new_lam_grid, flam + ferr, flam - ferr, color='lightred')
+    #ax.errorbar(new_lam_grid, flam, yerr=ferr, fmt='-', color='red')
 
     # shade region for dn4000 bands
     arg3900 = np.argmin(abs(orig_lam_grid_model - 3900))
@@ -185,11 +193,34 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     x_fill = np.arange(4000,4101,1)
     ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
 
-    fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + 'refined_z_' + str(pearsid) + '.eps', dpi=150)
+    # put in labels for old and new redshifts
+    id_labelbox = TextArea(pearsfield + "  " + str(pearsid), textprops=dict(color='k', size=12))
+    anc_id_labelbox = AnchoredOffsetbox(loc=2, child=id_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.2, 0.9),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_id_labelbox)
 
-    sys.exit(0)
+    old_z_labelbox = TextArea(r"$z_{\mathrm{old}} = $" + str(old_z), textprops=dict(color='k', size=12))
+    anc_old_z_labelbox = AnchoredOffsetbox(loc=2, child=old_z_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.2, 0.85),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_old_z_labelbox)
 
-    return None
+    new_z_labelbox = TextArea(r"$z_{\mathrm{new}} = $" + str("{:.3}".format(new_z)), textprops=dict(color='k', size=12))
+    anc_new_z_labelbox = AnchoredOffsetbox(loc=2, child=new_z_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.2, 0.8),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_new_z_labelbox)
+
+    # turn on minor ticks and add grid
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True)
+
+    fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + 'refined_z_' + pearsfield + '_' + str(pearsid) + '.eps', dpi=150)
+
+    return new_dn4000, new_dn4000_err, new_d4000, new_d4000_err, old_z, new_z, old_chi2, new_chi2
 
 def get_avg_dlam(lam):
 
@@ -235,7 +266,8 @@ if __name__ == '__main__':
     # galaxies with significant breaks
     sig_4000break_indices_pears = np.where(((pears_cat['dn4000'] / pears_cat['dn4000_err']) >= 3.0))[0]
 
-    #arg = np.where((pears_cat['field'] == 'GOODS-S') & (pears_cat['pears_id'] == 16836))[0]
+    # use these next two lines if you want to run the code only for a specific galaxy
+    #arg = np.where((pears_cat['field'] == 'GOODS-N') & (pears_cat['pears_id'] == 40991))[0]
     #print pears_cat[arg]
     
     # there are 1226 galaxies with SNR on dn4000 greater than 3sigma
@@ -250,18 +282,36 @@ if __name__ == '__main__':
     all_pears_ids = pears_cat['pears_id'][sig_4000break_indices_pears][prop_4000break_indices_pears]
     all_pears_fields = pears_cat['field'][sig_4000break_indices_pears][prop_4000break_indices_pears]
     all_pears_redshifts = pears_cat['redshift'][sig_4000break_indices_pears][prop_4000break_indices_pears]
+    all_pears_ra = pears_cat['ra'][sig_4000break_indices_pears][prop_4000break_indices_pears]
+    all_pears_dec = pears_cat['dec'][sig_4000break_indices_pears][prop_4000break_indices_pears]
 
     total_galaxies = len(all_pears_ids)
     print total_galaxies
 
+    # Make arrays for writing stuff
+    pears_id_to_write = []
+    pears_field_to_write = []
+    pears_ra_to_write = []
+    pears_dec_to_write = []
+    pears_old_redshift_to_write = []
+    pears_new_redshift_to_write = []
+    pears_dn4000_refined_to_write = []
+    pears_dn4000_err_refined_to_write = []
+    pears_d4000_refined_to_write = []
+    pears_d4000_err_refined_to_write = []
+    pears_old_chi2_to_write = []
+    pears_new_chi2_to_write = []
+
     for i in range(total_galaxies):
-        print i 
 
         current_id = all_pears_ids[i]
         current_redshift = all_pears_redshifts[i]
         current_field = all_pears_fields[i]
+        print current_id
 
         lam_em, flam_em, ferr, specname = gd.fileprep(current_id, current_redshift, current_field)
+        print len(flam_em)
+        sys.exit(0)
  
         # extend lam_grid to be able to move the lam_grid later 
         avg_dlam = get_avg_dlam(lam_em)
@@ -272,8 +322,9 @@ if __name__ == '__main__':
         resampling_lam_grid = np.insert(lam_em, obj=0, values=lam_low_to_insert)
         resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
-        create_bc03_lib(current_id, current_redshift, current_field, resampling_lam_grid)
-        continue
+        #create_bc03_lib(current_id, current_redshift, current_field, resampling_lam_grid)
+        #del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
+        #continue
 
         # Open fits files with comparison spectra
         try:
@@ -287,8 +338,7 @@ if __name__ == '__main__':
         bc03_extens = fcj.get_total_extensions(bc03_spec)
         bc03_extens -= 1  # because the first extension is just the resampling grid for the model
 
-        # get lam grid for model and put in spectra for all ages in a properly shaped numpy array for faster computations
-        orig_lam_grid_model = bc03_spec[1].data
+        # put in spectra for all ages in a properly shaped numpy array for faster computations
 
         comp_spec_bc03 = np.zeros([bc03_extens, len(resampling_lam_grid)], dtype=np.float64)
         for i in range(bc03_extens):
@@ -308,16 +358,52 @@ if __name__ == '__main__':
                     resampled_spec[i] = ma.masked
             resampled_spec = resampled_spec.T
 
-        # Run the actual fitting function
-        ages_bc03, metals_bc03, refined_z = \
-        fit_chi2_redshift(lam_em, orig_lam_grid_model, resampled_spec, ferr,\
-         num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id)
+        # run the actual fitting function
+        new_dn4000, new_dn4000_err, new_d4000, new_d4000_err, old_z, new_z, old_chi2, new_chi2 = \
+        fit_chi2_redshift(lam_em, resampling_lam_grid, resampled_spec, ferr,\
+         num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field)
+
+        # append stuff to arrays that will finally be written
+        pears_id_to_write.append(current_id)
+        pears_field_to_write.append(current_field)
+        pears_ra_to_write.append(all_pears_ra[i])
+        pears_dec_to_write.append(all_pears_dec[i])
+        pears_old_redshift_to_write.append(old_z)
+        pears_new_redshift_to_write.append(new_z)
+        pears_dn4000_refined_to_write.append(new_dn4000)
+        pears_dn4000_err_refined_to_write.append(new_dn4000_err)
+        pears_d4000_refined_to_write.append(new_d4000)
+        pears_d4000_err_refined_to_write.append(new_d4000_err)
+        pears_old_chi2_to_write.append(old_chi2)
+        pears_new_chi2_to_write.append(new_chi2)
+
+    # write to plain text file
+    pears_id_to_write = np.asarray(pears_id_to_write)
+    pears_field_to_write = np.asarray(pears_field_to_write, dtype='|S7')
+    pears_ra_to_write = np.asarray(pears_ra_to_write)
+    pears_dec_to_write = np.asarray(pears_dec_to_write)
+    pears_old_redshift_to_write = np.asarray(pears_old_redshift_to_write)
+    pears_new_redshift_to_write = np.asarray(pears_new_redshift_to_write)
+    pears_dn4000_refined_to_write = np.asarray(pears_dn4000_refined_to_write)
+    pears_dn4000_err_refined_to_write = np.asarray(pears_dn4000_err_refined_to_write)
+    pears_d4000_refined_to_write = np.asarray(pears_d4000_refined_to_write)
+    pears_d4000_err_refined_to_write = np.asarray(pears_d4000_err_refined_to_write)
+    pears_old_chi2_to_write = np.asarray(pears_old_chi2_to_write)
+    pears_new_chi2_to_write = np.asarray(pears_new_chi2_to_write)
+
+    data = np.array(zip(pears_id_to_write, pears_field_to_write, pears_ra_to_write, pears_dec_to_write, pears_old_redshift_to_write,\
+        pears_new_redshift_to_write, pears_dn4000_refined_to_write, pears_dn4000_err_refined_to_write, pears_d4000_refined_to_write, pears_d4000_err_refined_to_write,\
+        pears_old_chi2_to_write, pears_new_chi2_to_write),\
+         dtype=[('pears_id_to_write', int), ('pears_field_to_write', '|S7'), ('pears_ra_to_write', float), ('pears_dec_to_write', float),\
+         ('pears_old_redshift_to_write', float), ('pears_new_redshift_to_write', float), ('pears_dn4000_refined_to_write', float),\
+         ('pears_dn4000_err_refined_to_write', float), ('pears_d4000_refined_to_write', float), ('pears_d4000_err_refined_to_write', float),\
+         ('pears_old_chi2_to_write', float), ('pears_new_chi2_to_write', float)])
+    np.savetxt(stacking_analysis_dir + 'pears_refined_4000break_catalog.txt', data,\
+     fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
+     header='Catalog for all galaxies that now have refined redshifts. See paper/code for sample selection. \n' +\
+     'pearsid field ra dec old_z new_z dn4000 dn4000_err d4000 d4000_err old_chi2 new_chi2')
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
     sys.exit(0)
-
-
-
-
 
