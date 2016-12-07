@@ -369,13 +369,15 @@ if __name__ == '__main__':
     #ax.add_artist(anc_shelslabelbox)
 
     # metallicity labels
-    solarmetals_labelbox = TextArea(r"$- \mathrm{Z}_\odot$", textprops=dict(color='seagreen', size=12))
+    # for both these labels
+    # had to use unicode character for long dash because matplotlib doesn't like \text{} inside math mode in a string
+    solarmetals_labelbox = TextArea(ur"\u2014" + r"$\mathrm{Z}_\odot$", textprops=dict(color='seagreen', size=12))
     anc_solarmetals_labelbox = AnchoredOffsetbox(loc=2, child=solarmetals_labelbox, pad=0.0, frameon=False,\
                                          bbox_to_anchor=(0.85, 0.87),\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_solarmetals_labelbox)
 
-    highestmetals_labelbox = TextArea(r"$- 2.5\, \mathrm{Z}_\odot$", textprops=dict(color='darkgoldenrod', size=12))
+    highestmetals_labelbox = TextArea(ur"\u2014" + r"$2.5\, \mathrm{Z}_\odot$", textprops=dict(color='darkgoldenrod', size=12))
     anc_highestmetals_labelbox = AnchoredOffsetbox(loc=2, child=highestmetals_labelbox, pad=0.0, frameon=False,\
                                          bbox_to_anchor=(0.85, 0.82),\
                                          bbox_transform=ax.transAxes, borderpad=0.0)

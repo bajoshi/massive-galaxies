@@ -96,6 +96,15 @@ if __name__ == '__main__':
     ax.tick_params('both', width=1, length=4.7, which='major')
     ax.grid(True)
 
-    fig.savefig(massive_figures_dir + "refined_old_new_chi2_hist.eps", dpi=300, bbox_inches='tight')
+    ax.set_xlabel(r'$\mathrm{log(\chi^2)}$')
+    ax.set_ylabel(r'$\mathrm{N}$')
 
-    plt.show()
+    fig.savefig(massive_figures_dir + "refined_old_new_chi2_hist.eps", dpi=300, bbox_inches='tight')
+    
+    sys.exit(0)
+
+
+
+
+
+
