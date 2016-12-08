@@ -29,7 +29,7 @@ import fast_chi2_jackknife as fcj
 import fast_chi2_jackknife_massive_galaxies as fcjm
 import dn4000_catalog as dc
 
-def create_bc03_lib(pearsid, redshift, field, lam_grid):
+def create_bc03_lib_ssp(pearsid, redshift, field, lam_grid):
 
     final_fitsname = 'all_comp_spectra_bc03_ssp_withlsf_' + str(pearsid) + '.fits'
 
@@ -232,6 +232,10 @@ def get_avg_dlam(lam):
 
     return avg_dlam
 
+def error_in_z():
+
+    return None
+
 if __name__ == '__main__':
     
     # Start time
@@ -310,8 +314,11 @@ if __name__ == '__main__':
         print current_id
 
         lam_em, flam_em, ferr, specname = gd.fileprep(current_id, current_redshift, current_field)
-        print len(flam_em)
-        sys.exit(0)
+
+        # Contamination rejection
+        if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
+            print 'Skipping', current_id, 'because of overall contamination.'
+            continue
  
         # extend lam_grid to be able to move the lam_grid later 
         avg_dlam = get_avg_dlam(lam_em)
@@ -322,7 +329,7 @@ if __name__ == '__main__':
         resampling_lam_grid = np.insert(lam_em, obj=0, values=lam_low_to_insert)
         resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
-        #create_bc03_lib(current_id, current_redshift, current_field, resampling_lam_grid)
+        #create_bc03_lib_ssp(current_id, current_redshift, current_field, resampling_lam_grid)
         #del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
         #continue
 
