@@ -24,6 +24,8 @@ if __name__ == '__main__':
     old_chi2 = np.log10(pears_refined_cat['old_chi2'] / 88)
     new_chi2 = np.log10(pears_refined_cat['new_chi2'] / 88)
 
+    new_z_err = pears_refined_cat['new_z_err']
+
     # make plots
     # z_spec vs z_phot
     gs = gridspec.GridSpec(15,15)
@@ -68,16 +70,16 @@ if __name__ == '__main__':
 
     del fig, ax1, ax2
 
+    """
     # histograms of chi2
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
     # get total bins and plot histogram
-    old_chi2_indx = np.where(old_chi2 < 20)
-    new_chi2_indx = np.where(new_chi2 < 20)
-
-    old_chi2 = old_chi2[old_chi2_indx]
-    new_chi2 = new_chi2[new_chi2_indx]
+    #old_chi2_indx = np.where(old_chi2 < 20)
+    #new_chi2_indx = np.where(new_chi2 < 20)
+    #old_chi2 = old_chi2[old_chi2_indx]
+    #new_chi2 = new_chi2[new_chi2_indx]
 
     iqr = np.std(old_chi2, dtype=np.float64)
     binsize = 2*iqr*np.power(len(old_chi2),-1/3)
@@ -100,7 +102,55 @@ if __name__ == '__main__':
     ax.set_ylabel(r'$\mathrm{N}$')
 
     fig.savefig(massive_figures_dir + "refined_old_new_chi2_hist.eps", dpi=300, bbox_inches='tight')
+    """
+ 
+    # histogram of error in new redshift
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    z_phot_err = []
+    for i in range(len(z_phot)):
+        if z_phot[i] < z_spec[i]:
+            z_phot_err.append(z_spec[i] - new_z_err[i] - z_phot[i])
+        elif z_phot[i] > z_spec[i]:
+            z_phot_err.append(z_phot[i] - z_spec[i] + new_z_err[i])
+        elif z_phot[i] == z_spec[i]:
+            z_phot_err.append(0.0)
+
+    z_phot_err = np.asarray(z_phot_err)
+
+    new_z_err_indx = np.where(new_z_err < 0.2)[0]
+    z_phot_err_indx = np.where(z_phot_err < 0.2)[0]
+    new_z_err = new_z_err[new_z_err_indx]
+    z_phot_err = z_phot_err[z_phot_err_indx]
+
+    iqr = np.std(new_z_err, dtype=np.float64)
+    binsize = 2*iqr*np.power(len(new_z_err),-1/3)
+    totalbins = np.floor((max(new_z_err) - min(new_z_err))/binsize)
+
+    ax.hist(new_z_err, totalbins, facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step')
+
+    iqr = np.std(z_phot_err, dtype=np.float64)
+    binsize = 2*iqr*np.power(len(z_phot_err),-1/3)
+    totalbins = np.floor((max(z_phot_err) - min(z_phot_err))/binsize)
+
+    ax.hist(z_phot_err, totalbins, facecolor='None', align='mid', linewidth=1, edgecolor='b', histtype='step')    
     
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True)
+    
+    ax.set_xlabel(r'$\mathrm{\Delta z_{new}}$')
+    ax.set_ylabel(r'$\mathrm{N}$')
+
+    ax.set_xlim(-0.1, 0.2)
+
+    print np.mean(new_z_err)
+    print np.median(new_z_err)
+
+    fig.savefig(massive_figures_dir + "refined_z_err_hist_0p2_uplim.eps", dpi=300, bbox_inches='tight')
+
     sys.exit(0)
 
 

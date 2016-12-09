@@ -91,14 +91,42 @@ def create_bc03_lib_ssp(pearsid, redshift, field, lam_grid):
     return None
 
 def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec, nexten, spec_hdu, old_z, pearsid, pearsfield):
+    """
+    This function will refine a prior supplied redshift.
 
-    # first find best fit assuming old redshift is ok
+    The different variable names used in here for spectra are:
+
+    1. comp_spec : 
+    This is the numpy array made from the LSF convolved model spectra that were originally saved to a fits file.
+    The wavelength range used on comp_spec is the extended wavelength range using which they were resampled. 
+
+    2. currentspec :
+    Because flam and ferr and their lambda grids have different dimensions from the lambda grid for comp_spec,
+    the lambda grid for comp_spec needs to be sliced to match the lambda grid for flam. currentspec is the sliced
+    comp_spec array. Their first dimensions are the same i.e. they correspond to all the ages for all metallicites.
+
+    3. current_best_fit_model :
+
+    4. current_best_fit_model_whole :
+
+    5. current_best_fit_model_chopped :
+    
+    """
+
     fitages = []
     fitmetals = []
     best_exten = []
     bestalpha = []
+    old_chi2 = []
+    new_chi2 = []
+    new_z = []
+    new_dn4000 = []
+    new_dn4000_err = []
+    new_d4000 = []
+    new_d4000_err = []
 
-    for i in range(int(num_samp_to_draw)):  # loop over jackknife runs
+    for i in range(int(num_samp_to_draw)):  # loop over bootstrap runs
+        # first find best fit assuming old redshift is ok
         if num_samp_to_draw == 1:
             flam = resampled_spec
         elif num_samp_to_draw > 1:
@@ -122,56 +150,95 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
                 fitmetals.append(bc03_spec[sortargs[k] + 2].header['METAL'])
                 best_exten.append(sortargs[k] + 2)
                 bestalpha.append(alpha[sortargs[k]])
+                old_chi2.append(chi2[sortargs[k]])
                 current_best_fit_model = currentspec[sortargs[k]]
                 current_best_fit_model_whole = comp_spec[sortargs[k]]
-                old_chi2 = chi2[sortargs[k]]
-                print "Old     Chi2", chi2[sortargs[k]]
                 break
 
+        # now shift in wavelength space to get best fit on wavelength grid and correspongind redshift
+        low_lim_for_comp = 2500
+        high_lim_for_comp = 6500
+
+        start_low_indx = np.argmin(abs(orig_lam_grid_model - low_lim_for_comp))
+        start_high_indx = start_low_indx + len(current_best_fit_model) - 1
+        # these starting low and high indices are set up in a way that the dimensions of
+        # current_best_fit_model_chopped and flam and ferr are the same to be able to 
+        # compute alpha and chi2 below.
+
+        chi2_redshift_arr = []
+        count = 0 
+        while 1:
+            current_low_indx = start_low_indx + count
+            current_high_indx = start_high_indx + count
+
+            # do the fitting again for each shifted lam grid
+            current_best_fit_model_chopped = current_best_fit_model_whole[current_low_indx:current_high_indx+1]
+
+            alpha = np.sum(flam * current_best_fit_model_chopped / (ferr**2)) / np.sum(current_best_fit_model_chopped**2 / ferr**2)
+            chi2 = np.sum(((flam - (alpha * current_best_fit_model_chopped)) / ferr)**2)
+
+            chi2_redshift_arr.append(chi2)
+
+            count += 1
+            if orig_lam_grid_model[current_high_indx] >= high_lim_for_comp:
+                break
+
+        new_chi2.append(np.min(chi2_redshift_arr))
+        refined_chi2_indx = np.argmin(chi2_redshift_arr)
+        new_lam_grid = orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1]
+        new_dn4000_temp, new_dn4000_err_temp = dc.get_dn4000(new_lam_grid, flam, ferr)
+        new_d4000_temp, new_d4000_err_temp = dc.get_d4000(new_lam_grid, flam, ferr)
+
+        new_dn4000.append(new_dn4000_temp)
+        new_dn4000_err.append(new_dn4000_err_temp)
+        new_d4000.append(new_d4000_temp)
+        new_d4000_err.append(new_d4000_err_temp)
+
+        new_z.append(((orig_lam_grid[0] * (1 + old_z)) / new_lam_grid[0]) - 1)
+
+    
+    new_chi2_minindx = np.argmin(new_chi2)
+    print "Old chi2 -", old_chi2[new_chi2_minindx]
+    print "New chi2 -", new_chi2[new_chi2_minindx]
+
+    new_z_minchi2 = new_z[new_chi2_minindx]
+    new_z_err = np.std(new_z)
+    print "Old and new redshifts -", old_z, "{:.3}".format(new_z_minchi2)
+    print "Error in new redshift -", new_z_err, "mean", np.mean(new_z), "median", np.median(new_z)
+
+    new_dn4000_ret = new_dn4000[new_chi2_minindx]
+    new_dn4000_err_ret = new_dn4000_err[new_chi2_minindx]
+    new_d4000_ret = new_d4000[new_chi2_minindx]
+    new_d4000_err_ret = new_d4000_err[new_chi2_minindx]
+
+    # This code block will show a histogram for the new z as it comes in
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    iqr = np.std(new_z, dtype=np.float64)
+    binsize = 2*iqr*np.power(len(new_z),-1/3)
+    totalbins = np.floor((max(new_z) - min(new_z))/binsize)
+    ax.hist(new_z, totalbins, facecolor='None', align='mid', linewidth=1, edgecolor='k', histtype='step')
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True)
+    ax.set_xlabel(r'$\mathrm{z_{new}}$')
+    ax.set_ylabel(r'$\mathrm{N}$')
+    plt.show()
+    plt.cla()
+    plt.clf()
+    del fig, ax
+    """
+
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(orig_lam_grid, current_best_fit_model*bestalpha, '-', color='k')
     ax.plot(orig_lam_grid, flam, '-', color='royalblue')
-    #ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='lightskyblue')
+    ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='lightskyblue')
     #ax.errorbar(orig_lam_grid, flam, yerr=ferr, fmt='-', color='blue')
     #sys.exit(0)
-
-    # now shift in wavelength space to get best fit on wavelength grid and correspongind redshift
-    low_lim_for_comp = 2500
-    high_lim_for_comp = 6500
-
-    start_low_indx = np.argmin(abs(orig_lam_grid_model - low_lim_for_comp))
-    start_high_indx = start_low_indx + len(current_best_fit_model) - 1
-
-    chi2_redshift_arr = []
-    count = 0 
-    while 1:
-        current_low_indx = start_low_indx + count
-        current_high_indx = start_high_indx + count
-
-        # do the fitting again for each shifted lam grid
-        current_best_fit_model_chopped = current_best_fit_model_whole[current_low_indx:current_high_indx+1]
-
-        alpha = np.sum(flam * current_best_fit_model_chopped / (ferr**2)) / np.sum(current_best_fit_model_chopped**2 / ferr**2)
-        chi2 = np.sum(((flam - (alpha * current_best_fit_model_chopped)) / ferr)**2)
-
-        chi2_redshift_arr.append(chi2)
-
-        count += 1
-        if orig_lam_grid_model[current_high_indx] >= high_lim_for_comp:
-            break
-
-    print "Refined Chi2", np.min(chi2_redshift_arr)
-    new_chi2 = np.min(chi2_redshift_arr)
-    refined_chi2_indx = np.argmin(chi2_redshift_arr)
-    new_lam_grid = orig_lam_grid_model[start_low_indx+refined_chi2_indx:start_high_indx+refined_chi2_indx+1]
-    new_dn4000, new_dn4000_err = dc.get_dn4000(new_lam_grid, flam, ferr)
-    new_d4000, new_d4000_err = dc.get_d4000(new_lam_grid, flam, ferr)
-
-    lam_obs = orig_lam_grid[0] * (1 + old_z)
-    new_z = (lam_obs / new_lam_grid[0]) - 1
-
-    print old_z, "{:.3}".format(new_z)
 
     # plot the newer shifted spectrum
     ax.plot(new_lam_grid, flam, '-', color='red')
@@ -219,8 +286,10 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     ax.grid(True)
 
     fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + 'refined_z_' + pearsfield + '_' + str(pearsid) + '.eps', dpi=150)
+    """
 
-    return new_dn4000, new_dn4000_err, new_d4000, new_d4000_err, old_z, new_z, old_chi2, new_chi2
+    return new_dn4000_ret, new_dn4000_err_ret, new_d4000_ret, new_d4000_err_ret,\
+     old_z, new_z_minchi2, new_z_err, old_chi2[new_chi2_minindx], new_chi2[new_chi2_minindx]
 
 def get_avg_dlam(lam):
 
@@ -231,10 +300,6 @@ def get_avg_dlam(lam):
     avg_dlam = dlam / (len(lam) - 1)
 
     return avg_dlam
-
-def error_in_z():
-
-    return None
 
 if __name__ == '__main__':
     
@@ -299,6 +364,7 @@ if __name__ == '__main__':
     pears_dec_to_write = []
     pears_old_redshift_to_write = []
     pears_new_redshift_to_write = []
+    pears_new_redshift_err_to_write = []
     pears_dn4000_refined_to_write = []
     pears_dn4000_err_refined_to_write = []
     pears_d4000_refined_to_write = []
@@ -306,18 +372,21 @@ if __name__ == '__main__':
     pears_old_chi2_to_write = []
     pears_new_chi2_to_write = []
 
+    skipped_gal = 0
+    counted_gal = 0
     for i in range(total_galaxies):
 
         current_id = all_pears_ids[i]
         current_redshift = all_pears_redshifts[i]
         current_field = all_pears_fields[i]
-        print current_id
+        print "\n", current_id
 
         lam_em, flam_em, ferr, specname = gd.fileprep(current_id, current_redshift, current_field)
 
         # Contamination rejection
         if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
             print 'Skipping', current_id, 'because of overall contamination.'
+            skipped_gal += 1
             continue
  
         # extend lam_grid to be able to move the lam_grid later 
@@ -351,24 +420,34 @@ if __name__ == '__main__':
         for i in range(bc03_extens):
             comp_spec_bc03[i] = bc03_spec[i+2].data
 
-        # Get random samples by jackknifing
-        num_samp_to_draw = int(1)
+        # Get random samples by bootstrapping
+        num_samp_to_draw = int(100)
         if num_samp_to_draw == 1:
             resampled_spec = flam_em
         else:
-            print "Running over", num_samp_to_draw, "random jackknifed samples."
+            print "Running over", num_samp_to_draw, "random bootstrapped samples."
             resampled_spec = ma.empty((len(flam_em), num_samp_to_draw))
             for i in range(len(flam_em)):
                 if flam_em[i] is not ma.masked:
-                    resampled_spec[i] = np.random.normal(flam_em[i], ferr[i], num_samp_to_draw)
+                    try:
+                        resampled_spec[i] = np.random.normal(flam_em[i], ferr[i], num_samp_to_draw)
+                    except ValueError as e:
+                        print e
+                        skipped_gal += 1
+                        break
                 else:
                     resampled_spec[i] = ma.masked
             resampled_spec = resampled_spec.T
 
-        # run the actual fitting function
-        new_dn4000, new_dn4000_err, new_d4000, new_d4000_err, old_z, new_z, old_chi2, new_chi2 = \
-        fit_chi2_redshift(lam_em, resampling_lam_grid, resampled_spec, ferr,\
-         num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field)
+        if resampled_spec.size:
+            # run the actual fitting function
+            new_dn4000, new_dn4000_err, new_d4000, new_d4000_err, old_z, new_z, new_z_err, old_chi2, new_chi2 = \
+            fit_chi2_redshift(lam_em, resampling_lam_grid, resampled_spec, ferr,\
+             num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field)
+        else:
+            continue
+
+        counted_gal += 1
 
         # append stuff to arrays that will finally be written
         pears_id_to_write.append(current_id)
@@ -377,12 +456,16 @@ if __name__ == '__main__':
         pears_dec_to_write.append(all_pears_dec[i])
         pears_old_redshift_to_write.append(old_z)
         pears_new_redshift_to_write.append(new_z)
+        pears_new_redshift_err_to_write.append(new_z_err)
         pears_dn4000_refined_to_write.append(new_dn4000)
         pears_dn4000_err_refined_to_write.append(new_dn4000_err)
         pears_d4000_refined_to_write.append(new_d4000)
         pears_d4000_err_refined_to_write.append(new_d4000_err)
         pears_old_chi2_to_write.append(old_chi2)
         pears_new_chi2_to_write.append(new_chi2)
+
+    print "Skipped Galaxies :", skipped_gal
+    print "Galaxies in sample :", counted_gal
 
     # write to plain text file
     pears_id_to_write = np.asarray(pears_id_to_write)
@@ -391,6 +474,7 @@ if __name__ == '__main__':
     pears_dec_to_write = np.asarray(pears_dec_to_write)
     pears_old_redshift_to_write = np.asarray(pears_old_redshift_to_write)
     pears_new_redshift_to_write = np.asarray(pears_new_redshift_to_write)
+    pears_new_redshift_err_to_write = np.asarray(pears_new_redshift_err_to_write)
     pears_dn4000_refined_to_write = np.asarray(pears_dn4000_refined_to_write)
     pears_dn4000_err_refined_to_write = np.asarray(pears_dn4000_err_refined_to_write)
     pears_d4000_refined_to_write = np.asarray(pears_d4000_refined_to_write)
@@ -399,16 +483,16 @@ if __name__ == '__main__':
     pears_new_chi2_to_write = np.asarray(pears_new_chi2_to_write)
 
     data = np.array(zip(pears_id_to_write, pears_field_to_write, pears_ra_to_write, pears_dec_to_write, pears_old_redshift_to_write,\
-        pears_new_redshift_to_write, pears_dn4000_refined_to_write, pears_dn4000_err_refined_to_write, pears_d4000_refined_to_write, pears_d4000_err_refined_to_write,\
-        pears_old_chi2_to_write, pears_new_chi2_to_write),\
+        pears_new_redshift_to_write, pears_new_redshift_err_to_write, pears_dn4000_refined_to_write, pears_dn4000_err_refined_to_write, pears_d4000_refined_to_write,\
+        pears_d4000_err_refined_to_write, pears_old_chi2_to_write, pears_new_chi2_to_write),\
          dtype=[('pears_id_to_write', int), ('pears_field_to_write', '|S7'), ('pears_ra_to_write', float), ('pears_dec_to_write', float),\
-         ('pears_old_redshift_to_write', float), ('pears_new_redshift_to_write', float), ('pears_dn4000_refined_to_write', float),\
-         ('pears_dn4000_err_refined_to_write', float), ('pears_d4000_refined_to_write', float), ('pears_d4000_err_refined_to_write', float),\
-         ('pears_old_chi2_to_write', float), ('pears_new_chi2_to_write', float)])
+         ('pears_old_redshift_to_write', float), ('pears_new_redshift_to_write', float), ('pears_new_redshift_err_to_write', float),\
+         ('pears_dn4000_refined_to_write', float), ('pears_dn4000_err_refined_to_write', float), ('pears_d4000_refined_to_write', float),\
+         ('pears_d4000_err_refined_to_write', float), ('pears_old_chi2_to_write', float), ('pears_new_chi2_to_write', float)])
     np.savetxt(stacking_analysis_dir + 'pears_refined_4000break_catalog.txt', data,\
-     fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
+     fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%.4f','%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
      header='Catalog for all galaxies that now have refined redshifts. See paper/code for sample selection. \n' +\
-     'pearsid field ra dec old_z new_z dn4000 dn4000_err d4000 d4000_err old_chi2 new_chi2')
+     'pearsid field ra dec old_z new_z new_z_err dn4000 dn4000_err d4000 d4000_err old_chi2 new_chi2')
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
