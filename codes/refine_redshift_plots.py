@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+import scipy.stats as stats
 
 import os
 import sys
@@ -66,7 +67,7 @@ if __name__ == '__main__':
     ax2.tick_params('both', width=1, length=4.7, which='major')
     ax2.grid(True)
 
-    fig.savefig(massive_figures_dir + "refined_zspec_vs_zphot.eps", dpi=300, bbox_inches='tight')
+    #fig.savefig(massive_figures_dir + "refined_zspec_vs_zphot.eps", dpi=300, bbox_inches='tight')
 
     del fig, ax1, ax2
 
@@ -148,8 +149,9 @@ if __name__ == '__main__':
 
     print np.mean(new_z_err)
     print np.median(new_z_err)
+    print stats.mode(new_z_err)
 
-    fig.savefig(massive_figures_dir + "refined_z_err_hist_0p2_uplim.eps", dpi=300, bbox_inches='tight')
+    #fig.savefig(massive_figures_dir + "refined_z_err_hist_0p2_uplim.eps", dpi=300, bbox_inches='tight')
 
     sys.exit(0)
 
