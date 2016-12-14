@@ -142,6 +142,11 @@ def match(ra1, dec1, ra2, dec2, lim=0.1*1/3600):
     cat1_dec_matches = np.asarray(cat1_dec_matches, dtype=np.float128)
     cat2_ra_matches = np.asarray(cat2_ra_matches, dtype=np.float128)
     cat2_dec_matches = np.asarray(cat2_dec_matches, dtype=np.float128)
+    cat1_indices = np.asarray(cat1_indices, dtype=int)
+    cat2_indices = np.asarray(cat2_indices, dtype=int)
+
+    cat1_indices = cat1_indices.flatten()
+    cat2_indices = cat2_indices.flatten()
 
     return delRA, delDEC, cat1_ra_matches, cat1_dec_matches, cat2_ra_matches, cat2_dec_matches, cat1_indices, cat2_indices, single_count
 

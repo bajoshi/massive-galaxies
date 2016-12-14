@@ -150,6 +150,8 @@ if __name__ == '__main__':
     print np.mean(new_z_err)
     print np.median(new_z_err)
     print stats.mode(new_z_err)
+    print len(np.where(new_z_err <= 0.03)[0])
+    print len(np.where(new_z_err <= 0.01)[0])
 
     #fig.savefig(massive_figures_dir + "refined_z_err_hist_0p2_uplim.eps", dpi=300, bbox_inches='tight')
 
