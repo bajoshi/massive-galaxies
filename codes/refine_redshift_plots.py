@@ -111,27 +111,38 @@ if __name__ == '__main__':
     ax.set_ylabel(r'$\mathrm{N}$')
 
     fig.savefig(massive_figures_dir + "refined_old_new_chi2_hist.eps", dpi=300, bbox_inches='tight')
- 
+
     # histogram of error in new redshift
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    new_z_err_plot = np.empty(len(z_spec_std))
+    count_zero = 0
+    count_nonzero_finite = 0
+    norm_z_err_plot = np.empty(len(z_spec_std))
     for i in range(len(z_spec_std)):
-        delta_z = abs(z_spec[i] - z_phot[i])
-        new_z_err_plot[i] = delta_z / z_spec_std[i]
+        delta_z = z_phot[i] - z_spec[i]
+        if delta_z == 0:
+            count_zero += 1
+        elif (delta_z != 0) & ~np.isinf(delta_z / z_spec_std[i]):
+            count_nonzero_finite += 1
+        norm_z_err_plot[i] = delta_z / z_spec_std[i]
 
-    new_z_err_indx = np.where(new_z_err_plot < 0.2)[0]
-    new_z_err_plot = new_z_err_plot[new_z_err_indx]
+    print "Total zero values in normalized error of new redshift --", count_zero
+    print "Total nonzero and finite values in normalized error of new redshift --", count_nonzero_finite
 
-    ax.hist(new_z_err_plot[np.isfinite(new_z_err_plot)], 10, facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step')
+    rng = 100
+    norm_z_err_indx = np.where(abs(norm_z_err_plot) <= rng)[0]
+    norm_z_err_plot = norm_z_err_plot[norm_z_err_indx]
+    print "Total values in range +-", rng ,"for normalized error of new redshift --", len(norm_z_err_indx)
+
+    ax.hist(norm_z_err_plot[np.isfinite(norm_z_err_plot)], 30, facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step')
 
     #z_phot_err = []
     #for i in range(len(z_phot)):
     #    if z_phot[i] < z_spec[i]:
-    #        z_phot_err.append(z_spec[i] - new_z_err[i] - z_phot[i])
+    #        z_phot_err.append(z_spec[i] - norm_z_err[i] - z_phot[i])
     #    elif z_phot[i] > z_spec[i]:
-    #        z_phot_err.append(z_phot[i] - z_spec[i] + new_z_err[i])
+    #        z_phot_err.append(z_phot[i] - z_spec[i] + norm_z_err[i])
     #    elif z_phot[i] == z_spec[i]:
     #        z_phot_err.append(0.0)
     #z_phot_err = np.asarray(z_phot_err)
@@ -149,18 +160,47 @@ if __name__ == '__main__':
     ax.tick_params('both', width=1, length=4.7, which='major')
     ax.grid(True)
     
-    ax.set_xlabel(r'$\mathrm{\Delta z_{new}}$')
+    ax.set_xlabel(r'$\mathrm{Normalized\ Error\ (\Delta z_{norm} = \Delta z / \sigma_{z_{new}})}$')
     ax.set_ylabel(r'$\mathrm{N}$')
 
     #ax.set_xlim(-0.1, 0.2)
 
-    print np.mean(new_z_err_plot[np.isfinite(new_z_err_plot)])
-    print np.median(new_z_err_plot[np.isfinite(new_z_err_plot)])
-    print stats.mode(new_z_err_plot[np.isfinite(new_z_err_plot)])
-    print len(np.where(new_z_err_plot[np.isfinite(new_z_err_plot)] <= 0.03)[0])
-    print len(np.where(new_z_err_plot[np.isfinite(new_z_err_plot)] <= 0.01)[0])
+    print '\n'
+    print "Mean of measurement uncertainty in new redshift--", np.mean(z_spec_std)
+    print "Median of measurement uncertainty in new redshift--", np.median(z_spec_std)
+    print "Mode of measurement uncertainty in new redshift--", stats.mode(z_spec_std)
+    print "Total values of measurement uncertainty in new redshift within 3% --", len(np.where(z_spec_std <= 0.03)[0])
+    print "Total values of measurement uncertainty in new redshift within 1% --", len(np.where(z_spec_std <= 0.01)[0])
+    print '\n'
 
-    fig.savefig(massive_figures_dir + "refined_z_err_hist_0p2_uplim.eps", dpi=300, bbox_inches='tight')
+    print "Mean of normalized error of new redshift --", np.mean(norm_z_err_plot[np.isfinite(norm_z_err_plot)])
+    print "Median of normalized error of new redshift --", np.median(norm_z_err_plot[np.isfinite(norm_z_err_plot)])
+    print "Mode of normalized error of new redshift --", stats.mode(norm_z_err_plot[np.isfinite(norm_z_err_plot)])
+    print "Total values of normalized error of new redshift within 3% --", len(np.where(norm_z_err_plot[np.isfinite(norm_z_err_plot)] <= 0.03)[0])
+    print "Total values of normalized error of new redshift within 1% --", len(np.where(norm_z_err_plot[np.isfinite(norm_z_err_plot)] <= 0.01)[0])
+
+    fig.savefig(massive_figures_dir + "refined_norm_z_err_hist_inrange_pm_" + str(rng) + ".eps", dpi=300, bbox_inches='tight')
+    del fig, ax
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    z_spec_std_indx = np.where(z_spec_std < 0.2)[0]
+    z_spec_std = z_spec_std[z_spec_std_indx]
+
+    ax.hist(z_spec_std[np.isfinite(z_spec_std)], 30, facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step')
+
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True)
+    
+    ax.set_xlabel(r'$\mathrm{\sigma_{z_{new}}}$')
+    ax.set_ylabel(r'$\mathrm{N}$')
+
+    ax.set_xlim(0.0, 0.2)
+
+    fig.savefig(massive_figures_dir + "refined_z_err_hist.eps", dpi=300, bbox_inches='tight')
 
     sys.exit(0)
 
