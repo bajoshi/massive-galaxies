@@ -43,8 +43,8 @@ def get_dn4000(lam, spec, spec_err):
     delta_lam = 100
     spec_nu_err = spec_err * lam**2 / 2.99792458e10
     flux_nu_err_sqr = spec_nu_err**2
-    sum_up_err = np.sqrt(delta_lam**2 * (sum(4 * flux_nu_err_sqr[arg4000+1:arg4100+1]) + flux_nu_err_sqr[arg4000] + flux_nu_err_sqr[arg4100]))
-    sum_low_err = np.sqrt(delta_lam**2 * (sum(4 * flux_nu_err_sqr[arg3850+1:arg3950+1]) + flux_nu_err_sqr[arg3850] + flux_nu_err_sqr[arg3950]))
+    sum_up_err = np.sqrt((delta_lam**2 / (2*len(flux_nu_err_sqr[arg4000:arg4100+1]))) * (4*sum(flux_nu_err_sqr[arg4000+1:arg4100+1]) + flux_nu_err_sqr[arg4000] + flux_nu_err_sqr[arg4100]))
+    sum_low_err = np.sqrt((delta_lam**2 / (2*len(flux_nu_err_sqr[arg3850:arg3950+1]))) * (4*sum(flux_nu_err_sqr[arg3850+1:arg3950+1]) + flux_nu_err_sqr[arg3850] + flux_nu_err_sqr[arg3950]))
     sum_low = np.trapz(fnu_minus, x=lam[arg3850:arg3950+1])
     sum_up = np.trapz(fnu_plus, x=lam[arg4000:arg4100+1])
     dn4000_err = (1/sum_low**2) * np.sqrt(sum_up_err**2 * sum_low**2 + sum_up**2 * sum_low_err**2)
@@ -69,8 +69,8 @@ def get_d4000(lam, spec, spec_err):
     delta_lam = 100
     spec_nu_err = spec_err * lam**2 / 2.99792458e10
     flux_nu_err_sqr = spec_nu_err**2
-    sum_up_err = np.sqrt(delta_lam**2 * (sum(4 * flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
-    sum_low_err = np.sqrt(delta_lam**2 * (sum(4 * flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
+    sum_up_err = np.sqrt((delta_lam**2 / (2*len(flux_nu_err_sqr[arg4050:arg4250+1]))) * (4*sum(flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
+    sum_low_err = np.sqrt((delta_lam**2 / (2*len(flux_nu_err_sqr[arg3750:arg3950+1]))) * (4*sum(flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
     sum_low = np.trapz(fnu_minus, x=lam[arg3750:arg3950+1])
     sum_up = np.trapz(fnu_plus, x=lam[arg4050:arg4250+1])
     d4000_err = (1/sum_low**2) * np.sqrt(sum_up_err**2 * sum_low**2 + sum_up**2 * sum_low_err**2)
@@ -345,59 +345,84 @@ def get_figs_dn4000(field, threed_cat, field_match, field_spc):
 
 if __name__ == '__main__':
     
-    cat = np.genfromtxt(home + '/Desktop/FIGS/stacking-analysis-pears/color_stellarmass.txt',
-                   dtype=None, names=True, skip_header=2)
+    cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt',
+                   dtype=None, names=True, skip_header=1)
+    cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt',
+                   dtype=None, names=True, skip_header=1)
+    
+    allcats = [cat_n, cat_s]
 
-    pears_id = cat['pearsid']
-    photz = cat['threedzphot']
-    fieldname = cat['field']
-    stellarmass = cat['mstar']
+    catcount = 0
+    for cat in allcats:
 
-    # Only doing this for the most massive ones right now because they're the ones with the bigger breaks
-    # and brighter spectra
-    # Find indices for massive galaxies
-    massive_galaxies_indices = np.where(stellarmass >= 7)[0]
+        if catcount == 0:
+            fieldname = 'GOODS-N'
+            print 'Starting with', len(cat), 'matched objects in', fieldname
+        elif catcount == 1:
+            fieldname = 'GOODS-S'
+            print 'Starting with', len(cat), 'matched objects in', fieldname
 
-    pears_id_write = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
-    photz_write = np.zeros(len(np.unique(pears_id[massive_galaxies_indices]))) 
-    dn4000_arr = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
-    dn4000_err_arr = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
-    d4000_arr = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
-    d4000_err_arr = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
-    pears_ra = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
-    pears_dec = np.zeros(len(np.unique(pears_id[massive_galaxies_indices])))
-    pearsfield = np.empty(len(np.unique(pears_id[massive_galaxies_indices])), dtype='|S7')
+        redshift_indices = np.where((cat['zphot'] >= 0.558) & (cat['zphot'] <= 1.317))[0]
 
-    # Loop over all spectra 
-    pears_unique_ids, pears_unique_ids_indices = np.unique(pears_id[massive_galaxies_indices], return_index=True)
-    i = 0
-    for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
+        pears_id = cat['pearsid'][redshift_indices]
+        photz = cat['zphot'][redshift_indices]
 
-        redshift = photz[massive_galaxies_indices][count]
-        #print "\n", "Currently working with PEARS object id: ", current_pears_index, "with log(M/M_sol) =", stellarmass[massive_galaxies_indices][count], "at redshift", redshift
+        pears_id_write = np.zeros(len(np.unique(pears_id)))
+        photz_write = np.zeros(len(np.unique(pears_id)))
+        dn4000_arr = np.zeros(len(np.unique(pears_id)))
+        dn4000_err_arr = np.zeros(len(np.unique(pears_id)))
+        d4000_arr = np.zeros(len(np.unique(pears_id)))
+        d4000_err_arr = np.zeros(len(np.unique(pears_id)))
+        pears_ra = np.zeros(len(np.unique(pears_id)))
+        pears_dec = np.zeros(len(np.unique(pears_id)))
+        pearsfield = np.empty(len(np.unique(pears_id)), dtype='|S7')
+        redshift_source = np.empty(len(np.unique(pears_id)), dtype='|S7')
 
-        #z_refined = refine_redshift(current_pears_index, redshift, fieldname[massive_galaxies_indices][count])
-        #print current_pears_index, fieldname[massive_galaxies_indices][count], redshift, z_refined
+        print len(np.unique(pears_id)), "unique objects in", fieldname, "in redshift range"
 
-        lam_em, flam_em, ferr, specname = gd.fileprep(current_pears_index, redshift, fieldname[massive_galaxies_indices][count])
+        # Loop over all spectra 
+        pears_unique_ids, pears_unique_ids_indices = np.unique(pears_id, return_index=True)
+        i = 0
+        for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
 
-        fitsfile = fits.open(pears_spectra_dir + specname)
-        pears_ra[i] = float(fitsfile[0].header['RA'])
-        pears_dec[i] = float(fitsfile[0].header['DEC'])
+            redshift = photz[count]
+            #print "\n", "Currently working with PEARS object id: ", current_pears_index, "at redshift", redshift
 
-        dn4000_arr[i], dn4000_err_arr[i] = get_dn4000(lam_em, flam_em, ferr)
-        d4000_arr[i], d4000_err_arr[i] = get_d4000(lam_em, flam_em, ferr)
-        pearsfield[i] = fieldname[massive_galaxies_indices][count]
-        pears_id_write[i] = current_pears_index
-        photz_write[i] = redshift
+            lam_em, flam_em, ferr, specname = gd.fileprep(current_pears_index, redshift, fieldname)
 
-        i += 1
+            if not lam_em.size:
+                # i.e. skip galaxy if fileprep returned an empty array
+                # happens at least for one galaxy -- GOODS-S 78080 (none in GOODS-N)
+                continue
 
-    data = np.array(zip(pears_id_write, pearsfield, photz_write, pears_ra, pears_dec, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
-                dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('photz_write', float), ('pears_ra', float), ('pears_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
-    np.savetxt(stacking_analysis_dir + 'pears_4000break_catalog.txt', data, fmt=['%d', '%s', '%.3f', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
-               header='Catalog for all galaxies that matched between 3DHST and PEARS. \n' +
-               'pears_id field redshift ra dec dn4000 dn4000_err d4000 d4000_err')
+            fitsfile = fits.open(pears_spectra_dir + specname)
+            pears_ra[i] = float(fitsfile[0].header['RA'])
+            pears_dec[i] = float(fitsfile[0].header['DEC'])
+
+            dn4000_arr[i], dn4000_err_arr[i] = get_dn4000(lam_em, flam_em, ferr)
+            d4000_arr[i], d4000_err_arr[i] = get_d4000(lam_em, flam_em, ferr)
+            pearsfield[i] = fieldname
+            pears_id_write[i] = current_pears_index
+            photz_write[i] = redshift
+            redshift_source[i] = cat['source'][redshift_indices][count] 
+
+            i += 1
+
+        data = np.array(zip(pears_id_write, pearsfield, photz_write, redshift_source, pears_ra, pears_dec, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
+                    dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('photz_write', float), ('redshift_source', '|S7'), ('pears_ra', float),\
+                     ('pears_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
+        if fieldname == 'GOODS-N':
+            np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
+                       header='Catalog for all galaxies that matched between 3DHST and PEARS in ' + fieldname + '. \n' +
+                       'pears_id field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
+        elif fieldname == 'GOODS-S':
+            np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
+                       header='Catalog for all galaxies that matched between CANDELS and PEARS in GOODS-S.' + '\n' +\
+                       'If a galaxy did not match with CANDELS then a matching in 3DHST was attempted.' + '\n' +\
+                       'the \'zphot_source\' column indicates the source of the photometric redshift.' + '\n' +\
+                       'pears_id field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
+
+        catcount += 1
 
     """
     # Read in FIGS spc files

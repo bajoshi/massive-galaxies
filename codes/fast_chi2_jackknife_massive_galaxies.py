@@ -59,7 +59,7 @@ def get_interplsf(pearsid, redshift, fieldforid):
             lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
     except IOError as e:
     	print e
-    	print "Moving on to next galaxy for now."
+    	print "No LSF file found. Moving on to next galaxy for now."
     	return None
 
     # Interpolate the LSF to the rest frame delta lambda grid of the galaxy

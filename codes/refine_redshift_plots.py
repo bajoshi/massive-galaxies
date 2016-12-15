@@ -15,17 +15,23 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = massive_galaxies_dir + "figures/"
 
 if __name__ == '__main__':
-    
+
     # read catalog adn rename arrays for convenience
-    pears_refined_cat = np.genfromtxt(home + '/Desktop/FIGS/stacking-analysis-pears/pears_refined_4000break_catalog.txt', dtype=None, names=True, skip_header=1)
+    pears_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-N.txt',\
+     dtype=None, names=True, skip_header=1)
+    pears_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-S.txt',\
+     dtype=None, names=True, skip_header=1)
 
-    z_spec = pears_refined_cat['new_z']
-    z_phot = pears_refined_cat['old_z']
+    z_spec = np.concatenate((pears_cat_n['new_z'], pears_cat_s['new_z']), axis=0)
+    z_phot = np.concatenate((pears_cat_n['old_z'], pears_cat_s['old_z']), axis=0)
 
-    old_chi2 = np.log10(pears_refined_cat['old_chi2'] / 88)
-    new_chi2 = np.log10(pears_refined_cat['new_chi2'] / 88)
+    old_chi2 = np.concatenate((pears_cat_n['old_chi2'], pears_cat_s['old_chi2']), axis=0)
+    old_chi2 = np.log10(old_chi2 / 88)
 
-    new_z_err = pears_refined_cat['new_z_err']
+    new_chi2 = np.concatenate((pears_cat_n['new_chi2'], pears_cat_s['new_chi2']), axis=0)
+    new_chi2 = np.log10(new_chi2 / 88)
+
+    z_spec_std = np.concatenate((pears_cat_n['new_z_err'], pears_cat_s['new_z_err']), axis=0)
 
     # make plots
     # z_spec vs z_phot
@@ -67,11 +73,10 @@ if __name__ == '__main__':
     ax2.tick_params('both', width=1, length=4.7, which='major')
     ax2.grid(True)
 
-    #fig.savefig(massive_figures_dir + "refined_zspec_vs_zphot.eps", dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + "refined_zspec_vs_zphot.eps", dpi=300, bbox_inches='tight')
 
     del fig, ax1, ax2
 
-    """
     # histograms of chi2
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -81,6 +86,9 @@ if __name__ == '__main__':
     #new_chi2_indx = np.where(new_chi2 < 20)
     #old_chi2 = old_chi2[old_chi2_indx]
     #new_chi2 = new_chi2[new_chi2_indx]
+
+    new_chi2 = new_chi2[~np.isnan(new_chi2)]
+    old_chi2 = old_chi2[~np.isnan(old_chi2)] 
 
     iqr = np.std(old_chi2, dtype=np.float64)
     binsize = 2*iqr*np.power(len(old_chi2),-1/3)
@@ -103,39 +111,38 @@ if __name__ == '__main__':
     ax.set_ylabel(r'$\mathrm{N}$')
 
     fig.savefig(massive_figures_dir + "refined_old_new_chi2_hist.eps", dpi=300, bbox_inches='tight')
-    """
  
     # histogram of error in new redshift
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    z_phot_err = []
-    for i in range(len(z_phot)):
-        if z_phot[i] < z_spec[i]:
-            z_phot_err.append(z_spec[i] - new_z_err[i] - z_phot[i])
-        elif z_phot[i] > z_spec[i]:
-            z_phot_err.append(z_phot[i] - z_spec[i] + new_z_err[i])
-        elif z_phot[i] == z_spec[i]:
-            z_phot_err.append(0.0)
+    new_z_err_plot = np.empty(len(z_spec_std))
+    for i in range(len(z_spec_std)):
+        delta_z = abs(z_spec[i] - z_phot[i])
+        new_z_err_plot[i] = delta_z / z_spec_std[i]
 
-    z_phot_err = np.asarray(z_phot_err)
+    new_z_err_indx = np.where(new_z_err_plot < 0.2)[0]
+    new_z_err_plot = new_z_err_plot[new_z_err_indx]
 
-    new_z_err_indx = np.where(new_z_err < 0.2)[0]
-    z_phot_err_indx = np.where(z_phot_err < 0.2)[0]
-    new_z_err = new_z_err[new_z_err_indx]
-    z_phot_err = z_phot_err[z_phot_err_indx]
+    ax.hist(new_z_err_plot[np.isfinite(new_z_err_plot)], 10, facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step')
 
-    iqr = np.std(new_z_err, dtype=np.float64)
-    binsize = 2*iqr*np.power(len(new_z_err),-1/3)
-    totalbins = np.floor((max(new_z_err) - min(new_z_err))/binsize)
+    #z_phot_err = []
+    #for i in range(len(z_phot)):
+    #    if z_phot[i] < z_spec[i]:
+    #        z_phot_err.append(z_spec[i] - new_z_err[i] - z_phot[i])
+    #    elif z_phot[i] > z_spec[i]:
+    #        z_phot_err.append(z_phot[i] - z_spec[i] + new_z_err[i])
+    #    elif z_phot[i] == z_spec[i]:
+    #        z_phot_err.append(0.0)
+    #z_phot_err = np.asarray(z_phot_err)
 
-    ax.hist(new_z_err, totalbins, facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step')
+    #z_phot_err_indx = np.where(z_phot_err < 0.2)[0]
+    #z_phot_err = z_phot_err[z_phot_err_indx]
+    #iqr = np.std(z_phot_err, dtype=np.float64)
+    #binsize = 2*iqr*np.power(len(z_phot_err),-1/3)
+    #totalbins = np.floor((max(z_phot_err) - min(z_phot_err))/binsize)
 
-    iqr = np.std(z_phot_err, dtype=np.float64)
-    binsize = 2*iqr*np.power(len(z_phot_err),-1/3)
-    totalbins = np.floor((max(z_phot_err) - min(z_phot_err))/binsize)
-
-    ax.hist(z_phot_err, totalbins, facecolor='None', align='mid', linewidth=1, edgecolor='b', histtype='step')    
+    #ax.hist(z_phot_err, totalbins, facecolor='None', align='mid', linewidth=1, edgecolor='b', histtype='step')    
     
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')
@@ -145,20 +152,15 @@ if __name__ == '__main__':
     ax.set_xlabel(r'$\mathrm{\Delta z_{new}}$')
     ax.set_ylabel(r'$\mathrm{N}$')
 
-    ax.set_xlim(-0.1, 0.2)
+    #ax.set_xlim(-0.1, 0.2)
 
-    print np.mean(new_z_err)
-    print np.median(new_z_err)
-    print stats.mode(new_z_err)
-    print len(np.where(new_z_err <= 0.03)[0])
-    print len(np.where(new_z_err <= 0.01)[0])
+    print np.mean(new_z_err_plot[np.isfinite(new_z_err_plot)])
+    print np.median(new_z_err_plot[np.isfinite(new_z_err_plot)])
+    print stats.mode(new_z_err_plot[np.isfinite(new_z_err_plot)])
+    print len(np.where(new_z_err_plot[np.isfinite(new_z_err_plot)] <= 0.03)[0])
+    print len(np.where(new_z_err_plot[np.isfinite(new_z_err_plot)] <= 0.01)[0])
 
-    #fig.savefig(massive_figures_dir + "refined_z_err_hist_0p2_uplim.eps", dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + "refined_z_err_hist_0p2_uplim.eps", dpi=300, bbox_inches='tight')
 
     sys.exit(0)
-
-
-
-
-
 
