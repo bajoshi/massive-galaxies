@@ -367,16 +367,18 @@ if __name__ == '__main__':
         pears_id = cat['pearsid'][redshift_indices]
         photz = cat['zphot'][redshift_indices]
 
-        pears_id_write = np.zeros(len(np.unique(pears_id)))
-        photz_write = np.zeros(len(np.unique(pears_id)))
-        dn4000_arr = np.zeros(len(np.unique(pears_id)))
-        dn4000_err_arr = np.zeros(len(np.unique(pears_id)))
-        d4000_arr = np.zeros(len(np.unique(pears_id)))
-        d4000_err_arr = np.zeros(len(np.unique(pears_id)))
-        pears_ra = np.zeros(len(np.unique(pears_id)))
-        pears_dec = np.zeros(len(np.unique(pears_id)))
-        pearsfield = np.empty(len(np.unique(pears_id)), dtype='|S7')
-        redshift_source = np.empty(len(np.unique(pears_id)), dtype='|S7')
+        # create lists to write final data in and 
+        # loop over all galaxies
+        pears_id_write = []
+        photz_write = []
+        dn4000_arr = []
+        dn4000_err_arr = []
+        d4000_arr = []
+        d4000_err_arr = []
+        pears_ra = []
+        pears_dec = []
+        pearsfield = []
+        redshift_source = []
 
         print len(np.unique(pears_id)), "unique objects in", fieldname, "in redshift range"
 
@@ -396,17 +398,34 @@ if __name__ == '__main__':
                 continue
 
             fitsfile = fits.open(pears_spectra_dir + specname)
-            pears_ra[i] = float(fitsfile[0].header['RA'])
-            pears_dec[i] = float(fitsfile[0].header['DEC'])
+            pears_ra.append(float(fitsfile[0].header['RA']))
+            pears_dec.append(float(fitsfile[0].header['DEC']))
 
-            dn4000_arr[i], dn4000_err_arr[i] = get_dn4000(lam_em, flam_em, ferr)
-            d4000_arr[i], d4000_err_arr[i] = get_d4000(lam_em, flam_em, ferr)
-            pearsfield[i] = fieldname
-            pears_id_write[i] = current_pears_index
-            photz_write[i] = redshift
-            redshift_source[i] = cat['source'][redshift_indices][count] 
+            dn4000_temp, dn4000_err_temp = get_dn4000(lam_em, flam_em, ferr)
+            d4000_temp, d4000_err_temp = get_d4000(lam_em, flam_em, ferr)
+            pearsfield.append(fieldname)
+            pears_id_write.append(current_pears_index)
+            photz_write.append(redshift)
+            redshift_source.append(cat['source'][redshift_indices][count])
+
+            dn4000_arr.append(dn4000_temp)
+            dn4000_err_arr.append(dn4000_err_temp)
+            d4000_arr.append(d4000_temp)
+            d4000_err_arr.append(d4000_err_temp)
 
             i += 1
+
+        # convert lists to numpy arrays for writing with savetxt
+        pears_id_write = np.asarray(pears_id_write)
+        photz_write = np.asarray(photz_write)
+        dn4000_arr = np.asarray(dn4000_arr)
+        dn4000_err_arr = np.asarray(dn4000_err_arr)
+        d4000_arr = np.asarray(d4000_arr)
+        d4000_err_arr = np.asarray(d4000_err_arr)
+        pears_ra = np.asarray(pears_ra)
+        pears_dec = np.asarray(pears_dec)
+        pearsfield = np.asarray(pearsfield, dtype='|S7')
+        redshift_source = np.asarray(redshift_source, dtype='|S7')
 
         data = np.array(zip(pears_id_write, pearsfield, photz_write, redshift_source, pears_ra, pears_dec, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
                     dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('photz_write', float), ('redshift_source', '|S7'), ('pears_ra', float),\

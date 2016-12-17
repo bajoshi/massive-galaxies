@@ -43,7 +43,7 @@ if __name__ == '__main__':
     ax2 = fig.add_subplot(gs[10:,:])
 
     # first subplot
-    ax1.plot(z_phot, z_spec, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax1.plot(z_spec, z_phot, 'o', markersize=1.5, color='k', markeredgecolor='k')
     ax1.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
 
     ax1.set_xlim(0.2, 1.42)
@@ -77,6 +77,7 @@ if __name__ == '__main__':
 
     del fig, ax1, ax2
 
+    """
     # histograms of chi2
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     ax.set_xlabel(r'$\mathrm{log(\chi^2)}$')
     ax.set_ylabel(r'$\mathrm{N}$')
 
-    fig.savefig(massive_figures_dir + "refined_old_new_chi2_hist.eps", dpi=300, bbox_inches='tight')
+    #fig.savefig(massive_figures_dir + "refined_old_new_chi2_hist.eps", dpi=300, bbox_inches='tight')
 
     # histogram of error in new redshift
     fig = plt.figure()
@@ -179,7 +180,7 @@ if __name__ == '__main__':
     print "Total values of normalized error of new redshift within 3% --", len(np.where(norm_z_err_plot[np.isfinite(norm_z_err_plot)] <= 0.03)[0])
     print "Total values of normalized error of new redshift within 1% --", len(np.where(norm_z_err_plot[np.isfinite(norm_z_err_plot)] <= 0.01)[0])
 
-    fig.savefig(massive_figures_dir + "refined_norm_z_err_hist_inrange_pm_" + str(rng) + ".eps", dpi=300, bbox_inches='tight')
+    #fig.savefig(massive_figures_dir + "refined_norm_z_err_hist_inrange_pm_" + str(rng) + ".eps", dpi=300, bbox_inches='tight')
     del fig, ax
 
     fig = plt.figure()
@@ -200,7 +201,7 @@ if __name__ == '__main__':
 
     ax.set_xlim(0.0, 0.2)
 
-    fig.savefig(massive_figures_dir + "refined_z_err_hist.eps", dpi=300, bbox_inches='tight')
-
+    #fig.savefig(massive_figures_dir + "refined_z_err_hist.eps", dpi=300, bbox_inches='tight')
+    """
     sys.exit(0)
 

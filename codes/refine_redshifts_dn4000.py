@@ -120,7 +120,6 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     fitages = []
     fitmetals = []
     best_exten = []
-    bestalpha = []
     old_chi2 = []
     new_chi2 = []
     new_z = []
@@ -128,6 +127,10 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     new_dn4000_err = []
     new_d4000 = []
     new_d4000_err = []
+
+    current_best_fit_model_plot = []
+    new_lam_grid_plot = []
+    bestalpha_plot = []
 
     for i in range(int(num_samp_to_draw)):  # loop over bootstrap runs
         # first find best fit assuming old redshift is ok
@@ -153,7 +156,7 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
                 fitages.append(best_age)
                 fitmetals.append(bc03_spec[sortargs[k] + 2].header['METAL'])
                 best_exten.append(sortargs[k] + 2)
-                bestalpha.append(alpha[sortargs[k]])
+                bestalpha_plot.append(alpha[sortargs[k]])
                 old_chi2.append(chi2[sortargs[k]])
                 current_best_fit_model = currentspec[sortargs[k]]
                 current_best_fit_model_whole = comp_spec[sortargs[k]]
@@ -199,7 +202,8 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
         new_d4000_err.append(new_d4000_err_temp)
 
         new_z.append(((orig_lam_grid[0] * (1 + old_z)) / new_lam_grid[0]) - 1)
-
+        current_best_fit_model_plot.append(current_best_fit_model)
+        new_lam_grid_plot.append(new_lam_grid)
     
     new_chi2_minindx = np.argmin(new_chi2)
     print "Old chi2 -", old_chi2[new_chi2_minindx]
@@ -215,17 +219,26 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     new_d4000_ret = new_d4000[new_chi2_minindx]
     new_d4000_err_ret = new_d4000_err[new_chi2_minindx]
 
+    # assign flam for plots
+    flam = resampled_spec[new_chi2_minindx]
+    current_best_fit_model = current_best_fit_model_plot[new_chi2_minindx]
+    new_lam_grid = new_lam_grid_plot[new_chi2_minindx]
+    bestalpha = bestalpha_plot[new_chi2_minindx]
+
+    plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, pearsid, pearsfield)
+
     return new_dn4000_ret, new_dn4000_err_ret, new_d4000_ret, new_d4000_err_ret,\
      old_z, new_z_minchi2, new_z_err, old_chi2[new_chi2_minindx], new_chi2[new_chi2_minindx]
 
-def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model, current_best_fit_model_whole,\
-    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, pearsid):
+def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, pearsid, pearsfield):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(orig_lam_grid, current_best_fit_model*bestalpha, '-', color='k')
     ax.plot(orig_lam_grid, flam, '-', color='royalblue')
-    ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='lightskyblue')
+    #ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='lightskyblue')
     #ax.errorbar(orig_lam_grid, flam, yerr=ferr, fmt='-', color='blue')
     #sys.exit(0)
 
@@ -234,19 +247,18 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
     #ax.fill_between(new_lam_grid, flam + ferr, flam - ferr, color='lightred')
     #ax.errorbar(new_lam_grid, flam, yerr=ferr, fmt='-', color='red')
 
-    # shade region for dn4000 bands
-    arg3900 = np.argmin(abs(orig_lam_grid_model - 3900))
-    arg4050 = np.argmin(abs(orig_lam_grid_model - 4050))
-    bestalpha = bestalpha[0]
+    # shade region for d4000 bands
+    arg3850 = np.argmin(abs(new_lam_grid - 3850))
+    arg4150 = np.argmin(abs(new_lam_grid - 4150))
 
-    x_fill = np.arange(3850,3951,1)
+    x_fill = np.arange(3750,3951,1)
     y0_fill = np.ones(len(x_fill)) * \
-    (current_best_fit_model_whole[arg3900]*bestalpha - 3*0.05*current_best_fit_model_whole[arg3900]*bestalpha)
+    (current_best_fit_model[arg3850]*bestalpha - 3*0.05*current_best_fit_model[arg3850]*bestalpha)
     y1_fill = np.ones(len(x_fill)) * \
-    (current_best_fit_model_whole[arg4050]*bestalpha + 3*0.05*current_best_fit_model_whole[arg4050]*bestalpha)
+    (current_best_fit_model[arg4150]*bestalpha + 3*0.05*current_best_fit_model[arg4150]*bestalpha)
     ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
 
-    x_fill = np.arange(4000,4101,1)
+    x_fill = np.arange(4050,4251,1)
     ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
 
     # put in labels for old and new redshifts
