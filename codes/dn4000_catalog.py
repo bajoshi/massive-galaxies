@@ -43,8 +43,8 @@ def get_dn4000(lam, spec, spec_err):
     delta_lam = 100
     spec_nu_err = spec_err * lam**2 / 2.99792458e10
     flux_nu_err_sqr = spec_nu_err**2
-    sum_up_err = np.sqrt((delta_lam**2 / (2*len(flux_nu_err_sqr[arg4000:arg4100+1]))) * (4*sum(flux_nu_err_sqr[arg4000+1:arg4100+1]) + flux_nu_err_sqr[arg4000] + flux_nu_err_sqr[arg4100]))
-    sum_low_err = np.sqrt((delta_lam**2 / (2*len(flux_nu_err_sqr[arg3850:arg3950+1]))) * (4*sum(flux_nu_err_sqr[arg3850+1:arg3950+1]) + flux_nu_err_sqr[arg3850] + flux_nu_err_sqr[arg3950]))
+    sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4000:arg4100+1])-1))) * (4*sum(flux_nu_err_sqr[arg4000+1:arg4100+1]) + flux_nu_err_sqr[arg4000] + flux_nu_err_sqr[arg4100]))
+    sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3850:arg3950+1])-1))) * (4*sum(flux_nu_err_sqr[arg3850+1:arg3950+1]) + flux_nu_err_sqr[arg3850] + flux_nu_err_sqr[arg3950]))
     sum_low = np.trapz(fnu_minus, x=lam[arg3850:arg3950+1])
     sum_up = np.trapz(fnu_plus, x=lam[arg4000:arg4100+1])
     dn4000_err = (1/sum_low**2) * np.sqrt(sum_up_err**2 * sum_low**2 + sum_up**2 * sum_low_err**2)
@@ -69,8 +69,8 @@ def get_d4000(lam, spec, spec_err):
     delta_lam = 100
     spec_nu_err = spec_err * lam**2 / 2.99792458e10
     flux_nu_err_sqr = spec_nu_err**2
-    sum_up_err = np.sqrt((delta_lam**2 / (2*len(flux_nu_err_sqr[arg4050:arg4250+1]))) * (4*sum(flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
-    sum_low_err = np.sqrt((delta_lam**2 / (2*len(flux_nu_err_sqr[arg3750:arg3950+1]))) * (4*sum(flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
+    sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4050:arg4250+1])-1))) * (4*sum(flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
+    sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3750:arg3950+1])-1))) * (4*sum(flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
     sum_low = np.trapz(fnu_minus, x=lam[arg3750:arg3950+1])
     sum_up = np.trapz(fnu_plus, x=lam[arg4050:arg4250+1])
     d4000_err = (1/sum_low**2) * np.sqrt(sum_up_err**2 * sum_low**2 + sum_up**2 * sum_low_err**2)
