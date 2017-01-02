@@ -399,35 +399,36 @@ if __name__ == '__main__':
     ax.set_xlabel('RA')
     ax.set_ylabel('DEC')
 
-    # plot 3DHST wfc3 prime orbits
-    count = 0
-    for i in range(len(threed_11600_wfc3_north_ind)):
-        ax.plot(x_threed_11600_wfc3_north[count:count+5], y_threed_11600_wfc3_north[count:count+5], color='gray', linewidth=1)
-        count += 5
+    ## plot 3DHST wfc3 prime orbits
+    #count = 0
+    #for i in range(len(threed_11600_wfc3_north_ind)):
+    #    ax.plot(x_threed_11600_wfc3_north[count:count+5], y_threed_11600_wfc3_north[count:count+5], color='gray', linewidth=1)
+    #    count += 5
 
     # plot PEARS acs prime orbits
     count = 0
     for i in range(len(pears_acs_north_ind)):
         ax.plot(x_pears_acs_north[count:count+5], y_pears_acs_north[count:count+5], color='green', linewidth=1)
+        print x_pears_acs_north[count:count+5], y_pears_acs_north[count:count+5]
         ax.fill_between(x_pears_acs_north[count:count+2], y_pears_acs_north[count+1], y_pears_acs_north[count+2], color='lightgreen', alpha=0.8)
         count += 5
 
-    # plot FIGS acs parallel orbits
-    count = 0
-    for i in range(len(figs_acs_north_ind)):
-        ax.plot(x_figs_acs_north[count:count+5], y_figs_acs_north[count:count+5], color='red', linewidth=1)
-        ax.fill_between(x_figs_acs_north[count:count+2], y_figs_acs_north[count+1], y_figs_acs_north[count+2], color='pink', alpha=0.8)
-        count += 5
+    ## plot FIGS acs parallel orbits
+    #count = 0
+    #for i in range(len(figs_acs_north_ind)):
+    #    ax.plot(x_figs_acs_north[count:count+5], y_figs_acs_north[count:count+5], color='red', linewidth=1)
+    #    ax.fill_between(x_figs_acs_north[count:count+2], y_figs_acs_north[count+1], y_figs_acs_north[count+2], color='pink', alpha=0.8)
+    #    count += 5
 
-    # plot FIGS wfc3 prime orbits
-    count = 0
-    for i in range(len(figs_wfc3_north_ind)):
-        ax.plot(x_figs_wfc3_north[count:count+5], y_figs_wfc3_north[count:count+5], color='blue', linewidth=1)
-        ax.fill_between(x_figs_wfc3_north[count:count+2], y_figs_wfc3_north[count+1], y_figs_wfc3_north[count+2], color='lightblue', alpha=0.8)
-        count += 5
+    ## plot FIGS wfc3 prime orbits
+    #count = 0
+    #for i in range(len(figs_wfc3_north_ind)):
+    #    ax.plot(x_figs_wfc3_north[count:count+5], y_figs_wfc3_north[count:count+5], color='blue', linewidth=1)
+    #    ax.fill_between(x_figs_wfc3_north[count:count+2], y_figs_wfc3_north[count+1], y_figs_wfc3_north[count+2], color='lightblue', alpha=0.8)
+    #    count += 5
 
-    ax.set_xlim(188.9, 189.7)
-    ax.set_ylim(62.1, 62.51)
+    #ax.set_xlim(188.9, 189.7)
+    #ax.set_ylim(62.1, 62.4)
 
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')

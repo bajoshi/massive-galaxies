@@ -350,6 +350,9 @@ if __name__ == '__main__':
     #gs1_cat = np.genfromtxt(home + '/Desktop/FIGS/stacking-analysis-pears/figs_gs1_4000break_catalog.txt',\
     # dtype=None, names=True, skip_header=1)
 
+    print len(pears_cat_n), "objects in PEARS GOODS-N 4000 break catalog."
+    print len(pears_cat_s), "objects in PEARS GOODS-S 4000 break catalog."
+
     #### PEARS ####
 
     allcats = [pears_cat_n, pears_cat_s]
@@ -362,18 +365,15 @@ if __name__ == '__main__':
         elif catcount == 1:
             fieldname = 'GOODS-S'
 
-        pears_redshift_indices = np.where((pears_cat['redshift'] >= 0.558) & (pears_cat['redshift'] <= 1.317))[0]
+        pears_redshift_indices = np.where((pears_cat['redshift'] >= 0.6) & (pears_cat['redshift'] <= 1.235))[0]
 
         # galaxies in the possible redshift range
-        print len(pears_redshift_indices)  # 2318
-
-        # galaxies that are outside the redshift range
-        # not sure how these originally got into the pears and 3dhst matched sample....need to check again
-        # these were originally selected to be within the above written redshift range
-        #print np.setdiff1d(np.arange(len(pears_cat)), pears_redshift_indices)  # [1136 2032 2265]
+        # this number should be the exact same as the length of the catalog
+        # which it is .... so this part of the code just serves as a redundancy now.
+        print len(pears_redshift_indices)
 
         # galaxies with significant breaks
-        sig_4000break_indices_pears = np.where(((pears_cat['d4000'] / pears_cat['d4000_err']) >= 3.0))[0]
+        sig_4000break_indices_pears = np.where(((pears_cat['d4000'][pears_redshift_indices] / pears_cat['d4000_err'][pears_redshift_indices]) >= 3.0))[0]
 
         # use these next two lines if you want to run the code only for a specific galaxy
         #arg = np.where((pears_cat['field'] == 'GOODS-N') & (pears_cat['pears_id'] == 40991))[0]
@@ -384,19 +384,20 @@ if __name__ == '__main__':
 
         # Galaxies with believable breaks; im calling them proper breaks
         prop_4000break_indices_pears = \
-        np.where((pears_cat['d4000'][sig_4000break_indices_pears] >= 1.05) & (pears_cat['d4000'][sig_4000break_indices_pears] <= 3.5))[0]
+        np.where((pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] >= 1.05) &\
+         (pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] <= 3.5))[0]
 
         # there are now 483 galaxies in this dn4000 range
 
-        all_pears_ids = pears_cat['pears_id'][sig_4000break_indices_pears][prop_4000break_indices_pears]
-        all_pears_fields = pears_cat['field'][sig_4000break_indices_pears][prop_4000break_indices_pears]
-        all_pears_redshifts = pears_cat['redshift'][sig_4000break_indices_pears][prop_4000break_indices_pears]
-        all_pears_redshift_sources = pears_cat['zphot_source'][sig_4000break_indices_pears][prop_4000break_indices_pears]
-        all_pears_ra = pears_cat['ra'][sig_4000break_indices_pears][prop_4000break_indices_pears]
-        all_pears_dec = pears_cat['dec'][sig_4000break_indices_pears][prop_4000break_indices_pears]
+        all_pears_ids = pears_cat['pears_id'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
+        all_pears_fields = pears_cat['field'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
+        all_pears_redshifts = pears_cat['redshift'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
+        all_pears_redshift_sources = pears_cat['zphot_source'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
+        all_pears_ra = pears_cat['ra'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
+        all_pears_dec = pears_cat['dec'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
 
         total_galaxies = len(all_pears_ids)
-        print "Will attempt to refine redshifts for", total_galaxies, "galaxies in", fieldname
+        print '\n', "Will attempt to refine redshifts for", total_galaxies, "galaxies in", fieldname
 
         # Make arrays for writing stuff
         pears_id_to_write = []
@@ -425,6 +426,11 @@ if __name__ == '__main__':
             print "\n", "Working on --", current_id
 
             lam_em, flam_em, ferr, specname = gd.fileprep(current_id, current_redshift, current_field)
+
+            #skip_n = [33944, 37672, 45370] # have emmission lines or just noisy spectra
+            #if (current_id in skip_n) and (current_field == 'GOODS-N'):
+            #    skipped_gal += 1
+            #    continue
 
             # Contamination rejection
             if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):

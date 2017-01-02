@@ -43,8 +43,16 @@ def get_dn4000(lam, spec, spec_err):
     delta_lam = 100
     spec_nu_err = spec_err * lam**2 / 2.99792458e10
     flux_nu_err_sqr = spec_nu_err**2
-    sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4000:arg4100+1])-1))) * (4*sum(flux_nu_err_sqr[arg4000+1:arg4100+1]) + flux_nu_err_sqr[arg4000] + flux_nu_err_sqr[arg4100]))
-    sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3850:arg3950+1])-1))) * (4*sum(flux_nu_err_sqr[arg3850+1:arg3950+1]) + flux_nu_err_sqr[arg3850] + flux_nu_err_sqr[arg3950]))
+
+    if ((len(flux_nu_err_sqr[arg4000:arg4100+1])-1) >= 1) and ((len(flux_nu_err_sqr[arg3850:arg3950+1])-1) >= 1):
+        sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4000:arg4100+1])-1))) * (4*sum(flux_nu_err_sqr[arg4000+1:arg4100+1]) + flux_nu_err_sqr[arg4000] + flux_nu_err_sqr[arg4100]))
+        sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3850:arg3950+1])-1))) * (4*sum(flux_nu_err_sqr[arg3850+1:arg3950+1]) + flux_nu_err_sqr[arg3850] + flux_nu_err_sqr[arg3950]))
+    elif ((len(flux_nu_err_sqr[arg4000:arg4100+1])-1) == 0) and ((len(flux_nu_err_sqr[arg3850:arg3950+1])-1) == 0):
+        sum_up_err = np.sqrt(flux_nu_err_sqr[arg4000:arg4100+1])
+        sum_low_err = np.sqrt(flux_nu_err_sqr[arg3850:arg3950+1])
+    else:
+        return np.nan, np.nan
+
     sum_low = np.trapz(fnu_minus, x=lam[arg3850:arg3950+1])
     sum_up = np.trapz(fnu_plus, x=lam[arg4000:arg4100+1])
     dn4000_err = (1/sum_low**2) * np.sqrt(sum_up_err**2 * sum_low**2 + sum_up**2 * sum_low_err**2)
@@ -69,8 +77,16 @@ def get_d4000(lam, spec, spec_err):
     delta_lam = 100
     spec_nu_err = spec_err * lam**2 / 2.99792458e10
     flux_nu_err_sqr = spec_nu_err**2
-    sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4050:arg4250+1])-1))) * (4*sum(flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
-    sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3750:arg3950+1])-1))) * (4*sum(flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
+
+    if ((len(flux_nu_err_sqr[arg4050:arg4250+1])-1) >= 1) and ((len(flux_nu_err_sqr[arg3750:arg3950+1])-1) >= 1):
+        sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4050:arg4250+1])-1))) * (4*sum(flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
+        sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3750:arg3950+1])-1))) * (4*sum(flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
+    elif ((len(flux_nu_err_sqr[arg4050:arg4250+1])-1) == 0) and ((len(flux_nu_err_sqr[arg3750:arg3950+1])-1) == 0):
+        sum_up_err = np.sqrt(flux_nu_err_sqr[arg4050:arg4250+1])
+        sum_low_err = np.sqrt(flux_nu_err_sqr[arg3750:arg3950+1])
+    else:
+        return np.nan, np.nan
+
     sum_low = np.trapz(fnu_minus, x=lam[arg3750:arg3950+1])
     sum_up = np.trapz(fnu_plus, x=lam[arg4050:arg4250+1])
     d4000_err = (1/sum_low**2) * np.sqrt(sum_up_err**2 * sum_low**2 + sum_up**2 * sum_low_err**2)
@@ -362,7 +378,7 @@ if __name__ == '__main__':
             fieldname = 'GOODS-S'
             print 'Starting with', len(cat), 'matched objects in', fieldname
 
-        redshift_indices = np.where((cat['zphot'] >= 0.558) & (cat['zphot'] <= 1.317))[0]
+        redshift_indices = np.where((cat['zphot'] >= 0.6) & (cat['zphot'] <= 1.235))[0]
 
         pears_id = cat['pearsid'][redshift_indices]
         photz = cat['zphot'][redshift_indices]
@@ -388,13 +404,36 @@ if __name__ == '__main__':
         for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
 
             redshift = photz[count]
-            #print "\n", "Currently working with PEARS object id: ", current_pears_index, "at redshift", redshift
+            print "\n", "Currently working with PEARS object id: ", current_pears_index, "at redshift", redshift
 
             lam_em, flam_em, ferr, specname = gd.fileprep(current_pears_index, redshift, fieldname)
 
             if not lam_em.size:
                 # i.e. skip galaxy if fileprep returned an empty array
                 # happens at least for one galaxy -- GOODS-S 78080 (none in GOODS-N)
+                continue
+
+            if (lam_em[0] > 3780) or (lam_em[-1] < 4220):
+                # based on d4000 instead of dn4000
+                # i've pushed the limits a little inward (i.e. > 24 A), to be conservative, 
+                # so that if there isn't an flux measurement at the exact end point wavelengths
+                # but there is one nearby then the galaxy isn't skipped
+                # skipping galaxy because there are too few or no flux measurements at the required wavelengths
+                print "Skipping", current_pears_index,\
+                 "due to too few or no flux measurements at the required wavelengths. The end points of the wavelength array are",\
+                 lam_em[0], lam_em[-1]
+                continue
+
+            arg3750 = np.argmin(abs(lam_em - 3750))
+            arg3950 = np.argmin(abs(lam_em - 3950))
+            arg4050 = np.argmin(abs(lam_em - 4050))
+            arg4250 = np.argmin(abs(lam_em - 4250))
+
+            if (len(lam_em[arg3750:arg3950+1]) == 0) or (len(lam_em[arg4050:arg4250+1]) == 0):
+                # based on d4000 instead of dn4000
+                print "Skipping", current_pears_index,\
+                 "due to no flux measurements at the required wavelengths. The end points of the wavelength array are",\
+                 lam_em[0], lam_em[-1]
                 continue
 
             fitsfile = fits.open(pears_spectra_dir + specname)

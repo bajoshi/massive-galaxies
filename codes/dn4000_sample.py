@@ -93,21 +93,20 @@ def save_speclist_sdss(plateid, mjd, fiberid, redshift_sdss, dn4000_sdss, sdss_u
 
 if __name__ == '__main__':
     
-    # read in dn4000 catalogs 
-    pears_cat = np.genfromtxt(home + '/Desktop/FIGS/stacking-analysis-pears/pears_4000break_catalog.txt',\
+    # read in 4000 break catalogs 
+    pears_cat_n = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/pears_4000break_catalog_GOODS-N.txt',\
      dtype=None, names=True, skip_header=1)
-    gn1_cat = np.genfromtxt(home + '/Desktop/FIGS/stacking-analysis-pears/figs_gn1_4000break_catalog.txt',\
-     dtype=None, names=True, skip_header=1)
-    gn2_cat = np.genfromtxt(home + '/Desktop/FIGS/stacking-analysis-pears/figs_gn2_4000break_catalog.txt',\
-     dtype=None, names=True, skip_header=1)
-    gs1_cat = np.genfromtxt(home + '/Desktop/FIGS/stacking-analysis-pears/figs_gs1_4000break_catalog.txt',\
-     dtype=None, names=True, skip_header=1)
+    pears_cat_s = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/pears_4000break_catalog_GOODS-S.txt',\
+     dtype=None, names=True, skip_header=3)
+    #gn1_cat = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/figs_gn1_4000break_catalog.txt',\
+    # dtype=None, names=True, skip_header=1)
+    #gn2_cat = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/figs_gn2_4000break_catalog.txt',\
+    # dtype=None, names=True, skip_header=1)
+    #gs1_cat = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/figs_gs1_4000break_catalog.txt',\
+    # dtype=None, names=True, skip_header=1)
 
     #### PEARS ####
-    pears_redshift_indices = np.where((pears_cat['redshift'] >= 0.558) & (pears_cat['redshift'] <= 1.317))[0]
-
-    # galaxies in the possible redshift range
-    #print len(pears_redshift_indices)  # 2318
+    pears_redshift_indices_n = np.where((pears_cat_n['redshift'] >= 0.6) & (pears_cat_n['redshift'] <= 1.235))[0]
 
     # galaxies that are outside the redshift range
     # not sure how these originally got into the pears and 3dhst matched sample....need to check again
@@ -115,18 +114,26 @@ if __name__ == '__main__':
     #print np.setdiff1d(np.arange(len(pears_cat)), pears_redshift_indices)  # [1136 2032 2265]
 
     # galaxies with significant breaks
-    sig_4000break_indices_pears = np.where(((pears_cat['dn4000'] / pears_cat['dn4000_err']) >= 3.0) &\
-        ((pears_cat['dn4000'] / pears_cat['dn4000_err']) <= 20.0))[0]
+    sig_4000break_indices_pears_n = np.where(((pears_cat_n['d4000'][pears_redshift_indices_n] / pears_cat_n['d4000_err'][pears_redshift_indices_n]) >= 3.0) &\
+        ((pears_cat_n['d4000'][pears_redshift_indices_n] / pears_cat_n['d4000_err'][pears_redshift_indices_n]) <= 20.0))[0]
 
-    # Galaxies with believable breaks; im calling them proper breaks
-    prop_4000break_indices_pears = \
-    np.where((pears_cat['dn4000'][sig_4000break_indices_pears] >= 1.2) & \
-        (pears_cat['dn4000'][sig_4000break_indices_pears] <= 2.5))[0]
+    # Galaxies with breaks that can be used for refining redshifts; im calling them proper breaks
+    prop_4000break_indices_pears_n = \
+    np.where((pears_cat_n['d4000'][pears_redshift_indices_n][sig_4000break_indices_pears_n] >= 1.05) & \
+        (pears_cat_n['d4000'][pears_redshift_indices_n][sig_4000break_indices_pears_n] <= 3.5))[0]
 
-    #print len(prop_4000break_indices_pears)  # 477
+    # same stuff for south
+    pears_redshift_indices_s = np.where((pears_cat_s['redshift'] >= 0.6) & (pears_cat_s['redshift'] <= 1.235))[0]
 
+    sig_4000break_indices_pears_s = np.where(((pears_cat_s['d4000'][pears_redshift_indices_s] / pears_cat_s['d4000_err'][pears_redshift_indices_s]) >= 3.0) &\
+        ((pears_cat_s['d4000'][pears_redshift_indices_s] / pears_cat_s['d4000_err'][pears_redshift_indices_s]) <= 20.0))[0]
+
+    prop_4000break_indices_pears_s = \
+    np.where((pears_cat_s['d4000'][pears_redshift_indices_s][sig_4000break_indices_pears_s] >= 1.05) & \
+        (pears_cat_s['d4000'][pears_redshift_indices_s][sig_4000break_indices_pears_s] <= 3.5))[0]
+
+    """
     #### FIGS ####
-
     # galaxies with significant breaks
     sig_4000break_indices_gn1 = np.where(((gn1_cat['dn4000'] / gn1_cat['dn4000_err']) >= 3.0) &\
         ((gn1_cat['dn4000'] / gn1_cat['dn4000_err']) <= 20.0))[0]
@@ -221,6 +228,7 @@ if __name__ == '__main__':
     # IDK if there is any overlap in the fields?
     # You could also download a convincing number of SDSS spectra and run your code on them
     # and see if you get the same number for dn4000 as they do.
+    """
     
 
     # ------------------------- PLOTS ------------------------- #
@@ -235,32 +243,39 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
 
     # create proper array for plotting
-    dn4000_pears = pears_cat['dn4000'][sig_4000break_indices_pears]
-    dn4000_pears_plot = dn4000_pears[np.where(dn4000_pears <= 3)[0]]
-    #print len(np.where(dn4000_pears > 3)[0])  # 10
-    print len(dn4000_pears_plot)
-    # There are only 10 out of 1226 values that are greater than 3 so 
-    # I won't plot them just for the sake of making my plot look a little better.
+    d4000_pears_n = pears_cat_n['d4000'][pears_redshift_indices_n][sig_4000break_indices_pears_n]
+    d4000_pears_plot_n = d4000_pears_n[np.where(d4000_pears_n <= 4)[0]]
+
+    d4000_pears_s = pears_cat_s['d4000'][pears_redshift_indices_s][sig_4000break_indices_pears_s]
+    d4000_pears_plot_s = d4000_pears_s[np.where(d4000_pears_s <= 4)[0]]
+
+    d4000_pears_plot = np.concatenate((d4000_pears_plot_n, d4000_pears_plot_s))
+
+    print len(d4000_pears_n) + len(d4000_pears_s), len(d4000_pears_plot)
 
     # get total bins and plot histogram
-    iqr = np.std(dn4000_pears_plot, dtype=np.float64)
-    binsize = 2*iqr*np.power(len(dn4000_pears_plot),-1/3)
-    totalbins = np.floor((max(dn4000_pears_plot) - min(dn4000_pears_plot))/binsize)
+    iqr = np.std(d4000_pears_plot, dtype=np.float64)
+    binsize = 2*iqr*np.power(len(d4000_pears_plot),-1/3)
+    totalbins = np.floor((max(d4000_pears_plot) - min(d4000_pears_plot))/binsize)
 
-    ncount, edges, patches = ax.hist(dn4000_pears_plot, totalbins, color='lightgray', align='mid')
+    ncount, edges, patches = ax.hist(d4000_pears_plot, totalbins, color='lightgray', align='mid')
     ax.grid(True)
 
     # shade the selection region
-    edges_plot = np.where((edges >= 1.2) & (edges <= 2.5))[0]
+    edges_plot = np.where((edges >= 1.05) & (edges <= 3.5))[0]
     patches_plot = [patches[edge_ind] for edge_ind in edges_plot]
-    col = np.full(len(patches_plot), 'lightblue', dtype='|S9')  
+    col = np.full(len(patches_plot), 'lightblue', dtype='|S9')
     # make sure the length of the string given in the array initialization is the same as the color name
     for c, p in zip(col, patches_plot):
         plt.setp(p, 'facecolor', c)
 
-    # save figure
-    fig.savefig(massive_figures_dir + 'pears_dn4000_hist.eps', dpi=300, bbox_inches='tight')
+    ax.set_xlabel(r'$\mathrm{D}(4000)$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
 
+    # save figure
+    fig.savefig(massive_figures_dir + 'pears_d4000_hist.eps', dpi=300, bbox_inches='tight')
+
+    """
     # FIGS dn4000 histogram
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -298,40 +313,47 @@ if __name__ == '__main__':
 
     # save figure
     fig.savefig(massive_figures_dir + 'figs_dn4000_hist.eps', dpi=300, bbox_inches='tight')    
+    """
 
     # dn4000 vs redshift 
-    # This should include the big clud of SDSS points and 
-    # any other points that you can find which give dn4000 for the whole redshift range
-
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    # get proper redshift and dn4000_err arrays for PEARS and FIGS for plotting
-    redshift_pears = pears_cat['redshift'][sig_4000break_indices_pears]
-    redshift_pears_plot = redshift_pears[np.where(dn4000_pears <= 3)[0]]
+    # get proper redshift and d4000_err arrays for PEARS and FIGS for plotting
+    redshift_pears_n = pears_cat_n['redshift'][pears_redshift_indices_n][sig_4000break_indices_pears_n]
+    redshift_pears_plot_n = redshift_pears_n[np.where(d4000_pears_n <= 4)[0]]
 
-    dn4000_err_pears = pears_cat['dn4000_err'][sig_4000break_indices_pears]
-    dn4000_err_pears_plot = dn4000_err_pears[np.where(dn4000_pears <= 3)[0]]
+    d4000_err_pears_n = pears_cat_n['d4000_err'][pears_redshift_indices_n][sig_4000break_indices_pears_n]
+    d4000_err_pears_plot_n = d4000_err_pears_n[np.where(d4000_pears_n <= 4)[0]]
 
-    redshift_gn1 = gn1_cat['redshift'][sig_4000break_indices_gn1]
-    redshift_gn2 = gn2_cat['redshift'][sig_4000break_indices_gn2]
-    redshift_gs1 = gs1_cat['redshift'][sig_4000break_indices_gs1]
-    redshift_figs = np.concatenate((redshift_gn1, redshift_gn2, redshift_gs1))
-    redshift_figs_plot = redshift_figs[np.where(dn4000_figs <= 3)[0]]
+    redshift_pears_s = pears_cat_s['redshift'][pears_redshift_indices_s][sig_4000break_indices_pears_s]
+    redshift_pears_plot_s = redshift_pears_s[np.where(d4000_pears_s <= 4)[0]]
 
-    dn4000_err_gn1 = gn1_cat['dn4000_err'][sig_4000break_indices_gn1]
-    dn4000_err_gn2 = gn2_cat['dn4000_err'][sig_4000break_indices_gn2]
-    dn4000_err_gs1 = gs1_cat['dn4000_err'][sig_4000break_indices_gs1]
-    dn4000_err_figs = np.concatenate((dn4000_err_gn1, dn4000_err_gn2, dn4000_err_gs1))
-    dn4000_err_figs_plot = dn4000_err_figs[np.where(dn4000_figs <= 3)[0]] 
+    d4000_err_pears_s = pears_cat_s['d4000_err'][pears_redshift_indices_s][sig_4000break_indices_pears_s]
+    d4000_err_pears_plot_s = d4000_err_pears_s[np.where(d4000_pears_s <= 4)[0]]
+
+    redshift_pears_plot = np.concatenate((redshift_pears_plot_n, redshift_pears_plot_s))
+    d4000_err_pears_plot = np.concatenate((d4000_err_pears_plot_n, d4000_err_pears_plot_s))
+
+    #redshift_gn1 = gn1_cat['redshift'][sig_4000break_indices_gn1]
+    #redshift_gn2 = gn2_cat['redshift'][sig_4000break_indices_gn2]
+    #redshift_gs1 = gs1_cat['redshift'][sig_4000break_indices_gs1]
+    #redshift_figs = np.concatenate((redshift_gn1, redshift_gn2, redshift_gs1))
+    #redshift_figs_plot = redshift_figs[np.where(dn4000_figs <= 3)[0]]
+
+    #dn4000_err_gn1 = gn1_cat['dn4000_err'][sig_4000break_indices_gn1]
+    #dn4000_err_gn2 = gn2_cat['dn4000_err'][sig_4000break_indices_gn2]
+    #dn4000_err_gs1 = gs1_cat['dn4000_err'][sig_4000break_indices_gs1]
+    #dn4000_err_figs = np.concatenate((dn4000_err_gn1, dn4000_err_gn2, dn4000_err_gs1))
+    #dn4000_err_figs_plot = dn4000_err_figs[np.where(dn4000_figs <= 3)[0]] 
 
     #ax.plot(redshift_pears_plot, dn4000_pears_plot, 'o', markersize=2, color='k', markeredgecolor='k')
     #ax.plot(redshift_figs_plot, dn4000_figs_plot, 'o', markersize=2, color='b', markeredgecolor='b')
 
-    ax.errorbar(redshift_pears_plot, dn4000_pears_plot, yerr=dn4000_err_pears_plot,\
+    ax.errorbar(redshift_pears_plot, d4000_pears_plot, yerr=d4000_err_pears_plot,\
      fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=7, elinewidth=0.5)
-    ax.errorbar(redshift_figs_plot, dn4000_figs_plot, yerr=dn4000_err_figs_plot,\
-     fmt='.', color='b', markeredgecolor='b', capsize=0, markersize=7, elinewidth=0.5)
+    #ax.errorbar(redshift_figs_plot, dn4000_figs_plot, yerr=dn4000_err_figs_plot,\
+    # fmt='.', color='b', markeredgecolor='b', capsize=0, markersize=7, elinewidth=0.5)
     #ax.plot(redshift_sdss_plot, dn4000_sdss_plot, '.', markersize=2, color='slategray')
     #ax.plot(redshift_shels_plot, dn4000_shels_plot, '.', markersize=2, color='seagreen')
 
@@ -344,11 +366,11 @@ if __name__ == '__main__':
     ax.axhline(y=1, linewidth=1, linestyle='--', color='r')
 
     # labels
-    figslabelbox = TextArea("FIGS", textprops=dict(color='blue', size=12))
-    anc_figslabelbox = AnchoredOffsetbox(loc=2, child=figslabelbox, pad=0.0, frameon=False,\
-                                         bbox_to_anchor=(0.85, 0.97),\
-                                         bbox_transform=ax.transAxes, borderpad=0.0)
-    ax.add_artist(anc_figslabelbox)
+    #figslabelbox = TextArea("FIGS", textprops=dict(color='blue', size=12))
+    #anc_figslabelbox = AnchoredOffsetbox(loc=2, child=figslabelbox, pad=0.0, frameon=False,\
+    #                                     bbox_to_anchor=(0.85, 0.97),\
+    #                                     bbox_transform=ax.transAxes, borderpad=0.0)
+    #ax.add_artist(anc_figslabelbox)
 
     pearslabelbox = TextArea("PEARS", textprops=dict(color='black', size=12))
     anc_pearslabelbox = AnchoredOffsetbox(loc=2, child=pearslabelbox, pad=0.0, frameon=False,\
@@ -384,8 +406,8 @@ if __name__ == '__main__':
     ax.add_artist(anc_highestmetals_labelbox)
 
     # labels and minor ticks
-    ax.set_xlabel(r'$\mathrm{Redshift}$')
-    ax.set_ylabel(r'$\mathrm{D_n}(4000)$')
+    ax.set_xlabel(r'$\mathrm{Redshift}$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{D}(4000)$', fontsize=15)
 
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')
@@ -402,12 +424,12 @@ if __name__ == '__main__':
     ax2.set_xticks(ageticks)
     ax2.set_xticklabels(['{:g}'.format(age) for age in ages.value])
 
-    ax.set_xlim(0.5,1.85)
-    ax2.set_xlim(0.5,1.85)
+    ax.set_xlim(0.5,1.3)
+    ax2.set_xlim(0.5,1.3)
 
-    ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$')
+    ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$', fontsize=15)
 
     # save the figure
-    fig.savefig(massive_figures_dir + 'dn4000_redshift.eps', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'd4000_redshift.eps', dpi=300, bbox_inches='tight')
 
     sys.exit(0)
