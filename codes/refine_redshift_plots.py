@@ -8,6 +8,7 @@ import sys
 import time
 import datetime
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, AnchoredText
@@ -19,6 +20,120 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
+
+def z_spec_std_vs_imag(z_spec_std_plot, imag_plot, samp_str):
+
+    # z_spec_std vs imag
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(imag_plot, z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True)
+
+    ax.set_xlabel(r'$\mathrm{i\,[AB\ mag]}$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)  
+
+    fig.savefig(massive_figures_dir + 'z_err_vs_imag_' + samp_str + '.eps', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return None
+
+def z_spec_std_vs_netsig_corr(z_spec_std_plot, net_sig_corr_cat_plot, d4000_plot, samp_str):
+
+    # z_spec_std vs corrected net sig in master catalog
+    gs = gridspec.GridSpec(15,15)
+    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=1.0, hspace=0.0)
+
+    fig = plt.figure()
+
+    ax1 = fig.add_subplot(gs[:,:14])
+    ax2 = fig.add_subplot(gs[:,14:])
+
+    norm = plt.Normalize()
+    colors = plt.cm.OrRd(norm(d4000_plot))
+    ax1.scatter(np.log10(net_sig_corr_cat_plot), z_spec_std_plot, s=5, color=colors)
+
+    cmap = mpl.cm.OrRd
+    norm = mpl.colors.Normalize(vmin=np.min(d4000_plot), vmax=np.max(d4000_plot))
+    cb1 = mpl.colorbar.ColorbarBase(ax2, cmap=cmap,
+                                    norm=norm,
+                                    orientation='vertical')
+    cb1.set_label('D(4000)')
+    # for more details about plotting the colorbar see
+    # http://matplotlib.org/examples/api/colorbar_only.html
+
+    ax1.minorticks_on()
+    ax1.tick_params('both', width=1, length=3, which='minor')
+    ax1.tick_params('both', width=1, length=4.7, which='major')
+    ax1.grid(True)
+
+    ax1.set_xlabel(r'$\mathrm{log(Corrected\ Net\ Spectral\ Significance)}$', fontsize=15)
+    ax1.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)  
+
+    fig.savefig(massive_figures_dir + 'z_err_vs_netsig_corr_' + samp_str + '.eps', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return None
+
+def z_spec_std_vs_d4000(z_spec_std_plot, d4000_plot, samp_str):
+
+    # z_spec_std vs d4000
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(d4000_plot, z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True)
+
+    ax.set_xlabel(r'$\mathrm{D(4000)}$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)  
+
+    ax.set_xlim(0.8, 2.5)
+
+    fig.savefig(massive_figures_dir + 'z_err_vs_d4000_' + samp_str + '.eps', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return None
+
+def z_spec_std_vs_redshift(z_spec_std_plot, redshift_plot, samp_str):
+
+    # z_spec_std vs redshift
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(redshift_plot, z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True)
+
+    ax.set_xlabel(r'$\mathrm{z}$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)  
+
+    fig.savefig(massive_figures_dir + 'z_err_vs_redshift_' + samp_str + '.eps', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return None
 
 if __name__ == '__main__':
 
@@ -45,7 +160,6 @@ if __name__ == '__main__':
     z_spec_std = np.concatenate((pears_cat_n['new_z_err'], pears_cat_s['new_z_err']), axis=0)
 
     # only consider redshifts in the range defined by d4000
-    """
     valid_zspec_indices = np.where((z_spec >= 0.6) & (z_spec <= 1.235))[0]
     z_spec = z_spec[valid_zspec_indices]
     z_phot = z_phot[valid_zspec_indices]
@@ -95,6 +209,11 @@ if __name__ == '__main__':
 
     del fig, ax1, ax2
 
+    print np.median(abs(z_spec - z_phot)/(1+z_spec))
+    print np.mean(abs(z_spec - z_phot)/(1+z_spec)) # it seems to be convention to quote the mean or median of this quatity as a measure of accuracy of redshifts
+    print len(np.where(abs(z_spec - z_phot)/(1+z_spec) > 0.1)[0]) # this is what 3DHST calls catastrophic failure
+    print len(np.where(abs(z_spec - z_phot)/(1+z_spec) <= 0.01)[0])
+
     # redshift hist
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -115,7 +234,7 @@ if __name__ == '__main__':
 
     fig.savefig(massive_figures_dir + 'redshift_dist.eps', dpi=300, bbox_inches='tight')
 
-    print len(z_spec), "galaxies in the refine redshift sample."
+    print '\n', len(z_spec), "galaxies in the refine redshift sample."
 
     del fig, ax
 
@@ -152,7 +271,7 @@ if __name__ == '__main__':
 
     fig.savefig(massive_figures_dir + "refined_old_new_chi2_hist.eps", dpi=300, bbox_inches='tight')
 
-    print "Mean for old chi2", np.mean(old_chi2)
+    print '\n', "Mean for old chi2", np.mean(old_chi2)
     print "Median for old chi2", np.median(old_chi2)
     print "Mode for old chi2", (old_bins[np.argmax(n_old_chi2)] + old_bins[np.argmax(n_old_chi2)+1])/2
 
@@ -188,25 +307,7 @@ if __name__ == '__main__':
     norm_z_err_plot = norm_z_err_plot[norm_z_err_indx]
     print "Total values in range +-", rng ,"for normalized error of new redshift --", len(norm_z_err_indx)
 
-    n, b, p = ax.hist(norm_z_err_plot[np.isfinite(norm_z_err_plot)], bins='fd', facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step')
-
-    #z_phot_err = []
-    #for i in range(len(z_phot)):
-    #    if z_phot[i] < z_spec[i]:
-    #        z_phot_err.append(z_spec[i] - norm_z_err[i] - z_phot[i])
-    #    elif z_phot[i] > z_spec[i]:
-    #        z_phot_err.append(z_phot[i] - z_spec[i] + norm_z_err[i])
-    #    elif z_phot[i] == z_spec[i]:
-    #        z_phot_err.append(0.0)
-    #z_phot_err = np.asarray(z_phot_err)
-
-    #z_phot_err_indx = np.where(z_phot_err < 0.2)[0]
-    #z_phot_err = z_phot_err[z_phot_err_indx]
-    #iqr = np.std(z_phot_err, dtype=np.float64)
-    #binsize = 2*iqr*np.power(len(z_phot_err),-1/3)
-    #totalbins = np.floor((max(z_phot_err) - min(z_phot_err))/binsize)
-
-    #ax.hist(z_phot_err, totalbins, facecolor='None', align='mid', linewidth=1, edgecolor='b', histtype='step')    
+    n, b, p = ax.hist(norm_z_err_plot[np.isfinite(norm_z_err_plot)], bins='fd', facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step') 
     
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')
@@ -247,28 +348,47 @@ if __name__ == '__main__':
     ax.set_xlim(0.0, 0.2)
 
     print '\n'
-    print "Mean of measurement uncertainty in new redshift--", np.mean(z_spec_std)
-    print "Median of measurement uncertainty in new redshift--", np.median(z_spec_std)
+    print "Mean of measurement uncertainty in new redshift--", np.mean(z_spec_std[np.isfinite(z_spec_std)])
+    print "Median of measurement uncertainty in new redshift--", np.median(z_spec_std[np.isfinite(z_spec_std)])
     print "Mode of measurement uncertainty in new redshift--", (b[np.argmax(n)] + b[np.argmax(n)+1])/2
-    print "Total values of measurement uncertainty in new redshift within 3% --", len(np.where(z_spec_std <= 0.03)[0])
-    print "Total values of measurement uncertainty in new redshift within 1% --", len(np.where(z_spec_std <= 0.01)[0])
+    print "Total values of measurement uncertainty in new redshift within 3% --", len(np.where(z_spec_std[np.isfinite(z_spec_std)] <= 0.03)[0])
+    print "Total values of measurement uncertainty in new redshift within 1% --", len(np.where(z_spec_std[np.isfinite(z_spec_std)] <= 0.01)[0])
+    print "Total values that are catastrophic failures of redshift estimate --", len(np.where(z_spec_std[np.isfinite(z_spec_std)] >= 0.1)[0])
 
     fig.savefig(massive_figures_dir + "refined_z_err_hist.eps", dpi=300, bbox_inches='tight')
     del fig, ax
-    """
 
     # z_spec_std vs net sig
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    #fig = plt.figure()
+    #ax = fig.add_subplot(111)
 
     # Read PEARS cats
     pears_master_ncat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_north_master.cat', dtype=None,\
                                names=['id', 'ra', 'dec', 'imag', 'netsig_corr'], usecols=(0,1,2,3,6))
     pears_master_scat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_south_master.cat', dtype=None,\
                                names=['id', 'ra', 'dec', 'imag', 'netsig_corr'], usecols=(0,1,2,3,6))
-    
+
     dec_offset_goodsn_v19 = 0.32/3600 # from GOODS ACS v2.0 readme
     pears_master_ncat['dec'] = pears_master_ncat['dec'] - dec_offset_goodsn_v19
+
+    # Match with Ferreras et al. 2009
+    ferreras_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_cat.txt', dtype=None,\
+                                 names=['id', 'ra', 'dec', 'z'], usecols=(0,1,2,5), skip_header=23)
+
+    ferreras_ids_n = []
+    ferreras_ids_s = []
+
+    for i in range(len(ferreras_cat)):
+
+        if ferreras_cat['dec'][i] > 0:
+            ferreras_ids_n.append(ferreras_cat['id'][i])
+
+        elif ferreras_cat['dec'][i] < 0:
+            ferreras_ids_s.append(ferreras_cat['id'][i])
+
+
+    #ferreras_prop_cat = np.genfromtxt(massive_galaxies_dir + 'ferreras_2009_ETG_prop_cat.txt', dtype=None,\
+    #                             names=['id', 'mstar'], usecols=(0,1), skip_header=23)   
 
     z_spec_std_n = pears_cat_n['new_z_err']
     z_spec_std_s = pears_cat_s['new_z_err']
@@ -280,6 +400,8 @@ if __name__ == '__main__':
     exptime_plot = []
     imag_plot = []
     net_sig_corr_cat_plot = []
+    d4000_plot = []
+    redshift_plot = []
 
     count_invalid = 0
     for pears_cat in allcats:
@@ -295,33 +417,35 @@ if __name__ == '__main__':
                 if current_z_spec_std <= 0.2:
                     if np.isfinite(current_z_spec_std):
                         z_spec_std_plot.append(current_z_spec_std)
+                        d4000_plot.append(pears_cat['d4000'][i])
+                        redshift_plot.append(current_redshift)
 
                         # Get the correct filename and the number of extensions
-                        data_path = home + "/Documents/PEARS/data_spectra_only/"
-                        if current_field == 'GOODS-N':
-                            filename = data_path + 'h_pears_n_id' + str(current_id) + '.fits'
-                        elif current_field == 'GOODS-S':
-                            filename = data_path + 'h_pears_s_id' + str(current_id) + '.fits'
+                        #data_path = home + "/Documents/PEARS/data_spectra_only/"
+                        #if current_field == 'GOODS-N':
+                        #    filename = data_path + 'h_pears_n_id' + str(current_id) + '.fits'
+                        #elif current_field == 'GOODS-S':
+                        #    filename = data_path + 'h_pears_s_id' + str(current_id) + '.fits'
 
-                        fitsfile = fits.open(filename)
-                        n_ext = fitsfile[0].header['NEXTEND']
+                        #fitsfile = fits.open(filename)
+                        #n_ext = fitsfile[0].header['NEXTEND']
 
-                        # Find where the highest net sig is for some PA of a galaxy
-                        if n_ext > 1:
-                            netsiglist = []
-                            for count in range(n_ext):
-                                fitsdata = fitsfile[count+1].data
-                                netsig = gd.get_net_sig(fitsdata, filename)
-                                netsiglist.append(netsig)
-                            netsiglist = np.array(netsiglist)
-                            netsigtoappend = np.max(netsiglist)
-                            net_sig_plot.append(netsigtoappend)
-                            max_ind = np.argmax(netsiglist)
-                            exptime_plot.append(fitsfile[max_ind+1].header['EXPTIME'])
-                        elif n_ext == 1:
-                            netsigtoappend = gd.get_net_sig(fitsfile[1].data, filename)
-                            net_sig_plot.append(netsigtoappend)
-                            exptime_plot.append(fitsfile[1].header['EXPTIME'])
+                        ## Find where the highest net sig is for some PA of a galaxy
+                        #if n_ext > 1:
+                        #    netsiglist = []
+                        #    for count in range(n_ext):
+                        #        fitsdata = fitsfile[count+1].data
+                        #        netsig = gd.get_net_sig(fitsdata, filename)
+                        #        netsiglist.append(netsig)
+                        #    netsiglist = np.array(netsiglist)
+                        #    netsigtoappend = np.max(netsiglist)
+                        #    net_sig_plot.append(netsigtoappend)
+                        #    max_ind = np.argmax(netsiglist)
+                        #    exptime_plot.append(fitsfile[max_ind+1].header['EXPTIME'])
+                        #elif n_ext == 1:
+                        #    netsigtoappend = gd.get_net_sig(fitsfile[1].data, filename)
+                        #    net_sig_plot.append(netsigtoappend)
+                        #    exptime_plot.append(fitsfile[1].header['EXPTIME'])
                         
                         if current_field == 'GOODS-N':
                             id_indx = np.where(pears_master_ncat['id'] == current_id)[0]
@@ -333,86 +457,103 @@ if __name__ == '__main__':
                             imag_plot.append(pears_master_scat['imag'][id_indx])
                             net_sig_corr_cat_plot.append(pears_master_scat['netsig_corr'][id_indx])
 
-                        if netsigtoappend == -99.0:
-                            count_invalid += 1
+                        #if netsigtoappend == -99.0:
+                        #    count_invalid += 1
 
     print count_invalid
-    print len(net_sig_plot), len(z_spec_std_plot)
-    ax.plot(np.log10(net_sig_plot), z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    print len(net_sig_corr_cat_plot), len(z_spec_std_plot), len(np.where(np.isfinite(d4000_plot) >= 0)[0])
+    #ax.plot(np.log10(net_sig_plot), z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
 
-    ax.minorticks_on()
-    ax.tick_params('both', width=1, length=3, which='minor')
-    ax.tick_params('both', width=1, length=4.7, which='major')
-    ax.grid(True)
+    #ax.minorticks_on()
+    #ax.tick_params('both', width=1, length=3, which='minor')
+    #ax.tick_params('both', width=1, length=4.7, which='major')
+    #ax.grid(True)
 
-    ax.set_xlabel(r'$\mathrm{log(Net\ Spectral\ Significance)}$', fontsize=15)
-    ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)    
+    #ax.set_xlabel(r'$\mathrm{log(Net\ Spectral\ Significance)}$', fontsize=15)
+    #ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)    
 
-    fig.savefig(massive_figures_dir + 'z_err_vs_netsig.eps', dpi=300, bbox_inches='tight')
+    #fig.savefig(massive_figures_dir + 'z_err_vs_netsig.eps', dpi=300, bbox_inches='tight')
 
-    plt.clf()
-    plt.cla()
-    plt.close()
+    #plt.clf()
+    #plt.cla()
+    #plt.close()
 
-    # z_spec_std vs exptime
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    ## z_spec_std vs exptime
+    #fig = plt.figure()
+    #ax = fig.add_subplot(111)
 
-    ax.plot(np.log10(exptime_plot), z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    #ax.plot(np.log10(exptime_plot), z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
 
-    ax.minorticks_on()
-    ax.tick_params('both', width=1, length=3, which='minor')
-    ax.tick_params('both', width=1, length=4.7, which='major')
-    ax.grid(True)
+    #ax.minorticks_on()
+    #ax.tick_params('both', width=1, length=3, which='minor')
+    #ax.tick_params('both', width=1, length=4.7, which='major')
+    #ax.grid(True)
 
-    ax.set_xlabel(r'$\mathrm{log(Exp.\ Time)}$', fontsize=15)
-    ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)  
+    #ax.set_xlabel(r'$\mathrm{log(Exp.\ Time)}$', fontsize=15)
+    #ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)  
 
-    fig.savefig(massive_figures_dir + 'z_err_vs_exptime.eps', dpi=300, bbox_inches='tight')
+    #fig.savefig(massive_figures_dir + 'z_err_vs_exptime.eps', dpi=300, bbox_inches='tight')
 
-    plt.clf()
-    plt.cla()
-    plt.close()
+    #plt.clf()
+    #plt.cla()
+    #plt.close()
 
-    # z_spec_std vs imag
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    z_spec_std_vs_netsig_corr(z_spec_std_plot, net_sig_corr_cat_plot, d4000_plot, 'refine_samp')
+    z_spec_std_vs_redshift(z_spec_std_plot, redshift_plot, 'refine_samp')
+    z_spec_std_vs_imag(z_spec_std_plot, imag_plot, 'refine_samp')
+    z_spec_std_vs_d4000(z_spec_std_plot, d4000_plot, 'refine_samp')
 
-    ax.plot(imag_plot, z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    del z_spec_std_plot, imag_plot, net_sig_corr_cat_plot, d4000_plot, redshift_plot
 
-    ax.minorticks_on()
-    ax.tick_params('both', width=1, length=3, which='minor')
-    ax.tick_params('both', width=1, length=4.7, which='major')
-    ax.grid(True)
+    ########################## same plots for Ferreras et al 2009 sample #############################
 
-    ax.set_xlabel(r'$\mathrm{i\,[AB\ mag]}$', fontsize=15)
-    ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)  
+    allcats = [pears_cat_n, pears_cat_s]
 
-    fig.savefig(massive_figures_dir + 'z_err_vs_imag.eps', dpi=300, bbox_inches='tight')
+    z_spec_std_plot = []
+    imag_plot = []
+    net_sig_corr_cat_plot = []
+    d4000_plot = []
+    redshift_plot = []
 
-    plt.clf()
-    plt.cla()
-    plt.close()
+    for pears_cat in allcats:
 
-    # z_spec_std vs corrected net sig in master catalog
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+        for i in range(len(pears_cat)):
 
-    ax.plot(np.log10(net_sig_corr_cat_plot), z_spec_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+            current_id = pears_cat['pearsid'][i]
+            current_field = pears_cat['field'][i]
+            current_redshift = pears_cat['new_z'][i]
+            current_z_spec_std = pears_cat['new_z_err'][i]
 
-    ax.minorticks_on()
-    ax.tick_params('both', width=1, length=3, which='minor')
-    ax.tick_params('both', width=1, length=4.7, which='major')
-    ax.grid(True)
+            if (current_redshift >= 0.6) & (current_redshift <= 1.235):
+                if current_z_spec_std <= 0.2:
+                    if np.isfinite(current_z_spec_std):
+                       
+                        if current_field == 'GOODS-N':
+                            if current_id in ferreras_ids_n:
+                                z_spec_std_plot.append(current_z_spec_std)
+                                d4000_plot.append(pears_cat['d4000'][i])
+                                redshift_plot.append(current_redshift)
 
-    ax.set_xlabel(r'$\mathrm{log(Corrected\ Net\ Spectral\ Significance)}$', fontsize=15)
-    ax.set_ylabel(r'$\mathrm{\sigma_{z_{spec}}}$', fontsize=15)  
+                                id_indx = np.where(pears_master_ncat['id'] == current_id)[0]
+                                imag_plot.append(pears_master_ncat['imag'][id_indx])
+                                net_sig_corr_cat_plot.append(pears_master_ncat['netsig_corr'][id_indx])
 
-    fig.savefig(massive_figures_dir + 'z_err_vs_netsig_corr.eps', dpi=300, bbox_inches='tight')
+                        elif current_field == 'GOODS-S':
+                            if current_id in ferreras_ids_s:
+                                z_spec_std_plot.append(current_z_spec_std)
+                                d4000_plot.append(pears_cat['d4000'][i])
+                                redshift_plot.append(current_redshift)
 
-    plt.clf()
-    plt.cla()
-    plt.close()
+                                id_indx = np.where(pears_master_scat['id'] == current_id)[0]
+                                imag_plot.append(pears_master_scat['imag'][id_indx])
+                                net_sig_corr_cat_plot.append(pears_master_scat['netsig_corr'][id_indx])
+
+    print len(net_sig_corr_cat_plot), len(z_spec_std_plot), len(np.where(np.isfinite(d4000_plot) >= 0)[0])
+
+    z_spec_std_vs_netsig_corr(z_spec_std_plot, net_sig_corr_cat_plot, d4000_plot, 'ferreras_samp')
+    z_spec_std_vs_redshift(z_spec_std_plot, redshift_plot, 'ferreras_samp')
+    z_spec_std_vs_imag(z_spec_std_plot, imag_plot, 'ferreras_samp')
+    z_spec_std_vs_d4000(z_spec_std_plot, d4000_plot, 'ferreras_samp')
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."

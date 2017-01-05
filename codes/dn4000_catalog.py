@@ -480,6 +480,8 @@ if __name__ == '__main__':
                        'the \'zphot_source\' column indicates the source of the photometric redshift.' + '\n' +\
                        'pears_id field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
 
+        print len(np.isfinite(dn4000_arr)), len(np.isfinite(dn4000_err_arr)), len(np.isfinite(d4000_arr)), len(np.isfinite(d4000_err_arr))
+
         catcount += 1
 
     """

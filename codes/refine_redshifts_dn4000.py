@@ -225,14 +225,21 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     new_lam_grid = new_lam_grid_plot[new_chi2_minindx]
     bestalpha = bestalpha_plot[new_chi2_minindx]
 
-    plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, pearsid, pearsfield)
+    if new_z_err <= 0.03:
+        savefolder = "err_using_std/"
+        plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+        bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, pearsid, pearsfield, savefolder)
+
+    if (abs(old_z - new_z_minchi2)/(1+new_z_minchi2)) <= 0.03:
+        savefolder = "err_using_deltaz_over_oneplusz/"
+        plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+        bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, pearsid, pearsfield, savefolder)
 
     return new_dn4000_ret, new_dn4000_err_ret, new_d4000_ret, new_d4000_err_ret,\
      old_z, new_z_minchi2, new_z_err, old_chi2[new_chi2_minindx], new_chi2[new_chi2_minindx]
 
 def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, pearsid, pearsfield):
+    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, pearsid, pearsfield, savefolder):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -286,7 +293,7 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
     ax.tick_params('both', width=1, length=4.7, which='major')
     ax.grid(True)
 
-    fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + 'refined_z_' + pearsfield + '_' + str(pearsid) + '.eps', dpi=150)
+    fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + savefolder + 'refined_z_' + pearsfield + '_' + str(pearsid) + '.eps', dpi=150)
 
     return None
 
@@ -352,6 +359,54 @@ if __name__ == '__main__':
 
     print len(pears_cat_n), "objects in PEARS GOODS-N 4000 break catalog."
     print len(pears_cat_s), "objects in PEARS GOODS-S 4000 break catalog."
+
+    # no clear evidence of a break or too noisy or have emmission lines
+    # in many of these cases the fits are good but the break is not really
+    # clear -- in almost all cases the flux drops at the blue end 
+    # but never levels out
+    skip_n = [31670,31891,33414,36546,37225,37644,37908,38345,39311,38345,\
+    40613,41093,41439,42509,43584,44258,44559,45328,45370,45556,45624,46694,\
+    47065,47153,47440,48176,48229,48514,48737,48873,50214,50892,52404,52497,\
+    53189,53198,53362,53711,55348,55513,55580,55626,56190,57425,59873,60776,\
+    60858,61113,62128,62216,62376,63419,64394,64683,64701,65831,66218,67343,\
+    69419,70156,70677,70974,71198,71510,71974,71982,74794,75125,75398,75413,\
+    75556,75782,75980,76107,76405,76936,77351,78300,78535,78596,78698,79716,\
+    79903,80053,80348,82523,82799,83170,83628,84103,84143,84543,85100,85383,\
+    85386,85579,86021,86272,86405,86522,88265,88858,89094,89239,89383,90081,\
+    90082,90095,90526,90557,90831,90879,91129,91525,91792,92203,92250,92509,\
+    92570,93196,93338,93364,93516,93761,93976,94016,94085,94460,94671,94812,\
+    95077,95122,95351,95449,95785,95795,96098,96114,96405,96423,96426,96475,\
+    96650,97136,97358,97879,98102,98209,98749,99452,100435,100703,101985,\
+    102190,102314,102600,102776,102886,103139,104408,104779,105303,105709,\
+    106442,106613,106752,106969,107152,107198,107263,107452,107999,108279,\
+    108516,108529,108721,108799,109225,109561,109801,109851,110145,110223,\
+    110489,110688,110814,111096,112181,112301,112383,113696,113746,114628,\
+    115437,116636,116739,117046,117087,117153,117715,118236,118361,118642,\
+    118719,119616,119621,119652,119684,119764,120544,120726,121093,122267,\
+    122303,122947,123142,124190,124194,124211,124428,124893,125735,125948,\
+    126356]
+
+    skip_s = [11507,14990,15005,15391,17021,17024,17163,17494,17587,18260,\
+    18337,18484,19226,19585,19652,19774,20957,21612,22217,24396,25390,25474,\
+    26160,26909,28588,30887,31325,32858,33498,33636,33725,34128,35255,35475,\
+    35579,35692,35765,35878,35989,37950,38744,38854,39116,40875,41338,42395,\
+    43170,44769,44843,44893,45314,45727,47101,50107,51356,52086,52529,52945,\
+    53650,54553,57446,57642,61334,61340,62122,62788,65609,66708,66729,67814,\
+    67996,68941,68982,69084,69117,69234,70232,70878,71051,71305,71524,73385,\
+    73423,74166,74950,75495,75733,76125,76349,76592,76612,78140,78177,78527,\
+    80076,81328,81832,85748,85844,85918,86051,86399,87259,90734,91615,92495,\
+    92503,93946,94200,94858,95513,95688,95800,96927,97487,97967,98372,98855,\
+    99156,100157,100526,100543,100572,101091,101615,102156,102735,103422,103683,\
+    104408,105522,107055,107266,108266,108456,108561,108795,109007,109019,\
+    109396,109710,109886,109889,110187,110258,110504,110655,110733,110891,\
+    111087,113184,113270,113279,117178,117180,117429,117560,117770,118251,\
+    118455,119088,119489,119951,120559,120825,120845,121302,121434,121911,\
+    122949,123236,123294,123477,123779,124248,124882,124945,125425,126478,\
+    126934,126958,127413,128422,129156,130387,131381,137226]
+
+    # these are cases where the old redshift looks correct
+    old_z_correct_n = [36842,45958,48743,65404,117385] 
+    old_z_correct_s = [40488,43758,81021,84478,101795,110801]
 
     #### PEARS ####
 
@@ -427,11 +482,14 @@ if __name__ == '__main__':
 
             lam_em, flam_em, ferr, specname = gd.fileprep(current_id, current_redshift, current_field)
 
-            #skip_n = [33944, 37672, 45370] # have emmission lines or just noisy spectra
-            #if (current_id in skip_n) and (current_field == 'GOODS-N'):
-            #    skipped_gal += 1
-            #    continue
+            if (current_id in skip_n) and (current_field == 'GOODS-N'):
+                skipped_gal += 1
+                continue
 
+            if (current_id in skip_s) and (current_field == 'GOODS-S'):
+                skipped_gal += 1
+                continue
+ 
             # Contamination rejection
             if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
                 print 'Skipping', current_id, 'because of overall contamination.'

@@ -1,3 +1,7 @@
+"""
+This code is written to clean up both the d4000 and refined redshift catalogs.
+It removes entries with NaNs in both catalogs and the entries with very large junk numbers for d4000 in the refined catalog.
+"""
 from __future__ import division
 
 import numpy as np
