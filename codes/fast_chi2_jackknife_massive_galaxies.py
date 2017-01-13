@@ -49,14 +49,38 @@ def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
     return None
 
-def get_interplsf(pearsid, redshift, fieldforid):
+def get_interplsf(pearsid, redshift, fieldforid, pa_forlsf):
 
     # This exception handler makes sure that the lsf exists before trying to use it so that the program execution is not stopped.
+
+    pa_str = pa_forlsf.replace('PA', 'pa')
+
     try:
+
         if fieldforid == 'GOODS-N':
-            lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt')
+            lsf_pa_filename = home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_' + pa_str + '_lsf.txt'
+            if os.path.isfile(lsf_pa_filename):
+                lsf = np.loadtxt(lsf_pa_filename)
+            else:
+                print pa_str, "for", pearsid, "in", fieldforid, "not found. Trying average LSF."
+                lsf_avg_filename = home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt'
+                if os.path.isfile(lsf_avg_filename):
+                    lsf = np.loadtxt(lsf_avg_filename)
+                else:
+                    raise IOError
+
         elif fieldforid == 'GOODS-S':
-            lsf = np.loadtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_avg_lsf.txt')
+            lsf_pa_filename = home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_' + pa_str + '_lsf.txt'
+            if os.path.isfile(lsf_pa_filename):
+                lsf = np.loadtxt(lsf_pa_filename)
+            else:
+                print pa_str, "for", pearsid, "in", fieldforid, "not found. Trying average LSF."
+                lsf_avg_filename = home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/n' + str(pearsid) + '_avg_lsf.txt'
+                if os.path.isfile(lsf_avg_filename):
+                    lsf = np.loadtxt(lsf_avg_filename)  
+                else:
+                    raise IOError
+
     except IOError as e:
     	print e
     	print "No LSF file found. Moving on to next galaxy for now."
@@ -134,7 +158,7 @@ def create_bc03_lib_main(lam_grid, pearsid, redshift):
 
                     hdr['METAL'] = str(metal_val)
                     hdr['TAU_GYR'] = str(float(tauval)/1e4)
-                    hdr['TAUV'] = str(float(tauVarrval)/10)
+                    hdr['TAUV'] = str(tauVarrval)
                     hdulist.append(fits.ImageHDU(data=currentspec[i], header=hdr))
 
     hdulist.writeto(savefits_dir + final_fitsname, clobber=True)

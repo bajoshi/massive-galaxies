@@ -105,6 +105,48 @@ if __name__ == '__main__':
     #gs1_cat = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/figs_gs1_4000break_catalog.txt',\
     # dtype=None, names=True, skip_header=1)
 
+    # get ids from old catalog to check which ones to replace with corrected values
+    pears_ids_n = pears_cat_n['pears_id']
+    pears_ids_s = pears_cat_s['pears_id']
+
+    # replace d4000 with corrected d4000 from refined redshift catalog
+    # first read the refined cats and make arrays
+    pears_ref_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-N.txt',\
+     dtype=None, names=True, skip_header=1)
+    pears_ref_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-S.txt',\
+     dtype=None, names=True, skip_header=1)
+
+    refined_ids_n = pears_ref_cat_n['pearsid']
+    refined_ids_s = pears_ref_cat_s['pearsid']
+
+    count = 0
+    count_ref_n = 0
+    for old_id in pears_ids_n:
+
+        if old_id in refined_ids_n:
+            id_indx = np.where(refined_ids_n == old_id)[0]
+            pears_cat_n['d4000'][count] = pears_ref_cat_n['d4000'][id_indx]
+            pears_cat_n['d4000_err'][count] = pears_ref_cat_n['d4000_err'][id_indx]
+            pears_cat_n['redshift'][count] = pears_ref_cat_n['new_z'][id_indx]
+            count_ref_n += 1
+
+        count += 1
+
+    count = 0
+    count_ref_s = 0
+    for old_id in pears_ids_s:
+
+        if old_id in refined_ids_s:
+            id_indx = np.where(refined_ids_s == old_id)[0]
+            pears_cat_s['d4000'][count] = pears_ref_cat_s['d4000'][id_indx]
+            pears_cat_s['d4000_err'][count] = pears_ref_cat_s['d4000_err'][id_indx]
+            pears_cat_s['redshift'][count] = pears_ref_cat_s['new_z'][id_indx]
+            count_ref_s += 1
+
+        count += 1
+
+    print count_ref_n, count_ref_s
+
     #### PEARS ####
     pears_redshift_indices_n = np.where((pears_cat_n['redshift'] >= 0.6) & (pears_cat_n['redshift'] <= 1.235))[0]
 
@@ -320,19 +362,23 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
 
     # get proper redshift and d4000_err arrays for PEARS and FIGS for plotting
+    # north
     redshift_pears_n = pears_cat_n['redshift'][pears_redshift_indices_n][sig_4000break_indices_pears_n]
     redshift_pears_plot_n = redshift_pears_n[np.where(d4000_pears_n <= 4)[0]]
 
     d4000_err_pears_n = pears_cat_n['d4000_err'][pears_redshift_indices_n][sig_4000break_indices_pears_n]
     d4000_err_pears_plot_n = d4000_err_pears_n[np.where(d4000_pears_n <= 4)[0]]
 
+    # south 
     redshift_pears_s = pears_cat_s['redshift'][pears_redshift_indices_s][sig_4000break_indices_pears_s]
     redshift_pears_plot_s = redshift_pears_s[np.where(d4000_pears_s <= 4)[0]]
 
     d4000_err_pears_s = pears_cat_s['d4000_err'][pears_redshift_indices_s][sig_4000break_indices_pears_s]
     d4000_err_pears_plot_s = d4000_err_pears_s[np.where(d4000_pears_s <= 4)[0]]
 
+    # concatenate north and south
     redshift_pears_plot = np.concatenate((redshift_pears_plot_n, redshift_pears_plot_s))
+    d4000_pears_plot = np.concatenate((d4000_pears_plot_n, d4000_pears_plot_s))
     d4000_err_pears_plot = np.concatenate((d4000_err_pears_plot_n, d4000_err_pears_plot_s))
 
     #redshift_gn1 = gn1_cat['redshift'][sig_4000break_indices_gn1]
@@ -413,6 +459,8 @@ if __name__ == '__main__':
     ax.tick_params('both', width=1, length=3, which='minor')
     ax.tick_params('both', width=1, length=4.7, which='major')
     ax.grid(True)
+
+    #ax.set_ylim(0,4)
 
     # parallel x axis for age of the Universe
     # This solution came from 

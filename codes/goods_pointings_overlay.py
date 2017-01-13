@@ -430,6 +430,8 @@ if __name__ == '__main__':
     #ax.set_xlim(188.9, 189.7)
     #ax.set_ylim(62.1, 62.4)
 
+    ax.get_xaxis().get_major_formatter().set_useOffset(False)
+
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')
     ax.tick_params('both', width=1, length=4.7, which='major')

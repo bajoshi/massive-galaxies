@@ -13,7 +13,9 @@ import time
 import datetime
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, AnchoredText
+from matplotlib.ticker import MaxNLocator
 
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -29,20 +31,35 @@ import fast_chi2_jackknife as fcj
 import fast_chi2_jackknife_massive_galaxies as fcjm
 import dn4000_catalog as dc
 
-def create_bc03_lib_ssp(pearsid, redshift, field, lam_grid):
+def get_valid_ages_in_model(pop, example_filename):
 
-    final_fitsname = 'all_comp_spectra_bc03_ssp_withlsf_' + field + '_' + str(pearsid) + '.fits'
+    if pop == 'ssp':
+        readdir = home + '/Documents/GALAXEV_BC03/bc03/models/Padova1994/salpeter/'
+    elif pop == 'csp':
+        readdir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'
 
-    interplsf = fcjm.get_interplsf(pearsid, redshift, field)
+    example = fits.open(readdir + example_filename)
+    ages = example[2].data
+    age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
+    total_ages = int(len(age_ind))  # 57 for SSPs
+
+    return total_ages, age_ind, ages
+
+def create_bc03_lib_ssp_csp(pearsid, redshift, field, lam_grid, pa_forlsf, include_csp=False):
+
+    if include_csp:
+        final_fitsname = 'all_comp_spectra_bc03_ssp_cspsolar_withlsf_' + field + '_' + str(pearsid) + '.fits'
+    else:
+        final_fitsname = 'all_comp_spectra_bc03_ssp_withlsf_' + field + '_' + str(pearsid) + '.fits'
+
+    interplsf = fcjm.get_interplsf(pearsid, redshift, field, pa_forlsf)
 
     if interplsf is None:
         return None
 
+    ######### For SSPs #########
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
-    example = fits.open(home + '/Documents/GALAXEV_BC03/bc03/models/Padova1994/salpeter/bc2003_hr_m22_salp_ssp.fits')
-    ages = example[2].data
-    age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
-    total_ages = int(len(age_ind))  # 57 for SSPs
+    total_ages, age_ind, ages = get_valid_ages_in_model(pop='ssp', example_filename='bc2003_hr_m22_salp_ssp.fits')
 
     # FITS file where the reduced number of spectra will be saved
     hdu = fits.PrimaryHDU()
@@ -86,11 +103,61 @@ def create_bc03_lib_ssp(pearsid, redshift, field, lam_grid):
             hdr['METAL'] = str(metal_val)
             hdulist.append(fits.ImageHDU(data=currentspec[i], header=hdr))
 
+    ######### For CSPs #########
+    if include_csp:
+
+        cspout = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/'
+        metals = ['m62']  # fixed at solar
+
+        # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
+        total_ages, age_ind, ages = get_valid_ages_in_model(pop='csp', example_filename='bc2003_hr_m62_tauV0_csp_tau100_salp.fits')
+
+        # read in BC03 spectra
+        # I've restricted tauV, tau, lambda, and ages in distinguishing spectra
+        tauVarr = np.arange(0.0, 2.0, 0.1)
+        logtauarr = np.arange(-2, 2, 0.2)
+        tauarr = np.empty(len(logtauarr)).astype(np.str)
+    
+        for i in range(len(logtauarr)):
+            tauarr[i] = str(int(float(str(10**logtauarr[i])[0:6])*10000))
+    
+        # Read in each individual spectrum and convolve it first and then chop and resample it
+        # The convolution has to be done first otherwise the ends of the spectra look weird
+        # because of the way convolution is done by astropy.convolution.convolve_fft
+        # So i'll convolve first to get the correct result from convolution at the ends of hte spectra (that I want)
+        for metallicity in metals:
+            metalfolder = metallicity + '/'
+            for tauVarrval in tauVarr:
+                for tauval in tauarr:
+                    filename = cspout + metalfolder + 'bc2003_hr_' + metallicity + '_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp.fits'
+
+                    h = fits.open(filename, memmap=False)
+                    currentlam = h[1].data
+                    currentspec = np.zeros([total_ages, len(currentlam)], dtype=np.float64)
+                    for i in range(total_ages):
+                        currentspec[i] = h[age_ind[i]+3].data
+                        currentspec[i] = convolve_fft(currentspec[i], interplsf)
+
+                    currentspec = ct.resample(currentlam, currentspec, lam_grid, total_ages)
+                    currentlam = lam_grid
+
+                    for i in range(total_ages):
+                        hdr = fits.Header()
+                        hdr['LOG_AGE'] = str(np.log10(ages[age_ind[i]]))
+
+                        metal_val = 0.02
+
+                        hdr['METAL'] = str(metal_val)
+                        hdr['TAU_GYR'] = str(float(tauval)/1e4)
+                        hdr['TAUV'] = str(tauVarrval)
+                        hdulist.append(fits.ImageHDU(data=currentspec[i], header=hdr))
+
     hdulist.writeto(savefits_dir + final_fitsname, clobber=True)
 
     return None
 
-def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec, nexten, spec_hdu, old_z, pearsid, pearsfield):
+def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec,\
+ nexten, spec_hdu, old_z, pearsid, pearsfield, makeplots, callcount):
     """
     This function will refine a prior supplied redshift.
 
@@ -225,21 +292,119 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     new_lam_grid = new_lam_grid_plot[new_chi2_minindx]
     bestalpha = bestalpha_plot[new_chi2_minindx]
 
-    if new_z_err <= 0.03:
-        savefolder = "err_using_std/"
-        plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-        bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, pearsid, pearsfield, savefolder)
+    if makeplots == 'plotbyerror':
+        if (abs(old_z - new_z_minchi2)/(1+new_z_minchi2)) <= 0.03:
+            savefolder = "err_using_deltaz_over_oneplusz/"
+            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
 
-    if (abs(old_z - new_z_minchi2)/(1+new_z_minchi2)) <= 0.03:
-        savefolder = "err_using_deltaz_over_oneplusz/"
-        plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-        bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, pearsid, pearsfield, savefolder)
+        if new_z_err <= 0.03:
+            savefolder = "err_using_std_lessthan3/"
+            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+        elif (new_z_err > 0.03) and (new_z_err <= 0.05):
+            savefolder = "err_using_std_3to5/"
+            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+        elif (new_z_err > 0.05) and (new_z_err <= 0.1):
+            savefolder = "err_using_std_5to10/"
+            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+        elif (new_z_err > 0.1):
+            savefolder = "err_using_std_morethan10/"
+            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+
+    if makeplots == 'gallery':
+        plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
+            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, callcount)
 
     return new_dn4000_ret, new_dn4000_err_ret, new_d4000_ret, new_d4000_err_ret,\
      old_z, new_z_minchi2, new_z_err, old_chi2[new_chi2_minindx], new_chi2[new_chi2_minindx]
 
+def plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
+    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, new_z_err, pearsid, pearsfield, callcount):
+
+    row = callcount//5
+    col = callcount%5     
+
+    ax = fig_gallery.add_subplot(gs[row*5:row*5+5,col*5:col*5+5])
+
+    ax.plot(orig_lam_grid, current_best_fit_model*bestalpha, '-', color='k')
+    ax.plot(orig_lam_grid, flam, '-', color='royalblue')
+
+    ax.plot(new_lam_grid, flam, '-', color='red')
+
+    # shade region for d4000 bands
+    arg3850 = np.argmin(abs(new_lam_grid - 3850))
+    arg4150 = np.argmin(abs(new_lam_grid - 4150))
+
+    x_fill = np.arange(3750,3951,1)
+    y0_fill = np.ones(len(x_fill)) * \
+    (current_best_fit_model[arg3850]*bestalpha - 3*0.05*current_best_fit_model[arg3850]*bestalpha)
+    y1_fill = np.ones(len(x_fill)) * \
+    (current_best_fit_model[arg4150]*bestalpha + 3*0.05*current_best_fit_model[arg4150]*bestalpha)
+    ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
+
+    x_fill = np.arange(4050,4251,1)
+    ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
+
+    # put in labels for old and new redshifts
+    id_labelbox = TextArea(pearsfield + "  " + str(pearsid), textprops=dict(color='k', size=5))
+    anc_id_labelbox = AnchoredOffsetbox(loc=2, child=id_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.92),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_id_labelbox)
+
+    old_z_labelbox = TextArea(r"$z_{\mathrm{old}} = $" + str(old_z), textprops=dict(color='k', size=5))
+    anc_old_z_labelbox = AnchoredOffsetbox(loc=2, child=old_z_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.83),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_old_z_labelbox)
+
+    new_z_labelbox = TextArea(r"$z_{\mathrm{new}} = $" + str("{:.3}".format(new_z)) + r"$\pm$" + str("{:.3}".format(new_z_err)), textprops=dict(color='k', size=5))
+    anc_new_z_labelbox = AnchoredOffsetbox(loc=2, child=new_z_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.75),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_new_z_labelbox)
+
+    # turn on minor ticks and add grid
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+
+    ax.set_xlim(3000,5500)
+
+    z_err_label = '_' + str("{:.3}".format(new_z_err)).replace('.', 'p')
+
+    if row != 4:
+        ax.xaxis.set_ticklabels([])
+    else:
+        if col < 4:
+            ax.xaxis.set_ticklabels(['3000','3500','4000','4500','5000',''], fontsize=8, rotation=45)
+        elif col == 4:
+            ax.xaxis.set_ticklabels(['3000','3500','4000','4500','5000','5500'], fontsize=8, rotation=45)
+
+    ax.yaxis.set_ticklabels([])
+
+    if (row == 2) and (col == 0):
+        ax.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA^{-1};\ arbitrary\ scale]}$')
+
+    if (row == 4) and (col == 2):
+        ax.set_xlabel(r'$\lambda [\AA]$')
+
+    fig_gallery.savefig(massive_figures_dir + 'gallery_5x5_spectra' + '.eps', dpi=300)
+
+    if callcount == 24:
+
+        plt.cla()
+        plt.clf()
+        plt.close()
+
+    return None
+
 def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, pearsid, pearsfield, savefolder):
+    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, new_z_err, pearsid, pearsfield, savefolder):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -281,7 +446,7 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_old_z_labelbox)
 
-    new_z_labelbox = TextArea(r"$z_{\mathrm{new}} = $" + str("{:.3}".format(new_z)), textprops=dict(color='k', size=12))
+    new_z_labelbox = TextArea(r"$z_{\mathrm{new}} = $" + str("{:.3}".format(new_z)) + r"$\pm$" + str("{:.3}".format(new_z_err)), textprops=dict(color='k', size=12))
     anc_new_z_labelbox = AnchoredOffsetbox(loc=2, child=new_z_labelbox, pad=0.0, frameon=False,\
                                          bbox_to_anchor=(0.2, 0.8),\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
@@ -293,7 +458,14 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
     ax.tick_params('both', width=1, length=4.7, which='major')
     ax.grid(True)
 
-    fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + savefolder + 'refined_z_' + pearsfield + '_' + str(pearsid) + '.eps', dpi=150)
+    z_err_label = '_' + str("{:.3}".format(new_z_err)).replace('.', 'p')
+
+    fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + savefolder + 'refined_z_' + pearsfield + '_' + str(pearsid) + z_err_label + '.eps', dpi=150)
+
+    plt.cla()
+    plt.clf()
+    plt.close()
+    del fig, ax
 
     return None
 
@@ -342,6 +514,11 @@ if __name__ == '__main__':
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
+    # grid for gallery plot
+    gs = gridspec.GridSpec(25,25)
+    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.0, hspace=0.0)
+    fig_gallery = plt.figure()
+
     # PEARS data path
     data_path = home + "/Documents/PEARS/data_spectra_only/"
 
@@ -364,7 +541,8 @@ if __name__ == '__main__':
     # in many of these cases the fits are good but the break is not really
     # clear -- in almost all cases the flux drops at the blue end 
     # but never levels out
-    skip_n = [31670,31891,33414,36546,37225,37644,37908,38345,39311,38345,\
+    #### NORTH ####
+    skip_n = [30256,31670,31891,33414,36546,37225,37644,37908,38345,39311,38345,\
     40613,41093,41439,42509,43584,44258,44559,45328,45370,45556,45624,46694,\
     47065,47153,47440,48176,48229,48514,48737,48873,50214,50892,52404,52497,\
     53189,53198,53362,53711,55348,55513,55580,55626,56190,57425,59873,60776,\
@@ -386,6 +564,35 @@ if __name__ == '__main__':
     122303,122947,123142,124190,124194,124211,124428,124893,125735,125948,\
     126356]
 
+    # this is from the list of spectra that originally had errors larger than 10%
+    # I have decided to skip all of these because each one of them looks very 
+    # noisy with the exception of perhaps one (GOODS-N 48216) which might fit 
+    # better if both the ends were to be chopped by an additional 300A or so.
+    # There are many of these in the previous North an South lists too where 
+    # additional chopping might help but I've decided to skip all of them for now.
+    skip_n1 = [100486,102913,106980,108010,108557,108928,113845,120374,120691,\
+    121854,126254,127073,32277,32277,35090,35090,37672,40748,41812,43988,44001,\
+    47511,48216,52886,55258,55828,65574,66873,71596,73991,75524,78180,79945,80787,\
+    80973,81132,81269,81414,82234,83240,83818,84001,84957,86234,86306,86362,86644,\
+    87810,87865,88171,88308,88347,88420,88684,89860,89877,95263,96483,96562,97695]
+
+    # this is from the list of spectra that originally had errors 
+    # larger than 5% and less than 10%
+    skip_n2 = [100198,101272,104177,104879,106183,107056,111351,112509,115636,118864,\
+    120365,122133,123257,124774,125153,127040,127093,28638,28638,33416,33416,33944,\
+    33944,36989,39072,41018,42605,42702,44678,46024,47284,47518,48772,49313,49912,\
+    50399,50528,61418,66922,72078,72261,72646,74157,79197,82368,82400,83434,84054,\
+    84077,85023,86044,86850,88448,88825,89139,89767,93806,95144,95506,97070]
+
+    # this is from the list of spectra that originally had errors 
+    # larger than 3% and less than 5%
+    skip_n3 = [102103,102134,102683,107021,109990,112100,119723,120498,120800,\
+    121958,122027,125716,126238,127736,37982,38344,41064,41546,45117,48728,\
+    49261,52896,52948,56330,64339,65687,65833,67793,71675,73266,74125,75246,\
+    80084,84715,86603,87093,87634,87911,88175,89993,90093,90919,92276,92316,\
+    93907,97087,97566]
+
+    #### SOUTH ####
     skip_s = [11507,14990,15005,15391,17021,17024,17163,17494,17587,18260,\
     18337,18484,19226,19585,19652,19774,20957,21612,22217,24396,25390,25474,\
     26160,26909,28588,30887,31325,32858,33498,33636,33725,34128,35255,35475,\
@@ -404,15 +611,57 @@ if __name__ == '__main__':
     122949,123236,123294,123477,123779,124248,124882,124945,125425,126478,\
     126934,126958,127413,128422,129156,130387,131381,137226]
 
+    # this is from the list of spectra that originally had errors larger than 10%
+    skip_s1 = [102205,103784,108779,110664,113364,116124,122756,123543,129605,\
+    16073,18882,21363,27652,29515,29789,41075,42022,44581,52445,54056,54631,\
+    56067,60341,65179,66853,67542,67558,68852,69168,70821,72302,73166,81384,\
+    84323,87611,90103,90132,91001,91517,93923,97910,99381]
+
+    # this is from the list of spectra that originally had errors 
+    # larger than 5% and less than 10%
+    skip_s2 = [100349,102027,106061,107036,108066,108359,108576,110988,111030,\
+    113169,118024,119722,119774,119927,122146,128012,130087,17495,18972,22784,\
+    23929,30742,32879,35068,35537,39109,40295,49366,53588,56575,56875,65471,\
+    67630,70161,71071,73908,81743,81815,82058,83754,85552,86109,86431,87420,\
+    90198,90809,91869,92589,92755,93563,97638]
+
+    # this is from the list of spectra that originally had errors 
+    # larger than 3% and less than 5%
+    skip_s3 = [100094,101299,108004,108358,109505,109992,110397,110962,111194,\
+    112133,112840,118155,118772,121405,122392,128679,130552,13283,133586,133802,\
+    137013,15118,16596,18213,19733,20681,21529,21647,21777,22486,25184,25316,\
+    33949,37846,49165,50261,54920,56391,57524,57648,59393,59586,63179,65335,\
+    66620,67654,68414,73974,77325,80500,81296,81973,85517,87958,90116,91382,\
+    92025,92455,92860,95997,96737]
+
+    # the comments above about additional chopping applies to all lists.
+    # see the handwritten list in notes which had ids that will benefit from 
+    # additional chopping. these are to be added later.
+
     # these are cases where the old redshift looks correct
     old_z_correct_n = [36842,45958,48743,65404,117385] 
     old_z_correct_s = [40488,43758,81021,84478,101795,110801]
+
+    # for 5x5 gallery
+    # these two lists commented out have more spectra if you want
+    # plot_n = [36105,40991,43618,44078,44756,46766,50196,51648,57792,\
+    # 62511,63526,76889,78475,79426,79587,81336,84520,84649,84974,96517]
+
+    # plot_s = [16836,26158,29322,30107,36121,57014,58181,61235,68104,88671,95110,\
+    # 110487,113298,114108,114230,123472]
+
+    plot_n = [36105,40991,43618,44078,46766,50196,62511,\
+    63526,76889,79426,81336,84649,84974,96517]
+
+    plot_s = [26158,29322,30107,57014,61235,68104,88671,95110,\
+    110487,114108,114230]
 
     #### PEARS ####
 
     allcats = [pears_cat_n, pears_cat_s]
 
     catcount = 0
+    callcount = 0
     for pears_cat in allcats:
 
         if catcount == 0:
@@ -433,16 +682,11 @@ if __name__ == '__main__':
         # use these next two lines if you want to run the code only for a specific galaxy
         #arg = np.where((pears_cat['field'] == 'GOODS-N') & (pears_cat['pears_id'] == 40991))[0]
         #print pears_cat[arg]
-    
-        # there are 1226 galaxies with SNR on dn4000 greater than 3sigma
-        # there are 492 galaxies with SNR on dn4000 greater than 3sigma and less than 20sigma
 
         # Galaxies with believable breaks; im calling them proper breaks
         prop_4000break_indices_pears = \
         np.where((pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] >= 1.05) &\
          (pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] <= 3.5))[0]
-
-        # there are now 483 galaxies in this dn4000 range
 
         all_pears_ids = pears_cat['pears_id'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
         all_pears_fields = pears_cat['field'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
@@ -480,16 +724,44 @@ if __name__ == '__main__':
             current_redshift_source = all_pears_redshift_sources[i]
             print "\n", "Working on --", current_id
 
-            lam_em, flam_em, ferr, specname = gd.fileprep(current_id, current_redshift, current_field)
+            # comment out these next two if statements if you want to run the code on the entire sample
+            # and uncomment them if you just want to plot a gallery of the best spectra
+            # also comment out the lines that save the text file at the end if you want to plot the gallery
+            # also change the string argument that is passed to the fitting function to say 'gallery'
+            #if (current_field == 'GOODS-N') and (current_id not in plot_n):
+            #    continue
+
+            #if (current_field == 'GOODS-S') and (current_id not in plot_s):
+            #    continue
+
+            lam_em, flam_em, ferr, specname, pa_forlsf = gd.fileprep(current_id, current_redshift, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
 
             if (current_id in skip_n) and (current_field == 'GOODS-N'):
+                skipped_gal += 1
+                continue
+            elif (current_id in skip_n1) and (current_field == 'GOODS-N'):
+                skipped_gal += 1
+                continue
+            elif (current_id in skip_n2) and (current_field == 'GOODS-N'):
+                skipped_gal += 1
+                continue
+            elif (current_id in skip_n3) and (current_field == 'GOODS-N'):
                 skipped_gal += 1
                 continue
 
             if (current_id in skip_s) and (current_field == 'GOODS-S'):
                 skipped_gal += 1
                 continue
- 
+            elif (current_id in skip_s1) and (current_field == 'GOODS-S'):
+                skipped_gal += 1
+                continue
+            elif (current_id in skip_s2) and (current_field == 'GOODS-S'):
+                skipped_gal += 1
+                continue
+            elif (current_id in skip_s3) and (current_field == 'GOODS-S'):
+                skipped_gal += 1
+                continue
+
             # Contamination rejection
             if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
                 print 'Skipping', current_id, 'because of overall contamination.'
@@ -505,7 +777,7 @@ if __name__ == '__main__':
             resampling_lam_grid = np.insert(lam_em, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
-            #create_bc03_lib_ssp(current_id, current_redshift, current_field, resampling_lam_grid)
+            #create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf)
             #del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
             #continue
 
@@ -551,7 +823,8 @@ if __name__ == '__main__':
                 # run the actual fitting function
                 new_dn4000, new_dn4000_err, new_d4000, new_d4000_err, old_z, new_z, new_z_err, old_chi2, new_chi2 = \
                 fit_chi2_redshift(lam_em, resampling_lam_grid, resampled_spec, ferr,\
-                 num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field)
+                 num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field, 'plotbyerror', callcount)
+                callcount += 1
             else:
                 continue
 
