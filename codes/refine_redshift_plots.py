@@ -378,6 +378,7 @@ if __name__ == '__main__':
     ax.set_xlim(0.0, 0.2)
 
     print '\n'
+    print "Numbers for sigma_z_grism divided by (1+z_grism):"
     print "Mean of measurement uncertainty in new redshift--", np.mean(z_grism_std_div[np.isfinite(z_grism_std_div)])
     print "Median of measurement uncertainty in new redshift--", np.median(z_grism_std_div[np.isfinite(z_grism_std_div)])
     print "Mode of measurement uncertainty in new redshift--", (b[np.argmax(n)] + b[np.argmax(n)+1])/2

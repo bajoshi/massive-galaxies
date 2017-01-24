@@ -406,7 +406,7 @@ if __name__ == '__main__':
             redshift = photz[count]
             print "\n", "Currently working with PEARS object id: ", current_pears_index, "at redshift", redshift
 
-            lam_em, flam_em, ferr, specname = gd.fileprep(current_pears_index, redshift, fieldname)
+            lam_em, flam_em, ferr, specname, pa_chosen = gd.fileprep(current_pears_index, redshift, fieldname)
 
             if not lam_em.size:
                 # i.e. skip galaxy if fileprep returned an empty array
@@ -437,8 +437,8 @@ if __name__ == '__main__':
                 continue
 
             fitsfile = fits.open(pears_spectra_dir + specname)
-            pears_ra.append(float(fitsfile[0].header['RA']))
-            pears_dec.append(float(fitsfile[0].header['DEC']))
+            pears_ra.append(float(cat['pearsra'][redshift_indices][count]))
+            pears_dec.append(float(cat['pearsdec'][redshift_indices][count]))
 
             dn4000_temp, dn4000_err_temp = get_dn4000(lam_em, flam_em, ferr)
             d4000_temp, d4000_err_temp = get_d4000(lam_em, flam_em, ferr)
@@ -472,13 +472,13 @@ if __name__ == '__main__':
         if fieldname == 'GOODS-N':
             np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
                        header='Catalog for all galaxies that matched between 3DHST and PEARS in ' + fieldname + '. \n' +
-                       'pears_id field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
+                       'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
         elif fieldname == 'GOODS-S':
             np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
                        header='Catalog for all galaxies that matched between CANDELS and PEARS in GOODS-S.' + '\n' +\
                        'If a galaxy did not match with CANDELS then a matching in 3DHST was attempted.' + '\n' +\
                        'the \'zphot_source\' column indicates the source of the photometric redshift.' + '\n' +\
-                       'pears_id field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
+                       'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
 
         print len(np.isfinite(dn4000_arr)), len(np.isfinite(dn4000_err_arr)), len(np.isfinite(d4000_arr)), len(np.isfinite(d4000_err_arr))
 

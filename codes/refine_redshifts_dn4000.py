@@ -362,7 +362,7 @@ def plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_old_z_labelbox)
 
-    new_z_labelbox = TextArea(r"$z_{\mathrm{new}} = $" + str("{:.3}".format(new_z)) + r"$\pm$" + str("{:.3}".format(new_z_err)), textprops=dict(color='k', size=5))
+    new_z_labelbox = TextArea(r"$z_{\mathrm{grism}} = $" + str("{:.3}".format(new_z)) + r"$\pm$" + str("{:.3}".format(new_z_err)), textprops=dict(color='k', size=5))
     anc_new_z_labelbox = AnchoredOffsetbox(loc=2, child=new_z_labelbox, pad=0.0, frameon=False,\
                                          bbox_to_anchor=(0.05, 0.75),\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
@@ -688,7 +688,7 @@ if __name__ == '__main__':
         np.where((pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] >= 1.05) &\
          (pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] <= 3.5))[0]
 
-        all_pears_ids = pears_cat['pears_id'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
+        all_pears_ids = pears_cat['pearsid'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
         all_pears_fields = pears_cat['field'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
         all_pears_redshifts = pears_cat['redshift'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
         all_pears_redshift_sources = pears_cat['zphot_source'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
@@ -734,7 +734,7 @@ if __name__ == '__main__':
             #if (current_field == 'GOODS-S') and (current_id not in plot_s):
             #    continue
 
-            lam_em, flam_em, ferr, specname, pa_forlsf = gd.fileprep(current_id, current_redshift, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+            lam_em, flam_em, ferr, specname, pa_forlsf, netsig_chosen = gd.fileprep(current_id, current_redshift, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
 
             if (current_id in skip_n) and (current_field == 'GOODS-N'):
                 skipped_gal += 1
@@ -777,13 +777,27 @@ if __name__ == '__main__':
             resampling_lam_grid = np.insert(lam_em, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
-            #create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf)
-            #del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
-            #continue
+            include_csp=True
+            # Uncomment the following lines of code if you want to create libraries
+            # and comment them out when you want to run the code to refine redshifts after creating libraries
+            if include_csp:
+                if os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_ssp_cspsolar_withlsf_' + current_field + '_' + str(current_id) + '.fits'):
+                    continue
+                else:
+                    create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf, include_csp=include_csp)
+                    del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
+                    continue
+            else:
+                create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf, include_csp=include_csp)
+                del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
+                continue
 
             # Open fits files with comparison spectra
             try:
-                bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_ssp_withlsf_' + current_field + '_' + str(current_id) + '.fits', memmap=False)        
+                if include_csp:
+                    bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_ssp_cspsolar_withlsf_' + current_field + '_' + str(current_id) + '.fits', memmap=False)
+                else:
+                    bc03_spec = fits.open(savefits_dir + 'all_comp_spectra_bc03_ssp_withlsf_' + current_field + '_' + str(current_id) + '.fits', memmap=False)
             except IOError as e:
                 print e
                 print "LSF was not taken into account for this galaxy. Moving on to next galaxy for now."
@@ -797,8 +811,8 @@ if __name__ == '__main__':
             # put in spectra for all ages in a properly shaped numpy array for faster computations
 
             comp_spec_bc03 = np.zeros([bc03_extens, len(resampling_lam_grid)], dtype=np.float64)
-            for i in range(bc03_extens):
-                comp_spec_bc03[i] = bc03_spec[i+2].data
+            for j in range(bc03_extens):
+                comp_spec_bc03[j] = bc03_spec[j+2].data
 
             # Get random samples by bootstrapping
             num_samp_to_draw = int(100)
@@ -807,16 +821,16 @@ if __name__ == '__main__':
             else:
                 print "Running over", num_samp_to_draw, "random bootstrapped samples."
                 resampled_spec = ma.empty((len(flam_em), num_samp_to_draw))
-                for i in range(len(flam_em)):
-                    if flam_em[i] is not ma.masked:
+                for k in range(len(flam_em)):
+                    if flam_em[k] is not ma.masked:
                         try:
-                            resampled_spec[i] = np.random.normal(flam_em[i], ferr[i], num_samp_to_draw)
+                            resampled_spec[k] = np.random.normal(flam_em[k], ferr[k], num_samp_to_draw)
                         except ValueError as e:
                             print e
                             skipped_gal += 1
                             break
                     else:
-                        resampled_spec[i] = ma.masked
+                        resampled_spec[k] = ma.masked
                 resampled_spec = resampled_spec.T
 
             if resampled_spec.size:
