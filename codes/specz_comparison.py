@@ -103,6 +103,7 @@ if __name__ == '__main__':
     z_grism_std_plot = []
 
     skipped = 0
+    weird = 0
     catcount = 0
     for cat in all_spec_cats:  # dummy loop variable. I know I could use it but I like the clarity of the current way better.
         
@@ -164,6 +165,7 @@ if __name__ == '__main__':
                     netsig_corr = pears_master_scat['netsig_corr'][idarg]
     
                 print '\n', netsig_corr, netsig_chosen_specz, imag
+                weird += 1
 
                 """
                 # plot for comparison
@@ -238,7 +240,8 @@ if __name__ == '__main__':
 
         catcount += 1
 
-    print skipped, "galaxies were skipped."
+    print skipped, "galaxies were skipped due to bad spectroscopic z quality."
+    print weird, "galaxies were skipped which had (z_spec - z_grism) >= 0.05."
     print len(specz_n_ind) + len(specz_s_ind) - skipped, "galaxies in spectroscopic comparison sample."
 
     # convert to numpy arrays for operations 
