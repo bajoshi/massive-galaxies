@@ -35,9 +35,9 @@ if __name__ == '__main__':
     goods_n_cat = np.genfromtxt(massive_galaxies_dir + 'goods_n_specz_0117.txt', dtype=None, names=['ra','dec','z_spec','z_qual','catname','duplicate'], skip_header=13)
 
     # read pears refined z cat
-    pears_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-N.txt',\
+    pears_cat_n = np.genfromtxt(home + '/Desktop/pears_refined_4000break_catalog_GOODS-N.txt',\
      dtype=None, names=True, skip_header=1)
-    pears_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-S.txt',\
+    pears_cat_s = np.genfromtxt(home + '/Desktop/pears_refined_4000break_catalog_GOODS-S.txt',\
      dtype=None, names=True, skip_header=1)
     
     # match with break catalogs instead of refined
@@ -134,9 +134,16 @@ if __name__ == '__main__':
                 current_specz_source = spec_cat['catname'][spec_ind][i]
                 current_specz_qual = spec_cat['z_qual'][spec_ind][i]
     
-                if (current_specz_qual == "Z") or (current_specz_qual < 3):
+                if (current_specz_qual != "A"):
                     skipped += 1
                     continue
+
+                try:
+                    if (int(current_specz_qual) < 3):
+                        skipped += 1
+                        continue
+                except ValueError as e:
+                    pass
     
                 if current_specz_source == "3D_HST":
                     skipped += 1
@@ -157,7 +164,7 @@ if __name__ == '__main__':
                     netsig_corr = pears_master_scat['netsig_corr'][idarg]
     
                 print '\n', netsig_corr, netsig_chosen_specz, imag
-    
+
                 """
                 # plot for comparison
                 fig = plt.figure()
@@ -219,7 +226,7 @@ if __name__ == '__main__':
                                                      bbox_transform=ax.transAxes, borderpad=0.0)
                 ax.add_artist(anc_imag_labelbox)
 
-                #plt.show()
+                plt.show()
                 del fig, ax
                 """
 
@@ -368,6 +375,18 @@ if __name__ == '__main__':
     fig.savefig(massive_figures_dir + "zspec_vs_zgrism_err.eps", dpi=150, bbox_inches='tight')
 
     #plt.show()
+
+    # ------------------------------------------------------------------------------------------------- #
+    # histogram of delta_z/1+z
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    hist_arr = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
+
+    ax.hist(hist_arr, 20, alpha=0.6)
+
+    plt.show()
 
     sys.exit(0)
 
