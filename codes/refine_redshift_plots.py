@@ -148,6 +148,9 @@ if __name__ == '__main__':
     pears_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-S.txt',\
      dtype=None, names=True, skip_header=1)
 
+    print "Number of objects in refined catalog for GOODS-N", len(pears_cat_n)
+    print "Number of objects in refined catalog for GOODS-S", len(pears_cat_s)
+
     z_grism = np.concatenate((pears_cat_n['new_z'], pears_cat_s['new_z']), axis=0)
     z_phot = np.concatenate((pears_cat_n['old_z'], pears_cat_s['old_z']), axis=0)
 
@@ -353,8 +356,11 @@ if __name__ == '__main__':
     print "Mode of measurement uncertainty in new redshift--", (b[np.argmax(n)] + b[np.argmax(n)+1])/2
     print "Total values of measurement uncertainty in new redshift within 3% --", len(np.where(z_grism_std[np.isfinite(z_grism_std)] <= 0.03)[0])
     print "Total values of measurement uncertainty in new redshift within 1% --", len(np.where(z_grism_std[np.isfinite(z_grism_std)] <= 0.01)[0])
+    print "Total values of measurement uncertainty in new redshift within 0.5% --", len(np.where(z_grism_std[np.isfinite(z_grism_std)] <= 0.005)[0])
+    print "Total values of measurement uncertainty in new redshift within 0.3% --", len(np.where(z_grism_std[np.isfinite(z_grism_std)] <= 0.003)[0])
     print "Total values of measurement uncertainty in new redshift within 0.1% --", len(np.where(z_grism_std[np.isfinite(z_grism_std)] <= 0.001)[0])
-    print "Total values that are catastrophic failures of redshift estimate --", len(np.where(z_grism_std[np.isfinite(z_grism_std)] >= 0.1)[0])
+    print "Total values that are catastrophic failures of redshift estimate > 5% --", len(np.where(z_grism_std[np.isfinite(z_grism_std)] >= 0.05)[0])
+    print "Total values that are catastrophic failures of redshift estimate > 10% --", len(np.where(z_grism_std[np.isfinite(z_grism_std)] >= 0.1)[0])
 
     fig.savefig(massive_figures_dir + "refined_z_err_hist.eps", dpi=300, bbox_inches='tight')
     del fig, ax
@@ -375,6 +381,8 @@ if __name__ == '__main__':
     ax.set_xlabel(r'$\mathrm{\sigma_{z_{grism}}/(1+z_{grism})}$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
 
+    ax.axvline(x=0.037, linestyle='--', color='b')
+
     ax.set_xlim(0.0, 0.2)
 
     print '\n'
@@ -384,8 +392,11 @@ if __name__ == '__main__':
     print "Mode of measurement uncertainty in new redshift--", (b[np.argmax(n)] + b[np.argmax(n)+1])/2
     print "Total values of measurement uncertainty in new redshift within 3% --", len(np.where(z_grism_std_div[np.isfinite(z_grism_std_div)] <= 0.03)[0])
     print "Total values of measurement uncertainty in new redshift within 1% --", len(np.where(z_grism_std_div[np.isfinite(z_grism_std_div)] <= 0.01)[0])
+    print "Total values of measurement uncertainty in new redshift within 0.5% --", len(np.where(z_grism_std_div[np.isfinite(z_grism_std_div)] <= 0.005)[0])
+    print "Total values of measurement uncertainty in new redshift within 0.3% --", len(np.where(z_grism_std_div[np.isfinite(z_grism_std_div)] <= 0.003)[0])
     print "Total values of measurement uncertainty in new redshift within 0.1% --", len(np.where(z_grism_std_div[np.isfinite(z_grism_std_div)] <= 0.001)[0])
-    print "Total values that are catastrophic failures of redshift estimate --", len(np.where(z_grism_std_div[np.isfinite(z_grism_std_div)] >= 0.1)[0])
+    print "Total values that are catastrophic failures of redshift estimate > 5% --", len(np.where(z_grism_std_div[np.isfinite(z_grism_std_div)] >= 0.05)[0])
+    print "Total values that are catastrophic failures of redshift estimate > 10% --", len(np.where(z_grism_std_div[np.isfinite(z_grism_std_div)] >= 0.1)[0])
 
     fig.savefig(massive_figures_dir + "refined_z_err_div_oneplusz_hist.eps", dpi=300, bbox_inches='tight')
     del fig, ax

@@ -106,8 +106,8 @@ if __name__ == '__main__':
     # dtype=None, names=True, skip_header=1)
 
     # get ids from old catalog to check which ones to replace with corrected values
-    pears_ids_n = pears_cat_n['pears_id']
-    pears_ids_s = pears_cat_s['pears_id']
+    pears_ids_n = pears_cat_n['pearsid']
+    pears_ids_s = pears_cat_s['pearsid']
 
     # replace d4000 with corrected d4000 from refined redshift catalog
     # first read the refined cats and make arrays

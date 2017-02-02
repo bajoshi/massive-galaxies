@@ -49,8 +49,7 @@ def find_matches_in_ferreras2009(pears_cat, ferreras_prop_cat, ferreras_cat):
 
     return None
 
-def get_interplsf(pearsid, redshift, fieldforid, pa_forlsf):
-
+def read_lsf(pearsid, redshift, fieldforid, pa_forlsf):
     # This exception handler makes sure that the lsf exists before trying to use it so that the program execution is not stopped.
 
     pa_str = pa_forlsf.replace('PA', 'pa')
@@ -61,11 +60,13 @@ def get_interplsf(pearsid, redshift, fieldforid, pa_forlsf):
             lsf_pa_filename = home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_' + pa_str + '_lsf.txt'
             if os.path.isfile(lsf_pa_filename):
                 lsf = np.loadtxt(lsf_pa_filename)
+                return lsf
             else:
                 print pa_str, "for", pearsid, "in", fieldforid, "not found. Trying average LSF."
                 lsf_avg_filename = home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(pearsid) + '_avg_lsf.txt'
                 if os.path.isfile(lsf_avg_filename):
                     lsf = np.loadtxt(lsf_avg_filename)
+                    return lsf
                 else:
                     raise IOError
 
@@ -73,18 +74,65 @@ def get_interplsf(pearsid, redshift, fieldforid, pa_forlsf):
             lsf_pa_filename = home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(pearsid) + '_' + pa_str + '_lsf.txt'
             if os.path.isfile(lsf_pa_filename):
                 lsf = np.loadtxt(lsf_pa_filename)
+                return lsf
             else:
                 print pa_str, "for", pearsid, "in", fieldforid, "not found. Trying average LSF."
                 lsf_avg_filename = home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/n' + str(pearsid) + '_avg_lsf.txt'
                 if os.path.isfile(lsf_avg_filename):
-                    lsf = np.loadtxt(lsf_avg_filename)  
+                    lsf = np.loadtxt(lsf_avg_filename)
+                    return lsf
                 else:
                     raise IOError
 
     except IOError as e:
-    	print e
-    	print "No LSF file found. Moving on to next galaxy for now."
-    	return None
+        print e
+        print "No LSF file found. Moving on to next galaxy for now."
+        return None
+
+def get_interplsf(pearsid, redshift, fieldforid, pa_forlsf):
+
+    if type(pa_forlsf) == list:
+ 
+        if len(pa_forlsf) == 0:  # if the combined pa array is an empty array
+            return None
+
+        elif len(pa_forlsf) == 1:  # if the combined pa array has only one element
+            single_pa = 'PA' + pa_forlsf[0]
+            lsf = read_lsf(pearsid, redshift, fieldforid, single_pa)
+
+        elif len(pa_forlsf) > 1:  # if the combined pa array has more than one element
+
+            # put lsfs in an arrray
+            lsf_arr = []
+            for single_pa in pa_forlsf:
+                single_pa = 'PA' + single_pa
+                lsf_arr.append(read_lsf(pearsid, redshift, fieldforid, single_pa))
+
+            # average all lsfs in the array
+            lsf_count = 0
+            for l in lsf_arr:
+                if l is None:
+                    continue
+                else:
+                    if lsf_count == 0:
+                        lsum = np.zeros(len(l))
+
+                    lsum = lsum + np.asarray(l)
+                    lsf_count += 1
+
+            if lsf_count == 0:
+                return None
+            elif lsf_count == 1:
+                lsf = lsum
+            elif lsf_count > 1:
+                lsf = lsum / lsf_count
+
+    else:
+        lsf = read_lsf(pearsid, redshift, fieldforid, pa_forlsf)
+
+    # if read_lsf couldn't find the lsf and returned a NoneType object
+    if lsf is None:
+        return None
 
     # Interpolate the LSF to the rest frame delta lambda grid of the galaxy
     dlam_obs = 24

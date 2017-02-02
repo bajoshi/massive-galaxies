@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
         for i in range(len(spec_cat['z_spec'][spec_ind])):
 
-            if abs(spec_cat['z_spec'][spec_ind][i] - pears_cat['new_z'][pears_ind][i]) >= 0.05:
+            if abs(spec_cat['z_spec'][spec_ind][i] - pears_cat['new_z'][pears_ind][i]) >= 0.03:
     
                 current_id = pears_cat['pearsid'][pears_ind][i]
                 current_grismz = pears_cat['new_z'][pears_ind][i]
@@ -150,9 +150,9 @@ if __name__ == '__main__':
                     skipped += 1
                     continue
     
-                lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                lam_em_photz, flam_em_photz, ferr_photz, specname_photz, pa_forlsf_photz, netsig_chosen_photz = gd.fileprep(current_id, current_photz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+                #lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+                #lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+                #lam_em_photz, flam_em_photz, ferr_photz, specname_photz, pa_forlsf_photz, netsig_chosen_photz = gd.fileprep(current_id, current_photz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
     
                 # get i band mag
                 if current_field == 'GOODS-N':
@@ -164,8 +164,12 @@ if __name__ == '__main__':
                     imag = pears_master_scat['imag'][idarg]
                     netsig_corr = pears_master_scat['netsig_corr'][idarg]
     
-                print '\n', netsig_corr, netsig_chosen_specz, imag
+                #print current_specz_source  #, netsig_corr, netsig_chosen_specz, imag
                 weird += 1
+                z_spec_plot.append(spec_cat['z_spec'][spec_ind][i])
+                z_grism_plot.append(pears_cat['new_z'][pears_ind][i])
+                z_phot_plot.append(pears_cat['old_z'][pears_ind][i])
+                z_grism_std_plot.append(pears_cat['new_z_err'][pears_ind][i])
 
                 """
                 # plot for comparison
@@ -233,6 +237,10 @@ if __name__ == '__main__':
                 """
 
             else:
+                if current_specz_source == "3D_HST":
+                    skipped += 1
+                    continue
+                #print current_specz_source
                 z_spec_plot.append(spec_cat['z_spec'][spec_ind][i])
                 z_grism_plot.append(pears_cat['new_z'][pears_ind][i])
                 z_phot_plot.append(pears_cat['old_z'][pears_ind][i])
@@ -241,8 +249,8 @@ if __name__ == '__main__':
         catcount += 1
 
     print skipped, "galaxies were skipped due to bad spectroscopic z quality."
-    print weird, "galaxies were skipped which had (z_spec - z_grism) >= 0.05."
-    print len(specz_n_ind) + len(specz_s_ind) - skipped, "galaxies in spectroscopic comparison sample."
+    print weird, "galaxies have (z_spec - z_grism) >= 0.03."
+    print len(z_spec_plot), "galaxies in spectroscopic comparison sample."
 
     # convert to numpy arrays for operations 
     z_spec_plot = np.asarray(z_spec_plot)
@@ -252,7 +260,7 @@ if __name__ == '__main__':
 
     # z_grism vs z_phot vs z_spec
     gs = gridspec.GridSpec(15,30)
-    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.5, hspace=0.00)
+    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=20.0, hspace=0.00)
 
     fig_gs = plt.figure()
     ax1 = fig_gs.add_subplot(gs[:10,:10])
@@ -267,12 +275,13 @@ if __name__ == '__main__':
     ax1.plot(z_spec_plot, z_grism_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
     ax1.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
 
-    ax1.set_xlim(0.55, 1.3)
-    ax1.set_ylim(0.55, 1.3)
+    ax1.set_xlim(0.6, 1.24)
+    ax1.set_ylim(0.6, 1.24)
 
-    ax1.set_ylabel(r'$z_\mathrm{grism}$', fontsize=15)
+    ax1.set_ylabel(r'$z_\mathrm{g}$', fontsize=12, labelpad=1)
 
     ax1.xaxis.set_ticklabels([])
+    ax1.yaxis.set_ticklabels(['', '0.6', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize=8, rotation=45)
 
     ax1.minorticks_on()
     ax1.tick_params('both', width=1, length=3, which='minor')
@@ -283,11 +292,14 @@ if __name__ == '__main__':
     ax2.plot(z_spec_plot, (z_spec_plot - z_grism_plot)/(1+z_spec_plot), 'o', markersize=1.5, color='k', markeredgecolor='k')
     ax2.axhline(y=0, linestyle='--', color='r')
 
-    ax2.set_xlim(0.55, 1.3)
-    ax2.set_ylim(-0.3, 0.3)
+    ax2.set_xlim(0.6, 1.24)
+    ax2.set_ylim(-0.2, 0.2)
 
-    ax2.set_xlabel(r'$z_\mathrm{spec}$', fontsize=15)
-    ax2.set_ylabel(r'$(z_\mathrm{spec} - z_\mathrm{grism})/(1+z_\mathrm{spec})$', fontsize=15)
+    ax2.xaxis.set_ticklabels(['', '0.6', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize=8, rotation=45)
+    ax2.yaxis.set_ticklabels(['-0.2', '-0.15', '-0.1', '-0.05', '0.0', '0.05', '0.1', '0.15', ''], fontsize=8, rotation=45)
+
+    ax2.set_xlabel(r'$z_\mathrm{s}$', fontsize=12)
+    ax2.set_ylabel(r'$(z_\mathrm{s} - z_\mathrm{g})/(1+z_\mathrm{s})$', fontsize=12, labelpad=-2)
 
     ax2.minorticks_on()
     ax2.tick_params('both', width=1, length=3, which='minor')
@@ -299,12 +311,13 @@ if __name__ == '__main__':
     ax3.plot(z_spec_plot, z_phot_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
     ax3.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
 
-    ax3.set_xlim(0.55, 1.3)
-    ax3.set_ylim(0.55, 1.3)
+    ax3.set_xlim(0.6, 1.24)
+    ax3.set_ylim(0.6, 1.24)
 
-    ax3.set_ylabel(r'$z_\mathrm{CANDELS/3DHST}$', fontsize=15)
+    ax3.set_ylabel(r'$z_\mathrm{p}$', fontsize=12, labelpad=-2)
 
     ax3.xaxis.set_ticklabels([])
+    ax3.yaxis.set_ticklabels([])
 
     ax3.minorticks_on()
     ax3.tick_params('both', width=1, length=3, which='minor')
@@ -315,11 +328,14 @@ if __name__ == '__main__':
     ax4.plot(z_spec_plot, (z_spec_plot - z_phot_plot)/(1+z_spec_plot), 'o', markersize=1.5, color='k', markeredgecolor='k')
     ax4.axhline(y=0, linestyle='--', color='r')
 
-    ax4.set_xlim(0.55, 1.3)
-    ax4.set_ylim(-0.3, 0.3)
+    ax4.set_xlim(0.6, 1.24)
+    ax4.set_ylim(-0.2, 0.2)
 
-    ax4.set_xlabel(r'$z_\mathrm{spec}$', fontsize=15)
-    ax4.set_ylabel(r'$(z_\mathrm{spec} - z_\mathrm{CANDELS/3DHST})/(1+z_\mathrm{spec})$', fontsize=15)
+    ax4.xaxis.set_ticklabels(['', '0.6', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize=8, rotation=45)
+    ax4.yaxis.set_ticklabels([])
+
+    ax4.set_xlabel(r'$z_\mathrm{s}$', fontsize=12)
+    ax4.set_ylabel(r'$(z_\mathrm{s} - z_\mathrm{p})/(1+z_\mathrm{s})$', fontsize=12, labelpad=-2)
 
     ax4.minorticks_on()
     ax4.tick_params('both', width=1, length=3, which='minor')
@@ -331,12 +347,13 @@ if __name__ == '__main__':
     ax5.plot(z_grism_plot, z_phot_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
     ax5.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
 
-    ax5.set_xlim(0.55, 1.3)
-    ax5.set_ylim(0.55, 1.3)
+    ax5.set_xlim(0.6, 1.24)
+    ax5.set_ylim(0.6, 1.24)
 
-    ax5.set_ylabel(r'$z_\mathrm{CANDELS/3DHST}$', fontsize=15)
+    ax5.set_ylabel(r'$z_\mathrm{p}$', fontsize=12, labelpad=-2)
 
     ax5.xaxis.set_ticklabels([])
+    ax5.yaxis.set_ticklabels([])
 
     ax5.minorticks_on()
     ax5.tick_params('both', width=1, length=3, which='minor')
@@ -347,11 +364,14 @@ if __name__ == '__main__':
     ax6.plot(z_grism_plot, (z_grism_plot - z_phot_plot)/(1+z_grism_plot), 'o', markersize=1.5, color='k', markeredgecolor='k')
     ax6.axhline(y=0, linestyle='--', color='r')
 
-    ax6.set_xlim(0.55, 1.3)
-    ax6.set_ylim(-0.3, 0.3)
+    ax6.set_xlim(0.6, 1.24)
+    ax6.set_ylim(-0.2, 0.2)
 
-    ax6.set_xlabel(r'$z_\mathrm{grism}$', fontsize=15)
-    ax6.set_ylabel(r'$(z_\mathrm{grism} - z_\mathrm{CANDELS/3DHST})/(1+z_\mathrm{grism})$', fontsize=15)
+    ax6.xaxis.set_ticklabels(['', '0.6', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize=8, rotation=45)
+    ax6.yaxis.set_ticklabels([])
+
+    ax6.set_xlabel(r'$z_\mathrm{g}$', fontsize=12)
+    ax6.set_ylabel(r'$(z_\mathrm{g} - z_\mathrm{p})/(1+z_\mathrm{g})$', fontsize=12, labelpad=-2)
 
     ax6.minorticks_on()
     ax6.tick_params('both', width=1, length=3, which='minor')
@@ -364,11 +384,11 @@ if __name__ == '__main__':
     # plot of z_spec - z_grism vs sigma_z_grism
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot((z_spec_plot - z_grism_plot), z_grism_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax.plot((z_spec_plot - z_grism_plot)**2, z_grism_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
     ax.axhline(y=0, linestyle='--', color='r')
 
-    ax.set_xlabel(r'$(z_\mathrm{spec} - z_\mathrm{grism})$', fontsize=15)
-    ax.set_ylabel(r'$\mathrm{\sigma_{z_{grism}}}$', fontsize=15)
+    ax.set_xlabel(r'$(z_\mathrm{s} - z_\mathrm{g})^2$', fontsize=12)
+    ax.set_ylabel(r'$\mathrm{\sigma_{z_{g}}}$', fontsize=12)
 
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')
@@ -389,7 +409,7 @@ if __name__ == '__main__':
 
     ax.hist(hist_arr, 20, alpha=0.6)
 
-    plt.show()
+    #plt.show()
 
     sys.exit(0)
 

@@ -25,6 +25,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 new_codes_dir = home + "/Desktop/FIGS/new_codes/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
+sys.path.append(massive_galaxies_dir + 'codes/')
 import grid_coadd as gd
 import create_fsps_miles_libraries as ct
 import fast_chi2_jackknife as fcj
@@ -293,27 +294,30 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     bestalpha = bestalpha_plot[new_chi2_minindx]
 
     if makeplots == 'plotbyerror':
-        if (abs(old_z - new_z_minchi2)/(1+new_z_minchi2)) <= 0.03:
-            savefolder = "err_using_deltaz_over_oneplusz/"
-            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+        if (new_z_minchi2 <= 1.235) and (new_z_minchi2 >= 0.6):
+            if (abs(old_z - new_z_minchi2)/(1+new_z_minchi2)) <= 0.03:
+                savefolder = "err_using_deltaz_over_oneplusz/"
+                plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+                bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
 
-        if new_z_err <= 0.03:
-            savefolder = "err_using_std_lessthan3/"
-            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
-        elif (new_z_err > 0.03) and (new_z_err <= 0.05):
-            savefolder = "err_using_std_3to5/"
-            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
-        elif (new_z_err > 0.05) and (new_z_err <= 0.1):
-            savefolder = "err_using_std_5to10/"
-            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
-        elif (new_z_err > 0.1):
-            savefolder = "err_using_std_morethan10/"
-            plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-            bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+            if new_z_err <= 0.03:
+                savefolder = "err_using_std_lessthan3/"
+                plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+                bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+            elif (new_z_err > 0.03) and (new_z_err <= 0.05):
+                savefolder = "err_using_std_3to5/"
+                plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+                bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+            elif (new_z_err > 0.05) and (new_z_err <= 0.1):
+                savefolder = "err_using_std_5to10/"
+                plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+                bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+            elif (new_z_err > 0.1):
+                savefolder = "err_using_std_morethan10/"
+                plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+                bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, savefolder)
+        else:
+            print "Will not plot", pearsid, "in", pearsfield, "because the new z is outside valid range."
 
     if makeplots == 'gallery':
         plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
@@ -537,6 +541,15 @@ if __name__ == '__main__':
     print len(pears_cat_n), "objects in PEARS GOODS-N 4000 break catalog."
     print len(pears_cat_s), "objects in PEARS GOODS-S 4000 break catalog."
 
+    # read master catalog to get magnitude and corrected netsig for making cut
+    pears_master_ncat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_north_master.cat', dtype=None,\
+                               names=['id', 'ra', 'dec', 'imag', 'netsig_corr'], usecols=(0,1,2,3,6))
+    pears_master_scat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_south_master.cat', dtype=None,\
+                               names=['id', 'ra', 'dec', 'imag', 'netsig_corr'], usecols=(0,1,2,3,6))
+
+    dec_offset_goodsn_v19 = 0.32/3600 # from GOODS ACS v2.0 readme
+    pears_master_ncat['dec'] = pears_master_ncat['dec'] - dec_offset_goodsn_v19
+
     # no clear evidence of a break or too noisy or have emmission lines
     # in many of these cases the fits are good but the break is not really
     # clear -- in almost all cases the flux drops at the blue end 
@@ -658,9 +671,9 @@ if __name__ == '__main__':
 
     #### PEARS ####
 
-    allcats = [pears_cat_n, pears_cat_s]
+    allcats = [pears_cat_s] #[pears_cat_n, pears_cat_s]  # this needs to be an iterable
 
-    catcount = 0
+    catcount = 1
     callcount = 0
     for pears_cat in allcats:
 
@@ -668,6 +681,9 @@ if __name__ == '__main__':
             fieldname = 'GOODS-N'
         elif catcount == 1:
             fieldname = 'GOODS-S'
+
+        # if you're using a combined spectrum
+        recarray = np.load(massive_galaxies_dir + 'pears_pa_combination_info_' + fieldname + '.npy')
 
         pears_redshift_indices = np.where((pears_cat['redshift'] >= 0.6) & (pears_cat['redshift'] <= 1.235))[0]
 
@@ -734,8 +750,21 @@ if __name__ == '__main__':
             #if (current_field == 'GOODS-S') and (current_id not in plot_s):
             #    continue
 
-            lam_em, flam_em, ferr, specname, pa_forlsf, netsig_chosen = gd.fileprep(current_id, current_redshift, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+            # apply cut on netsig
+            if current_field == 'GOODS-N':
+                idarg = np.where(pears_master_ncat['id'] == current_id)[0]
+                imag = pears_master_ncat['imag'][idarg]
+                netsig_corr = pears_master_ncat['netsig_corr'][idarg]
+            elif current_field == 'GOODS-S':
+                idarg = np.where(pears_master_scat['id'] == current_id)[0]
+                imag = pears_master_scat['imag'][idarg]
+                netsig_corr = pears_master_scat['netsig_corr'][idarg]
 
+            if netsig_corr <= 100:
+                skipped_gal += 1
+                continue
+
+            # reject galaxy if its in any of the skip arrays
             if (current_id in skip_n) and (current_field == 'GOODS-N'):
                 skipped_gal += 1
                 continue
@@ -762,6 +791,10 @@ if __name__ == '__main__':
                 skipped_gal += 1
                 continue
 
+            # Run fileprep if galaxy survived all above cuts
+            print 'Corrected NetSig: ', netsig_corr
+            lam_em, flam_em, ferr, specname, pa_forlsf = gd.fileprep(current_id, current_redshift, current_field, recarray, apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=False)
+
             # Contamination rejection
             if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
                 print 'Skipping', current_id, 'because of overall contamination.'
@@ -777,9 +810,10 @@ if __name__ == '__main__':
             resampling_lam_grid = np.insert(lam_em, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
-            include_csp=True
+            include_csp=False
             # Uncomment the following lines of code if you want to create libraries
             # and comment them out when you want to run the code to refine redshifts after creating libraries
+            """
             if include_csp:
                 if os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_ssp_cspsolar_withlsf_' + current_field + '_' + str(current_id) + '.fits'):
                     continue
@@ -791,6 +825,7 @@ if __name__ == '__main__':
                 create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf, include_csp=include_csp)
                 del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
                 continue
+            """
 
             # Open fits files with comparison spectra
             try:
@@ -843,6 +878,8 @@ if __name__ == '__main__':
                 continue
 
             counted_gal += 1
+            bc03_spec.close()
+            del bc03_spec
 
             # append stuff to arrays that will finally be written
             pears_id_to_write.append(current_id)

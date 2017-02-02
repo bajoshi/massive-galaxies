@@ -1,0 +1,2 @@
+# Catalog for all galaxies that matched between 3DHST and PEARS in GOODS-N. 
+# pearsid field rejected_pa combined_pa

@@ -2,6 +2,7 @@ from __future__ import division
 
 import numpy as np
 from astropy.io import fits
+from scipy import stats
 
 import glob
 import os
@@ -13,6 +14,7 @@ home = os.getenv('HOME')  # Does not have a trailing slash at the end
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 pears_spectra_dir = home + "/Documents/PEARS/data_spectra_only/"
 figures_dir = stacking_analysis_dir + "figures/"
+massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 import grid_coadd as gd
@@ -51,7 +53,7 @@ def combine_all_position_angles_pears(pears_index, field):
     elif field == 'GOODS-S':
         filename = data_path + 'h_pears_s_id' + str(pears_index) + '.fits'
 
-    spec_hdu = fits.open(filename)
+    spec_hdu = fits.open(filename, memmap=False)
     spec_extens = fcj.get_total_extensions(spec_hdu)
     specname = os.path.basename(filename)
 
@@ -97,6 +99,9 @@ def combine_all_position_angles_pears(pears_index, field):
                 old_flam[x] = []
                 old_flamerr[x] = []
 
+        # Subtract Contamination
+        flam = flam - contam
+
         # Reject spectrum if it is more than 30% contaminated
         if np.sum(abs(ferr)) > 0.3 * np.sum(abs(flam)):
             print "Skipped extension #", count + 1, "in", specname , "because of excess contamination."
@@ -108,20 +113,23 @@ def combine_all_position_angles_pears(pears_index, field):
     
     for y in range(len(lam_grid)):
         if old_flam[y]:
-            # fix the error formula over here
             # you could do a 100 bootstrap samples
-            old_flamerr[y] = 1.253 * np.std(old_flam[y]) / np.sqrt(len(old_flam[y]))
-            old_flam[y] = np.median(old_flam[y])
+            old_flamerr[y] = np.sqrt(np.sum(old_flamerr[y]))  # old formula for error on median -- 1.253 * np.std(old_flam[y]) / np.sqrt(len(old_flam[y]))
+            old_flam[y] = np.mean(old_flam[y])
         else:
             # this shoudl not be set to 0
             # you DID NOT measure an exactly zero signal
             old_flam[y] = 0.0
             old_flamerr[y] = 0.0
 
-    old_flam = np.asarray(old_flam)
-    old_flamerr = np.asarray(old_flamerr)
+    comb_flam = np.asarray(old_flam)
+    comb_flamerr = np.asarray(old_flamerr)
 
-    return lam_grid, old_flam, old_flamerr, rejected_pa, combined_pa
+    # close opened fits file
+    spec_hdu.close()
+    del spec_hdu
+
+    return lam_grid, comb_flam, comb_flamerr, rejected_pa, combined_pa
 
 def plot_all_pa_and_combinedspec(allpearsids, allpearsfields):
     """
@@ -192,7 +200,7 @@ if __name__ == '__main__':
             fieldname = 'GOODS-S'
             print 'Starting with', len(cat), 'matched objects in', fieldname
 
-        redshift_indices = np.where((cat['zphot'] >= 0.558) & (cat['zphot'] <= 1.317))[0]
+        redshift_indices = np.where((cat['zphot'] >= 0.6) & (cat['zphot'] <= 1.235))[0]
 
         pears_id = cat['pearsid'][redshift_indices]
         photz = cat['zphot'][redshift_indices]
@@ -202,6 +210,9 @@ if __name__ == '__main__':
         # create arrays for writing
         pears_id_write = []
         pearsfield = []
+        lam_grid_to_write = []
+        comb_flam_to_write = []
+        comb_ferr_to_write = []
         rejected_pa_to_write = []
         combined_pa_to_write = []
 
@@ -210,10 +221,13 @@ if __name__ == '__main__':
         i = 0
         for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
 
-            lam_grid, old_flam, old_flamerr, rejected_pa, combined_pa = combine_all_position_angles_pears(current_pears_index, fieldname)
+            lam_grid, comb_flam, comb_flamerr, rejected_pa, combined_pa = combine_all_position_angles_pears(current_pears_index, fieldname)
 
             pears_id_write.append(current_pears_index)
             pearsfield.append(fieldname)
+            lam_grid_to_write.append(lam_grid)
+            comb_flam_to_write.append(comb_flam)
+            comb_ferr_to_write.append(comb_flamerr)
             rejected_pa_to_write.append(rejected_pa)
             combined_pa_to_write.append(combined_pa)
 
@@ -221,13 +235,16 @@ if __name__ == '__main__':
         pearsfield = np.asarray(pearsfield)
         rejected_pa_to_write = np.asarray(rejected_pa_to_write)
         combined_pa_to_write = np.asarray(combined_pa_to_write)
+        lam_grid_to_write = np.asarray(lam_grid_to_write)
+        comb_flam_to_write = np.asarray(comb_flam_to_write)
+        comb_ferr_to_write = np.asarray(comb_ferr_to_write)
         
-        data = np.array(zip(pears_id_write, pearsfield, rejected_pa_to_write, combined_pa_to_write),\
-                    dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('rejected_pa_to_write', list), ('combined_pa_to_write', list)])
+        recarray = np.core.records.fromarrays([pears_id_write, pearsfield, lam_grid_to_write, comb_flam_to_write, comb_ferr_to_write, rejected_pa_to_write, combined_pa_to_write],\
+         names='pearsid,field,lam_grid,combined_flam,combined_ferr,rejected_pa,combined_pa')
+        np.save(massive_galaxies_dir + 'pears_pa_combination_info_' + fieldname, recarray)
+        # this will save the record array as a numpy binary file which can be read by just doing
+        # recarray = np.load('/path/to/filename.npy')
 
-        np.savetxt(massive_galaxies_dir + 'pears_combined_pa_' + fieldname + '.txt', data, fmt=['%d', '%s', list, list], delimiter=' ',\
-                   header='Catalog for all galaxies that matched between 3DHST and PEARS in ' + fieldname + '. \n' +
-                   'pears_id field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
-
+        catcount += 1
 
     sys.exit(0)
