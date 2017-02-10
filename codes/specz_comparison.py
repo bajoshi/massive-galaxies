@@ -102,6 +102,8 @@ if __name__ == '__main__':
     z_phot_plot = []
     z_grism_std_plot = []
 
+    spec_z_source_list = []
+
     skipped = 0
     weird = 0
     catcount = 0
@@ -165,6 +167,7 @@ if __name__ == '__main__':
                     netsig_corr = pears_master_scat['netsig_corr'][idarg]
     
                 #print current_specz_source  #, netsig_corr, netsig_chosen_specz, imag
+                spec_z_source_list.append(current_specz_source)
                 weird += 1
                 z_spec_plot.append(spec_cat['z_spec'][spec_ind][i])
                 z_grism_plot.append(pears_cat['new_z'][pears_ind][i])
@@ -240,7 +243,7 @@ if __name__ == '__main__':
                 if current_specz_source == "3D_HST":
                     skipped += 1
                     continue
-                #print current_specz_source
+                spec_z_source_list.append(current_specz_source)
                 z_spec_plot.append(spec_cat['z_spec'][spec_ind][i])
                 z_grism_plot.append(pears_cat['new_z'][pears_ind][i])
                 z_phot_plot.append(pears_cat['old_z'][pears_ind][i])
@@ -251,6 +254,8 @@ if __name__ == '__main__':
     print skipped, "galaxies were skipped due to bad spectroscopic z quality."
     print weird, "galaxies have (z_spec - z_grism) >= 0.03."
     print len(z_spec_plot), "galaxies in spectroscopic comparison sample."
+
+    print np.unique(spec_z_source_list)
 
     # convert to numpy arrays for operations 
     z_spec_plot = np.asarray(z_spec_plot)
