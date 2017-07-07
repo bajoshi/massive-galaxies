@@ -470,15 +470,17 @@ if __name__ == '__main__':
                     dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('photz_write', float), ('redshift_source', '|S7'), ('pears_ra', float),\
                      ('pears_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
         if fieldname == 'GOODS-N':
-            np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
-                       header='Catalog for all galaxies that matched between 3DHST and PEARS in ' + fieldname + '. \n' +
-                       'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
+            np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, \
+            fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ', \
+            header='Catalog for all galaxies that matched between 3DHST and PEARS in ' + fieldname + '. \n' + \
+            'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
         elif fieldname == 'GOODS-S':
-            np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
-                       header='Catalog for all galaxies that matched between CANDELS and PEARS in GOODS-S.' + '\n' +\
-                       'If a galaxy did not match with CANDELS then a matching in 3DHST was attempted.' + '\n' +\
-                       'the \'zphot_source\' column indicates the source of the photometric redshift.' + '\n' +\
-                       'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
+            np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, \
+                fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ', \
+                header='Catalog for all galaxies that matched between CANDELS and PEARS in GOODS-S.' + '\n' + \
+                'If a galaxy did not match with CANDELS then a matching in 3DHST was attempted.' + '\n' + \
+                'the \'zphot_source\' column indicates the source of the photometric redshift.' + '\n' + \
+                'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
 
         print len(np.isfinite(dn4000_arr)), len(np.isfinite(dn4000_err_arr)), len(np.isfinite(d4000_arr)), len(np.isfinite(d4000_err_arr))
 
