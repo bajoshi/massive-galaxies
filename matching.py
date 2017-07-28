@@ -51,10 +51,12 @@ def angular_difference(ra_one, dec_one, ra_two, dec_two):
     return delta*180/np.pi  # return result in degrees
 
 def match(ra1, dec1, ra2, dec2, lim=0.1*1/3600):
-    
+    """This is the main function that should be used for matching two catalogs.
+    To do list: 
     # Find if the two given regions of the sky are anywhere close
     # Keep in mind that there might exist a large offset that could prevent the catalogs from having any initial overlap
     # You have to decide how large of an initial offset you will allow
+    """
     
     delRA = []
     delDEC = []

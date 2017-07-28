@@ -23,6 +23,73 @@ sys.path.append(massive_galaxies_dir)
 import grid_coadd as gd
 import matching as mt
 
+def plot_for_comparison():
+
+    # plot for comparison
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    
+    ax.plot(lam_em_specz, flam_em_specz, '-', color='royalblue')
+    ax.plot(lam_em_grismz, flam_em_grismz, '-', color='red')
+    ax.plot(lam_em_photz, flam_em_photz, '-', color='green')
+    
+    # label all important quanitities
+    # id and field label
+    id_labelbox = TextArea(current_field + "  " + str(current_id), textprops=dict(color='k', size=10))
+    anc_id_labelbox = AnchoredOffsetbox(loc=2, child=id_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.98),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_id_labelbox)
+    
+    # spec z label
+    spec_z_labelbox = TextArea(r"$z_{\mathrm{spec}} = $" + str("{:.3}".format(current_specz)), textprops=dict(color='k', size=10))
+    anc_spec_z_labelbox = AnchoredOffsetbox(loc=2, child=spec_z_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.93),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_spec_z_labelbox)
+    
+    # spec z quality and source label
+    spec_z_info_labelbox = TextArea(r"$\mathrm{z_{spec}\ quality} = $" + str(current_specz_qual) + ", Source=" + str(current_specz_source), textprops=dict(color='k', size=10))
+    anc_spec_z_info_labelbox = AnchoredOffsetbox(loc=2, child=spec_z_info_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.25, 0.93),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_spec_z_info_labelbox)
+    
+    # grism z label
+    grism_z_labelbox = TextArea(r"$z_{\mathrm{grism}} = $" + str("{:.3}".format(current_grismz)) + r"$\pm$" + str("{:.3}".format(current_grismz_err)), textprops=dict(color='k', size=10))
+    anc_grism_z_labelbox = AnchoredOffsetbox(loc=2, child=grism_z_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.88),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_grism_z_labelbox)
+    
+    # phot z label
+    phot_z_labelbox = TextArea(r"$z_{\mathrm{phot}} = $" + str("{:.3}".format(current_photz)), textprops=dict(color='k', size=10))
+    anc_phot_z_labelbox = AnchoredOffsetbox(loc=2, child=phot_z_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.83),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_phot_z_labelbox)
+    
+    # netsig label
+    netsig_labelbox = TextArea(r"$N_s = $" + str("{:.3}".format(netsig_chosen_specz)) + "," + r"$N_g = $" + str("{:.3}".format(netsig_chosen_grismz)) +\
+     "," + r"$N_p = $" + str("{:.3}".format(netsig_chosen_photz)) + "," + r"$N_{corr} = $" + str(netsig_corr),\
+     textprops=dict(color='k', size=10))
+    anc_netsig_labelbox = AnchoredOffsetbox(loc=2, child=netsig_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.78),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_netsig_labelbox)
+    
+    # i magnitude label
+    imag_labelbox = TextArea(r"$i = $" + str(imag) + r"$\ \mathrm{AB\ mag}$", textprops=dict(color='k', size=10))
+    anc_imag_labelbox = AnchoredOffsetbox(loc=2, child=imag_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.05, 0.73),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_imag_labelbox)
+
+    plt.show()
+    del fig, ax
+
+    return None
+
 if __name__ == '__main__':
     
     # Start time
@@ -35,9 +102,9 @@ if __name__ == '__main__':
     goods_n_cat = np.genfromtxt(massive_galaxies_dir + 'goods_n_specz_0117.txt', dtype=None, names=['ra','dec','z_spec','z_qual','catname','duplicate'], skip_header=13)
 
     # read pears refined z cat
-    pears_cat_n = np.genfromtxt(home + '/Desktop/pears_refined_4000break_catalog_GOODS-N.txt',\
+    pears_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-N.txt',\
      dtype=None, names=True, skip_header=1)
-    pears_cat_s = np.genfromtxt(home + '/Desktop/pears_refined_4000break_catalog_GOODS-S.txt',\
+    pears_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-S.txt',\
      dtype=None, names=True, skip_header=1)
     
     # match with break catalogs instead of refined
@@ -174,71 +241,6 @@ if __name__ == '__main__':
                 z_phot_plot.append(pears_cat['old_z'][pears_ind][i])
                 z_grism_std_plot.append(pears_cat['new_z_err'][pears_ind][i])
 
-                """
-                # plot for comparison
-                fig = plt.figure()
-                ax = fig.add_subplot(111)
-    
-                ax.plot(lam_em_specz, flam_em_specz, '-', color='royalblue')
-                ax.plot(lam_em_grismz, flam_em_grismz, '-', color='red')
-                ax.plot(lam_em_photz, flam_em_photz, '-', color='green')
-    
-                # label all important quanitities
-                # id and field label
-                id_labelbox = TextArea(current_field + "  " + str(current_id), textprops=dict(color='k', size=10))
-                anc_id_labelbox = AnchoredOffsetbox(loc=2, child=id_labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.05, 0.98),\
-                                                     bbox_transform=ax.transAxes, borderpad=0.0)
-                ax.add_artist(anc_id_labelbox)
-    
-                # spec z label
-                spec_z_labelbox = TextArea(r"$z_{\mathrm{spec}} = $" + str("{:.3}".format(current_specz)), textprops=dict(color='k', size=10))
-                anc_spec_z_labelbox = AnchoredOffsetbox(loc=2, child=spec_z_labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.05, 0.93),\
-                                                     bbox_transform=ax.transAxes, borderpad=0.0)
-                ax.add_artist(anc_spec_z_labelbox)
-    
-                # spec z quality and source label
-                spec_z_info_labelbox = TextArea(r"$\mathrm{z_{spec}\ quality} = $" + str(current_specz_qual) + ", Source=" + str(current_specz_source), textprops=dict(color='k', size=10))
-                anc_spec_z_info_labelbox = AnchoredOffsetbox(loc=2, child=spec_z_info_labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.25, 0.93),\
-                                                     bbox_transform=ax.transAxes, borderpad=0.0)
-                ax.add_artist(anc_spec_z_info_labelbox)
-    
-                # grism z label
-                grism_z_labelbox = TextArea(r"$z_{\mathrm{grism}} = $" + str("{:.3}".format(current_grismz)) + r"$\pm$" + str("{:.3}".format(current_grismz_err)), textprops=dict(color='k', size=10))
-                anc_grism_z_labelbox = AnchoredOffsetbox(loc=2, child=grism_z_labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.05, 0.88),\
-                                                     bbox_transform=ax.transAxes, borderpad=0.0)
-                ax.add_artist(anc_grism_z_labelbox)
-    
-                # phot z label
-                phot_z_labelbox = TextArea(r"$z_{\mathrm{phot}} = $" + str("{:.3}".format(current_photz)), textprops=dict(color='k', size=10))
-                anc_phot_z_labelbox = AnchoredOffsetbox(loc=2, child=phot_z_labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.05, 0.83),\
-                                                     bbox_transform=ax.transAxes, borderpad=0.0)
-                ax.add_artist(anc_phot_z_labelbox)
-    
-                # netsig label
-                netsig_labelbox = TextArea(r"$N_s = $" + str("{:.3}".format(netsig_chosen_specz)) + "," + r"$N_g = $" + str("{:.3}".format(netsig_chosen_grismz)) +\
-                 "," + r"$N_p = $" + str("{:.3}".format(netsig_chosen_photz)) + "," + r"$N_{corr} = $" + str(netsig_corr),\
-                 textprops=dict(color='k', size=10))
-                anc_netsig_labelbox = AnchoredOffsetbox(loc=2, child=netsig_labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.05, 0.78),\
-                                                     bbox_transform=ax.transAxes, borderpad=0.0)
-                ax.add_artist(anc_netsig_labelbox)
-    
-                # i magnitude label
-                imag_labelbox = TextArea(r"$i = $" + str(imag) + r"$\ \mathrm{AB\ mag}$", textprops=dict(color='k', size=10))
-                anc_imag_labelbox = AnchoredOffsetbox(loc=2, child=imag_labelbox, pad=0.0, frameon=False,\
-                                                     bbox_to_anchor=(0.05, 0.73),\
-                                                     bbox_transform=ax.transAxes, borderpad=0.0)
-                ax.add_artist(anc_imag_labelbox)
-
-                plt.show()
-                del fig, ax
-                """
-
             else:
                 if current_specz_source == "3D_HST":
                     skipped += 1
@@ -277,7 +279,7 @@ if __name__ == '__main__':
 
     # ------------------------------------------------------------------------------------------------- #
     # first panel # z_spec vs z_grism
-    ax1.plot(z_spec_plot, z_grism_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax1.plot(z_spec_plot, z_grism_plot, 'o', markersize=2.0, color='k', markeredgecolor='k')
     ax1.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
 
     ax1.set_xlim(0.6, 1.24)
@@ -294,7 +296,7 @@ if __name__ == '__main__':
     ax1.grid(True)
 
     # residuals for first panel
-    ax2.plot(z_spec_plot, (z_spec_plot - z_grism_plot)/(1+z_spec_plot), 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax2.plot(z_spec_plot, (z_spec_plot - z_grism_plot)/(1+z_spec_plot), 'o', markersize=2.0, color='k', markeredgecolor='k')
     ax2.axhline(y=0, linestyle='--', color='r')
 
     ax2.set_xlim(0.6, 1.24)
@@ -313,7 +315,7 @@ if __name__ == '__main__':
 
     # ------------------------------------------------------------------------------------------------- #
     # second panel # z_spec vs z_phot
-    ax3.plot(z_spec_plot, z_phot_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax3.plot(z_spec_plot, z_phot_plot, 'o', markersize=2.0, color='k', markeredgecolor='k')
     ax3.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
 
     ax3.set_xlim(0.6, 1.24)
@@ -330,7 +332,7 @@ if __name__ == '__main__':
     ax3.grid(True)
 
     # residuals for second panel
-    ax4.plot(z_spec_plot, (z_spec_plot - z_phot_plot)/(1+z_spec_plot), 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax4.plot(z_spec_plot, (z_spec_plot - z_phot_plot)/(1+z_spec_plot), 'o', markersize=2.0, color='k', markeredgecolor='k')
     ax4.axhline(y=0, linestyle='--', color='r')
 
     ax4.set_xlim(0.6, 1.24)
@@ -349,7 +351,7 @@ if __name__ == '__main__':
 
     # ------------------------------------------------------------------------------------------------- #
     # third panel # z_grism vs z_phot
-    ax5.plot(z_grism_plot, z_phot_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax5.plot(z_grism_plot, z_phot_plot, 'o', markersize=2.0, color='k', markeredgecolor='k')
     ax5.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
 
     ax5.set_xlim(0.6, 1.24)
@@ -366,7 +368,7 @@ if __name__ == '__main__':
     ax5.grid(True)
 
     # residuals for third panel
-    ax6.plot(z_grism_plot, (z_grism_plot - z_phot_plot)/(1+z_grism_plot), 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax6.plot(z_grism_plot, (z_grism_plot - z_phot_plot)/(1+z_grism_plot), 'o', markersize=2.0, color='k', markeredgecolor='k')
     ax6.axhline(y=0, linestyle='--', color='r')
 
     ax6.set_xlim(0.6, 1.24)
@@ -383,13 +385,21 @@ if __name__ == '__main__':
     ax6.tick_params('both', width=1, length=4.7, which='major')
     ax6.grid(True)
 
-    fig_gs.savefig(massive_figures_dir + "zspec_comparison.eps", dpi=150, bbox_inches='tight')
+    fig_gs.savefig(massive_figures_dir + "zspec_comparison.eps", dpi=300, bbox_inches='tight')
+    #plt.show()
+
+    print "typical delta z / 1+z", np.median((z_spec_plot - z_grism_plot)/(1+z_spec_plot))
+    acc = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
+    print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0001:", len(np.where(acc <= 0.001)[0])
+    print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0003:", len(np.where(acc <= 0.003)[0])
+
+    sys.exit(0)
 
     # ------------------------------------------------------------------------------------------------- #
     # plot of z_spec - z_grism vs sigma_z_grism
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot((z_spec_plot - z_grism_plot)**2, z_grism_std_plot, 'o', markersize=1.5, color='k', markeredgecolor='k')
+    ax.plot((z_spec_plot - z_grism_plot)**2, z_grism_std_plot, 'o', markersize=2.0, color='k', markeredgecolor='k')
     ax.axhline(y=0, linestyle='--', color='r')
 
     ax.set_xlabel(r'$(z_\mathrm{s} - z_\mathrm{g})^2$', fontsize=12)
@@ -400,9 +410,7 @@ if __name__ == '__main__':
     ax.tick_params('both', width=1, length=4.7, which='major')
     ax.grid(True)
 
-    fig.savefig(massive_figures_dir + "zspec_vs_zgrism_err.eps", dpi=150, bbox_inches='tight')
-
-    #plt.show()
+    #fig.savefig(massive_figures_dir + "zspec_vs_zgrism_err.eps", dpi=150, bbox_inches='tight')
 
     # ------------------------------------------------------------------------------------------------- #
     # histogram of delta_z/1+z
