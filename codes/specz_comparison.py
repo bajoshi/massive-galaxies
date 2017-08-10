@@ -90,6 +90,40 @@ def plot_for_comparison():
 
     return None
 
+def get_pears_catalogs(refined=True):
+
+    if refined:
+        # read pears refined z cat
+        pears_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-N.txt',\
+         dtype=None, names=True, skip_header=1)
+        pears_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-S.txt',\
+         dtype=None, names=True, skip_header=1)
+
+        print "Total galaxies in refined grism-z sample:", len(pears_cat_n) + len(pears_cat_s)
+
+    else:
+        # match with break catalogs instead of refined
+        pears_cat_n = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/pears_4000break_catalog_GOODS-N.txt',\
+         dtype=None, names=True, skip_header=1)
+        pears_cat_s = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/pears_4000break_catalog_GOODS-S.txt',\
+         dtype=None, names=True, skip_header=3)
+
+        print "Total galaxies in break catalog sample:", len(pears_cat_n) + len(pears_cat_s)
+
+    return pears_cat_n, pears_cat_s
+
+def plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz, flam_em_grismz, current_grismz):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(lam_em_specz, flam_em_specz, '--', color='b', lw=1)
+    ax.plot(lam_em_grismz, flam_em_grismz, '--', color='r', lw=1)
+
+    plt.show()
+
+    return None
+
 if __name__ == '__main__':
     
     # Start time
@@ -101,17 +135,8 @@ if __name__ == '__main__':
     cdfs_cat = np.genfromtxt(massive_galaxies_dir + 'cdfs_specz_0117.txt', dtype=None, names=['ra','dec','z_spec','z_qual','catname','duplicate'], skip_header=13)
     goods_n_cat = np.genfromtxt(massive_galaxies_dir + 'goods_n_specz_0117.txt', dtype=None, names=['ra','dec','z_spec','z_qual','catname','duplicate'], skip_header=13)
 
-    # read pears refined z cat
-    pears_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-N.txt',\
-     dtype=None, names=True, skip_header=1)
-    pears_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_GOODS-S.txt',\
-     dtype=None, names=True, skip_header=1)
-    
-    # match with break catalogs instead of refined
-    #pears_cat_n = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/pears_4000break_catalog_GOODS-N.txt',\
-    # dtype=None, names=True, skip_header=1)
-    #pears_cat_s = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/pears_4000break_catalog_GOODS-S.txt',\
-    # dtype=None, names=True, skip_header=3)
+    # read in pears catalogs
+    pears_cat_n, pears_cat_s = get_pears_catalogs(refined=True)
 
     # match spec catalog with refined cat
     # create arrays
@@ -188,7 +213,7 @@ if __name__ == '__main__':
             pears_cat = pears_cat_s
             pears_ind = pears_s_ind
 
-        print len(spec_cat['z_spec'][spec_ind])
+        #print len(spec_cat['z_spec'][spec_ind])
 
         for i in range(len(spec_cat['z_spec'][spec_ind])):
 
@@ -203,7 +228,16 @@ if __name__ == '__main__':
                 current_specz = spec_cat['z_spec'][spec_ind][i]
                 current_specz_source = spec_cat['catname'][spec_ind][i]
                 current_specz_qual = spec_cat['z_qual'][spec_ind][i]
+
+                # skip if grism z is not within range
+                # this condition probalby shouldn't be here
+                # i hsould be checking if the spec_z is in range
+                # if spec_z is in range then I need to find why 
+                # the grism z finding fails.
+                if (current_grismz > 1.2) or (current_grismz < 0.6):
+                    continue
     
+                # other spec z quality cuts
                 if (current_specz_qual != "A"):
                     skipped += 1
                     continue
@@ -218,10 +252,6 @@ if __name__ == '__main__':
                 if current_specz_source == "3D_HST":
                     skipped += 1
                     continue
-    
-                #lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                #lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                #lam_em_photz, flam_em_photz, ferr_photz, specname_photz, pa_forlsf_photz, netsig_chosen_photz = gd.fileprep(current_id, current_photz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
     
                 # get i band mag
                 if current_field == 'GOODS-N':
@@ -240,6 +270,14 @@ if __name__ == '__main__':
                 z_grism_plot.append(pears_cat['new_z'][pears_ind][i])
                 z_phot_plot.append(pears_cat['old_z'][pears_ind][i])
                 z_grism_std_plot.append(pears_cat['new_z_err'][pears_ind][i])
+
+                # find which galaxies have large (z_spec - z_grism)/(1+z_spec)
+                if abs((current_specz - current_grismz)/(1 + current_specz)) > 0.05:
+                    print "large diff between spec and grism z", current_grismz, current_specz, current_id, current_field, current_photz
+                    lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+                    lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+                    #lam_em_photz, flam_em_photz, ferr_photz, specname_photz, pa_forlsf_photz, netsig_chosen_photz = gd.fileprep(current_id, current_photz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+                    plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz, flam_em_grismz, current_grismz)
 
             else:
                 if current_specz_source == "3D_HST":
@@ -388,7 +426,8 @@ if __name__ == '__main__':
     fig_gs.savefig(massive_figures_dir + "zspec_comparison.eps", dpi=300, bbox_inches='tight')
     #plt.show()
 
-    print "typical delta z / 1+z", np.median((z_spec_plot - z_grism_plot)/(1+z_spec_plot))
+    print "median abs(z_spec - z_grism)/ 1+z_spec", np.median(abs(z_spec_plot - z_grism_plot)/(1+z_spec_plot))
+    print "median abs(z_spec - z_phot)/ 1+z_spec", np.median(abs(z_spec_plot - z_phot_plot)/(1+z_spec_plot))
     acc = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
     print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0001:", len(np.where(acc <= 0.001)[0])
     print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0003:", len(np.where(acc <= 0.003)[0])

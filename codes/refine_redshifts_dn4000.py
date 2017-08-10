@@ -360,7 +360,7 @@ def plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_id_labelbox)
 
-    old_z_labelbox = TextArea(r"$z_{\mathrm{old}} = $" + str(old_z), textprops=dict(color='k', size=5))
+    old_z_labelbox = TextArea(r"$z_{\mathrm{phot}} = $" + str(old_z), textprops=dict(color='k', size=5))
     anc_old_z_labelbox = AnchoredOffsetbox(loc=2, child=old_z_labelbox, pad=0.0, frameon=False,\
                                          bbox_to_anchor=(0.05, 0.83),\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
@@ -518,6 +518,13 @@ if __name__ == '__main__':
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
+    # give user argument for how to run code
+    # options are:
+    # 'plotbyerror'
+    # 'gallery'
+    makeplots = sys.argv[1]
+    print "I got the following user argument:", makeplots
+
     # grid for gallery plot
     gs = gridspec.GridSpec(25,25)
     gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.0, hspace=0.0)
@@ -668,12 +675,20 @@ if __name__ == '__main__':
 
     plot_s = [26158,29322,30107,57014,61235,68104,88671,95110,\
     110487,114108,114230]
+    # 62511 and 84974 in GOODS-N will be skipped due to 
+    # low_netsig/overall contam. and no LSF respectively.
+    # However they look perfectly fine by eye.
+    # Fix this!
+    # There could be many more which are perfectly fine 
+    # but get skipped over due to these cuts.
+    # Find out why the netsig is so bad for 62511
+    # and also what to do if there is no LSF. Don't just skip.
 
     #### PEARS ####
 
-    allcats = [pears_cat_s] #[pears_cat_n, pears_cat_s]  # this needs to be an iterable
+    allcats = [pears_cat_n, pears_cat_s]  # this needs to be an iterable
 
-    catcount = 1
+    catcount = 0
     callcount = 0
     for pears_cat in allcats:
 
@@ -744,11 +759,12 @@ if __name__ == '__main__':
             # and uncomment them if you just want to plot a gallery of the best spectra
             # also comment out the lines that save the text file at the end if you want to plot the gallery
             # also change the string argument that is passed to the fitting function to say 'gallery'
-            #if (current_field == 'GOODS-N') and (current_id not in plot_n):
-            #    continue
+            if makeplots == 'gallery':
+                if (current_field == 'GOODS-N') and (current_id not in plot_n):
+                    continue
 
-            #if (current_field == 'GOODS-S') and (current_id not in plot_s):
-            #    continue
+                if (current_field == 'GOODS-S') and (current_id not in plot_s):
+                    continue
 
             # apply cut on netsig
             if current_field == 'GOODS-N':
@@ -760,7 +776,7 @@ if __name__ == '__main__':
                 imag = pears_master_scat['imag'][idarg]
                 netsig_corr = pears_master_scat['netsig_corr'][idarg]
 
-            if netsig_corr <= 100:
+            if netsig_corr <= 100: # 10 is a good number? # check discussion in N. Pirzkal et al. 2004
                 skipped_gal += 1
                 continue
 
@@ -793,7 +809,11 @@ if __name__ == '__main__':
 
             # Run fileprep if galaxy survived all above cuts
             print 'Corrected NetSig: ', netsig_corr
-            lam_em, flam_em, ferr, specname, pa_forlsf = gd.fileprep(current_id, current_redshift, current_field, recarray, apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=False)
+            use_single_pa=True
+            if use_single_pa:
+                lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, current_redshift, current_field, recarray, apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
+            else:
+                lam_em, flam_em, ferr, specname, pa_forlsf = gd.fileprep(current_id, current_redshift, current_field, recarray, apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
 
             # Contamination rejection
             if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
@@ -872,7 +892,7 @@ if __name__ == '__main__':
                 # run the actual fitting function
                 new_dn4000, new_dn4000_err, new_d4000, new_d4000_err, old_z, new_z, new_z_err, old_chi2, new_chi2 = \
                 fit_chi2_redshift(lam_em, resampling_lam_grid, resampled_spec, ferr,\
-                 num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field, 'plotbyerror', callcount)
+                 num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field, makeplots, callcount)
                 callcount += 1
             else:
                 continue
@@ -916,17 +936,18 @@ if __name__ == '__main__':
         pears_old_chi2_to_write = np.asarray(pears_old_chi2_to_write)
         pears_new_chi2_to_write = np.asarray(pears_new_chi2_to_write)
 
-        data = np.array(zip(pears_id_to_write, pears_field_to_write, pears_ra_to_write, pears_dec_to_write, pears_old_redshift_to_write,\
-            pears_new_redshift_to_write, pears_new_redshift_err_to_write, pears_redshift_source_to_write, pears_dn4000_refined_to_write,\
-            pears_dn4000_err_refined_to_write, pears_d4000_refined_to_write, pears_d4000_err_refined_to_write, pears_old_chi2_to_write, pears_new_chi2_to_write),\
-             dtype=[('pears_id_to_write', int), ('pears_field_to_write', '|S7'), ('pears_ra_to_write', float), ('pears_dec_to_write', float),\
-             ('pears_old_redshift_to_write', float), ('pears_new_redshift_to_write', float), ('pears_new_redshift_err_to_write', float), ('pears_redshift_source_to_write', '|S7'),\
-             ('pears_dn4000_refined_to_write', float), ('pears_dn4000_err_refined_to_write', float), ('pears_d4000_refined_to_write', float),\
-             ('pears_d4000_err_refined_to_write', float), ('pears_old_chi2_to_write', float), ('pears_new_chi2_to_write', float)])
-        np.savetxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_' + fieldname + '.txt', data,\
-         fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%.4f','%.4f', '%s', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
-         header='Catalog for all galaxies that now have refined redshifts. See paper/code for sample selection. \n' +\
-         'pearsid field ra dec old_z new_z new_z_err source dn4000 dn4000_err d4000 d4000_err old_chi2 new_chi2')
+        if makeplots == 'plotbyerror':
+            data = np.array(zip(pears_id_to_write, pears_field_to_write, pears_ra_to_write, pears_dec_to_write, pears_old_redshift_to_write,\
+                pears_new_redshift_to_write, pears_new_redshift_err_to_write, pears_redshift_source_to_write, pears_dn4000_refined_to_write,\
+                pears_dn4000_err_refined_to_write, pears_d4000_refined_to_write, pears_d4000_err_refined_to_write, pears_old_chi2_to_write, pears_new_chi2_to_write),\
+                 dtype=[('pears_id_to_write', int), ('pears_field_to_write', '|S7'), ('pears_ra_to_write', float), ('pears_dec_to_write', float),\
+                 ('pears_old_redshift_to_write', float), ('pears_new_redshift_to_write', float), ('pears_new_redshift_err_to_write', float), ('pears_redshift_source_to_write', '|S7'),\
+                 ('pears_dn4000_refined_to_write', float), ('pears_dn4000_err_refined_to_write', float), ('pears_d4000_refined_to_write', float),\
+                 ('pears_d4000_err_refined_to_write', float), ('pears_old_chi2_to_write', float), ('pears_new_chi2_to_write', float)])
+            np.savetxt(massive_galaxies_dir + 'pears_refined_4000break_catalog_' + fieldname + '.txt', data,\
+             fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%.4f','%.4f', '%s', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
+             header='Catalog for all galaxies that now have refined redshifts. See paper/code for sample selection. \n' +\
+             'pearsid field ra dec old_z new_z new_z_err source dn4000 dn4000_err d4000 d4000_err old_chi2 new_chi2')
 
         catcount += 1
 
