@@ -4,6 +4,7 @@ import numpy as np
 import numpy.ma as ma
 from astropy.io import fits
 from astropy.convolution import convolve_fft
+from astropy.convolution import convolve, Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
 
 import os
@@ -23,6 +24,7 @@ massive_figures_dir = massive_galaxies_dir + "figures/"
 savefits_dir = home + "/Desktop/FIGS/new_codes/bc03_fits_files_for_refining_redshifts/"
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 new_codes_dir = home + "/Desktop/FIGS/new_codes/"
+data_path = home + "/Documents/PEARS/data_spectra_only/"  # PEARS data path
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
@@ -518,20 +520,26 @@ if __name__ == '__main__':
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
-    # give user argument for how to run code
+    # get user argument for how to run code
     # options are:
-    # 'plotbyerror'
-    # 'gallery'
-    makeplots = sys.argv[1]
-    print "I got the following user argument:", makeplots
+    # 'plotbyerror' : to do the regular chi2 fitting for each spectrum 
+    # 'gallery' : to create a gallery of the best 25 spectra (only runs code on these 25 galaxies)
+    try:
+        if len(sys.argv) > 1:
+            makeplots = sys.argv[1]
+            check_overall_contam = sys.argv[2]
+        else:
+            makeplots = sys.argv[1]
+    except IndexError as e:
+        makeplots = 'plotbyerror'
+        check_overall_contam = False
+    print "I got the following user arguments:", makeplots, "and", check_overall_contam, "for checking overall contamination."
 
-    # grid for gallery plot
-    gs = gridspec.GridSpec(25,25)
-    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.0, hspace=0.0)
-    fig_gallery = plt.figure()
-
-    # PEARS data path
-    data_path = home + "/Documents/PEARS/data_spectra_only/"
+    if makeplots == 'gallery':
+        # grid for gallery plot
+        gs = gridspec.GridSpec(25,25)
+        gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.0, hspace=0.0)
+        fig_gallery = plt.figure()
 
     # read in dn4000 catalogs 
     pears_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_4000break_catalog_GOODS-N.txt',\
@@ -684,6 +692,10 @@ if __name__ == '__main__':
     # Find out why the netsig is so bad for 62511
     # and also what to do if there is no LSF. Don't just skip.
 
+    # define kernel
+    # This is used for smoothing the spectrum later
+    kernel = Gaussian1DKernel(2.0)
+
     #### PEARS ####
 
     allcats = [pears_cat_n, pears_cat_s]  # this needs to be an iterable
@@ -700,12 +712,18 @@ if __name__ == '__main__':
         # if you're using a combined spectrum
         recarray = np.load(massive_galaxies_dir + 'pears_pa_combination_info_' + fieldname + '.npy')
 
+        # check that galaxies are within required redshift range
         pears_redshift_indices = np.where((pears_cat['redshift'] >= 0.6) & (pears_cat['redshift'] <= 1.235))[0]
 
         # galaxies in the possible redshift range
         # this number should be the exact same as the length of the catalog
         # which it is .... so this part of the code just serves as a redundancy now.
-        print len(pears_redshift_indices)
+        if len(pears_redshift_indices) != len(pears_cat):
+            print "The catalog has redshifts which are outside of the possible range."
+            print "Check the catalog making code."
+            print "Exiting for now."
+            print "If you want to skip this check and continue then comment out these lines."
+            sys.exit(0)
 
         # galaxies with significant breaks
         sig_4000break_indices_pears = np.where(((pears_cat['d4000'][pears_redshift_indices] / pears_cat['d4000_err'][pears_redshift_indices]) >= 3.0))[0]
@@ -719,6 +737,7 @@ if __name__ == '__main__':
         np.where((pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] >= 1.05) &\
          (pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] <= 3.5))[0]
 
+        # assign arrays
         all_pears_ids = pears_cat['pearsid'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
         all_pears_fields = pears_cat['field'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
         all_pears_redshifts = pears_cat['redshift'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
@@ -745,6 +764,7 @@ if __name__ == '__main__':
         pears_old_chi2_to_write = []
         pears_new_chi2_to_write = []
 
+        # start looping over all galaxies in a given catalog
         skipped_gal = 0
         counted_gal = 0
         for i in range(total_galaxies):
@@ -753,12 +773,7 @@ if __name__ == '__main__':
             current_redshift = all_pears_redshifts[i]
             current_field = all_pears_fields[i]
             current_redshift_source = all_pears_redshift_sources[i]
-            print "\n", "Working on --", current_id
 
-            # comment out these next two if statements if you want to run the code on the entire sample
-            # and uncomment them if you just want to plot a gallery of the best spectra
-            # also comment out the lines that save the text file at the end if you want to plot the gallery
-            # also change the string argument that is passed to the fitting function to say 'gallery'
             if makeplots == 'gallery':
                 if (current_field == 'GOODS-N') and (current_id not in plot_n):
                     continue
@@ -776,7 +791,12 @@ if __name__ == '__main__':
                 imag = pears_master_scat['imag'][idarg]
                 netsig_corr = pears_master_scat['netsig_corr'][idarg]
 
-            if netsig_corr <= 100: # 10 is a good number? # check discussion in N. Pirzkal et al. 2004
+            # Either remove this netsig check or have two of them.
+            # i.e. one here and one check after smoothing hte spectrum
+            # If you have two netsig checks then his one can be a 
+            # lower number and the next one which I trust more can be
+            # a larger number.
+            if netsig_corr <= 10: # 10 is a good number? # check discussion in N. Pirzkal et al. 2004
                 skipped_gal += 1
                 continue
 
@@ -808,18 +828,37 @@ if __name__ == '__main__':
                 continue
 
             # Run fileprep if galaxy survived all above cuts
-            print 'Corrected NetSig: ', netsig_corr
+            print "\n", "Working on --", current_id, "in", current_field
+            print "Corrected NetSig:", netsig_corr
             use_single_pa=True
             if use_single_pa:
                 lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, current_redshift, current_field, recarray, apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
             else:
                 lam_em, flam_em, ferr, specname, pa_forlsf = gd.fileprep(current_id, current_redshift, current_field, recarray, apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
 
-            # Contamination rejection
-            if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
-                print 'Skipping', current_id, 'because of overall contamination.'
+            # smooth galaxy spectrum and check netsig
+            fitsfile = fits.open(data_path + specname)            
+            fitsdata = fitsfile[pa_chosen].data
+
+            counts = fitsdata['COUNT']
+            counts_error = fitsdata['ERROR']
+
+            counts = convolve(counts, kernel)
+            counts_error /= 2
+
+            netsig_smoothed = gd.get_net_sig(counts, counts_error)
+            if netsig_smoothed < 30:
                 skipped_gal += 1
                 continue
+            print "Netsig after smoothing:", netsig_smoothed
+            fitsfile.close()
+
+            # Contamination rejection
+            if check_overall_contam:
+                if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
+                    print 'Skipping', current_id, 'because of overall contamination.'
+                    skipped_gal += 1
+                    continue
  
             # extend lam_grid to be able to move the lam_grid later 
             avg_dlam = get_avg_dlam(lam_em)
