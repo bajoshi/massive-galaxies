@@ -1,4 +1,4 @@
-# The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1 catalog.
+# The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1.5 catalog.
 # figs_id threed_north_idv41 figs_ra figs_dec threed_ra threed_dec
 400001 25884 189.407975 62.275124 189.407990 62.275162
 400002 24759 189.364487 62.272724 189.364502 62.272724

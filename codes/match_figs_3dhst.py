@@ -301,7 +301,7 @@ if __name__ == '__main__':
     data = np.array(zip(gn1_id_matched, threed_n_gn1_id_matched, figs_gn1_ra_matches, figs_gn1_dec_matches, threed_gn1_ra_matches, threed_gn1_dec_matches),\
                 dtype=[('gn1_id_matched', int), ('threed_n_gn1_id_matched', int), ('figs_gn1_ra_matches', float), ('figs_gn1_dec_matches', float), ('threed_gn1_ra_matches', float), ('threed_gn1_dec_matches', float)])
     np.savetxt(massive_galaxies_dir + 'gn1_threedhst_matches.txt', data, fmt=['%d', '%d', '%.6f', '%.6f', '%.6f', '%.6f'], delimiter=' ',\
-               header= 'The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1 catalog.' + '\n' + 'figs_id threed_north_idv41 figs_ra figs_dec threed_ra threed_dec')
+               header= 'The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1.5 catalog.' + '\n' + 'figs_id threed_north_idv41 figs_ra figs_dec threed_ra threed_dec')
 
     # GN2 --------------------------------------------------
     gn2_id_matched = gn2_id[figs_gn2_ind]
@@ -309,7 +309,7 @@ if __name__ == '__main__':
     data = np.array(zip(gn2_id_matched, threed_n_gn2_id_matched, figs_gn2_ra_matches, figs_gn2_dec_matches, threed_gn2_ra_matches, threed_gn2_dec_matches),\
                 dtype=[('gn2_id_matched', int), ('threed_n_gn2_id_matched', int), ('figs_gn2_ra_matches', float), ('figs_gn2_dec_matches', float), ('threed_gn2_ra_matches', float), ('threed_gn2_dec_matches', float)])
     np.savetxt(massive_galaxies_dir + 'gn2_threedhst_matches.txt', data, fmt=['%d', '%d', '%.6f', '%.6f', '%.6f', '%.6f'], delimiter=' ',\
-               header= 'The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1 catalog.' + '\n' + 'figs_id threed_north_idv41 figs_ra figs_dec threed_ra threed_dec')
+               header= 'The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1.5 catalog.' + '\n' + 'figs_id threed_north_idv41 figs_ra figs_dec threed_ra threed_dec')
 
     # GS1 --------------------------------------------------
     gs1_id_matched = gs1_id[figs_gn2_ind]
@@ -317,7 +317,7 @@ if __name__ == '__main__':
     data = np.array(zip(gs1_id_matched, threed_n_gs1_id_matched, figs_gs1_ra_matches, figs_gs1_dec_matches, threed_gs1_ra_matches, threed_gs1_dec_matches),\
                 dtype=[('gs1_id_matched', int), ('threed_n_gs1_id_matched', int), ('figs_gs1_ra_matches', float), ('figs_gs1_dec_matches', float), ('threed_gs1_ra_matches', float), ('threed_gs1_dec_matches', float)])
     np.savetxt(massive_galaxies_dir + 'gs1_threedhst_matches.txt', data, fmt=['%d', '%d', '%.6f', '%.6f', '%.6f', '%.6f'], delimiter=' ',\
-               header= 'The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1 catalog.' + '\n' + 'figs_id threed_south_idv41 figs_ra figs_dec threed_ra threed_dec')
+               header= 'The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1.5 catalog.' + '\n' + 'figs_id threed_south_idv41 figs_ra figs_dec threed_ra threed_dec')
 
 
     # GS2 --------------------------------------------------
@@ -326,6 +326,6 @@ if __name__ == '__main__':
     data = np.array(zip(gs2_id_matched, threed_n_gs2_id_matched, figs_gs2_ra_matches, figs_gs2_dec_matches, threed_gs2_ra_matches, threed_gs2_dec_matches),\
                 dtype=[('gs2_id_matched', int), ('threed_n_gs2_id_matched', int), ('figs_gs2_ra_matches', float), ('figs_gs2_dec_matches', float), ('threed_gs2_ra_matches', float), ('threed_gs2_dec_matches', float)])
     np.savetxt(massive_galaxies_dir + 'gs2_threedhst_matches.txt', data, fmt=['%d', '%d', '%.6f', '%.6f', '%.6f', '%.6f'], delimiter=' ',\
-               header= 'The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1 catalog.' + '\n' + 'figs_id threed_south_idv41 figs_ra figs_dec threed_ra threed_dec')
+               header= 'The 3DHST ID is specific to its north or south catalog. Currently using 3DHST v4.1.5 catalog.' + '\n' + 'figs_id threed_south_idv41 figs_ra figs_dec threed_ra threed_dec')
 
     sys.exit(0)
