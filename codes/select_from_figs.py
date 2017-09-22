@@ -57,14 +57,17 @@ def get_props(matchedfile, threedcat, figscat, ra_list, dec_list):
 
         # check if object can be selected
         if (zphot >= 0.5) and (zphot <= 2.0) and (mstar >= 10.5):
-            if (f105w_mag <= 20.0) and np.isfinite(f105w_mag):
-                print ra, dec, mstar, zphot, '{:.2f}'.format(f105w_mag), '{:.2f}'.format(f125w_mag), '{:.2f}'.format(f140w_mag), '{:.2f}'.format(f160w_mag)
+            if (f105w_mag <= 20.0) or (f125w_mag <= 20.0) or (f140w_mag <= 20.0) or (f160w_mag <= 20.0):
+                print current_id, ra, dec, mstar, zphot, '{:.2f}'.format(f105w_mag), '{:.2f}'.format(f125w_mag), '{:.2f}'.format(f140w_mag), '{:.2f}'.format(f160w_mag)
                 ra_list.append(ra)
                 dec_list.append(dec)
 
     return ra_list, dec_list
 
 if __name__ == '__main__':
+    
+    # read in 3DHST master catalog
+    threedcat = fits.open(home + '/Documents/3D-HST/3dhst.v4.1.5.master.fits')
 
     # Read in FIGS catalogs # latest version v1.2
     gn1cat = np.genfromtxt(massive_galaxies_dir + 'GN1_prelim_science_v1.2.cat', dtype=None,\
@@ -75,15 +78,12 @@ if __name__ == '__main__':
                            names=['id','ra','dec','f105w_flux','f125w_flux','f140w_flux','f160w_flux'], usecols=([2,3,4,17,19,21,23]), skip_header=25)
     gs2cat = np.genfromtxt(massive_galaxies_dir + 'GS2_prelim_science_v1.2.cat', dtype=None,\
                            names=['id','ra','dec','f105w_flux','f125w_flux','f160w_flux'], usecols=([2,3,4,13,15,17]), skip_header=19)
-    
+
     # read in catalogs for matched objects between 3DHST and FIGS
     gn1_matches = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/gn1_threedhst_matches.txt', dtype=None, names=True, skip_header=1)
     gn2_matches = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/gn2_threedhst_matches.txt', dtype=None, names=True, skip_header=1)
     gs1_matches = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/gs1_threedhst_matches.txt', dtype=None, names=True, skip_header=1)
     gs2_matches = np.genfromtxt(home + '/Desktop/FIGS/massive-galaxies/gs2_threedhst_matches.txt', dtype=None, names=True, skip_header=1)
-
-    # read in 3DHST master catalog
-    threedcat = fits.open(home + '/Documents/3D-HST/3dhst.v4.1.5.master.fits')
 
     # loop over all matches in all fields and select an object if it passes all criteria
     ra_list = []
