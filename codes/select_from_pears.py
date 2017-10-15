@@ -88,6 +88,7 @@ def do_pears_threed_matching():
 
 def get_props(matchedfile, threedcat, pearscat, ra_list, dec_list):
 
+    count = 0
     for i in range(len(matchedfile)):
 
         # first find object in 3DHST catlaog
@@ -113,10 +114,11 @@ def get_props(matchedfile, threedcat, pearscat, ra_list, dec_list):
         imag = float(pearscat['imag'][pears_idx])
 
         # check if object can be selected
-        if (zphot >= 0.5) and (mstar >= 10.5) and (imag < 22):
-            print current_id, ra, dec, mstar, zphot, '{:.2f}'.format(imag)
+        if (zphot >= 0.5) and (mstar >= 10) and (imag < 22):
+            print count, current_id, ra, dec, mstar, zphot, '{:.2f}'.format(imag)
             ra_list.append(ra)
             dec_list.append(dec)
+            count += 1
 
     return ra_list, dec_list
 
@@ -149,6 +151,6 @@ if __name__ == '__main__':
 
     ax.plot(ra_list, dec_list, 'o', markersize=2)
 
-    plt.show()
+    #plt.show()
 
     sys.exit(0)

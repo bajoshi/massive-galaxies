@@ -13,6 +13,7 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 
 def get_props(matchedfile, threedcat, figscat, ra_list, dec_list):
 
+    count = 0
     for i in range(len(matchedfile)):
 
         # first find object in 3DHST catlaog
@@ -56,11 +57,12 @@ def get_props(matchedfile, threedcat, figscat, ra_list, dec_list):
         f160w_mag = -2.5 * np.log10(f160w_flux / 3631)
 
         # check if object can be selected
-        if (zphot >= 0.5) and (zphot <= 2.0) and (mstar >= 10.5):
+        if (zphot >= 0.5) and (mstar >= 10):
             if (f105w_mag <= 20.0) or (f125w_mag <= 20.0) or (f140w_mag <= 20.0) or (f160w_mag <= 20.0):
-                print current_id, ra, dec, mstar, zphot, '{:.2f}'.format(f105w_mag), '{:.2f}'.format(f125w_mag), '{:.2f}'.format(f140w_mag), '{:.2f}'.format(f160w_mag)
+                print current_id, ra, dec, mstar, zphot, '{:.2f}'.format(f160w_mag)
                 ra_list.append(ra)
                 dec_list.append(dec)
+                count += 1
 
     return ra_list, dec_list
 
@@ -98,6 +100,6 @@ if __name__ == '__main__':
 
     ax.plot(ra_list, dec_list, 'o', markersize=2)
 
-    plt.show()
+    #plt.show()
 
     sys.exit(0)
