@@ -1,6 +1,9 @@
 from __future__ import division
 
 import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, AnchoredText
 
@@ -280,6 +283,8 @@ if __name__ == '__main__':
 
     fig.savefig(massive_figures_dir + 'field_footprint_goodss.eps')
     plt.clf()
+    plt.cla()
+    plt.close()
 
     ## ------------------------------------------------------------------------------------------- ##
     ################ NORTH ################
@@ -394,38 +399,58 @@ if __name__ == '__main__':
 
     # Make plots
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    goodsn_sect13 = fits.open(home + '/Desktop/FIGS/h_nv_sect24_v2.0_drz_img.fits')
+    wcs = WCS(goodsn_sect13[0].header)
+    ax = fig.add_subplot(111, projection=wcs)
+    print wcs
 
     ax.set_xlabel('RA')
     ax.set_ylabel('DEC')
 
+    from matplotlib.patches import Rectangle
+    from astropy import units as u
+    print pears_north_ra[0]
+    print pears_north_dec[0]
+    ax.imshow(goodsn_sect13[0].data, origin='lower', cmap='Greys', vmin=0, vmax=10)
+    ax.set_autoscale_on(False)
+    r = Rectangle((189.6, 62.2), acs_half_fov*2/3600, acs_half_fov*2/3600, \
+        edgecolor='red', lw=2, facecolor='none', transform=ax.get_transform('icrs'))
+    ax.add_patch(r)
+
+    ax.set_xlim(187, 192)
+    ax.set_ylim(60, 65)
+
+    #fig.savefig(massive_figures_dir + 'pears_goodsn_new.eps')
+    plt.show()
+    sys.exit(0)
+
     ## plot 3DHST wfc3 prime orbits
-    #count = 0
-    #for i in range(len(threed_11600_wfc3_north_ind)):
-    #    ax.plot(x_threed_11600_wfc3_north[count:count+5], y_threed_11600_wfc3_north[count:count+5], color='gray', linewidth=1)
-    #    count += 5
+    count = 0
+    for i in range(len(threed_11600_wfc3_north_ind)):
+        ax.plot(x_threed_11600_wfc3_north[count:count+5], y_threed_11600_wfc3_north[count:count+5], color='gray', linewidth=1)
+        count += 5
 
     # plot PEARS acs prime orbits
     count = 0
     for i in range(len(pears_acs_north_ind)):
         ax.plot(x_pears_acs_north[count:count+5], y_pears_acs_north[count:count+5], color='green', linewidth=1)
-        print x_pears_acs_north[count:count+5], y_pears_acs_north[count:count+5]
+        #print x_pears_acs_north[count:count+5], y_pears_acs_north[count:count+5]
         ax.fill_between(x_pears_acs_north[count:count+2], y_pears_acs_north[count+1], y_pears_acs_north[count+2], color='lightgreen', alpha=0.8)
         count += 5
 
     ## plot FIGS acs parallel orbits
-    #count = 0
-    #for i in range(len(figs_acs_north_ind)):
-    #    ax.plot(x_figs_acs_north[count:count+5], y_figs_acs_north[count:count+5], color='red', linewidth=1)
-    #    ax.fill_between(x_figs_acs_north[count:count+2], y_figs_acs_north[count+1], y_figs_acs_north[count+2], color='pink', alpha=0.8)
-    #    count += 5
+    count = 0
+    for i in range(len(figs_acs_north_ind)):
+        ax.plot(x_figs_acs_north[count:count+5], y_figs_acs_north[count:count+5], color='red', linewidth=1)
+        ax.fill_between(x_figs_acs_north[count:count+2], y_figs_acs_north[count+1], y_figs_acs_north[count+2], color='pink', alpha=0.8)
+        count += 5
 
     ## plot FIGS wfc3 prime orbits
-    #count = 0
-    #for i in range(len(figs_wfc3_north_ind)):
-    #    ax.plot(x_figs_wfc3_north[count:count+5], y_figs_wfc3_north[count:count+5], color='blue', linewidth=1)
-    #    ax.fill_between(x_figs_wfc3_north[count:count+2], y_figs_wfc3_north[count+1], y_figs_wfc3_north[count+2], color='lightblue', alpha=0.8)
-    #    count += 5
+    count = 0
+    for i in range(len(figs_wfc3_north_ind)):
+        ax.plot(x_figs_wfc3_north[count:count+5], y_figs_wfc3_north[count:count+5], color='blue', linewidth=1)
+        ax.fill_between(x_figs_wfc3_north[count:count+2], y_figs_wfc3_north[count+1], y_figs_wfc3_north[count+2], color='lightblue', alpha=0.8)
+        count += 5
 
     #ax.set_xlim(188.9, 189.7)
     #ax.set_ylim(62.1, 62.4)
