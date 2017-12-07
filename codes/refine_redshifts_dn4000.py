@@ -321,7 +321,7 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
         else:
             print "Will not plot", pearsid, "in", pearsfield, "because the new z is outside valid range."
 
-    if makeplots == 'gallery':
+    elif makeplots == 'gallery':
         plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
             bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, callcount)
 
@@ -531,8 +531,8 @@ if __name__ == '__main__':
         else:
             makeplots = sys.argv[1]
     except IndexError as e:
-        makeplots = 'plotbyerror'
-        check_overall_contam = False
+        makeplots = 'NoPlots'
+        check_overall_contam = True
     print "I got the following user arguments:", makeplots, "and", check_overall_contam, "for checking overall contamination."
 
     if makeplots == 'gallery':
@@ -570,6 +570,7 @@ if __name__ == '__main__':
     # clear -- in almost all cases the flux drops at the blue end 
     # but never levels out
     #### NORTH ####
+    """
     skip_n = [30256,31670,31891,33414,36546,37225,37644,37908,38345,39311,38345,\
     40613,41093,41439,42509,43584,44258,44559,45328,45370,45556,45624,46694,\
     47065,47153,47440,48176,48229,48514,48737,48873,50214,50892,52404,52497,\
@@ -669,6 +670,7 @@ if __name__ == '__main__':
     # these are cases where the old redshift looks correct
     old_z_correct_n = [36842,45958,48743,65404,117385] 
     old_z_correct_s = [40488,43758,81021,84478,101795,110801]
+    """
 
     # for 5x5 gallery
     # these two lists commented out have more spectra if you want
@@ -684,7 +686,7 @@ if __name__ == '__main__':
     plot_s = [26158,29322,30107,57014,61235,68104,88671,95110,\
     110487,114108,114230]
     # 62511 and 84974 in GOODS-N will be skipped due to 
-    # low_netsig/overall contam. and no LSF respectively.
+    # low_netsig/overall contam. and no LSF either.
     # However they look perfectly fine by eye.
     # Fix this!
     # There could be many more which are perfectly fine 
@@ -692,12 +694,20 @@ if __name__ == '__main__':
     # Find out why the netsig is so bad for 62511
     # and also what to do if there is no LSF. Don't just skip.
 
+    skip_n  = []
+    skip_n1 = []
+    skip_n2 = []
+    skip_n3 = []
+    skip_s  = []
+    skip_s1 = []
+    skip_s2 = []
+    skip_s3 = []
+
     # define kernel
     # This is used for smoothing the spectrum later
     kernel = Gaussian1DKernel(2.0)
 
     #### PEARS ####
-
     allcats = [pears_cat_n, pears_cat_s]  # this needs to be an iterable
 
     catcount = 0
@@ -709,7 +719,7 @@ if __name__ == '__main__':
         elif catcount == 1:
             fieldname = 'GOODS-S'
 
-        # if you're using a combined spectrum
+        # read in the recarray if you're using a combined spectrum
         recarray = np.load(massive_galaxies_dir + 'pears_pa_combination_info_' + fieldname + '.npy')
 
         # check that galaxies are within required redshift range
@@ -734,8 +744,7 @@ if __name__ == '__main__':
 
         # Galaxies with believable breaks; im calling them proper breaks
         prop_4000break_indices_pears = \
-        np.where((pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] >= 1.05) &\
-         (pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] <= 3.5))[0]
+        np.where((pears_cat['d4000'][pears_redshift_indices][sig_4000break_indices_pears] >= 1.05))[0]
 
         # assign arrays
         all_pears_ids = pears_cat['pearsid'][pears_redshift_indices][sig_4000break_indices_pears][prop_4000break_indices_pears]
@@ -796,9 +805,9 @@ if __name__ == '__main__':
             # If you have two netsig checks then his one can be a 
             # lower number and the next one which I trust more can be
             # a larger number.
-            if netsig_corr <= 10: # 10 is a good number? # check discussion in N. Pirzkal et al. 2004
-                skipped_gal += 1
-                continue
+            #if netsig_corr < 10: # 10 is a good number? # check discussion in N. Pirzkal et al. 2004
+            #    skipped_gal += 1
+            #    continue
 
             # reject galaxy if its in any of the skip arrays
             if (current_id in skip_n) and (current_field == 'GOODS-N'):
@@ -832,13 +841,20 @@ if __name__ == '__main__':
             print "Corrected NetSig:", netsig_corr
             use_single_pa=True
             if use_single_pa:
-                lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, current_redshift, current_field, recarray, apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
+                lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = \
+                gd.fileprep(current_id, current_redshift, current_field, \
+                    apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
             else:
-                lam_em, flam_em, ferr, specname, pa_forlsf = gd.fileprep(current_id, current_redshift, current_field, recarray, apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
-
+                lam_em, flam_em, ferr, specname, pa_forlsf = \
+                gd.fileprep(current_id, current_redshift, current_field, \
+                    apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
+ 
             # smooth galaxy spectrum and check netsig
-            fitsfile = fits.open(data_path + specname)            
-            fitsdata = fitsfile[pa_chosen].data
+            fitsfile = fits.open(data_path + specname)
+            if use_single_pa:
+                fitsdata = fitsfile[pa_chosen].data
+            else:
+                fitsdata = fitsfile[pa_forlsf].data
 
             counts = fitsdata['COUNT']
             counts_error = fitsdata['ERROR']
@@ -854,12 +870,12 @@ if __name__ == '__main__':
             fitsfile.close()
 
             # Contamination rejection
-            if check_overall_contam:
+            if check_overall_contam is False:
                 if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
                     print 'Skipping', current_id, 'because of overall contamination.'
                     skipped_gal += 1
                     continue
- 
+
             # extend lam_grid to be able to move the lam_grid later 
             avg_dlam = get_avg_dlam(lam_em)
 
@@ -975,7 +991,7 @@ if __name__ == '__main__':
         pears_old_chi2_to_write = np.asarray(pears_old_chi2_to_write)
         pears_new_chi2_to_write = np.asarray(pears_new_chi2_to_write)
 
-        if makeplots == 'plotbyerror':
+        if makeplots != 'gallery':
             data = np.array(zip(pears_id_to_write, pears_field_to_write, pears_ra_to_write, pears_dec_to_write, pears_old_redshift_to_write,\
                 pears_new_redshift_to_write, pears_new_redshift_err_to_write, pears_redshift_source_to_write, pears_dn4000_refined_to_write,\
                 pears_dn4000_err_refined_to_write, pears_d4000_refined_to_write, pears_d4000_err_refined_to_write, pears_old_chi2_to_write, pears_new_chi2_to_write),\

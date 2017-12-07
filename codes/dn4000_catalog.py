@@ -383,6 +383,8 @@ if __name__ == '__main__':
         pears_id = cat['pearsid'][redshift_indices]
         photz = cat['zphot'][redshift_indices]
 
+        print len(np.unique(pears_id)), "unique objects in", fieldname, "in redshift range"
+
         # create lists to write final data in and 
         # loop over all galaxies
         pears_id_write = []
@@ -396,21 +398,22 @@ if __name__ == '__main__':
         pearsfield = []
         redshift_source = []
 
-        print len(np.unique(pears_id)), "unique objects in", fieldname, "in redshift range"
-
         # Loop over all spectra 
         pears_unique_ids, pears_unique_ids_indices = np.unique(pears_id, return_index=True)
         i = 0
         for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
 
             redshift = photz[count]
-            print "\n", "Currently working with PEARS object id: ", current_pears_index, "at redshift", redshift
+            #print "\n", "Currently working with PEARS object id: ", current_pears_index, "at redshift", redshift
 
-            lam_em, flam_em, ferr, specname, pa_chosen = gd.fileprep(current_pears_index, redshift, fieldname)
+            lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_pears_index, redshift, fieldname)
 
             if not lam_em.size:
                 # i.e. skip galaxy if fileprep returned an empty array
-                # happens at least for one galaxy -- GOODS-S 78080 (none in GOODS-N)
+                # happens for-- (that I know of; I think there might be a few more)
+                # GOODS-S 78080
+                # GOODS-N 80787
+                print "Skipping", current_pears_index, "in", fieldname, "due to empty wavelength array."
                 continue
 
             if (lam_em[0] > 3780) or (lam_em[-1] < 4220):
@@ -419,7 +422,7 @@ if __name__ == '__main__':
                 # so that if there isn't an flux measurement at the exact end point wavelengths
                 # but there is one nearby then the galaxy isn't skipped
                 # skipping galaxy because there are too few or no flux measurements at the required wavelengths
-                print "Skipping", current_pears_index,\
+                print "Skipping", current_pears_index, "in", fieldname,\
                  "due to too few or no flux measurements at the required wavelengths. The end points of the wavelength array are",\
                  lam_em[0], lam_em[-1]
                 continue
@@ -431,7 +434,7 @@ if __name__ == '__main__':
 
             if (len(lam_em[arg3750:arg3950+1]) == 0) or (len(lam_em[arg4050:arg4250+1]) == 0):
                 # based on d4000 instead of dn4000
-                print "Skipping", current_pears_index,\
+                print "Skipping", current_pears_index, "in", fieldname,\
                  "due to no flux measurements at the required wavelengths. The end points of the wavelength array are",\
                  lam_em[0], lam_em[-1]
                 continue

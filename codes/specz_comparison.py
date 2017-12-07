@@ -277,7 +277,7 @@ if __name__ == '__main__':
                     lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
                     lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
                     #lam_em_photz, flam_em_photz, ferr_photz, specname_photz, pa_forlsf_photz, netsig_chosen_photz = gd.fileprep(current_id, current_photz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                    plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz, flam_em_grismz, current_grismz)
+                    #plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz, flam_em_grismz, current_grismz)
 
             else:
                 if current_specz_source == "3D_HST":
@@ -304,16 +304,16 @@ if __name__ == '__main__':
     z_grism_std_plot = np.asarray(z_grism_std_plot)
 
     # z_grism vs z_phot vs z_spec
-    gs = gridspec.GridSpec(15,30)
+    gs = gridspec.GridSpec(15,32)
     gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=20.0, hspace=0.00)
 
     fig_gs = plt.figure()
     ax1 = fig_gs.add_subplot(gs[:10,:10])
     ax2 = fig_gs.add_subplot(gs[10:,:10])
-    ax3 = fig_gs.add_subplot(gs[:10,10:20])
-    ax4 = fig_gs.add_subplot(gs[10:,10:20])
-    ax5 = fig_gs.add_subplot(gs[:10,20:])
-    ax6 = fig_gs.add_subplot(gs[10:,20:])
+    ax3 = fig_gs.add_subplot(gs[:10,11:21])
+    ax4 = fig_gs.add_subplot(gs[10:,11:21])
+    ax5 = fig_gs.add_subplot(gs[:10,22:])
+    ax6 = fig_gs.add_subplot(gs[10:,22:])
 
     # ------------------------------------------------------------------------------------------------- #
     # first panel # z_spec vs z_grism
@@ -428,7 +428,8 @@ if __name__ == '__main__':
 
     print "median abs(z_spec - z_grism)/ 1+z_spec", np.median(abs(z_spec_plot - z_grism_plot)/(1+z_spec_plot))
     print "median abs(z_spec - z_phot)/ 1+z_spec", np.median(abs(z_spec_plot - z_phot_plot)/(1+z_spec_plot))
-    acc = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
+    acc = abs(z_spec_plot - z_grism_plot)/(1+z_spec_plot)
+    print "Number of catastrophic failures", len(np.where(acc >= 0.05)[0])
     print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0001:", len(np.where(acc <= 0.001)[0])
     print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0003:", len(np.where(acc <= 0.003)[0])
 

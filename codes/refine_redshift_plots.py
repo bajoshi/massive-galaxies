@@ -284,6 +284,7 @@ if __name__ == '__main__':
     # This gives the x-value of where the peak is.
 
     # histogram of normalized error in new redshift
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -327,6 +328,7 @@ if __name__ == '__main__':
 
     fig.savefig(massive_figures_dir + "refined_norm_z_err_hist_inrange_pm_" + str(rng) + ".eps", dpi=300, bbox_inches='tight')
     del fig, ax
+    """
 
     # hist of standard deviation of z_grism
     fig = plt.figure()
@@ -346,7 +348,7 @@ if __name__ == '__main__':
     ax.set_xlabel(r'$\mathrm{\sigma_{z_{grism}}}$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
 
-    ax.axvline(x=0.037, linestyle='--', color='b')
+    #ax.axvline(x=0.037, linestyle='--', color='b')
 
     ax.set_xlim(0.0, 0.2)
 
@@ -381,7 +383,7 @@ if __name__ == '__main__':
     ax.set_xlabel(r'$\mathrm{\sigma_{z_{grism}}/(1+z_{grism})}$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
 
-    ax.axvline(x=0.037, linestyle='--', color='b')
+    #ax.axvline(x=0.037, linestyle='--', color='b')
 
     ax.set_xlim(0.0, 0.2)
 
@@ -400,10 +402,13 @@ if __name__ == '__main__':
 
     fig.savefig(massive_figures_dir + "refined_z_err_div_oneplusz_hist.eps", dpi=300, bbox_inches='tight')
     del fig, ax
+    sys.exit(0)
 
     # z_grism_std vs net sig
     #fig = plt.figure()
     #ax = fig.add_subplot(111)
+
+    # -------------------------------------------------------------------------------------- # 
 
     # Read PEARS cats
     pears_master_ncat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_north_master.cat', dtype=None,\

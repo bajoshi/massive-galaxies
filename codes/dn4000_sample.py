@@ -304,8 +304,9 @@ if __name__ == '__main__':
     ax.grid(True)
 
     # shade the selection region
-    edges_plot = np.where((edges >= 1.05) & (edges <= 3.5))[0]
-    patches_plot = [patches[edge_ind] for edge_ind in edges_plot]
+    edges_plot = np.where(edges >= 1.05)[0]
+    patches_plot = [patches[edge_ind] for edge_ind in edges_plot[:-1]]
+    # I put in the [:-1] because for some reason edges was 1 element longer than patches
     col = np.full(len(patches_plot), 'lightblue', dtype='|S9')
     # make sure the length of the string given in the array initialization is the same as the color name
     for c, p in zip(col, patches_plot):
@@ -397,19 +398,20 @@ if __name__ == '__main__':
     #ax.plot(redshift_figs_plot, dn4000_figs_plot, 'o', markersize=2, color='b', markeredgecolor='b')
 
     ax.errorbar(redshift_pears_plot, d4000_pears_plot, yerr=d4000_err_pears_plot,\
-     fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=7, elinewidth=0.5)
+     fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=4, elinewidth=0.25)
     #ax.errorbar(redshift_figs_plot, dn4000_figs_plot, yerr=dn4000_err_figs_plot,\
     # fmt='.', color='b', markeredgecolor='b', capsize=0, markersize=7, elinewidth=0.5)
     #ax.plot(redshift_sdss_plot, dn4000_sdss_plot, '.', markersize=2, color='slategray')
     #ax.plot(redshift_shels_plot, dn4000_shels_plot, '.', markersize=2, color='seagreen')
 
+    ax.axhline(y=1, linewidth=1, linestyle='--', color='r', zorder=10)
+
+    """
     # read in max break val at redshift text file and plot
     max_break_at_z_solar = np.genfromtxt(massive_galaxies_dir + 'max_break_at_redshift_solar.txt', dtype=None, names=True)
     ax.plot(max_break_at_z_solar['redshift'], max_break_at_z_solar['max_break'], '-', color='seagreen')
     max_break_at_z_highest_metals = np.genfromtxt(massive_galaxies_dir + 'max_break_at_redshift_highest_metals.txt', dtype=None, names=True)
     ax.plot(max_break_at_z_highest_metals['redshift'], max_break_at_z_highest_metals['max_break'], '-', color='darkgoldenrod')
-
-    ax.axhline(y=1, linewidth=1, linestyle='--', color='r')
 
     # labels
     #figslabelbox = TextArea("FIGS", textprops=dict(color='blue', size=12))
@@ -450,6 +452,7 @@ if __name__ == '__main__':
                                          bbox_to_anchor=(0.85, 0.82),\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_highestmetals_labelbox)
+    """
 
     # labels and minor ticks
     ax.set_xlabel(r'$\mathrm{Redshift}$', fontsize=15)

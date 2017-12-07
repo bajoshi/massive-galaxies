@@ -210,11 +210,11 @@ def read_3dhst_cats(mode='all'):
     threed_ncat = fits.open(home + '/Desktop/FIGS/new_codes/goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat.FITS')
     threed_scat = fits.open(home + '/Desktop/FIGS/new_codes/goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat.FITS')
 
-    threed_v41_phot = fits.open(home + '/Desktop/FIGS/new_codes/3dhst_master.phot.v4.1/3dhst_master.phot.v4.1.cat.fits')
-
     if mode == 'all':
+        threed_v41_phot = fits.open(home + '/Desktop/FIGS/new_codes/3dhst_master.phot.v4.1/3dhst_master.phot.v4.1.cat.fits')
         return threed_ncat, threed_scat, threed_v41_phot
     elif mode == 'master':
+        threed_v41_phot = fits.open(home + '/Desktop/FIGS/new_codes/3dhst_master.phot.v4.1/3dhst_master.phot.v4.1.cat.fits')
         return threed_v41_phot
     elif mode == 'fields':
         return threed_ncat, threed_scat
