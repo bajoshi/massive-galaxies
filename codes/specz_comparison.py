@@ -7,6 +7,7 @@ import sys
 import time
 import datetime
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, AnchoredText
@@ -22,6 +23,17 @@ sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir)
 import grid_coadd as gd
 import matching as mt
+import mag_hist as mh
+
+# modify rc Params
+mpl.rcParams["font.family"] = "serif"
+mpl.rcParams["font.sans-serif"] = ["Computer Modern Sans"]
+mpl.rcParams["text.usetex"] = True  
+# this above line will add like 15-20 seconds to your run time but some times its necessary
+# in here I need it to get teh \text to work
+mpl.rcParams["text.latex.preamble"] = [r'\usepackage{amsmath}']
+mpl.rcParams["xtick.direction"] = "in"
+mpl.rcParams["ytick.direction"] = "in"
 
 def plot_for_comparison():
 
@@ -193,6 +205,7 @@ if __name__ == '__main__':
     z_grism_plot = []
     z_phot_plot = []
     z_grism_std_plot = []
+    imag_plot = []
 
     spec_z_source_list = []
 
@@ -265,14 +278,15 @@ if __name__ == '__main__':
     
                 #print current_specz_source  #, netsig_corr, netsig_chosen_specz, imag
                 spec_z_source_list.append(current_specz_source)
-                weird += 1
                 z_spec_plot.append(spec_cat['z_spec'][spec_ind][i])
                 z_grism_plot.append(pears_cat['new_z'][pears_ind][i])
                 z_phot_plot.append(pears_cat['old_z'][pears_ind][i])
                 z_grism_std_plot.append(pears_cat['new_z_err'][pears_ind][i])
+                imag_plot.append(imag)
 
                 # find which galaxies have large (z_spec - z_grism)/(1+z_spec)
                 if abs((current_specz - current_grismz)/(1 + current_specz)) > 0.05:
+                    weird += 1
                     print "large diff between spec and grism z", current_grismz, current_specz, current_id, current_field, current_photz
                     lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
                     lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
@@ -302,7 +316,9 @@ if __name__ == '__main__':
     z_grism_plot = np.asarray(z_grism_plot)
     z_phot_plot = np.asarray(z_phot_plot)
     z_grism_std_plot = np.asarray(z_grism_std_plot)
+    imag_plot = np.asarray(imag_plot)
 
+    """
     # z_grism vs z_phot vs z_spec
     gs = gridspec.GridSpec(15,32)
     gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=20.0, hspace=0.00)
@@ -433,36 +449,57 @@ if __name__ == '__main__':
     print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0001:", len(np.where(acc <= 0.001)[0])
     print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0003:", len(np.where(acc <= 0.003)[0])
 
-    sys.exit(0)
+    plt.cla()
+    plt.clf()
+    plt.close()
+    """
 
-    # ------------------------------------------------------------------------------------------------- #
-    # plot of z_spec - z_grism vs sigma_z_grism
+    # ---------------------------- histogram of residuals overlaid ---------------------------- #
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot((z_spec_plot - z_grism_plot)**2, z_grism_std_plot, 'o', markersize=2.0, color='k', markeredgecolor='k')
-    ax.axhline(y=0, linestyle='--', color='r')
 
-    ax.set_xlabel(r'$(z_\mathrm{s} - z_\mathrm{g})^2$', fontsize=12)
-    ax.set_ylabel(r'$\mathrm{\sigma_{z_{g}}}$', fontsize=12)
+    # define colors
+    myblue = mh.rgb_to_hex(0, 100, 180)
+    myred = mh.rgb_to_hex(214, 39, 40)  # tableau 20 red
+
+    grism_resid_hist_arr = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
+    photz_resid_hist_arr = (z_spec_plot - z_phot_plot)/(1+z_spec_plot)
+
+    ax.hist(photz_resid_hist_arr, 23, range=[-0.06,0.06], color=myred, alpha=0.75, zorder=10)
+    ax.hist(grism_resid_hist_arr, 23, range=[-0.06,0.06], color=myblue, alpha=0.6, zorder=10)
+    # this plot really needs an alpha channel
+    # otherwise you wont see that the photo-z histogram under the grism-z histogram
+    # is actually fatter around 0 whereas the grism-z histogram is thinner.
+
+    ax.text(0.72, 0.97, r'$\mathrm{Grism{\text{-}}z}$' + '\n' + r'$\mathrm{residuals}$',\
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color=myblue, size=10)
+    ax.text(0.835, 0.96, r'$\mathrm{\equiv \frac{z_s - z_g}{1 + z_s}}$',\
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color=myblue, size=14)
+
+    ax.text(0.72, 0.87, r'$\mathrm{Photo{\text{-}}z}$' + '\n' + r'$\mathrm{residuals}$',\
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color=myred, size=10)
+    ax.text(0.835, 0.86, r'$\mathrm{\equiv \frac{z_s - z_p}{1 + z_s}}$',\
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color=myred, size=14)
 
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')
     ax.tick_params('both', width=1, length=4.7, which='major')
-    ax.grid(True)
+    ax.grid(True, alpha=0.5)
 
-    #fig.savefig(massive_figures_dir + "zspec_vs_zgrism_err.eps", dpi=150, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'residual_histogram.png', dpi=300, bbox_inches='tight')
+    # has to be png NOT eps. see comment above on alpha channel requirement.
 
-    # ------------------------------------------------------------------------------------------------- #
-    # histogram of delta_z/1+z
+    # ---------------------------- plot of error vs magnitude ---------------------------- #
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    hist_arr = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
-
-    ax.hist(hist_arr, 20, alpha=0.6)
-
-    #plt.show()
+    
 
     sys.exit(0)
 
