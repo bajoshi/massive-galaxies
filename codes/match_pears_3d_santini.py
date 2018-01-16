@@ -6,6 +6,8 @@ from astropy.io import fits
 import os
 import sys
 
+import matplotlib.pyplot as plt
+
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 
@@ -78,6 +80,9 @@ if __name__ == '__main__':
     print "There were", num_single_matches, "single matches found out of", len(pears_scat), "objects in the PEARS SOUTH catalog with Santini et al. 2015."
     mt.plot_diff(deltaRA, deltaDEC, name='pears_santini_goodss')
 
+    plt.show()
+    sys.exit(0)
+
     # save the matched file
     # North
     # get 3dhst north redshift
@@ -94,7 +99,7 @@ if __name__ == '__main__':
     match_ra_towrite = np.asarray(threed_n_ra_matches)
     match_dec_towrite = np.asarray(threed_n_dec_matches)
 
-    # i thought this was the easiest way of creating a numpy array with all elements filled in with the same string
+    # i thought this was the easiest/cleanest way of creating a numpy array with all elements filled in with the same string
     match_source = np.empty(len(threed_n_ra_matches), dtype=object)
     for i in range(len(match_source)):
         match_source[i] = ' 3DHST '
