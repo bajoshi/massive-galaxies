@@ -360,12 +360,10 @@ def get_figs_dn4000(field, threed_cat, field_match, field_spc):
     return None
 
 if __name__ == '__main__':
-    
-    cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt',
-                   dtype=None, names=True, skip_header=1)
-    cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt',
-                   dtype=None, names=True, skip_header=1)
-    
+
+    cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_match_3dhst_topcat.txt', dtype=None, names=True)
+    cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_match_3dhst_topcat.txt', dtype=None, names=True)
+
     allcats = [cat_n, cat_s]
 
     catcount = 0
@@ -378,12 +376,12 @@ if __name__ == '__main__':
             fieldname = 'GOODS-S'
             print 'Starting with', len(cat), 'matched objects in', fieldname
 
-        redshift_indices = np.where((cat['zphot'] >= 0.6) & (cat['zphot'] <= 1.235))[0]
+        redshift_indices = np.where((cat['z_peak'] >= 0.6) & (cat['z_peak'] <= 1.235))[0]
 
-        pears_id = cat['pearsid'][redshift_indices]
-        photz = cat['zphot'][redshift_indices]
+        pears_id = cat['col1'][redshift_indices]  # col1 is pears id in the topcat saved catalog
+        photz = cat['z_peak'][redshift_indices]
 
-        print len(np.unique(pears_id)), "unique objects in", fieldname, "in redshift range"
+        print len(np.unique(pears_id)), "unique objects within", fieldname, "in redshift range"
 
         # create lists to write final data in and 
         # loop over all galaxies
@@ -416,9 +414,9 @@ if __name__ == '__main__':
                 print "Skipping", current_pears_index, "in", fieldname, "due to empty wavelength array."
                 continue
 
-            if (lam_em[0] > 3780) or (lam_em[-1] < 4220):
+            if (lam_em[0] > 3800) or (lam_em[-1] < 4200):
                 # based on d4000 instead of dn4000
-                # i've pushed the limits a little inward (i.e. > 24 A), to be conservative, 
+                # i've pushed the limits a little inward (> 50 A i.e. approx two spec measuremnt points), to be conservative, 
                 # so that if there isn't an flux measurement at the exact end point wavelengths
                 # but there is one nearby then the galaxy isn't skipped
                 # skipping galaxy because there are too few or no flux measurements at the required wavelengths
@@ -440,15 +438,15 @@ if __name__ == '__main__':
                 continue
 
             fitsfile = fits.open(pears_spectra_dir + specname)
-            pears_ra.append(float(cat['pearsra'][redshift_indices][count]))
-            pears_dec.append(float(cat['pearsdec'][redshift_indices][count]))
+            pears_ra.append(float(cat['col2'][redshift_indices][count]))  # col2 is the pears ra
+            pears_dec.append(float(cat['col3'][redshift_indices][count]))  # col3 is the pears dec
 
             dn4000_temp, dn4000_err_temp = get_dn4000(lam_em, flam_em, ferr)
             d4000_temp, d4000_err_temp = get_d4000(lam_em, flam_em, ferr)
             pearsfield.append(fieldname)
             pears_id_write.append(current_pears_index)
             photz_write.append(redshift)
-            redshift_source.append(cat['source'][redshift_indices][count])
+            redshift_source.append('3DHST')  #cat['source'][redshift_indices][count])
 
             dn4000_arr.append(dn4000_temp)
             dn4000_err_arr.append(dn4000_err_temp)

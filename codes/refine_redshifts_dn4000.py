@@ -533,7 +533,7 @@ if __name__ == '__main__':
     except IndexError as e:
         makeplots = 'NoPlots'
         check_overall_contam = True
-    print "I got the following user arguments:", makeplots, "and", check_overall_contam, "for checking overall contamination."
+    print "I got the following user arguments:", makeplots, "for plots and", check_overall_contam, "for checking overall contamination."
 
     if makeplots == 'gallery':
         # grid for gallery plot
