@@ -848,7 +848,11 @@ if __name__ == '__main__':
                 lam_em, flam_em, ferr, specname, pa_forlsf = \
                 gd.fileprep(current_id, current_redshift, current_field, \
                     apply_smoothing=True, width=1.5, kernel_type='gauss', use_single_pa=use_single_pa)
- 
+                # skip if pa_forlsf is an empty list
+                if type(pa_forlsf) is list:
+                    if len(pa_forlsf) == 0:
+                        continue
+
             # smooth galaxy spectrum and check netsig
             fitsfile = fits.open(data_path + specname)
             if use_single_pa:
@@ -865,6 +869,7 @@ if __name__ == '__main__':
             netsig_smoothed = gd.get_net_sig(counts, counts_error)
             if netsig_smoothed < 30:
                 skipped_gal += 1
+                print "Skipping due to low NetSig:", netsig_smoothed
                 continue
             print "Netsig after smoothing:", netsig_smoothed
             fitsfile.close()
@@ -885,22 +890,26 @@ if __name__ == '__main__':
             resampling_lam_grid = np.insert(lam_em, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
-            include_csp=False
-            # Uncomment the following lines of code if you want to create libraries
-            # and comment them out when you want to run the code to refine redshifts after creating libraries
-            """
-            if include_csp:
-                if os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_ssp_cspsolar_withlsf_' + current_field + '_' + str(current_id) + '.fits'):
-                    continue
+            include_csp = False
+            create_lib = False
+            if create_lib:
+                # Uncomment the following lines of code if you want to create libraries
+                # and comment them out when you want to run the code to refine redshifts after creating libraries
+                if include_csp:
+                    if os.path.isfile(savefits_dir + 'all_comp_spectra_bc03_ssp_cspsolar_withlsf_' + current_field + '_' + str(current_id) + '.fits'):
+                        continue
+                    else:
+                        create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf, include_csp=include_csp)
+                        del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
+                        continue
                 else:
-                    create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf, include_csp=include_csp)
+                    if use_single_pa:
+                        create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_chosen, include_csp=include_csp)
+                    else:
+                        create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf, include_csp=include_csp)
                     del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
-                    continue
-            else:
-                create_bc03_lib_ssp_csp(current_id, current_redshift, current_field, resampling_lam_grid, pa_forlsf, include_csp=include_csp)
-                del resampling_lam_grid, avg_dlam, lam_low_to_insert, lam_high_to_append
+                    
                 continue
-            """
 
             # Open fits files with comparison spectra
             try:
@@ -971,7 +980,9 @@ if __name__ == '__main__':
             pears_d4000_err_refined_to_write.append(new_d4000_err)
             pears_old_chi2_to_write.append(old_chi2)
             pears_new_chi2_to_write.append(new_chi2)
+            """
 
+        """
         print "Skipped Galaxies :", skipped_gal
         print "Galaxies in sample :", counted_gal
 
@@ -1003,10 +1014,9 @@ if __name__ == '__main__':
              fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%.4f','%.4f', '%s', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
              header='Catalog for all galaxies that now have refined redshifts. See paper/code for sample selection. \n' +\
              'pearsid field ra dec old_z new_z new_z_err source dn4000 dn4000_err d4000 d4000_err old_chi2 new_chi2')
-
+        
         catcount += 1
 
     # total run time
     print "Total time taken --", time.time() - start, "seconds."
     sys.exit(0)
-
