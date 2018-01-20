@@ -20,7 +20,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 new_codes_dir = home + "/Desktop/FIGS/new_codes/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
-sys.path.append(massive_galaxies_dir)
+sys.path.append(massive_galaxies_dir + 'codes/')
 import grid_coadd as gd
 import matching as mt
 import mag_hist as mh
