@@ -8,6 +8,14 @@ import os
 import glob
 
 import matplotlib.pyplot as plt
+# modify rc Params
+import matplotlib as mpl
+mpl.rcParams["font.family"] = "serif"
+mpl.rcParams["font.sans-serif"] = ["Computer Modern Sans"]
+#mpl.rcParams["text.usetex"] = True
+mpl.rcParams["text.latex.preamble"] = [r'\usepackage{amsmath}']
+mpl.rcParams["xtick.direction"] = "in"
+mpl.rcParams["ytick.direction"] = "in"
 
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
@@ -213,9 +221,14 @@ def refine_redshift(pearsid, z_old, fname, use_index='narrow'):
 
     return z_new
 
-def plotspectrum(lam_em, flam_em, fig, ax, col='k'):
+def plotspectrum(lam_em, flam_em, ferr_em, pearsid, pearsfield, d4000_temp, d4000_err_temp, netsig):
 
-    ax.plot(lam_em, flam_em, ls='-', color=col)
+    # plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(lam_em, flam_em, ls='-', color='b')
+    ax.fill_between(lam_em, flam_em + ferr_em, flam_em - ferr_em, color='lightskyblue')
 
     ax.axvline(x=4000)
     
@@ -224,7 +237,26 @@ def plotspectrum(lam_em, flam_em, fig, ax, col='k'):
     ax.tick_params('both', width=1, length=4.7, which='major')
     ax.set_xlim(2500, 6000)
 
-    return fig, ax
+    # add text to plot
+    ax.text(0.6, 0.23, str(pearsid), \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=12)
+    ax.text(0.6, 0.18, str(pearsfield), \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=12)
+    ax.text(0.6, 0.13, r'$\mathrm{D(4000)\,=\,}$' + str("{:.3}".format(d4000_temp)) + r'$\pm$' + str("{:.3}".format(d4000_err_temp)), \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=12)
+    ax.text(0.6, 0.08, r'$\mathrm{NetSig\,=\,}$' + str("{:.3}".format(netsig)), \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=12)
+
+    plt.show()
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return None
 
 def plotdn4000(z_pot_arr, dn4000_pot_arr, fig, ax, z_old, z_new):
 
@@ -402,8 +434,6 @@ if __name__ == '__main__':
         for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
 
             redshift = photz[count]
-            #print "\n", "Currently working with PEARS object id: ", current_pears_index, "at redshift", redshift
-
             lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_pears_index, redshift, fieldname)
 
             if not lam_em.size:
@@ -452,6 +482,8 @@ if __name__ == '__main__':
             dn4000_err_arr.append(dn4000_err_temp)
             d4000_arr.append(d4000_temp)
             d4000_err_arr.append(d4000_err_temp)
+
+            plotspectrum(lam_em, flam_em, ferr, current_pears_index, fieldname, d4000_temp, d4000_err_temp, netsig_chosen)
 
             i += 1
 

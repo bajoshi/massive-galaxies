@@ -87,7 +87,7 @@ def combine_all_position_angles_pears(pears_index, field):
     combined_pa = []
 
     for count in range(spec_extens):
-         
+        
         flam = spec_hdu[count + 1].data['FLUX']
         ferr = spec_hdu[count + 1].data['FERROR']
         contam = spec_hdu[count + 1].data['CONTAM']
