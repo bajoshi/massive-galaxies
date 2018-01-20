@@ -248,17 +248,23 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
 
     new_chi2 = new_chi2[np.isfinite(new_chi2)]
-    old_chi2 = old_chi2[np.isfinite(old_chi2)] 
+    old_chi2 = old_chi2[np.isfinite(old_chi2)]
+
+    # also restrict the range you're showing 
+    valid_oldchi2_idx = np.where(old_chi2 <= 3)[0]
+    valid_newchi2_idx = np.where(new_chi2 <= 3)[0]
+    old_chi2 = old_chi2[valid_oldchi2_idx]
+    new_chi2 = new_chi2[valid_newchi2_idx]
 
     iqr = np.std(old_chi2, dtype=np.float64)
     binsize = 2*iqr*np.power(len(old_chi2),-1/3)
     totalbins = np.floor((max(old_chi2) - min(old_chi2))/binsize)
 
+    print "total bins", totalbins
     n_old_chi2, old_bins, patches_old = ax.hist(old_chi2, totalbins, facecolor='None', align='mid', linewidth=1, edgecolor='b', histtype='step')
-
     n_new_chi2, new_bins, patches_new = ax.hist(new_chi2, bins=old_bins, facecolor='None', align='mid', linewidth=1, edgecolor='r', histtype='step')
 
-    ax.set_xlim(0,3)
+    ax.set_xlim(-1,3)
 
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')

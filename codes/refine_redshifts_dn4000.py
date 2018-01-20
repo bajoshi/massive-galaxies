@@ -160,7 +160,8 @@ def create_bc03_lib_ssp_csp(pearsid, redshift, field, lam_grid, pa_forlsf, inclu
     return None
 
 def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, num_samp_to_draw, comp_spec,\
- nexten, spec_hdu, old_z, pearsid, pearsfield, makeplots, callcount):
+ nexten, spec_hdu, old_z, pearsid, pearsfield, makeplots, callcount, specz_sample_ids, specz_sample_field,\
+ specz_sample_z):
     """
     This function will refine a prior supplied redshift.
 
@@ -325,6 +326,16 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
         plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
             bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, pearsid, pearsfield, callcount)
 
+    elif makeplots == 'plot_specz_sample':
+        if pearsid in specz_sample_ids:
+            specz_idx = np.where(specz_sample_ids == pearsid)[0]
+            if specz_sample_field[specz_idx] == pearsfield:
+                current_specz = specz_sample_z[specz_idx]
+                savefolder = 'specz_comparison_sample_plots/'
+                plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+                bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, current_specz,\
+                pearsid, pearsfield, savefolder)
+
     return new_dn4000_ret, new_dn4000_err_ret, new_d4000_ret, new_d4000_err_ret,\
      old_z, new_z_minchi2, new_z_err, old_chi2[new_chi2_minindx], new_chi2[new_chi2_minindx]
 
@@ -368,7 +379,8 @@ def plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_old_z_labelbox)
 
-    new_z_labelbox = TextArea(r"$z_{\mathrm{grism}} = $" + str("{:.3}".format(new_z)) + r"$\pm$" + str("{:.3}".format(new_z_err)), textprops=dict(color='k', size=5))
+    new_z_labelbox = TextArea(r"$z_{\mathrm{grism}} = $" + str("{:.3}".format(new_z)) + r"$\pm$" + str("{:.3}".format(new_z_err)),\
+        textprops=dict(color='k', size=5))
     anc_new_z_labelbox = AnchoredOffsetbox(loc=2, child=new_z_labelbox, pad=0.0, frameon=False,\
                                          bbox_to_anchor=(0.05, 0.75),\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
@@ -410,11 +422,18 @@ def plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
     return None
 
 def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, new_z_err, pearsid, pearsfield, savefolder):
+    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, new_z_err, current_specz, pearsid, pearsfield, savefolder):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(orig_lam_grid, current_best_fit_model*bestalpha, '-', color='k')
+
+    # smooth the spectrum
+    gauss1d = Gaussian1DKernel(stddev=1)
+    
+    # Convolve data
+    flam = convolve(flam, gauss1d)
+
     ax.plot(orig_lam_grid, flam, '-', color='royalblue')
     #ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='lightskyblue')
     #ax.errorbar(orig_lam_grid, flam, yerr=ferr, fmt='-', color='blue')
@@ -452,11 +471,15 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_old_z_labelbox)
 
-    new_z_labelbox = TextArea(r"$z_{\mathrm{new}} = $" + str("{:.3}".format(new_z)) + r"$\pm$" + str("{:.3}".format(new_z_err)), textprops=dict(color='k', size=12))
+    new_z_labelbox = TextArea(r"$z_{\mathrm{new}} = $" + str("{:.3}".format(new_z)) + r"$\pm$" + str("{:.3}".format(new_z_err)),\
+        textprops=dict(color='k', size=12))
     anc_new_z_labelbox = AnchoredOffsetbox(loc=2, child=new_z_labelbox, pad=0.0, frameon=False,\
                                          bbox_to_anchor=(0.2, 0.8),\
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_new_z_labelbox)
+
+    ax.text(0.2, 0.75, r"$z_{\mathrm{spec}} = $" + str("{:.3}".format(float(current_specz))), verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=12)
 
     # turn on minor ticks and add grid
     ax.minorticks_on()
@@ -466,7 +489,7 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
 
     z_err_label = '_' + str("{:.3}".format(new_z_err)).replace('.', 'p')
 
-    fig.savefig(new_codes_dir + 'plots_from_refining_z_code/' + savefolder + 'refined_z_' + pearsfield + '_' + str(pearsid) + z_err_label + '.eps', dpi=150)
+    fig.savefig(massive_figures_dir + savefolder + 'refined_z_' + pearsfield + '_' + str(pearsid) + '.eps', dpi=150)
 
     plt.cla()
     plt.clf()
@@ -531,7 +554,7 @@ if __name__ == '__main__':
         else:
             makeplots = sys.argv[1]
     except IndexError as e:
-        makeplots = 'NoPlots'
+        makeplots = 'plot_specz_sample'
         check_overall_contam = True
     print "I got the following user arguments:", makeplots, "for plots and", check_overall_contam, "for checking overall contamination."
 
@@ -694,6 +717,11 @@ if __name__ == '__main__':
     # Find out why the netsig is so bad for 62511
     # and also what to do if there is no LSF. Don't just skip.
 
+    # read in ids of specz sample
+    specz_sample_field = np.load(massive_galaxies_dir + 'specz_sample_field.npy')
+    specz_sample_ids = np.load(massive_galaxies_dir + 'specz_sample_ids.npy')
+    specz_sample_z = np.load(massive_galaxies_dir + 'specz_sample_z.npy')
+
     skip_n  = []
     skip_n1 = []
     skip_n2 = []
@@ -799,6 +827,16 @@ if __name__ == '__main__':
                 idarg = np.where(pears_master_scat['id'] == current_id)[0]
                 imag = pears_master_scat['imag'][idarg]
                 netsig_corr = pears_master_scat['netsig_corr'][idarg]
+
+            if makeplots == 'plot_specz_sample':
+                if current_id in specz_sample_ids:
+                    specz_idx = np.where(specz_sample_ids == current_id)[0]
+                    if specz_sample_field[specz_idx] == current_field:
+                        print '\n', "Will plot", current_id, "in", current_field, "for spectroscopic comparison"
+                    else:
+                        continue
+                else:
+                    continue
 
             # Either remove this netsig check or have two of them.
             # i.e. one here and one check after smoothing hte spectrum
@@ -956,7 +994,8 @@ if __name__ == '__main__':
                 # run the actual fitting function
                 new_dn4000, new_dn4000_err, new_d4000, new_d4000_err, old_z, new_z, new_z_err, old_chi2, new_chi2 = \
                 fit_chi2_redshift(lam_em, resampling_lam_grid, resampled_spec, ferr,\
-                 num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field, makeplots, callcount)
+                num_samp_to_draw, comp_spec_bc03, bc03_extens, bc03_spec, current_redshift, current_id, current_field, makeplots, callcount,\
+                specz_sample_ids, specz_sample_field, specz_sample_z)
                 callcount += 1
             else:
                 continue

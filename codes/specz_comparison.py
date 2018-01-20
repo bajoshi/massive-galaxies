@@ -206,8 +206,11 @@ if __name__ == '__main__':
     z_phot_plot = []
     z_grism_std_plot = []
     imag_plot = []
-
     spec_z_source_list = []
+
+    specz_sample_ids = []
+    specz_sample_field = []
+    specz_sample_z = []
 
     skipped = 0
     weird = 0
@@ -284,6 +287,10 @@ if __name__ == '__main__':
             z_grism_std_plot.append(pears_cat['new_z_err'][pears_ind][i])
             imag_plot.append(imag)
 
+            specz_sample_field.append(current_field)
+            specz_sample_ids.append(current_id)
+            specz_sample_z.append(current_specz)
+
             # find which galaxies have large (z_spec - z_grism)/(1+z_spec)
             if abs((current_specz - current_grismz)/(1 + current_specz)) > 0.05:
                 weird += 1
@@ -318,6 +325,14 @@ if __name__ == '__main__':
     z_phot_plot = np.asarray(z_phot_plot)
     z_grism_std_plot = np.asarray(z_grism_std_plot)
     imag_plot = np.asarray(imag_plot)
+    specz_sample_ids = np.asarray(specz_sample_ids)
+    specz_sample_field = np.asarray(specz_sample_field)
+    specz_sample_z = np.asarray(specz_sample_z)
+
+    # save the comparison sample ids
+    np.save(massive_galaxies_dir + 'specz_sample_field.npy', specz_sample_field)
+    np.save(massive_galaxies_dir + 'specz_sample_ids.npy', specz_sample_ids)
+    np.save(massive_galaxies_dir + 'specz_sample_z.npy', specz_sample_z)
 
     print len(imag_plot), len(z_grism_plot)
 
@@ -330,10 +345,9 @@ if __name__ == '__main__':
     onepercent_acc_photo = np.where((abs(z_spec_plot - z_phot_plot) / (1 + z_spec_plot)) <= 0.01)[0]
     print len(threepercent_acc_photo), "galaxies in specz sample with photo-z accuracy better than 3%"
     print len(onepercent_acc_photo), "galaxies in specz sample with photo-z accuracy better than 1%"
+  
+    sys.exit(0)
 
-    #sys.exit(0)
-
-    """
     # z_grism vs z_phot vs z_spec
     gs = gridspec.GridSpec(15,32)
     gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=20.0, hspace=0.00)
@@ -460,14 +474,13 @@ if __name__ == '__main__':
     print "median abs(z_spec - z_grism)/ 1+z_spec", np.median(abs(z_spec_plot - z_grism_plot)/(1+z_spec_plot))
     print "median abs(z_spec - z_phot)/ 1+z_spec", np.median(abs(z_spec_plot - z_phot_plot)/(1+z_spec_plot))
     acc = abs(z_spec_plot - z_grism_plot)/(1+z_spec_plot)
-    print "Number of catastrophic failures", len(np.where(acc >= 0.05)[0])
+    print "Number of catastrophic failures i.e. comparison with specz gives error greater than 10%", len(np.where(acc >= 0.1)[0])
     print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0001:", len(np.where(acc <= 0.001)[0])
     print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0003:", len(np.where(acc <= 0.003)[0])
 
     plt.cla()
     plt.clf()
     plt.close()
-    """
 
     # ---------------------------- histogram of residuals overlaid ---------------------------- #
 
@@ -513,13 +526,12 @@ if __name__ == '__main__':
     plt.clf()
     plt.close()
 
-    # ---------------------------- plot of error vs magnitude ---------------------------- #
+    # -------- plot of fraction of galaxies with specified error limit vs magnitude -------- #
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
     ax.hist(imag_plot[threepercent_acc_grism], 10)
-
 
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111)
