@@ -490,6 +490,7 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
     z_err_label = '_' + str("{:.3}".format(new_z_err)).replace('.', 'p')
 
     fig.savefig(massive_figures_dir + savefolder + 'refined_z_' + pearsfield + '_' + str(pearsid) + '.eps', dpi=150)
+    plt.show()
 
     plt.cla()
     plt.clf()
@@ -554,7 +555,7 @@ if __name__ == '__main__':
         else:
             makeplots = sys.argv[1]
     except IndexError as e:
-        makeplots = 'plot_specz_sample'
+        makeplots = 'noplots'  #'plot_specz_sample'
         check_overall_contam = True
     print "I got the following user arguments:", makeplots, "for plots and", check_overall_contam, "for checking overall contamination."
 
@@ -721,6 +722,17 @@ if __name__ == '__main__':
     specz_sample_field = np.load(massive_galaxies_dir + 'specz_sample_field.npy')
     specz_sample_ids = np.load(massive_galaxies_dir + 'specz_sample_ids.npy')
     specz_sample_z = np.load(massive_galaxies_dir + 'specz_sample_z.npy')
+
+    # an even smaller confirmation sample
+    # from Ferreras et al 2009
+    # see their table one and figures 6 and 7
+    #specz_sample_ids = np.array([65620, 56798, 83499, 75762, 61447, 127697, 52017,\
+    #    61235, 69419, 40498, 47252, 42729, 17362, 57554, 119723, 53462, 107477, 104645])
+    #specz_sample_field = np.array(['GOODS-S', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-S',\
+    #    'GOODS-S', 'GOODS-N', 'GOODS-S', 'GOODS-S', 'GOODS-N', 'GOODS-N', 'GOODS-S',\
+    #    'GOODS-S', 'GOODS-N', 'GOODS-N', 'GOODS-S', 'GOODS-S', 'GOODS-N'])
+    #specz_sample_z = np.array([0.97, 0.48, 0.85, 0.79, 0.84, 0.49, 0.97, 1.06,\
+    #    0.75, 0.85, 0.96, 0.56, 0.51, 0.48, 0.80, 0.56, 0.42, 0.47])
 
     skip_n  = []
     skip_n1 = []
@@ -905,14 +917,22 @@ if __name__ == '__main__':
             counts_error /= 2
 
             netsig_smoothed = gd.get_net_sig(counts, counts_error)
-            if netsig_smoothed < 30:
-                skipped_gal += 1
-                print "Skipping due to low NetSig:", netsig_smoothed
-                continue
-            print "Netsig after smoothing:", netsig_smoothed
+            check_smoothed_netsig = False
+            if check_smoothed_netsig:
+                print "Netsig after smoothing:", netsig_smoothed
+                if netsig_smoothed < 30:
+                    skipped_gal += 1
+                    print "Skipping due to low NetSig (smoothed spectrum):", netsig_smoothed
+                    continue
+            else:
+                if netsig_corr < 100:
+                    skipped_gal += 1
+                    print "Skipping due to low NetSig:", netsig_corr
+                    continue
             fitsfile.close()
 
             # Contamination rejection
+            # actually this is overall error not just contamination
             if check_overall_contam is False:
                 if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
                     print 'Skipping', current_id, 'because of overall contamination.'

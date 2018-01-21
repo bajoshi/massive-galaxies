@@ -2,6 +2,7 @@ from __future__ import division
 
 import numpy as np
 from astropy.io import fits
+from astropy.convolution import convolve, Gaussian1DKernel
 
 import sys
 import os
@@ -227,6 +228,13 @@ def plotspectrum(lam_em, flam_em, ferr_em, pearsid, pearsfield, d4000_temp, d400
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
+    # smooth before plotting
+    gauss1d = Gaussian1DKernel(stddev=1.2)
+    
+    # Convolve data
+    flam_em = convolve(flam_em, gauss1d)
+    ferr_em = convolve(ferr_em, gauss1d)
+
     ax.plot(lam_em, flam_em, ls='-', color='b')
     ax.fill_between(lam_em, flam_em + ferr_em, flam_em - ferr_em, color='lightskyblue')
 
@@ -428,13 +436,21 @@ if __name__ == '__main__':
         pearsfield = []
         redshift_source = []
 
+        high_netsig_sample = 0
+
         # Loop over all spectra 
         pears_unique_ids, pears_unique_ids_indices = np.unique(pears_id, return_index=True)
         i = 0
         for current_pears_index, count in zip(pears_unique_ids, pears_unique_ids_indices):
 
+            # Next two lines useful for debugging only a single object. Do not remove. Just uncomment.
+            #if current_pears_index != 120306:
+            #    continue
+
             redshift = photz[count]
+            #print "At object", current_pears_index, "in", fieldname  # Line useful for debugging. Do not remove. Just uncomment.
             lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_pears_index, redshift, fieldname)
+            print "At object", current_pears_index, "in", fieldname, "with NetSig", netsig_chosen # Line useful for debugging. Do not remove. Just uncomment.
 
             if not lam_em.size:
                 # i.e. skip galaxy if fileprep returned an empty array
@@ -483,7 +499,12 @@ if __name__ == '__main__':
             d4000_arr.append(d4000_temp)
             d4000_err_arr.append(d4000_err_temp)
 
-            plotspectrum(lam_em, flam_em, ferr, current_pears_index, fieldname, d4000_temp, d4000_err_temp, netsig_chosen)
+            # Plotting. Skip the plot is NetSig is too low
+            if netsig_chosen < 100:
+                continue
+            else:
+                high_netsig_sample += 1
+                #plotspectrum(lam_em, flam_em, ferr, current_pears_index, fieldname, d4000_temp, d4000_err_temp, netsig_chosen)
 
             i += 1
 
@@ -518,6 +539,8 @@ if __name__ == '__main__':
         print len(np.isfinite(dn4000_arr)), len(np.isfinite(dn4000_err_arr)), len(np.isfinite(d4000_arr)), len(np.isfinite(d4000_err_arr))
 
         catcount += 1
+
+        print "Total", high_netsig_sample, "galaxies with high netsig in", fieldname
 
     """
     # Read in FIGS spc files
