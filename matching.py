@@ -300,8 +300,8 @@ def plot_diff(delRA, delDEC, inarcseconds=True, name='field'):
     else:
         ax.plot(delRA, delDEC, 'o', markersize=1, color='k', markeredgecolor='k')
     
-    ax.axhline(y=0, linestyle='--', color='k')
-    ax.axvline(x=0, linestyle='--', color='k')
+    ax.axhline(y=0, linestyle='-', color='r', zorder=5)
+    ax.axvline(x=0, linestyle='-', color='r', zorder=5)
     
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')

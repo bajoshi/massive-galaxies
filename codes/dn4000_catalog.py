@@ -229,7 +229,7 @@ def plotspectrum(lam_em, flam_em, ferr_em, pearsid, pearsfield, d4000_temp, d400
     ax = fig.add_subplot(111)
 
     # smooth before plotting
-    gauss1d = Gaussian1DKernel(stddev=1.2)
+    gauss1d = Gaussian1DKernel(stddev=0.9)
     
     # Convolve data
     flam_em = convolve(flam_em, gauss1d)
@@ -401,8 +401,14 @@ def get_figs_dn4000(field, threed_cat, field_match, field_spc):
 
 if __name__ == '__main__':
 
-    cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_match_3dhst_topcat.txt', dtype=None, names=True)
-    cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_match_3dhst_topcat.txt', dtype=None, names=True)
+    # Using topcat to match
+    topcat = False
+    if topcat:
+        cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_match_3dhst_topcat.txt', dtype=None, names=True)
+        cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_match_3dhst_topcat.txt', dtype=None, names=True)
+    else:
+        cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', dtype=None, names=True, skip_header=1)
+        cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', dtype=None, names=True, skip_header=1)
 
     allcats = [cat_n, cat_s]
 
@@ -416,10 +422,14 @@ if __name__ == '__main__':
             fieldname = 'GOODS-S'
             print 'Starting with', len(cat), 'matched objects in', fieldname
 
-        redshift_indices = np.where((cat['z_peak'] >= 0.6) & (cat['z_peak'] <= 1.235))[0]
-
-        pears_id = cat['col1'][redshift_indices]  # col1 is pears id in the topcat saved catalog
-        photz = cat['z_peak'][redshift_indices]
+        if topcat:
+            redshift_indices = np.where((cat['z_peak'] >= 0.6) & (cat['z_peak'] <= 1.235))[0]
+            pears_id = cat['col1'][redshift_indices]  # col1 is pears id in the topcat saved catalog
+            photz = cat['z_peak'][redshift_indices]
+        else:
+            redshift_indices = np.where((cat['zphot'] >= 0.6) & (cat['zphot'] <= 1.235))[0]
+            pears_id = cat['pearsid'][redshift_indices]
+            photz = cat['zphot'][redshift_indices]
 
         print len(np.unique(pears_id)), "unique objects within", fieldname, "in redshift range"
 
@@ -448,9 +458,9 @@ if __name__ == '__main__':
             #    continue
 
             redshift = photz[count]
-            #print "At object", current_pears_index, "in", fieldname  # Line useful for debugging. Do not remove. Just uncomment.
+            print "At object", current_pears_index, "in", fieldname  # Line useful for debugging. Do not remove. Just uncomment.
             lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_pears_index, redshift, fieldname)
-            print "At object", current_pears_index, "in", fieldname, "with NetSig", netsig_chosen # Line useful for debugging. Do not remove. Just uncomment.
+            #print "At object", current_pears_index, "in", fieldname, "with NetSig", netsig_chosen # Line useful for debugging. Do not remove. Just uncomment.
 
             if not lam_em.size:
                 # i.e. skip galaxy if fileprep returned an empty array
@@ -460,7 +470,8 @@ if __name__ == '__main__':
                 print "Skipping", current_pears_index, "in", fieldname, "due to empty wavelength array."
                 continue
 
-            if (lam_em[0] > 3800) or (lam_em[-1] < 4200):
+            if (lam_em[0] > 3780) or (lam_em[-1] < 4220):
+                # old limits (lam_em[0] > 3780) or (lam_em[-1] < 4220):
                 # based on d4000 instead of dn4000
                 # i've pushed the limits a little inward (> 50 A i.e. approx two spec measuremnt points), to be conservative, 
                 # so that if there isn't an flux measurement at the exact end point wavelengths
@@ -484,15 +495,20 @@ if __name__ == '__main__':
                 continue
 
             fitsfile = fits.open(pears_spectra_dir + specname)
-            pears_ra.append(float(cat['col2'][redshift_indices][count]))  # col2 is the pears ra
-            pears_dec.append(float(cat['col3'][redshift_indices][count]))  # col3 is the pears dec
+            if topcat:
+                pears_ra.append(float(cat['col2'][redshift_indices][count]))  # col2 is the pears ra
+                pears_dec.append(float(cat['col3'][redshift_indices][count]))  # col3 is the pears dec
+                redshift_source.append('3DHST')  # because the catalogs matched using topcat only matched to 3DHST. Didn't use Santini at all.
+            else:
+                pears_ra.append(float(cat['pearsra'][redshift_indices][count]))
+                pears_dec.append(float(cat['pearsdec'][redshift_indices][count]))
+                redshift_source.append(cat['source'][redshift_indices][count])
 
             dn4000_temp, dn4000_err_temp = get_dn4000(lam_em, flam_em, ferr)
             d4000_temp, d4000_err_temp = get_d4000(lam_em, flam_em, ferr)
             pearsfield.append(fieldname)
             pears_id_write.append(current_pears_index)
             photz_write.append(redshift)
-            redshift_source.append('3DHST')  #cat['source'][redshift_indices][count])
 
             dn4000_arr.append(dn4000_temp)
             dn4000_err_arr.append(dn4000_err_temp)

@@ -7,6 +7,15 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+# modify rc Params
+mpl.rcParams["font.family"] = "serif"
+mpl.rcParams["font.sans-serif"] = ["Computer Modern Sans"]
+#mpl.rcParams["text.usetex"] = True  
+mpl.rcParams["text.latex.preamble"] = r"\usepackage{amsmath}"
+mpl.rcParams["xtick.direction"] = "in"
+mpl.rcParams["ytick.direction"] = "in"
 
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -14,6 +23,33 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 sys.path.append(massive_galaxies_dir)
 import matching as mt
 from pears_and_3dhst import read_3dhst_cats
+
+def plot_hist(arr, totalbins):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    counts, bins, patches = ax.hist(arr, totalbins, edgecolor='b')
+
+    ax.axvline(x=0.0, ls='--', color='r')
+
+    ax.set_xticklabels(ax.get_xticks().tolist(), size=12)
+    ax.set_yticklabels(ax.get_yticks().tolist(), size=12)
+
+    idx = np.argmax(counts)
+    print "Array mode, median (arcseconds):", bins[idx] * 3600, np.median(arr) * 3600
+
+    ax.minorticks_on()
+    ax.tick_params('both', width=1, length=3, which='minor')
+    ax.tick_params('both', width=1, length=4.7, which='major')
+    ax.grid(True, alpha=0.25)
+
+    plt.show()
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return None
 
 if __name__ == '__main__':
     
@@ -58,30 +94,38 @@ if __name__ == '__main__':
     santini_s_z = santini['zphot']
 
     # Run the matching function
-    # PEARS North
+    # PEARS North with 3DHST
     deltaRA, deltaDEC, threed_n_ra_matches, threed_n_dec_matches, pears_n_ra_matches, pears_n_dec_matches, threed_n_ind, pears_n_ind, num_single_matches = \
     mt.match(threed_n_ra, threed_n_dec, pears_n_ra, pears_n_dec, lim=0.3*1/3600)
-
     print "There were", num_single_matches, "single matches found out of", len(pears_ncat), "objects in the PEARS NORTH catalog with 3DHST."
     mt.plot_diff(deltaRA, deltaDEC, name='pears_threed_goodsn')
 
-    # PEARS South
-    # with 3DHST
+    # PEARS South with 3DHST
     deltaRA, deltaDEC, threed_s_ra_matches, threed_s_dec_matches, pears_s_ra_matches_3d, pears_s_dec_matches_3d, threed_s_ind, pears_s_ind_3d, num_single_matches = \
     mt.match(threed_s_ra, threed_s_dec, pears_s_ra, pears_s_dec, lim=0.3*1/3600)
-
     print "There were", num_single_matches, "single matches found out of", len(pears_scat), "objects in the PEARS SOUTH catalog with 3DHST."
     mt.plot_diff(deltaRA, deltaDEC, name='pears_threed_goodss')
 
-    # with Santini
+    # Rematch
+    # small correction based on the diff plot and histograms that I saw
+    threed_s_ra += 0.015/3600
+    print "Rematching PEARS South and 3DHST after applying a small correction to RAs."
+
+    deltaRA, deltaDEC, threed_s_ra_matches, threed_s_dec_matches, pears_s_ra_matches_3d, pears_s_dec_matches_3d, threed_s_ind, pears_s_ind_3d, num_single_matches = \
+    mt.match(threed_s_ra, threed_s_dec, pears_s_ra, pears_s_dec, lim=0.3*1/3600)
+    print "There were", num_single_matches, "single matches found out of", len(pears_scat), "objects in the PEARS SOUTH catalog with 3DHST."
+    mt.plot_diff(deltaRA, deltaDEC, name='pears_threed_goodss')
+
+    # PEARS South with Santini
     deltaRA, deltaDEC, santini_s_ra_matches, santini_s_dec_matches, pears_s_ra_matches_san, pears_s_dec_matches_san, santini_s_ind, pears_s_ind_san, num_single_matches = \
     mt.match(santini_s_ra, santini_s_dec, pears_s_ra, pears_s_dec, lim=0.3*1/3600)
-
     print "There were", num_single_matches, "single matches found out of", len(pears_scat), "objects in the PEARS SOUTH catalog with Santini et al. 2015."
     mt.plot_diff(deltaRA, deltaDEC, name='pears_santini_goodss')
 
-    plt.show()
-    sys.exit(0)
+    # Lines useful for debugging. Do not remove. Just uncomment.
+    #plot_hist(deltaRA, 50)
+    #plot_hist(deltaDEC, 50)
+    #plt.show()
 
     # save the matched file
     # North

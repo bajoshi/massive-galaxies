@@ -20,6 +20,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 new_codes_dir = home + "/Desktop/FIGS/new_codes/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
+sys.path.append(massive_galaxies_dir)
 sys.path.append(massive_galaxies_dir + 'codes/')
 import grid_coadd as gd
 import matching as mt
@@ -28,7 +29,7 @@ import mag_hist as mh
 # modify rc Params
 mpl.rcParams["font.family"] = "serif"
 mpl.rcParams["font.sans-serif"] = ["Computer Modern Sans"]
-mpl.rcParams["text.usetex"] = True  
+#mpl.rcParams["text.usetex"] = True  
 # this above line will add like 15-20 seconds to your run time but some times its necessary
 # in here I need it to get teh \text to work
 mpl.rcParams["text.latex.preamble"] = [r'\usepackage{amsmath}']
@@ -129,7 +130,7 @@ def plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz,
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.plot(lam_em_specz, flam_em_specz, '--', color='b', lw=1)
+    ax.plot(lam_em_specz, flam_em_specz, '--', color='k', lw=1)
     ax.plot(lam_em_grismz, flam_em_grismz, '--', color='r', lw=1)
 
     plt.show()
@@ -255,21 +256,22 @@ if __name__ == '__main__':
 
             #if abs(spec_cat['z_spec'][spec_ind][i] - pears_cat['new_z'][pears_ind][i]) >= 0.03:
 
+            if (current_grismz > 1.235) or (current_grismz < 0.6):
+                continue
             # skip if grism z is not within range
             # this condition probalby shouldn't be here
             # i hsould be checking if the spec_z is in range
             # if spec_z is in range then I need to find why 
             # the grism z finding fails.
-            if (current_grismz > 1.235) or (current_grismz < 0.6):
-                continue
     
             # other spec z quality cuts
-            if (current_specz_qual == "C") or (current_specz_qual == "D") or (current_specz_qual == "Z"):
+            if (current_specz_qual != 'A'):
+                #if (current_specz_qual == "C") or (current_specz_qual == "D") or (current_specz_qual == "Z"):
                 skipped += 1
                 continue
 
             try:
-                if (int(current_specz_qual) <= 2):
+                if (int(current_specz_qual) < 3):
                     skipped += 1
                     continue
             except ValueError as e:
@@ -298,7 +300,10 @@ if __name__ == '__main__':
                 lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
                 lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
                 #lam_em_photz, flam_em_photz, ferr_photz, specname_photz, pa_forlsf_photz, netsig_chosen_photz = gd.fileprep(current_id, current_photz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                #plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz, flam_em_grismz, current_grismz)
+                current_d4000 = pears_cat['d4000'][pears_ind][i]
+                current_err_frac = np.sum(abs(ferr_specz)) / np.sum(abs(flam_em_specz))
+                print "D(4000), Netsig, and Overall error fraction is", current_d4000, netsig_chosen_specz, current_err_frac, '\n'
+                plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz, flam_em_grismz, current_grismz)
 
             #else:
             #    if current_specz_source == "3D_HST":
@@ -345,8 +350,6 @@ if __name__ == '__main__':
     onepercent_acc_photo = np.where((abs(z_spec_plot - z_phot_plot) / (1 + z_spec_plot)) <= 0.01)[0]
     print len(threepercent_acc_photo), "galaxies in specz sample with photo-z accuracy better than 3%"
     print len(onepercent_acc_photo), "galaxies in specz sample with photo-z accuracy better than 1%"
-  
-    sys.exit(0)
 
     # z_grism vs z_phot vs z_spec
     gs = gridspec.GridSpec(15,32)
@@ -475,8 +478,8 @@ if __name__ == '__main__':
     print "median abs(z_spec - z_phot)/ 1+z_spec", np.median(abs(z_spec_plot - z_phot_plot)/(1+z_spec_plot))
     acc = abs(z_spec_plot - z_grism_plot)/(1+z_spec_plot)
     print "Number of catastrophic failures i.e. comparison with specz gives error greater than 10%", len(np.where(acc >= 0.1)[0])
-    print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0001:", len(np.where(acc <= 0.001)[0])
-    print "Number of galaxies with (zspec - zgrism)/(1_zspec) less than or equal to 0.0003:", len(np.where(acc <= 0.003)[0])
+    print "Number of galaxies with abs(zspec - zgrism)/(1 + zspec) less than or equal to 0.0001:", len(np.where(acc <= 0.001)[0])
+    print "Number of galaxies with abs(zspec - zgrism)/(1 + zspec) less than or equal to 0.0003:", len(np.where(acc <= 0.003)[0])
 
     plt.cla()
     plt.clf()
@@ -500,14 +503,14 @@ if __name__ == '__main__':
     # otherwise you wont see that the photo-z histogram under the grism-z histogram
     # is actually fatter around 0 whereas the grism-z histogram is thinner.
 
-    ax.text(0.72, 0.97, r'$\mathrm{Grism{\text{-}}z}$' + '\n' + r'$\mathrm{residuals}$',\
+    ax.text(0.72, 0.97, r'$\mathrm{Grism{-}z}$' + '\n' + r'$\mathrm{residuals}$',\
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color=myblue, size=10)
     ax.text(0.835, 0.96, r'$\mathrm{\equiv \frac{z_s - z_g}{1 + z_s}}$',\
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color=myblue, size=14)
 
-    ax.text(0.72, 0.87, r'$\mathrm{Photo{\text{-}}z}$' + '\n' + r'$\mathrm{residuals}$',\
+    ax.text(0.72, 0.87, r'$\mathrm{Photo{-}z}$' + '\n' + r'$\mathrm{residuals}$',\
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color=myred, size=10)
     ax.text(0.835, 0.86, r'$\mathrm{\equiv \frac{z_s - z_p}{1 + z_s}}$',\

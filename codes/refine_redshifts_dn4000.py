@@ -203,12 +203,24 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
     new_lam_grid_plot = []
     bestalpha_plot = []
 
+    # try smoothing the spectrum just a bit to see if that helps the fit
+    gauss1d = Gaussian1DKernel(stddev=0.9)
+    #ferr = convolve(ferr, gauss1d)
+    # the ferr convolution has to be done outside the loop because 
+    # ferr is only defined once. Actually it is supplied as an arg 
+    # to this function. 
+
     for i in range(int(num_samp_to_draw)):  # loop over bootstrap runs
         # first find best fit assuming old redshift is ok
         if num_samp_to_draw == 1:
             flam = resampled_spec
         elif num_samp_to_draw > 1:
             flam = resampled_spec[i]
+        
+        # Convolve data
+        #flam = convolve(flam, gauss1d)
+        # flam has to be convolved every iteration because flam is redefined each time
+
         orig_lam_grid_model_indx_low = np.where(orig_lam_grid_model == orig_lam_grid[0])[0][0]
         orig_lam_grid_model_indx_high = np.where(orig_lam_grid_model == orig_lam_grid[-1])[0][0]
         currentspec = comp_spec[:,orig_lam_grid_model_indx_low:orig_lam_grid_model_indx_high+1]
@@ -336,6 +348,12 @@ def fit_chi2_redshift(orig_lam_grid, orig_lam_grid_model, resampled_spec, ferr, 
                 bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err, current_specz,\
                 pearsid, pearsfield, savefolder)
 
+    elif makeplots == 'high_netsig_sample':
+        savefolder = 'high_netsig_sample_plots/'
+        plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
+        bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z_minchi2, new_z_err,\
+        pearsid, pearsfield, savefolder)
+
     return new_dn4000_ret, new_dn4000_err_ret, new_d4000_ret, new_d4000_err_ret,\
      old_z, new_z_minchi2, new_z_err, old_chi2[new_chi2_minindx], new_chi2[new_chi2_minindx]
 
@@ -422,17 +440,16 @@ def plot_gallery(orig_lam_grid, flam, ferr, current_best_fit_model,\
     return None
 
 def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit_model,\
-    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, new_z_err, current_specz, pearsid, pearsfield, savefolder):
+    bestalpha, new_lam_grid, orig_lam_grid_model, old_z, new_z, new_z_err, *args):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(orig_lam_grid, current_best_fit_model*bestalpha, '-', color='k')
 
     # smooth the spectrum
-    gauss1d = Gaussian1DKernel(stddev=1)
-    
+    gauss1d = Gaussian1DKernel(stddev=0.9)
     # Convolve data
-    flam = convolve(flam, gauss1d)
+    #flam = convolve(flam, gauss1d)
 
     ax.plot(orig_lam_grid, flam, '-', color='royalblue')
     #ax.fill_between(orig_lam_grid, flam + ferr, flam - ferr, color='lightskyblue')
@@ -458,13 +475,7 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
     x_fill = np.arange(4050,4251,1)
     ax.fill_between(x_fill, y0_fill, y1_fill, color='lightsteelblue')
 
-    # put in labels for old and new redshifts
-    id_labelbox = TextArea(pearsfield + "  " + str(pearsid), textprops=dict(color='k', size=12))
-    anc_id_labelbox = AnchoredOffsetbox(loc=2, child=id_labelbox, pad=0.0, frameon=False,\
-                                         bbox_to_anchor=(0.2, 0.9),\
-                                         bbox_transform=ax.transAxes, borderpad=0.0)
-    ax.add_artist(anc_id_labelbox)
-
+    # put in labels
     old_z_labelbox = TextArea(r"$z_{\mathrm{old}} = $" + str(old_z), textprops=dict(color='k', size=12))
     anc_old_z_labelbox = AnchoredOffsetbox(loc=2, child=old_z_labelbox, pad=0.0, frameon=False,\
                                          bbox_to_anchor=(0.2, 0.85),\
@@ -478,19 +489,37 @@ def plot_comparison_old_new_redshift(orig_lam_grid, flam, ferr, current_best_fit
                                          bbox_transform=ax.transAxes, borderpad=0.0)
     ax.add_artist(anc_new_z_labelbox)
 
-    ax.text(0.2, 0.75, r"$z_{\mathrm{spec}} = $" + str("{:.3}".format(float(current_specz))), verticalalignment='top', horizontalalignment='left', \
-        transform=ax.transAxes, color='k', size=12)
+    if len(args) == 4:
+        current_specz = args[0]
+        pearsid = args[1]
+        pearsfield = args[2]
+        savefolder = args[3]
+
+        ax.text(0.2, 0.75, r"$z_{\mathrm{spec}} = $" + str("{:.3}".format(float(current_specz))), \
+            verticalalignment='top', horizontalalignment='left', \
+            transform=ax.transAxes, color='k', size=12)
+
+    elif len(args) == 3:
+        pearsid = args[0]
+        pearsfield = args[1]
+        savefolder = args[2]
+
+    id_labelbox = TextArea(pearsfield + "  " + str(pearsid), textprops=dict(color='k', size=12))
+    anc_id_labelbox = AnchoredOffsetbox(loc=2, child=id_labelbox, pad=0.0, frameon=False,\
+                                         bbox_to_anchor=(0.2, 0.9),\
+                                         bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anc_id_labelbox)
 
     # turn on minor ticks and add grid
     ax.minorticks_on()
     ax.tick_params('both', width=1, length=3, which='minor')
     ax.tick_params('both', width=1, length=4.7, which='major')
-    ax.grid(True)
+    ax.grid(True, alpha=0.4)
 
     z_err_label = '_' + str("{:.3}".format(new_z_err)).replace('.', 'p')
 
     fig.savefig(massive_figures_dir + savefolder + 'refined_z_' + pearsfield + '_' + str(pearsid) + '.eps', dpi=150)
-    plt.show()
+    #plt.show()
 
     plt.cla()
     plt.clf()
@@ -544,10 +573,7 @@ if __name__ == '__main__':
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
-    # get user argument for how to run code
-    # options are:
-    # 'plotbyerror' : to do the regular chi2 fitting for each spectrum 
-    # 'gallery' : to create a gallery of the best 25 spectra (only runs code on these 25 galaxies)
+    # get user arguments for how to run code
     try:
         if len(sys.argv) > 1:
             makeplots = sys.argv[1]
@@ -555,7 +581,13 @@ if __name__ == '__main__':
         else:
             makeplots = sys.argv[1]
     except IndexError as e:
-        makeplots = 'noplots'  #'plot_specz_sample'
+        makeplots = 'noplots'
+        # options for makeplots
+        #'noplots'
+        #'high_netsig_sample'
+        #'plot_specz_sample'
+        #'plot_by_error'
+        #'gallery'
         check_overall_contam = True
     print "I got the following user arguments:", makeplots, "for plots and", check_overall_contam, "for checking overall contamination."
 
@@ -748,9 +780,9 @@ if __name__ == '__main__':
     kernel = Gaussian1DKernel(2.0)
 
     #### PEARS ####
-    allcats = [pears_cat_n, pears_cat_s]  # this needs to be an iterable
+    allcats = [pears_cat_s] #[pears_cat_n, pears_cat_s]  # this needs to be an iterable
 
-    catcount = 0
+    catcount = 1
     callcount = 0
     for pears_cat in allcats:
 
@@ -822,6 +854,10 @@ if __name__ == '__main__':
             current_redshift = all_pears_redshifts[i]
             current_field = all_pears_fields[i]
             current_redshift_source = all_pears_redshift_sources[i]
+
+            # Next two lines useful for debugging only a single object. Do not remove. Just uncomment.
+            #if current_id != 9378:
+            #    continue
 
             if makeplots == 'gallery':
                 if (current_field == 'GOODS-N') and (current_id not in plot_n):
@@ -917,7 +953,7 @@ if __name__ == '__main__':
             counts_error /= 2
 
             netsig_smoothed = gd.get_net_sig(counts, counts_error)
-            check_smoothed_netsig = False
+            check_smoothed_netsig = True
             if check_smoothed_netsig:
                 print "Netsig after smoothing:", netsig_smoothed
                 if netsig_smoothed < 30:
@@ -925,7 +961,7 @@ if __name__ == '__main__':
                     print "Skipping due to low NetSig (smoothed spectrum):", netsig_smoothed
                     continue
             else:
-                if netsig_corr < 100:
+                if netsig_corr < 30:
                     skipped_gal += 1
                     print "Skipping due to low NetSig:", netsig_corr
                     continue
@@ -933,9 +969,9 @@ if __name__ == '__main__':
 
             # Contamination rejection
             # actually this is overall error not just contamination
-            if check_overall_contam is False:
+            if check_overall_contam is True:
                 if np.sum(abs(ferr)) > 0.2 * np.sum(abs(flam_em)):
-                    print 'Skipping', current_id, 'because of overall contamination.'
+                    print 'Skipping', current_id, 'because of overall error.'
                     skipped_gal += 1
                     continue
 
