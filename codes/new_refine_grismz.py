@@ -3,6 +3,7 @@ from __future__ import division
 import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve_fft, convolve, Gaussian1DKernel
+from astropy.cosmology import Planck15 as cosmo
 
 import os
 import sys
@@ -107,7 +108,7 @@ def convolve_models_with_lsf(pearsid, field, lam_grid, lsf):
         convolvedspec = np.zeros([total_ages, len(modellam)], dtype=np.float64)
         for i in range(total_ages):
             currentspec = h[age_ind[i]+3].data
-            convolvedspec[i] = convolve_fft(currentspec, lsf)
+            convolvedspec[i] = convolve_fft(currentspec, lsf, boundary='extend')
             #plot_interp_and_nointerp_lsf_comparison(modellam, currentspec, lsf, interplsf)
             # if you want to use the above line to compare then you will 
             # have to pass the interplsf as an additional argument.
@@ -141,12 +142,17 @@ def convolve_models_with_lsf(pearsid, field, lam_grid, lsf):
 
     return None
 
-def get_best_fit_model(flam, ferr, object_lam_grid, model_lam_grid, model_comp_spec):
+def get_best_fit_model(flam, ferr, object_lam_grid, model_lam_grid, model_comp_spec, current_z, model_spec_hdu):
 
     # chop the model to be consistent with the objects lam grid
-    model_lam_grid_indx_low = np.where(model_lam_grid == object_lam_grid[0])[0][0]
-    model_lam_grid_indx_high = np.where(model_lam_grid == object_lam_grid[-1])[0][0]
+    model_lam_grid_indx_low = np.argmin(abs(model_lam_grid - object_lam_grid[0]))
+    model_lam_grid_indx_high = np.argmin(abs(model_lam_grid - object_lam_grid[-1]))
     model_spec_in_objlamgrid = model_comp_spec[:, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+
+    # make sure that the arrays are the same length
+    if int(model_spec_in_objlamgrid.shape[1]) != len(object_lam_grid):
+        print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
+        sys.exit(0)
 
     # create chi2 array
     # i.e. there is one chi2 value for each model 
@@ -161,21 +167,21 @@ def get_best_fit_model(flam, ferr, object_lam_grid, model_lam_grid, model_comp_s
     # This is to get only physical ages
     sortargs = np.argsort(chi2)
     for k in range(len(chi2)):
-        best_age = float(bc03_spec[sortargs[k] + 2].header['LOG_AGE'])
-        age_at_z = cosmo.age(old_z).value * 1e9 # in yr
+        best_age = float(model_spec_hdu[sortargs[k] + 2].header['LOG_AGE'])
+        age_at_z = cosmo.age(current_z).value * 1e9 # in yr
         if (best_age < np.log10(age_at_z)) & (best_age > 9 + np.log10(0.1)):
-            fitages.append(best_age)
-            fitmetals.append(bc03_spec[sortargs[k] + 2].header['METAL'])
-            best_exten.append(sortargs[k] + 2)
-            bestalpha_plot.append(alpha[sortargs[k]])
-            old_chi2.append(chi2[sortargs[k]])
+            #fitages.append(best_age)
+            #fitmetals.append(model_spec_hdu[sortargs[k] + 2].header['METAL'])
+            #best_exten.append(sortargs[k] + 2)
+            #bestalpha_plot.append(alpha[sortargs[k]])
+            #old_chi2.append(chi2[sortargs[k]])
             current_best_fit_model = model_spec_in_objlamgrid[sortargs[k]]
             current_best_fit_model_whole = model_comp_spec[sortargs[k]]
             break
 
-    return current_best_fit_model, current_best_fit_model_whole
+    return current_best_fit_model, current_best_fit_model_whole, alpha[sortargs[k]]
 
-def shift_in_wav_get_new_z(flam, ferr, model_lam_grid, spec_elem_model_fit, best_fit_model_whole):
+def shift_in_wav_get_new_z(flam, ferr, lam_em, model_lam_grid, previous_z, spec_elem_model_fit, best_fit_model_whole):
 
     # now shift in wavelength space to get best fit on wavelength grid and correspongind redshift
     low_lim_for_comp = 1500
@@ -186,12 +192,19 @@ def shift_in_wav_get_new_z(flam, ferr, model_lam_grid, spec_elem_model_fit, best
     # these starting low and high indices are set up in a way that the dimensions of
     # best_fit_model_in_objlamgrid and flam and ferr are the same to be able to 
     # compute alpha and chi2 below.
+    # the -1 
 
     chi2_redshift_arr = []
     count = 0 
     while 1:
         current_low_indx = start_low_indx + count
         current_high_indx = start_high_indx + count
+
+        if current_high_indx == len(model_lam_grid):
+            break
+
+        if model_lam_grid[current_high_indx] >= high_lim_for_comp:
+            break
 
         # do the fitting again for each shifted lam grid
         best_fit_model_in_objlamgrid = best_fit_model_whole[current_low_indx:current_high_indx+1]
@@ -202,15 +215,16 @@ def shift_in_wav_get_new_z(flam, ferr, model_lam_grid, spec_elem_model_fit, best
         chi2_redshift_arr.append(chi2)
 
         count += 1
-        if model_lam_grid[current_high_indx] >= high_lim_for_comp:
-            break
 
-    new_chi2_minindx = np.argmin(new_chi2)
-    new_z_minchi2 = new_z[new_chi2_minindx]
+    chi2_redshift_arr = np.asarray(chi2_redshift_arr)
+    new_chi2_minindx = np.argmin(chi2_redshift_arr)
+
+    new_lam_grid = model_lam_grid[start_low_indx+new_chi2_minindx : start_high_indx+new_chi2_minindx+1]
+    new_z_minchi2 = ((lam_em[0] * (1 + previous_z)) / new_lam_grid[0]) - 1
 
     return new_z_minchi2
 
-def do_fitting(flam, ferr, object_lam_grid, starting_z, model_lam_grid, model_comp_spec):
+def do_fitting(flam, ferr, object_lam_grid, starting_z, model_lam_grid, model_comp_spec, model_spec_hdu):
     """
     flam, ferr, object_lam_grid are in observed wavelength space. Need to deredshift
     before fitting.
@@ -234,6 +248,8 @@ def do_fitting(flam, ferr, object_lam_grid, starting_z, model_lam_grid, model_co
         if num_samp_to_draw > 1:
             flam = resampled_spec[i]
 
+        print "Starting at redshift", starting_z
+
         previous_z = starting_z
         while 1: 
             # de-redshift
@@ -242,16 +258,46 @@ def do_fitting(flam, ferr, object_lam_grid, starting_z, model_lam_grid, model_co
             object_lam_grid_rest = object_lam_grid / (1 + previous_z)
 
             # now get teh best fit model spectrum
-            best_fit_model_in_objlamgrid, best_fit_model_whole = \
-            get_best_fit_model(flam_em, ferr_em, object_lam_grid_rest, model_lam_grid, model_comp_spec)
+            best_fit_model_in_objlamgrid, best_fit_model_whole, bestalpha = \
+            get_best_fit_model(flam_em, ferr_em, object_lam_grid_rest, model_lam_grid, model_comp_spec, previous_z, model_spec_hdu)
 
             # now shift in wavelength range and get new_z
-            new_z = shift_in_wav_get_new_z(flam_em, ferr_em, model_lam_grid, len(best_fit_model_in_objlamgrid), best_fit_model_whole)
+            new_z = \
+            shift_in_wav_get_new_z(flam_em, ferr_em, object_lam_grid_rest, model_lam_grid, previous_z, \
+                len(best_fit_model_in_objlamgrid), best_fit_model_whole)
+            print "Current Old and New redshifts", previous_z, new_z
 
             if abs(new_z - previous_z) < 0.01 * new_z:
                 break
 
             previous_z = new_z
+
+    plot_fit_and_residual(object_lam_grid_rest, flam_em, ferr_em, best_fit_model_in_objlamgrid, bestalpha)
+
+    print "New refined redshift", new_z
+
+    return None
+
+def plot_fit_and_residual(object_lam_grid_rest, flam_em, ferr_em, best_fit_model_in_objlamgrid, bestalpha):
+
+    #gauss_kernel = Gaussian1DKernel(1.6)
+    #best_fit_model_in_objlamgrid = convolve(best_fit_model_in_objlamgrid, gauss_kernel, boundary='extend')
+
+    fig = plt.figure()
+    gs = gridspec.GridSpec(10,10)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
+
+    ax1 = fig.add_subplot(gs[:8,:])
+    ax2 = fig.add_subplot(gs[8:,:])
+
+    ax1.plot(object_lam_grid_rest, flam_em, ls='-', color='k')
+    ax1.plot(object_lam_grid_rest, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
+    ax1.fill_between(object_lam_grid_rest, flam_em + ferr_em, flam_em - ferr_em, color='lightgray')
+
+    resid_fit = (flam_em - bestalpha*best_fit_model_in_objlamgrid) / ferr_em
+    ax2.plot(object_lam_grid_rest, resid_fit, ls='-', color='k')
+
+    plt.show()
 
     return None
 
@@ -262,6 +308,7 @@ if __name__ == '__main__':
 
     # Open spectra
     spec_hdu_old = fits.open(pears_datadir + 'h_pears_s_id65620.fits')
+    #spec_hdu_old = fits.open(pears_datadir + 'h_pears_s_id61447.fits')
     spec_hdu_young = fits.open(pears_datadir + 'h_pears_n_id40498.fits')
 
     # assign arrays
@@ -303,7 +350,9 @@ if __name__ == '__main__':
     # get original photo-z first
     current_id = 65620
     current_field = 'GOODS-S'
-    redshift = 0.972  # candels 0.972 # 3dhst 0.9673
+    redshift = 0.9673
+    # for 65620 GOODS-S
+    # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673
     lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
     d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
@@ -311,10 +360,7 @@ if __name__ == '__main__':
         print current_field, current_id, pa_chosen, netsig_chosen  # GOODS-S 65620 PA200 657.496906164
         print d4000  # 1.69
 
-    # ---------- Models --------- # 
-    # read in bc03 models
-    #bc03_spec_old = fits.open(savefits_dir + 'all_comp_spectra_bc03_ssp_withlsf_' + current_field + '_' + str(current_id) + '.fits')
-    
+    # ---------- Models --------- #     
     # get lsf and convolve the models with the lsf
     if current_field == 'GOODS-N':
         lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_avg_lsf.txt"
@@ -340,11 +386,15 @@ if __name__ == '__main__':
     #convolve_models_with_lsf(current_id, current_field, resampling_lam_grid, lsf)
 
     # read in models convolved with LSF
-    bc03_spec_new = fits.open(massive_galaxies_dir + 'all_comp_spectra_bc03_ssp_withlsf_' + current_field + '_' + str(current_id) + '.fits')
+    bc03_spec_new = fits.open(savefits_dir + \
+        'all_comp_spectra_bc03_ssp_cspsolar_withlsf_' + current_field + '_' + str(current_id) + '.fits')
 
     # ---------- Fitting --------- #
     # first arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     bc03_extens = fcj.get_total_extensions(bc03_spec_new)  # this function gives the total number of extensions minus the zeroth extension
+    if verbose:
+        print "Total extensions in model comparison fits file", bc03_extens
+    print "Total extensions in model comparison fits file", bc03_extens
 
     model_comp_spec = np.zeros([bc03_extens, len(resampling_lam_grid)], dtype=np.float64)
     for j in range(bc03_extens-1):  # the -1 takes into account that the #1 extension is the model wavelength grid
@@ -361,6 +411,6 @@ if __name__ == '__main__':
     # I need them to be in the observed frame because the iterative process for 
     # finding a new redshift will de-redshift them each time a new redshift is
     # found. 
-    do_fitting(flam_obs, ferr_obs, lam_obs, redshift, resampling_lam_grid, model_comp_spec)
+    do_fitting(flam_obs, ferr_obs, lam_obs, redshift, resampling_lam_grid, model_comp_spec, bc03_spec_new)
 
     sys.exit(0)
