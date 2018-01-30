@@ -54,8 +54,10 @@ def get_dn4000(lam, spec, spec_err):
     flux_nu_err_sqr = spec_nu_err**2
 
     if ((len(flux_nu_err_sqr[arg4000:arg4100+1])-1) >= 1) and ((len(flux_nu_err_sqr[arg3850:arg3950+1])-1) >= 1):
-        sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4000:arg4100+1])-1))) * (4*sum(flux_nu_err_sqr[arg4000+1:arg4100+1]) + flux_nu_err_sqr[arg4000] + flux_nu_err_sqr[arg4100]))
-        sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3850:arg3950+1])-1))) * (4*sum(flux_nu_err_sqr[arg3850+1:arg3950+1]) + flux_nu_err_sqr[arg3850] + flux_nu_err_sqr[arg3950]))
+        sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4000:arg4100+1])-1))) * \
+            (4*sum(flux_nu_err_sqr[arg4000+1:arg4100+1]) + flux_nu_err_sqr[arg4000] + flux_nu_err_sqr[arg4100]))
+        sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3850:arg3950+1])-1))) * \
+            (4*sum(flux_nu_err_sqr[arg3850+1:arg3950+1]) + flux_nu_err_sqr[arg3850] + flux_nu_err_sqr[arg3950]))
     elif ((len(flux_nu_err_sqr[arg4000:arg4100+1])-1) == 0) and ((len(flux_nu_err_sqr[arg3850:arg3950+1])-1) == 0):
         sum_up_err = np.sqrt(flux_nu_err_sqr[arg4000:arg4100+1])
         sum_low_err = np.sqrt(flux_nu_err_sqr[arg3850:arg3950+1])
@@ -88,8 +90,10 @@ def get_d4000(lam, spec, spec_err):
     flux_nu_err_sqr = spec_nu_err**2
 
     if ((len(flux_nu_err_sqr[arg4050:arg4250+1])-1) >= 1) and ((len(flux_nu_err_sqr[arg3750:arg3950+1])-1) >= 1):
-        sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4050:arg4250+1])-1))) * (4*sum(flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
-        sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3750:arg3950+1])-1))) * (4*sum(flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
+        sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4050:arg4250+1])-1))) * \
+            (4*sum(flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
+        sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3750:arg3950+1])-1))) * \
+            (4*sum(flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
     elif ((len(flux_nu_err_sqr[arg4050:arg4250+1])-1) == 0) and ((len(flux_nu_err_sqr[arg3750:arg3950+1])-1) == 0):
         sum_up_err = np.sqrt(flux_nu_err_sqr[arg4050:arg4250+1])
         sum_low_err = np.sqrt(flux_nu_err_sqr[arg3750:arg3950+1])
@@ -252,7 +256,7 @@ def plotspectrum(lam_em, flam_em, ferr_em, pearsid, pearsfield, d4000_temp, d400
     ax.text(0.6, 0.18, str(pearsfield), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=12)
-    ax.text(0.6, 0.13, r'$\mathrm{D(4000)\,=\,}$' + str("{:.3}".format(d4000_temp)) + r'$\pm$' + str("{:.3}".format(d4000_err_temp)), \
+    ax.text(0.6, 0.13, r'$\mathrm{D(4000)\,=\,}$' + str("{:.3}".format(d4000_temp)) + r'$\pm$' + str("{:.3}".format(d4000_err_temp)),\
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=12)
     ax.text(0.6, 0.08, r'$\mathrm{NetSig\,=\,}$' + str("{:.3}".format(netsig)), \
@@ -392,10 +396,12 @@ def get_figs_dn4000(field, threed_cat, field_match, field_spc):
     figs_id_arr = np.asarray(figs_id_arr)
 
     data = np.array(zip(figs_id_arr, redshift_arr, figs_ra_arr, figs_dec_arr, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
-                dtype=[('figs_id', int), ('photz', float), ('figs_ra', float), ('figs_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
-    np.savetxt(stacking_analysis_dir + 'figs_' + field + '_4000break_catalog.txt', data, fmt=['%d', '%.3f', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
-               header='Catalog for all galaxies that matched between 3DHST and FIGS within 1.2<z<1.8 for ' + field + '. \n' +
-               'figs_id redshift ra dec dn4000 dn4000_err d4000 d4000_err')
+                dtype=[('figs_id', int), ('photz', float), ('figs_ra', float), ('figs_dec', float), \
+                ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
+    np.savetxt(stacking_analysis_dir + 'figs_' + field + '_4000break_catalog.txt', data, \
+        fmt=['%d', '%.3f', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
+        header='Catalog for all galaxies that matched between 3DHST and FIGS within 1.2<z<1.8 for ' + field + '. \n' +\
+        'figs_id redshift ra dec dn4000 dn4000_err d4000 d4000_err')
 
     return None
 
@@ -460,7 +466,8 @@ if __name__ == '__main__':
             redshift = photz[count]
             print "At object", current_pears_index, "in", fieldname  # Line useful for debugging. Do not remove. Just uncomment.
             lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_pears_index, redshift, fieldname)
-            #print "At object", current_pears_index, "in", fieldname, "with NetSig", netsig_chosen # Line useful for debugging. Do not remove. Just uncomment.
+            #print "At object", current_pears_index, "in", fieldname, "with NetSig", netsig_chosen  
+            # Above Line useful for debugging. Do not remove. Just uncomment.
 
             if not lam_em.size:
                 # i.e. skip galaxy if fileprep returned an empty array
@@ -498,7 +505,8 @@ if __name__ == '__main__':
             if topcat:
                 pears_ra.append(float(cat['col2'][redshift_indices][count]))  # col2 is the pears ra
                 pears_dec.append(float(cat['col3'][redshift_indices][count]))  # col3 is the pears dec
-                redshift_source.append('3DHST')  # because the catalogs matched using topcat only matched to 3DHST. Didn't use Santini at all.
+                redshift_source.append('3DHST')
+                # because the catalogs matched using topcat only matched to 3DHST. Didn't use Santini at all.
             else:
                 pears_ra.append(float(cat['pearsra'][redshift_indices][count]))
                 pears_dec.append(float(cat['pearsdec'][redshift_indices][count]))
@@ -536,12 +544,13 @@ if __name__ == '__main__':
         pearsfield = np.asarray(pearsfield, dtype='|S7')
         redshift_source = np.asarray(redshift_source, dtype='|S7')
 
-        data = np.array(zip(pears_id_write, pearsfield, photz_write, redshift_source, pears_ra, pears_dec, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
-                    dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('photz_write', float), ('redshift_source', '|S7'), ('pears_ra', float),\
-                     ('pears_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
+        data = np.array(zip(pears_id_write, pearsfield, photz_write, redshift_source, pears_ra, \
+            pears_dec, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
+            dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('photz_write', float), ('redshift_source', '|S7'), ('pears_ra', float),\
+            ('pears_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
         if fieldname == 'GOODS-N':
-            np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data, \
-            fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ', \
+            np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data,\
+            fmt=['%d', '%s', '%.4f', '%s', '%.6f', '%.6f', '%.4f', '%.4f', '%.4f', '%.4f'], delimiter=' ',\
             header='Catalog for all galaxies that matched between 3DHST and PEARS in ' + fieldname + '. \n' + \
             'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
         elif fieldname == 'GOODS-S':

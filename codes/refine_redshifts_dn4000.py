@@ -3,7 +3,6 @@ from __future__ import division
 import numpy as np
 import numpy.ma as ma
 from astropy.io import fits
-from astropy.convolution import convolve_fft
 from astropy.convolution import convolve, Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
 
