@@ -21,6 +21,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 savefits_dir = home + "/Desktop/FIGS/new_codes/bc03_fits_files_for_refining_redshifts/"
 lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
+figs_dir = home + "/Desktop/FIGS/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
@@ -93,10 +94,16 @@ def get_model_set():
     file because I need a header with info for each extension
     ie. each model spectrum's parameters.
     """
-
-    # this is where the models are
+    
     # currently restricted to solar metallicity
+    # first check where the models are
     model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
+    # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(model_dir):
+        model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
+    else:
+        print "Model files not found. Exiting..."
+        sys.exit(0)
 
     # ONly using SSP for now
     # get valid ages i.e. between 100 Myr and 8 Gyr
@@ -463,7 +470,7 @@ if __name__ == '__main__':
     #get_model_set()
 
     # read in entire model set
-    bc03_all_spec = fits.open(massive_galaxies_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    bc03_all_spec = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
 
     # Read in LSF
     if current_field == 'GOODS-N':
@@ -484,8 +491,16 @@ if __name__ == '__main__':
     total_models = 22800
     # I've hard coded the number in because 
 
-    # first arrange the model spectra to be compared in a properly shaped numpy array for faster computation
+    # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
+    # first check where the models are
     model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
+    # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(model_dir):
+        model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
+    else:
+        print "Model files not found. Exiting..."
+        sys.exit(0)
+
     example_filename_lamgrid = 'bc2003_hr_m62_tauV0_csp_tau100_salp_lamgrid.npy'
     model_lam_grid = np.load(model_dir + example_filename_lamgrid)
     model_comp_spec = np.zeros([total_models, len(model_lam_grid)], dtype=np.float64)
@@ -515,6 +530,9 @@ if __name__ == '__main__':
 
     resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
     resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+    print resampling_lam_grid
+    print len(resampling_lam_grid)
+    sys.exit(0)
 
     # call actual fitting function
     do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
