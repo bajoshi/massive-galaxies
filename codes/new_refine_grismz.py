@@ -32,12 +32,16 @@ import fast_chi2_jackknife as fcj
 import refine_redshifts_dn4000 as old_ref
 import create_fsps_miles_libraries as ct
 
-def plotspectrum(lam, flam):
+def plotspectrum(lam, flam, ferr):
+
+    #gauss_kernel = Gaussian1DKernel(0.9)
+    #flam = convolve(flam, gauss_kernel, boundary='extend')
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
     ax.plot(lam, flam)
+    ax.fill_between(lam, flam + ferr, flam - ferr, color='lightgray')
 
     plt.show()
 
@@ -93,8 +97,50 @@ def get_model_set():
     fits file. Can't use a numpy array instead of a fits
     file because I need a header with info for each extension
     ie. each model spectrum's parameters.
+
+    It is set up right now to always include SSPs with all 
+    metallicities and CSPs restricted to solar
     """
+
+    # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
+    total_ages, age_ind, ages = old_ref.get_valid_ages_in_model(pop='ssp', example_filename='bc2003_hr_m22_salp_ssp.fits')
+
+    # FITS file where the reduced number of spectra will be saved
+    hdu = fits.PrimaryHDU()
+    hdulist = fits.HDUList(hdu)
     
+    for filename in glob.glob(home + '/Documents/GALAXEV_BC03/bc03/models/Padova1994/salpeter/' + '*.fits'):
+        
+        h = fits.open(filename, memmap=False)
+        modellam = h[1].data
+    
+        # define and initialize numpy array so that you can resample all the spectra at once.
+        # It also does the convolution in the for loop below because 
+        # I wasn't sure if I gave a 2D array to convolve_fft if it would convolve each row separately.
+        # I thought that it might think of the 2D ndarray as an image and convolve it that way which I don't want.
+        current_model_set_ssp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
+        for i in range(total_ages):
+            current_model_set_ssp[i] = h[age_ind[i]+3].data
+
+            hdr = fits.Header()
+            hdr['LOG_AGE'] = str(np.log10(ages[age_ind[i]]))
+
+            if 'm22' in filename:
+                metal_val = 0.0001
+            elif 'm32' in filename:
+                metal_val = 0.0004
+            elif 'm42' in filename:
+                metal_val = 0.004
+            elif 'm52' in filename:
+                metal_val = 0.008
+            elif 'm62' in filename:
+                metal_val = 0.02
+            elif 'm72' in filename:
+                metal_val = 0.05
+
+            hdr['METAL'] = str(metal_val)
+            hdulist.append(fits.ImageHDU(data=current_model_set_ssp[i], header=hdr))
+
     # currently restricted to solar metallicity
     # first check where the models are
     model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
@@ -113,10 +159,6 @@ def get_model_set():
     age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
     total_ages = int(len(age_ind))  # 57 for both SSP and CSP
 
-    # FITS file where the model number of spectra will be saved
-    hdu = fits.PrimaryHDU()
-    hdulist = fits.HDUList(hdu)
-
     # model grid parameters
     # they are being redefined here to be able to identify 
     # the different filenames which were set up in the exact same way.
@@ -127,22 +169,6 @@ def get_model_set():
     
     for i in range(len(logtauarr)):
         tauarr[i] = str(int(float(str(10**logtauarr[i])[0:6])*10000))
-
-    # you'll need the following block if you ever use the entire metallicty range
-    """
-    if 'm22' in filename:
-        metal_val = 0.0001
-    elif 'm32' in filename:
-        metal_val = 0.0004
-    elif 'm42' in filename:
-        metal_val = 0.004
-    elif 'm52' in filename:
-        metal_val = 0.008
-    elif 'm62' in filename:
-        metal_val = 0.02
-    elif 'm72' in filename:
-        metal_val = 0.05
-    """
 
     # Read in each individual spectrum and convolve it first and then chop and resample it
     # The convolution has to be done first otherwise the ends of the spectra look weird
@@ -156,22 +182,21 @@ def get_model_set():
             # It also does the convolution in the for loop below because 
             # I wasn't sure if I gave a 2D array to convolve_fft if it would convolve each row separately.
             # I thought that it might think of the 2D ndarray as an image and convolve it that way which I don't want.
-            current_model_set_array = np.load(filename)
+            current_model_set_csp_array = np.load(filename)
             modellam = np.load(filename.replace('_allspectra.npy','_lamgrid.npy'))
 
-            current_model_set = np.zeros([total_ages, len(modellam)], dtype=np.float64)
+            current_model_set_csp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
             for i in range(total_ages):
-                current_model_set[i] = current_model_set_array[age_ind[i]+3]
-                #current_model_set[i] = convolve_fft(current_model_spec, interplsf, boundary='extend')
-                #plot_interp_and_nointerp_lsf_comparison(modellam, current_model_set, lsf, interplsf)
+                current_model_set_csp[i] = current_model_set_csp_array[age_ind[i]]
+                #current_model_set_csp[i] = convolve_fft(current_model_spec, interplsf, boundary='extend')
+                #plot_interp_and_nointerp_lsf_comparison(modellam, current_model_set_csp, lsf, interplsf)
                 # if you want to use the above line to compare then you will 
                 # have to pass the interplsf as an additional argument.
 
-            #current_model_set = ct.resample(modellam, current_model_set, lam_grid, total_ages)
-            # modellam is the wavelength grid of the models at their native sampling i.e. very high resolution
-            # lam_grid is the wavelength grid that I want to downgrade the models to.
+                #current_model_set_csp = ct.resample(modellam, current_model_set_csp, lam_grid, total_ages)
+                # modellam is the wavelength grid of the models at their native sampling i.e. very high resolution
+                # lam_grid is the wavelength grid that I want to downgrade the models to.
 
-            for i in range(total_ages):
                 hdr = fits.Header()
                 hdr['LOG_AGE'] = str(np.log10(ages[age_ind[i]]))
 
@@ -180,14 +205,15 @@ def get_model_set():
                 hdr['METAL'] = str(metal_val)
                 hdr['TAU_GYR'] = str(float(tauval)/1e4)
                 hdr['TAUV'] = str(tauVarrval)
-                hdulist.append(fits.ImageHDU(data=current_model_set[i], header=hdr))
+                hdulist.append(fits.ImageHDU(data=current_model_set_csp[i], header=hdr))
 
     final_fitsname = 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits'
-    hdulist.writeto(massive_galaxies_dir + final_fitsname, overwrite=True)
+    hdulist.writeto(figs_dir + final_fitsname, overwrite=True)
+    print "All models (SSP + CSP_solar) saved to one fits file in directory:", figs_dir
 
     return None
 
-def do_model_modifications(model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z):
+def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z):
 
     # Before fitting
     # 0. get lsf and models (supplied as arguments to this function)
@@ -203,16 +229,31 @@ def do_model_modifications(model_lam_grid, model_comp_spec, resampling_lam_grid,
     model_lam_grid_z = model_lam_grid * (1 + z)
 
     # redshift flux
-    model_comp_spec = model_comp_spec / (1 + z)
+    model_comp_spec = model_comp_spec / (1 + z)    # figure added to be able to debug
+
+    # Interpolate the LSF to the rest frame delta lambda grid of the galaxy
+    #dlam_obs = old_ref.get_avg_dlam(object_lam_obs)
+    #dlam_em = dlam_obs / (1+z)
+    #interppoints = np.linspace(0, len(lsf), int(len(lsf)*dlam_em))
+    #interplsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
 
     for k in range(total_models):
 
-        # now convolve with lsf
+        # ALL OF THE PLOTTING CODE IS IMPORTANT FOR DEBUGGING. 
+        # DO NOT DELETE. UNCOMMENT IF NOT NEEDED.
+        # figure added to be able to debug
+        #fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+        #ax1.plot(model_lam_grid_z, model_comp_spec[k])
+        #ax1.set_xlim(5000, 10500)
+
         model_comp_spec[k] = convolve_fft(model_comp_spec[k], lsf)#, boundary='extend')
         # seems like boundary='extend' is not implemented 
         # currently for convolve_fft(). It works with convolve() though.
 
-        # now resample to object resolution
+        #ax2.plot(model_lam_grid_z, model_comp_spec[k])
+        #ax2.set_xlim(5000, 10500)
+
+        # resample to object resolution
         resampled_flam = np.zeros((len(resampling_lam_grid)))
 
         for i in range(len(resampling_lam_grid)):
@@ -232,6 +273,13 @@ def do_model_modifications(model_lam_grid, model_comp_spec, resampling_lam_grid,
             resampled_flam[i] = np.median(model_comp_spec[k][new_ind])
 
         model_comp_spec_modified[k] = resampled_flam
+
+        #ax3.plot(resampling_lam_grid, model_comp_spec_modified[k])
+        #ax3.set_xlim(5000, 10500)
+        #plt.show()
+        #plt.cla()
+        #plt.clf()
+        #plt.close()
 
     return model_comp_spec_modified
 
@@ -306,6 +354,8 @@ def shift_in_wav_get_new_z(flam, ferr, lam_obs, model_lam_grid, previous_z, spec
         chi2 = np.sum(((flam - (alpha * best_fit_model_in_objlamgrid)) / ferr)**2)
 
         chi2_redshift_arr.append(chi2)
+        #print "In shifting loop. Iteration #", count, current_low_indx, current_high_indx, len(model_lam_grid), chi2
+        # Above line useful for debugging. Do not remove. Just uncomment.
 
         count += 1
 
@@ -313,7 +363,7 @@ def shift_in_wav_get_new_z(flam, ferr, lam_obs, model_lam_grid, previous_z, spec
     new_chi2_minindx = np.argmin(chi2_redshift_arr)
 
     new_lam_grid = model_lam_grid[start_low_indx+new_chi2_minindx : start_high_indx+new_chi2_minindx+1]
-    new_z_minchi2 = ( new_lam_grid[0] / (lam_obs[0] / (1 + previous_z))) - 1
+    new_z_minchi2 = (new_lam_grid[0] / (lam_obs[0] / (1 + previous_z))) - 1
 
     return new_z_minchi2
 
@@ -330,11 +380,6 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
     # first find best fit by deredshifting the grism spectrum using the old redshift
     # iterate 
     """
-
-    # modify the model to be able to compare with data
-    model_comp_spec_modified = \
-    do_model_modifications(model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, starting_z)
-    print "Model mods done at current z", starting_z
 
     # Get resampled spectra for bootstrap based 
     # on errors and assuming gaussian errors.
@@ -354,18 +399,38 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
         print "Starting at redshift", starting_z
 
         previous_z = starting_z
-        while 1: 
+        num_iter = 0
+        while 1:
+            
+            print "Currently testing redshift:", previous_z
+
+            # modify the model to be able to compare with data
+            model_comp_spec_modified = \
+            do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, previous_z)
+            print "Model mods done at current z:", previous_z, "\n", "Total time taken up to now --", time.time() - start, "seconds."
 
             # now get teh best fit model spectrum
             best_fit_model_in_objlamgrid, best_fit_model_whole, bestalpha = \
             get_best_fit_model(flam, ferr, object_lam_obs, resampling_lam_grid, \
                 model_comp_spec_modified, previous_z, model_spec_hdu)
 
+            #plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
+
             # now shift in wavelength range and get new_z
             new_z = \
             shift_in_wav_get_new_z(flam, ferr, object_lam_obs, resampling_lam_grid, previous_z, \
                 len(best_fit_model_in_objlamgrid), best_fit_model_whole)
             print "Current Old and New redshifts", previous_z, new_z
+
+            # Need to add code to stop it from getting worse
+            # Can keep track of the minimum chi2 and if it increases after any run 
+            # then you know you've gone too far in that direction.
+
+            num_iter += 1
+            if num_iter >= 20:
+                print "Maximum iterations reached. Current grism redshift is", new_z
+                print "Exiting out of iterative loop."
+                break 
 
             if abs(new_z - previous_z) < 0.01 * new_z:
                 break
@@ -401,26 +466,19 @@ def plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgr
 
     return None
 
-if __name__ == '__main__':
-
-    # Start time
-    start = time.time()
-    dt = datetime.datetime
-    print "Starting at --", dt.now()
-
-    # if this is True then the code will show you all kinds of plots and print info to the screen
-    verbose = False
+def test_plot():
 
     # Open spectra
-    spec_hdu_old = fits.open(pears_datadir + 'h_pears_s_id65620.fits')
-    #spec_hdu_old = fits.open(pears_datadir + 'h_pears_s_id61447.fits')
+    #spec_hdu_old = fits.open(pears_datadir + 'h_pears_s_id65620.fits')
+    spec_hdu_old = fits.open(pears_datadir + 'h_pears_s_id61447.fits')
     spec_hdu_young = fits.open(pears_datadir + 'h_pears_n_id40498.fits')
+    #spec_hdu_old = fits.open(pears_datadir + 'h_pears_n_id83499.fits')
 
     # assign arrays
-    flam_old = spec_hdu_old[4].data['FLUX']
-    ferr_old = spec_hdu_old[4].data['FERROR']
-    contam_old = spec_hdu_old[4].data['CONTAM']
-    lam_old = spec_hdu_old[4].data['LAMBDA']
+    flam_old = spec_hdu_old[1].data['FLUX']
+    ferr_old = spec_hdu_old[1].data['FERROR']
+    contam_old = spec_hdu_old[1].data['CONTAM']
+    lam_old = spec_hdu_old[1].data['LAMBDA']
     
     flam_young = spec_hdu_young[1].data['FLUX']
     ferr_young = spec_hdu_young[1].data['FERROR']
@@ -438,6 +496,7 @@ if __name__ == '__main__':
     
     lam_old = lam_old[lam_low_idx:lam_high_idx+1]
     flam_old_consub = flam_old_consub[lam_low_idx:lam_high_idx+1]
+    ferr_old = ferr_old[lam_low_idx:lam_high_idx+1]
     
     # young pop
     lam_low_idx = np.argmin(abs(lam_young - 6000))
@@ -448,48 +507,106 @@ if __name__ == '__main__':
 
     # Plot
     if verbose:
-        plotspectrum(lam_young, flam_young_consub)
-        plotspectrum(lam_old, flam_old_consub)
+        #plotspectrum(lam_young, flam_young_consub, ferr_young)
+        plotspectrum(lam_old, flam_old_consub, ferr_old)
 
-    # now start fitting
-    # get original photo-z first
-    current_id = 65620
-    current_field = 'GOODS-S'
-    redshift = 0.9673
-    # for 65620 GOODS-S
-    # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673
-    lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
-    d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+    return None
 
-    if verbose:
-        print current_field, current_id, pa_chosen, netsig_chosen  # GOODS-S 65620 PA200 657.496906164
-        print d4000  # 1.69
+def get_mock_spec():
+    """
+    Choose and return a mock spectrum.
+    """
 
-    # ---------- Models --------- #    
-    # put all models into one single fits file
-    #get_model_set()
+    # first check where the models are
+    model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
+    # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(model_dir):
+        model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
+    else:
+        print "Model files not found. Exiting..."
+        sys.exit(0)
+
+    # I just chose some random file from the model directory
+    example_allspectra = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_allspectra.npy')
+    example_lamgrid = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_lamgrid.npy')
+    example_ages = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_ages.npy')
+
+    # Just make sure to pick a valid age
+    age_ind = np.where((example_ages/1e9 < 8) & (example_ages/1e9 > 0.1))[0]
+    total_ages = int(len(age_ind))  # 57 for both SSP and CSP
+    # for refrence example_ages[age_ind[30]] is  ~2.1 Gyr
+    #print example_ages[age_ind[30]]
+
+    # read in spectrum
+    # define mock redshift first
+    mock_redshift = 0.9
+    example_lamgrid_z = example_lamgrid * (1 + mock_redshift)
+
+    # now redshift model
+    example_lamgrid_z_idx = np.where((example_lamgrid_z >= 6000) & (example_lamgrid_z <= 9500))[0]
+    flam_obs = example_allspectra[age_ind[30]] / (1 + mock_redshift)
+
+    # now get only the part of the model within the valid wavelengths
+    lam_obs = example_lamgrid_z[example_lamgrid_z_idx]
+    flam_obs = flam_obs[example_lamgrid_z_idx]
+
+    # Now use a fake LSF and also resample the spectrum to the grism resolution
+    mock_lsf = Gaussian1DKernel(15.0)
+    flam_obs = convolve(flam_obs, mock_lsf, boundary='extend')
+
+    # resample 
+    mock_resample_lam_grid = np.linspace(6000, 9500, 88)
+    resampled_flam = np.zeros((len(mock_resample_lam_grid)))
+    for i in range(len(mock_resample_lam_grid)):
+
+        if i == 0:
+            lam_step_high = mock_resample_lam_grid[i+1] - mock_resample_lam_grid[i]
+            lam_step_low = lam_step_high
+        elif i == len(mock_resample_lam_grid) - 1:
+            lam_step_low = mock_resample_lam_grid[i] - mock_resample_lam_grid[i-1]
+            lam_step_high = lam_step_low
+        else:
+            lam_step_high = mock_resample_lam_grid[i+1] - mock_resample_lam_grid[i]
+            lam_step_low = mock_resample_lam_grid[i] - mock_resample_lam_grid[i-1]
+
+        new_ind = np.where((lam_obs >= mock_resample_lam_grid[i] - lam_step_low) & \
+            (lam_obs < mock_resample_lam_grid[i] + lam_step_high))[0]
+        resampled_flam[i] = np.median(flam_obs[new_ind])
+
+    flam_obs = resampled_flam
+
+    # multiply flam by a constant to get to some realistic flux levels
+    flam_obs *= 1e-12
+
+    # assign a constant 5% error
+    ferr_obs = np.ones(len(flam_obs))
+    ferr_obs = 0.05 * flam_obs
+
+    # plot to check it looks right
+    # don't delete these lines for plotting
+    #fig = plt.figure()
+    #ax = fig.add_subplot(111)
+    ###ax.plot(lam_obs, flam_obs)  # Use this line if you're plotting before resampling
+    ###ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')  # Use this line if you're plotting before resampling
+    #ax.plot(mock_resample_lam_grid, flam_obs)
+    #ax.fill_between(mock_resample_lam_grid, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
+    #plt.show()
+
+    return mock_resample_lam_grid, flam_obs, ferr_obs, mock_lsf
+
+def test_mock_spec():
+    """
+    Testing module. The structure here is exactly the same as the main code.
+    """
+
+    # try fitting a mock spectrum which you know has a match in the model grid
+    lam_obs, flam_obs, ferr_obs, mock_lsf = get_mock_spec()
 
     # read in entire model set
     bc03_all_spec = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
 
-    # Read in LSF
-    if current_field == 'GOODS-N':
-        lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_avg_lsf.txt"
-    elif current_field == 'GOODS-S':
-        lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
-
-    # read in LSF file
-    lsf = np.loadtxt(lsf_filename)
-    #interplsf = fcjm.get_interplsf(current_id, redshift, current_field, pa_chosen)
-    #plotlsf(lsf)
-    #plotlsf(interplsf)
-
-    # ---------- Fitting --------- #
-    #total_models = fcj.get_total_extensions(bc03_all_spec)  
-    # this function gives the total number of extensions minus the zeroth extension
-    # I used the above line to get this number which is hard coded in now.
-    total_models = 22800
-    # I've hard coded the number in because 
+    # prep for fitting
+    total_models = 23142
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     # first check where the models are
@@ -508,7 +625,104 @@ if __name__ == '__main__':
         model_comp_spec[j] = bc03_all_spec[j+1].data
 
     # total run time up to now
+    print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
+
+    # now call the actual fitting function
+    mock_redshift_estimate = 1.0  # this behaves like the photo-z
+
+    # extend lam_grid to be able to move the lam_grid later 
+    avg_dlam = old_ref.get_avg_dlam(lam_obs)
+
+    lam_low_to_insert = np.arange(5000, lam_obs[0], avg_dlam)
+    lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 10500, avg_dlam)
+
+    resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
+    resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+
+    # call actual fitting function
+    do_fitting(flam_obs, ferr_obs, lam_obs, mock_lsf, mock_redshift_estimate, resampling_lam_grid, \
+        model_lam_grid, total_models, model_comp_spec, bc03_all_spec)
+
+    # total time
     print "Total time taken up to now --", time.time() - start, "seconds."
+    sys.exit(0)
+
+    return None
+
+if __name__ == '__main__':
+
+    # Start time
+    start = time.time()
+    dt = datetime.datetime
+    print "Starting at --", dt.now()
+
+    # -------------------------------------------------------------------- TESTING WITH A MOCK SPECTRUM -------------------------------------------------------------------- #
+    # UNCOMMENT IF YOU'RE DONE TESTING
+    test_mock_spec()
+
+    # ----------------------------------------------------------------------------- GET OBS DATA ----------------------------------------------------------------------------- #
+    # if this is True then the code will show you all kinds of plots and print info to the screen
+    verbose = False
+
+    # start fitting
+    # get original photo-z first
+    current_id = 61447
+    current_field = 'GOODS-S'
+    redshift = 0.92
+    # for 65620 GOODS-S
+    # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673
+    lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
+    d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+
+    if verbose:
+        print current_field, current_id, pa_chosen, netsig_chosen  # GOODS-S 65620 PA200 657.496906164
+        print d4000  # 1.69
+
+    # ----------------------------------------------------------------------------- MODELS ----------------------------------------------------------------------------- #
+    # put all models into one single fits file
+    #get_model_set()
+
+    # read in entire model set
+    bc03_all_spec = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+
+    # Read in LSF
+    if current_field == 'GOODS-N':
+        lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_avg_lsf.txt"
+    elif current_field == 'GOODS-S':
+        lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+
+    # read in LSF file
+    lsf = np.loadtxt(lsf_filename)
+    #interplsf = fcjm.get_interplsf(current_id, redshift, current_field, pa_chosen)
+    #plotlsf(lsf)
+    #plotlsf(interplsf)
+
+    # ----------------------------------------------------------------------------- FITTING ----------------------------------------------------------------------------- #
+    #total_models = fcj.get_total_extensions(bc03_all_spec)
+    # this function gives the total number of extensions minus the zeroth extension
+    # I used the above line to get this number which is hard coded in now.
+    #print "Total models for comparison:", total_models
+    total_models = 23142
+    # I've hard coded the number in because
+
+    # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
+    # first check where the models are
+    model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
+    # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(model_dir):
+        model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
+    else:
+        print "Model files not found. Exiting..."
+        sys.exit(0)
+
+    example_filename_lamgrid = 'bc2003_hr_m62_tauV0_csp_tau100_salp_lamgrid.npy'
+    model_lam_grid = np.load(model_dir + example_filename_lamgrid)
+    model_comp_spec = np.zeros([total_models, len(model_lam_grid)], dtype=np.float64)
+    for j in range(total_models):
+        model_comp_spec[j] = bc03_all_spec[j+1].data
+
+    # total run time up to now
+    print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
     # now call the actual fitting function
     # the original function (fileprep in grid_coadd) will give quantities in rest frame
@@ -530,13 +744,12 @@ if __name__ == '__main__':
 
     resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
     resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
-    print resampling_lam_grid
-    print len(resampling_lam_grid)
-    sys.exit(0)
 
     # call actual fitting function
     do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
         model_lam_grid, total_models, model_comp_spec, bc03_all_spec)
 
+    # total time
+    print "Total time taken up to now --", time.time() - start, "seconds."
     sys.exit(0)
 
