@@ -320,7 +320,7 @@ def get_best_fit_model(flam, ferr, object_lam_grid, model_lam_grid, model_comp_s
             current_best_fit_model_whole = model_comp_spec[sortargs[k]]
             break
 
-    return current_best_fit_model, current_best_fit_model_whole, alpha[sortargs[k]]
+    return current_best_fit_model, current_best_fit_model_whole, alpha[sortargs[k]], np.nanmin(chi2)
 
 def shift_in_wav_get_new_z(flam, ferr, lam_obs, model_lam_grid, previous_z, spec_elem_model_fit, best_fit_model_whole):
 
@@ -363,7 +363,20 @@ def shift_in_wav_get_new_z(flam, ferr, lam_obs, model_lam_grid, previous_z, spec
     new_chi2_minindx = np.argmin(chi2_redshift_arr)
 
     new_lam_grid = model_lam_grid[start_low_indx+new_chi2_minindx : start_high_indx+new_chi2_minindx+1]
-    new_z_minchi2 = (new_lam_grid[0] / (lam_obs[0] / (1 + previous_z))) - 1
+
+    new_z_minchi2 = (lam_obs[0] * (1 + previous_z) / new_lam_grid[0]) - 1
+
+    # ---------
+    print chi2_redshift_arr
+    print new_chi2_minindx
+    print chi2_redshift_arr[new_chi2_minindx]
+
+    print model_lam_grid
+    print lam_obs
+    print new_lam_grid
+
+    print new_z_minchi2
+    # All printing lines useful for debugging. Do not remove. Just uncomment.
 
     return new_z_minchi2
 
@@ -402,7 +415,7 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
         num_iter = 0
         while 1:
             
-            print "Currently testing redshift:", previous_z
+            print "\n", "Currently testing redshift:", previous_z
 
             # modify the model to be able to compare with data
             model_comp_spec_modified = \
@@ -410,11 +423,18 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
             print "Model mods done at current z:", previous_z, "\n", "Total time taken up to now --", time.time() - start, "seconds."
 
             # now get teh best fit model spectrum
-            best_fit_model_in_objlamgrid, best_fit_model_whole, bestalpha = \
+            best_fit_model_in_objlamgrid, best_fit_model_whole, bestalpha, min_chi2 = \
             get_best_fit_model(flam, ferr, object_lam_obs, resampling_lam_grid, \
                 model_comp_spec_modified, previous_z, model_spec_hdu)
 
-            #plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
+            print "Current min chi2:", min_chi2
+            plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
+
+            #print "Current best fit model parameters are:"
+            #print "Age:"
+            #print "Metallicity: Solar (this was kept fixed)"
+            #print "Tau (i.e. exponential SFH time scale):"
+            #print "Tau_V:", , "A_V:",
 
             # now shift in wavelength range and get new_z
             new_z = \
@@ -539,7 +559,7 @@ def get_mock_spec():
 
     # read in spectrum
     # define mock redshift first
-    mock_redshift = 0.9
+    mock_redshift = 1.1
     example_lamgrid_z = example_lamgrid * (1 + mock_redshift)
 
     # now redshift model
@@ -658,7 +678,7 @@ if __name__ == '__main__':
 
     # -------------------------------------------------------------------- TESTING WITH A MOCK SPECTRUM -------------------------------------------------------------------- #
     # UNCOMMENT IF YOU'RE DONE TESTING
-    test_mock_spec()
+    #test_mock_spec()
 
     # ----------------------------------------------------------------------------- GET OBS DATA ----------------------------------------------------------------------------- #
     # if this is True then the code will show you all kinds of plots and print info to the screen
@@ -668,7 +688,7 @@ if __name__ == '__main__':
     # get original photo-z first
     current_id = 61447
     current_field = 'GOODS-S'
-    redshift = 0.92
+    redshift = 0.84
     # for 65620 GOODS-S
     # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673
     lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
@@ -735,6 +755,9 @@ if __name__ == '__main__':
     # I need them to be in the observed frame because the iterative process for 
     # finding a new redshift will de-redshift them each time a new redshift is
     # found. 
+
+    # plot to check # Line useful for debugging. Do not remove. Just uncomment.
+    #plotspectrum(lam_obs, flam_obs, ferr_obs)
 
     # extend lam_grid to be able to move the lam_grid later 
     avg_dlam = old_ref.get_avg_dlam(lam_obs)
