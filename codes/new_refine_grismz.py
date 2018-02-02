@@ -367,15 +367,15 @@ def shift_in_wav_get_new_z(flam, ferr, lam_obs, model_lam_grid, previous_z, spec
     new_z_minchi2 = (lam_obs[0] * (1 + previous_z) / new_lam_grid[0]) - 1
 
     # ---------
-    print chi2_redshift_arr
-    print new_chi2_minindx
-    print chi2_redshift_arr[new_chi2_minindx]
+    #print chi2_redshift_arr
+    #print new_chi2_minindx
+    #print chi2_redshift_arr[new_chi2_minindx]
 
-    print model_lam_grid
-    print lam_obs
-    print new_lam_grid
+    #print model_lam_grid
+    #print lam_obs
+    #print new_lam_grid
 
-    print new_z_minchi2
+    #print new_z_minchi2
     # All printing lines useful for debugging. Do not remove. Just uncomment.
 
     return new_z_minchi2
@@ -537,29 +537,45 @@ def get_mock_spec():
     Choose and return a mock spectrum.
     """
 
-    # first check where the models are
-    model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
-    # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
-    if not os.path.isdir(model_dir):
-        model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
-    else:
-        print "Model files not found. Exiting..."
-        sys.exit(0)
+    try_solar = False
+    # I've added this flag to be able to test with a mock model spectrum that is outside of the current
+    # available set of models for comparison. i.e. its trying to see that if you had a galaxy
+    # spectrum that wasn't matched well by any of the templates then how good of a match will the code 
+    # come up with. This is because the current set of models for comparison are restricted to solar
+    # metallicity. Turning this flag off (i.e. False) will supply a mock spectrum drawn from a model
+    # that does not have solar metallicity.
+    # You will have to change the model and metallicty by hand in the else part of the if statement
+    # below. This is where it looks for a different mock spectrum.
 
     # I just chose some random file from the model directory
-    example_allspectra = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_allspectra.npy')
-    example_lamgrid = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_lamgrid.npy')
-    example_ages = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_ages.npy')
+    if try_solar:
+        # first check where the models are
+        model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
+        # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
+        if not os.path.isdir(model_dir):
+            model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
+        else:
+            print "Model files not found. Exiting..."
+            sys.exit(0)
+
+        example_allspectra = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_allspectra.npy')
+        example_lamgrid = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_lamgrid.npy')
+        example_ages = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_ages.npy')
+    else:
+        model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m52/'
+        example_allspectra = np.load(model_dir + 'bc2003_hr_m52_tauV10_csp_tau1995_salp_allspectra.npy')
+        example_lamgrid = np.load(model_dir + 'bc2003_hr_m52_tauV10_csp_tau1995_salp_lamgrid.npy')
+        example_ages = np.load(model_dir + 'bc2003_hr_m52_tauV10_csp_tau1995_salp_ages.npy')
 
     # Just make sure to pick a valid age
     age_ind = np.where((example_ages/1e9 < 8) & (example_ages/1e9 > 0.1))[0]
     total_ages = int(len(age_ind))  # 57 for both SSP and CSP
     # for refrence example_ages[age_ind[30]] is  ~2.1 Gyr
-    #print example_ages[age_ind[30]]
+    #print "Age value chosen,", example_ages[age_ind[30]]
 
     # read in spectrum
     # define mock redshift first
-    mock_redshift = 1.1
+    mock_redshift = 1.13
     example_lamgrid_z = example_lamgrid * (1 + mock_redshift)
 
     # now redshift model
@@ -598,9 +614,13 @@ def get_mock_spec():
     # multiply flam by a constant to get to some realistic flux levels
     flam_obs *= 1e-12
 
-    # assign a constant 5% error
+    # assign a constant 5% error bar
     ferr_obs = np.ones(len(flam_obs))
     ferr_obs = 0.05 * flam_obs
+
+    # put in random noise in the model
+    for k in range(len(flam_obs)):
+        flam_obs[k] = np.random.normal(flam_obs[k], ferr_obs[k], 1)
 
     # plot to check it looks right
     # don't delete these lines for plotting
@@ -678,7 +698,7 @@ if __name__ == '__main__':
 
     # -------------------------------------------------------------------- TESTING WITH A MOCK SPECTRUM -------------------------------------------------------------------- #
     # UNCOMMENT IF YOU'RE DONE TESTING
-    #test_mock_spec()
+    test_mock_spec()
 
     # ----------------------------------------------------------------------------- GET OBS DATA ----------------------------------------------------------------------------- #
     # if this is True then the code will show you all kinds of plots and print info to the screen
@@ -686,11 +706,13 @@ if __name__ == '__main__':
 
     # start fitting
     # get original photo-z first
-    current_id = 61447
-    current_field = 'GOODS-S'
-    redshift = 0.84
+    current_id = 83499
+    current_field = 'GOODS-N'
+    redshift = 0.85
+    # for 61447 GOODS-S
+    # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
-    # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673
+    # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673 # spec-z 0.97
     lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
     d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
@@ -707,7 +729,7 @@ if __name__ == '__main__':
 
     # Read in LSF
     if current_field == 'GOODS-N':
-        lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_avg_lsf.txt"
+        lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
     elif current_field == 'GOODS-S':
         lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
 
