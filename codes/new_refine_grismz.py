@@ -102,6 +102,8 @@ def get_model_set():
     metallicities and CSPs restricted to solar
     """
 
+    print "Running code to generate set of models for comparison."
+
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
     total_ages, age_ind, ages = old_ref.get_valid_ages_in_model(pop='ssp', example_filename='bc2003_hr_m22_salp_ssp.fits')
 
@@ -147,9 +149,9 @@ def get_model_set():
     # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
     if not os.path.isdir(model_dir):
         model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
-    else:
-        print "Model files not found. Exiting..."
-        sys.exit(0)
+        if not os.path.isdir(model_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
 
     # ONly using SSP for now
     # get valid ages i.e. between 100 Myr and 8 Gyr
@@ -210,6 +212,8 @@ def get_model_set():
     final_fitsname = 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits'
     hdulist.writeto(figs_dir + final_fitsname, overwrite=True)
     print "All models (SSP + CSP_solar) saved to one fits file in directory:", figs_dir
+    print "Exiting."
+    sys.exit(0)
 
     return None
 
@@ -563,24 +567,27 @@ def get_mock_spec():
         example_ages = np.load(model_dir + 'bc2003_hr_m62_tauV10_csp_tau1995_salp_ages.npy')
     else:
         model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m52/'
-        example_allspectra = np.load(model_dir + 'bc2003_hr_m52_tauV10_csp_tau1995_salp_allspectra.npy')
-        example_lamgrid = np.load(model_dir + 'bc2003_hr_m52_tauV10_csp_tau1995_salp_lamgrid.npy')
-        example_ages = np.load(model_dir + 'bc2003_hr_m52_tauV10_csp_tau1995_salp_ages.npy')
+        single_csp_set_dir = home + '/Documents/GALAXEV_BC03/'
+        example_allspectra = np.load(single_csp_set_dir + 'bc2003_hr_m32_tauV10_csp_tau200000_salp_allspectra.npy')
+        example_lamgrid = np.load(single_csp_set_dir + 'bc2003_hr_m32_tauV10_csp_tau200000_salp_lamgrid.npy')
+        example_ages = np.load(single_csp_set_dir + 'bc2003_hr_m32_tauV10_csp_tau200000_salp_ages.npy')
 
     # Just make sure to pick a valid age
     age_ind = np.where((example_ages/1e9 < 8) & (example_ages/1e9 > 0.1))[0]
     total_ages = int(len(age_ind))  # 57 for both SSP and CSP
     # for refrence example_ages[age_ind[30]] is  ~2.1 Gyr
-    #print "Age value chosen,", example_ages[age_ind[30]]
+    #print example_ages[age_ind]
+    #print total_ages
+    #print "Age value chosen,", "{:.3}".format(example_ages[age_ind[20]])
 
     # read in spectrum
     # define mock redshift first
-    mock_redshift = 1.13
+    mock_redshift = 1.08
     example_lamgrid_z = example_lamgrid * (1 + mock_redshift)
 
     # now redshift model
     example_lamgrid_z_idx = np.where((example_lamgrid_z >= 6000) & (example_lamgrid_z <= 9500))[0]
-    flam_obs = example_allspectra[age_ind[30]] / (1 + mock_redshift)
+    flam_obs = example_allspectra[age_ind[20]] / (1 + mock_redshift)
 
     # now get only the part of the model within the valid wavelengths
     lam_obs = example_lamgrid_z[example_lamgrid_z_idx]
@@ -646,7 +653,8 @@ def test_mock_spec():
     bc03_all_spec = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
 
     # prep for fitting
-    total_models = 23142
+    #total_models = 23142  # if ssp + csp
+    total_models = 22800  # if only csp
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     # first check where the models are
@@ -654,9 +662,9 @@ def test_mock_spec():
     # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
     if not os.path.isdir(model_dir):
         model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
-    else:
-        print "Model files not found. Exiting..."
-        sys.exit(0)
+        if not os.path.isdir(model_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
 
     example_filename_lamgrid = 'bc2003_hr_m62_tauV0_csp_tau100_salp_lamgrid.npy'
     model_lam_grid = np.load(model_dir + example_filename_lamgrid)
@@ -698,7 +706,7 @@ if __name__ == '__main__':
 
     # -------------------------------------------------------------------- TESTING WITH A MOCK SPECTRUM -------------------------------------------------------------------- #
     # UNCOMMENT IF YOU'RE DONE TESTING
-    test_mock_spec()
+    #test_mock_spec()
 
     # ----------------------------------------------------------------------------- GET OBS DATA ----------------------------------------------------------------------------- #
     # if this is True then the code will show you all kinds of plots and print info to the screen
@@ -706,9 +714,9 @@ if __name__ == '__main__':
 
     # start fitting
     # get original photo-z first
-    current_id = 83499
-    current_field = 'GOODS-N'
-    redshift = 0.85
+    current_id = 69419
+    current_field = 'GOODS-S'
+    redshift = 1.0
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
@@ -745,7 +753,7 @@ if __name__ == '__main__':
     # I used the above line to get this number which is hard coded in now.
     #print "Total models for comparison:", total_models
     total_models = 23142
-    # I've hard coded the number in because
+    # I've hard coded the number in because the 
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     # first check where the models are
@@ -753,9 +761,9 @@ if __name__ == '__main__':
     # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
     if not os.path.isdir(model_dir):
         model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
-    else:
-        print "Model files not found. Exiting..."
-        sys.exit(0)
+        if not os.path.isdir(model_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
 
     example_filename_lamgrid = 'bc2003_hr_m62_tauV0_csp_tau100_salp_lamgrid.npy'
     model_lam_grid = np.load(model_dir + example_filename_lamgrid)
