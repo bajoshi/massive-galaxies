@@ -227,6 +227,7 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
 
     # create empty array in which final modified models will be stored
     model_comp_spec_modified = np.empty([total_models, len(resampling_lam_grid)])
+    model_comp_spec_broad = np.empty([total_models, len(resampling_lam_grid)])
 
     # redshift lambda grid for model 
     # this is the lambda grid at the model's native resolution
@@ -246,16 +247,22 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
         # ALL OF THE PLOTTING CODE IS IMPORTANT FOR DEBUGGING. 
         # DO NOT DELETE. UNCOMMENT IF NOT NEEDED.
         # figure added to be able to debug
-        #fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-        #ax1.plot(model_lam_grid_z, model_comp_spec[k])
-        #ax1.set_xlim(5000, 10500)
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(2, 2)
+        ax1.plot(model_lam_grid_z, model_comp_spec[k])
+        ax1.set_xlim(5000, 10500)
 
         model_comp_spec[k] = convolve_fft(model_comp_spec[k], lsf)#, boundary='extend')
         # seems like boundary='extend' is not implemented 
         # currently for convolve_fft(). It works with convolve() though.
 
-        #ax2.plot(model_lam_grid_z, model_comp_spec[k])
-        #ax2.set_xlim(5000, 10500)
+        ax2.plot(model_lam_grid_z, model_comp_spec[k])
+        ax2.set_xlim(5000, 10500)
+
+        # using a broader lsf just to see if that can do better
+        interppoints = np.linspace(0, len(lsf), int(len(lsf)*2))  
+        # just making the lsf twice as long # i.e. sampled at twice as many points
+        broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
+        model_comp_spec_broad[k] = convolve_fft(model_comp_spec[k], broad_lsf)
 
         # resample to object resolution
         resampled_flam = np.zeros((len(resampling_lam_grid)))
@@ -274,16 +281,25 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
 
             new_ind = np.where((model_lam_grid_z >= resampling_lam_grid[i] - lam_step_low) & \
                 (model_lam_grid_z < resampling_lam_grid[i] + lam_step_high))[0]
-            resampled_flam[i] = np.median(model_comp_spec[k][new_ind])
+            resampled_flam[i] = np.mean(model_comp_spec[k][new_ind])
+
+            resampled_flam_broadlsf[i] = np.mean(model_comp_spec_broad[k][new_ind])
 
         model_comp_spec_modified[k] = resampled_flam
+        model_comp_spec_broad[k] = resampled_flam_broadlsf
 
-        #ax3.plot(resampling_lam_grid, model_comp_spec_modified[k])
-        #ax3.set_xlim(5000, 10500)
-        #plt.show()
-        #plt.cla()
-        #plt.clf()
-        #plt.close()
+        ax3.plot(resampling_lam_grid, model_comp_spec_broad[k])
+        ax3.set_xlim(5000, 10500)
+
+        ax4.plot(resampling_lam_grid, model_comp_spec_modified[k])
+        ax4.set_xlim(5000, 10500)
+
+        plt.show()
+        plt.cla()
+        plt.clf()
+        plt.close()
+
+    sys.exit(0)
 
     return model_comp_spec_modified
 
@@ -313,6 +329,8 @@ def get_best_fit_model(flam, ferr, object_lam_grid, model_lam_grid, model_comp_s
     sortargs = np.argsort(chi2)
     for k in range(len(chi2)):
         best_age = float(model_spec_hdu[sortargs[k] + 1].header['LOG_AGE'])
+        best_tau = float(model_spec_hdu[sortargs[k] + 1].header['TAU_GYR'])
+        best_tauv = float(model_spec_hdu[sortargs[k] + 1].header['TAUV'])
         age_at_z = cosmo.age(current_z).value * 1e9 # in yr
         if (best_age < np.log10(age_at_z)) & (best_age > 9 + np.log10(0.1)):
             #fitages.append(best_age)
@@ -324,7 +342,7 @@ def get_best_fit_model(flam, ferr, object_lam_grid, model_lam_grid, model_comp_s
             current_best_fit_model_whole = model_comp_spec[sortargs[k]]
             break
 
-    return current_best_fit_model, current_best_fit_model_whole, alpha[sortargs[k]], np.nanmin(chi2)
+    return current_best_fit_model, current_best_fit_model_whole, alpha[sortargs[k]], np.nanmin(chi2), best_age, best_tau, best_tauv
 
 def shift_in_wav_get_new_z(flam, ferr, lam_obs, model_lam_grid, previous_z, spec_elem_model_fit, best_fit_model_whole):
 
@@ -427,11 +445,14 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
             print "Model mods done at current z:", previous_z, "\n", "Total time taken up to now --", time.time() - start, "seconds."
 
             # now get teh best fit model spectrum
-            best_fit_model_in_objlamgrid, best_fit_model_whole, bestalpha, min_chi2 = \
+            best_fit_model_in_objlamgrid, best_fit_model_whole, bestalpha, min_chi2, age, tau, tauv = \
             get_best_fit_model(flam, ferr, object_lam_obs, resampling_lam_grid, \
                 model_comp_spec_modified, previous_z, model_spec_hdu)
 
-            print "Current min chi2:", min_chi2
+            print "Current min Chi2:", min_chi2
+            print "Current best fit Age:", age
+            print "Current best fit Tau:", tau
+            print "Current best fit Tau_V:", tauv
             plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
 
             #print "Current best fit model parameters are:"
@@ -450,12 +471,14 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
             # Can keep track of the minimum chi2 and if it increases after any run 
             # then you know you've gone too far in that direction.
 
+            # Stop if maximum iterations are reached
             num_iter += 1
             if num_iter >= 20:
                 print "Maximum iterations reached. Current grism redshift is", new_z
                 print "Exiting out of iterative loop."
                 break 
 
+            # if the relative error is less than 1% then stop
             if abs(new_z - previous_z) < 0.01 * new_z:
                 break
 
@@ -634,7 +657,8 @@ def get_mock_spec():
     #fig = plt.figure()
     #ax = fig.add_subplot(111)
     ###ax.plot(lam_obs, flam_obs)  # Use this line if you're plotting before resampling
-    ###ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')  # Use this line if you're plotting before resampling
+    ###ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')  
+    ### Use this above line if you're plotting before resampling
     #ax.plot(mock_resample_lam_grid, flam_obs)
     #ax.fill_between(mock_resample_lam_grid, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
     #plt.show()
@@ -704,11 +728,11 @@ if __name__ == '__main__':
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
-    # -------------------------------------------------------------------- TESTING WITH A MOCK SPECTRUM -------------------------------------------------------------------- #
+    # -------------------------------------- TESTING WITH A MOCK SPECTRUM ----------------------------------------- #
     # UNCOMMENT IF YOU'RE DONE TESTING
     #test_mock_spec()
 
-    # ----------------------------------------------------------------------------- GET OBS DATA ----------------------------------------------------------------------------- #
+    # --------------------------------------------- GET OBS DATA ------------------------------------------- #
     # if this is True then the code will show you all kinds of plots and print info to the screen
     verbose = False
 
@@ -716,7 +740,7 @@ if __name__ == '__main__':
     # get original photo-z first
     current_id = 69419
     current_field = 'GOODS-S'
-    redshift = 1.0
+    redshift = 0.75
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
@@ -728,7 +752,7 @@ if __name__ == '__main__':
         print current_field, current_id, pa_chosen, netsig_chosen  # GOODS-S 65620 PA200 657.496906164
         print d4000  # 1.69
 
-    # ----------------------------------------------------------------------------- MODELS ----------------------------------------------------------------------------- #
+    # ---------------------------------------------- MODELS ----------------------------------------------- #
     # put all models into one single fits file
     #get_model_set()
 
@@ -747,7 +771,7 @@ if __name__ == '__main__':
     #plotlsf(lsf)
     #plotlsf(interplsf)
 
-    # ----------------------------------------------------------------------------- FITTING ----------------------------------------------------------------------------- #
+    # ---------------------------------------------- FITTING ----------------------------------------------- #
     #total_models = fcj.get_total_extensions(bc03_all_spec)
     # this function gives the total number of extensions minus the zeroth extension
     # I used the above line to get this number which is hard coded in now.
@@ -757,16 +781,17 @@ if __name__ == '__main__':
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     # first check where the models are
-    model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
-    # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
-    if not os.path.isdir(model_dir):
-        model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
-        if not os.path.isdir(model_dir):
-            print "Model files not found. Exiting..."
-            sys.exit(0)
+    #model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
+    ## this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
+    #if not os.path.isdir(model_dir):
+    #    model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
+    #    if not os.path.isdir(model_dir):
+    #        print "Model files not found. Exiting..."
+    #        sys.exit(0)
 
-    example_filename_lamgrid = 'bc2003_hr_m62_tauV0_csp_tau100_salp_lamgrid.npy'
-    model_lam_grid = np.load(model_dir + example_filename_lamgrid)
+    example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
+    bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
+    model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
     model_comp_spec = np.zeros([total_models, len(model_lam_grid)], dtype=np.float64)
     for j in range(total_models):
         model_comp_spec[j] = bc03_all_spec[j+1].data
