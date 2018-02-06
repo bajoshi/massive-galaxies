@@ -258,7 +258,7 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
         #ax2.set_xlim(5000, 10500)
 
         # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, len(lsf), int(len(lsf)*3))  
+        interppoints = np.linspace(0, len(lsf), int(len(lsf)*24))
         # just making the lsf sampling grid longer # i.e. sampled at more points 
         broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
         temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
@@ -326,8 +326,17 @@ def get_best_fit_model(flam, ferr, object_lam_grid, model_lam_grid, model_comp_s
     sortargs = np.argsort(chi2)
     for k in range(len(chi2)):
         best_age = float(model_spec_hdu[sortargs[k] + 1].header['LOG_AGE'])
-        best_tau = float(model_spec_hdu[sortargs[k] + 1].header['TAU_GYR'])
-        best_tauv = float(model_spec_hdu[sortargs[k] + 1].header['TAUV'])
+        # now check if the best fit model is an ssp or csp 
+        # only the csp models have tau and tauV parameters
+        # so if you try to get these keywords for the ssp fits files
+        # it will fail with a KeyError
+        if 'TAU_GYR' in list(model_spec_hdu[sortargs[k] + 1].header.keys()):
+            best_tau = float(model_spec_hdu[sortargs[k] + 1].header['TAU_GYR'])
+            best_tauv = float(model_spec_hdu[sortargs[k] + 1].header['TAUV'])
+        else:
+            # if the best fit model is an SSP then assign -99.0 to tau and tauV
+            best_tau = -99.0
+            best_tauv = -99.0
         age_at_z = cosmo.age(current_z).value * 1e9 # in yr
         if (best_age < np.log10(age_at_z)) & (best_age > 9 + np.log10(0.1)):
             #fitages.append(best_age)
@@ -674,8 +683,7 @@ def test_mock_spec():
     bc03_all_spec = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
 
     # prep for fitting
-    #total_models = 23142  # if ssp + csp
-    total_models = 22800  # if only csp
+    total_models = 34542  # if ssp + csp
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     # first check where the models are
