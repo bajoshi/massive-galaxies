@@ -165,7 +165,7 @@ def get_model_set():
     # they are being redefined here to be able to identify 
     # the different filenames which were set up in the exact same way.
     # I've restricted tauV, tau, lambda, and ages in distinguishing spectra
-    tauVarr = np.arange(0.0, 2.0, 0.1)
+    tauVarr = np.arange(0.0, 3.0, 0.1)
     logtauarr = np.arange(-2, 2, 0.2)
     tauarr = np.empty(len(logtauarr)).astype(np.str)
     
@@ -446,11 +446,11 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
             get_best_fit_model(flam, ferr, object_lam_obs, resampling_lam_grid, \
                 model_comp_spec_modified, previous_z, model_spec_hdu)
 
-            print "Current min Chi2:", min_chi2
-            print "Current best fit Age:", age
-            print "Current best fit Tau:", tau
+            print "Current min Chi2:", "{:.2}".format(min_chi2)
+            print "Current best fit log(age [yr]):", "{:.2}".format(age)
+            print "Current best fit Tau [Gyr]:", "{:.2}".format(tau)
             print "Current best fit Tau_V:", tauv
-            plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
+            #plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
 
             #print "Current best fit model parameters are:"
             #print "Age:"
@@ -773,8 +773,9 @@ if __name__ == '__main__':
     # this function gives the total number of extensions minus the zeroth extension
     # I used the above line to get this number which is hard coded in now.
     #print "Total models for comparison:", total_models
-    total_models = 23142
-    # I've hard coded the number in because the 
+    total_models = 34542
+    # I've hard coded the number in because the function to figure out the total
+    # number of extensions takes way too long to run (approx 2-3 mins).
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     # first check where the models are
