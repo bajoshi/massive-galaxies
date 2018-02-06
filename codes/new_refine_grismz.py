@@ -246,25 +246,25 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
         # ALL OF THE PLOTTING CODE IS IMPORTANT FOR DEBUGGING. 
         # DO NOT DELETE. UNCOMMENT IF NOT NEEDED.
         # figure added to be able to debug
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
-        ax1.plot(model_lam_grid_z, model_comp_spec[k])
-        ax1.set_xlim(5000, 10500)
+        #fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
+        #ax1.plot(model_lam_grid_z, model_comp_spec[k])
+        #ax1.set_xlim(5000, 10500)
 
         model_comp_spec[k] = convolve_fft(model_comp_spec[k], lsf)#, boundary='extend')
         # seems like boundary='extend' is not implemented 
         # currently for convolve_fft(). It works with convolve() though.
 
-        ax2.plot(model_lam_grid_z, model_comp_spec[k])
-        ax2.set_xlim(5000, 10500)
+        #ax2.plot(model_lam_grid_z, model_comp_spec[k])
+        #ax2.set_xlim(5000, 10500)
 
         # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, len(lsf), int(len(lsf)*2))  
-        # just making the lsf twice as long # i.e. sampled at twice as many points
+        interppoints = np.linspace(0, len(lsf), int(len(lsf)*3))  
+        # just making the lsf sampling grid longer # i.e. sampled at more points 
         broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
         temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
 
         # resample to object resolution
-        resampled_flam = np.zeros((len(resampling_lam_grid)))
+        #resampled_flam = np.zeros((len(resampling_lam_grid)))
         resampled_flam_broadlsf = np.zeros((len(resampling_lam_grid)))
 
         for i in range(len(resampling_lam_grid)):
@@ -281,24 +281,22 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
 
             new_ind = np.where((model_lam_grid_z >= resampling_lam_grid[i] - lam_step_low) & \
                 (model_lam_grid_z < resampling_lam_grid[i] + lam_step_high))[0]
-            resampled_flam[i] = np.mean(model_comp_spec[k][new_ind])
+            #resampled_flam[i] = np.mean(model_comp_spec[k][new_ind])
 
             resampled_flam_broadlsf[i] = np.mean(temp_broadlsf_model[new_ind])
 
-        model_comp_spec_modified[k] = resampled_flam
+        model_comp_spec_modified[k] = resampled_flam_broadlsf
 
-        ax3.plot(resampling_lam_grid, resampled_flam_broadlsf)
-        ax3.set_xlim(5000, 10500)
+        #ax3.plot(resampling_lam_grid, resampled_flam_broadlsf)
+        #ax3.set_xlim(5000, 10500)
 
-        ax4.plot(resampling_lam_grid, model_comp_spec_modified[k])
-        ax4.set_xlim(5000, 10500)
+        #ax4.plot(resampling_lam_grid, model_comp_spec_modified[k])
+        #ax4.set_xlim(5000, 10500)
 
-        plt.show()
-        plt.cla()
-        plt.clf()
-        plt.close()
-
-    sys.exit(0)
+        #plt.show()
+        #plt.cla()
+        #plt.clf()
+        #plt.close()
 
     return model_comp_spec_modified
 
