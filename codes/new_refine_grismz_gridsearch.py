@@ -77,7 +77,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         print "Model mods done at current z:", z, "\n", "Total time taken up to now --", time.time() - start_time, "seconds."
 
         # Now do the chi2 computation
-        chi2[count], alpha[count] = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec, resampling_lam_grid)
+        chi2[count], alpha[count] = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
 
         count += 1
 
