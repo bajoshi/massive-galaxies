@@ -4,6 +4,8 @@ import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve_fft, convolve, Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
+from joblib import Parallel, delayed
+import multiprocessing
 
 import os
 import sys
@@ -217,7 +219,66 @@ def get_model_set():
 
     return None
 
-def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z):
+def do_model_modifications(model_index_number, lsf, resampling_lam_grid, model_comp_spec, model_lam_grid_z):
+
+    # ALL OF THE PLOTTING CODE IS IMPORTANT FOR DEBUGGING. 
+    # DO NOT DELETE. UNCOMMENT IF NOT NEEDED.
+    # figure added to be able to debug
+    #fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
+    #ax1.plot(model_lam_grid_z, model_comp_spec[model_index_number])
+    #ax1.set_xlim(5000, 10500)
+
+    #model_comp_spec[model_index_number] = convolve_fft(model_comp_spec[model_index_number], lsf)#, boundary='extend')
+    # seems like boundary='extend' is not implemented 
+    # currently for convolve_fft(). It works with convolve() though.
+
+    #ax2.plot(model_lam_grid_z, model_comp_spec[model_index_number])
+    #ax2.set_xlim(5000, 10500)
+
+    # using a broader lsf just to see if that can do better
+    interppoints = np.linspace(0, len(lsf), int(len(lsf)*16))
+    # just making the lsf sampling grid longer # i.e. sampled at more points 
+    broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
+    temp_broadlsf_model = convolve_fft(model_comp_spec[model_index_number], broad_lsf)
+
+    # resample to object resolution
+    #resampled_flam = np.zeros((len(resampling_lam_grid)))
+    resampled_flam_broadlsf = np.zeros((len(resampling_lam_grid)))
+
+    for i in range(len(resampling_lam_grid)):
+
+        if i == 0:
+            lam_step_high = resampling_lam_grid[i+1] - resampling_lam_grid[i]
+            lam_step_low = lam_step_high
+        elif i == len(resampling_lam_grid) - 1:
+            lam_step_low = resampling_lam_grid[i] - resampling_lam_grid[i-1]
+            lam_step_high = lam_step_low
+        else:
+            lam_step_high = resampling_lam_grid[i+1] - resampling_lam_grid[i]
+            lam_step_low = resampling_lam_grid[i] - resampling_lam_grid[i-1]
+
+        new_ind = np.where((model_lam_grid_z >= resampling_lam_grid[i] - lam_step_low) & \
+            (model_lam_grid_z < resampling_lam_grid[i] + lam_step_high))[0]
+        #resampled_flam[i] = np.mean(model_comp_spec[model_index_number][new_ind])
+
+        resampled_flam_broadlsf[i] = np.mean(temp_broadlsf_model[new_ind])
+
+    current_modified_model = resampled_flam_broadlsf
+
+    #ax3.plot(resampling_lam_grid, resampled_flam_broadlsf)
+    #ax3.set_xlim(5000, 10500)
+
+    #ax4.plot(resampling_lam_grid, model_comp_spec_modified[model_index_number])
+    #ax4.set_xlim(5000, 10500)
+
+    #plt.show()
+    #plt.cla()
+    #plt.clf()
+    #plt.close()
+
+    return current_modified_model
+
+def model_modifications_wrapper(object_lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z):
 
     # Before fitting
     # 0. get lsf and models (supplied as arguments to this function)
@@ -235,68 +296,8 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
     # redshift flux
     model_comp_spec = model_comp_spec / (1 + z)    # figure added to be able to debug
 
-    # Interpolate the LSF to the rest frame delta lambda grid of the galaxy
-    #dlam_obs = old_ref.get_avg_dlam(object_lam_obs)
-    #dlam_em = dlam_obs / (1+z)
-    #interppoints = np.linspace(0, len(lsf), int(len(lsf)*dlam_em))
-    #interplsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
-
-    for k in range(total_models):
-
-        # ALL OF THE PLOTTING CODE IS IMPORTANT FOR DEBUGGING. 
-        # DO NOT DELETE. UNCOMMENT IF NOT NEEDED.
-        # figure added to be able to debug
-        #fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
-        #ax1.plot(model_lam_grid_z, model_comp_spec[k])
-        #ax1.set_xlim(5000, 10500)
-
-        model_comp_spec[k] = convolve_fft(model_comp_spec[k], lsf)#, boundary='extend')
-        # seems like boundary='extend' is not implemented 
-        # currently for convolve_fft(). It works with convolve() though.
-
-        #ax2.plot(model_lam_grid_z, model_comp_spec[k])
-        #ax2.set_xlim(5000, 10500)
-
-        # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, len(lsf), int(len(lsf)*16))
-        # just making the lsf sampling grid longer # i.e. sampled at more points 
-        broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
-        temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
-
-        # resample to object resolution
-        #resampled_flam = np.zeros((len(resampling_lam_grid)))
-        resampled_flam_broadlsf = np.zeros((len(resampling_lam_grid)))
-
-        for i in range(len(resampling_lam_grid)):
-
-            if i == 0:
-                lam_step_high = resampling_lam_grid[i+1] - resampling_lam_grid[i]
-                lam_step_low = lam_step_high
-            elif i == len(resampling_lam_grid) - 1:
-                lam_step_low = resampling_lam_grid[i] - resampling_lam_grid[i-1]
-                lam_step_high = lam_step_low
-            else:
-                lam_step_high = resampling_lam_grid[i+1] - resampling_lam_grid[i]
-                lam_step_low = resampling_lam_grid[i] - resampling_lam_grid[i-1]
-
-            new_ind = np.where((model_lam_grid_z >= resampling_lam_grid[i] - lam_step_low) & \
-                (model_lam_grid_z < resampling_lam_grid[i] + lam_step_high))[0]
-            #resampled_flam[i] = np.mean(model_comp_spec[k][new_ind])
-
-            resampled_flam_broadlsf[i] = np.mean(temp_broadlsf_model[new_ind])
-
-        model_comp_spec_modified[k] = resampled_flam_broadlsf
-
-        #ax3.plot(resampling_lam_grid, resampled_flam_broadlsf)
-        #ax3.set_xlim(5000, 10500)
-
-        #ax4.plot(resampling_lam_grid, model_comp_spec_modified[k])
-        #ax4.set_xlim(5000, 10500)
-
-        #plt.show()
-        #plt.cla()
-        #plt.clf()
-        #plt.close()
+    num_cores = 5
+    model_comp_spec_modified = Parallel(n_jobs=num_cores)(delayed(do_model_modifications)(k, lsf, resampling_lam_grid, model_comp_spec, model_lam_grid_z) for k in range(total_models))
 
     return model_comp_spec_modified
 
@@ -447,7 +448,7 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
 
             # modify the model to be able to compare with data
             model_comp_spec_modified = \
-            do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, previous_z)
+            model_modifications_wrapper(object_lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, previous_z)
             print "Model mods done at current z:", previous_z, "\n", "Total time taken up to now --", time.time() - start, "seconds."
 
             # now get teh best fit model spectrum
@@ -745,7 +746,7 @@ if __name__ == '__main__':
     # get original photo-z first
     current_id = 69419
     current_field = 'GOODS-S'
-    redshift = 0.9
+    redshift = 0.75
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
