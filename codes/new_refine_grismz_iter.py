@@ -258,7 +258,7 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
         #ax2.set_xlim(5000, 10500)
 
         # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, len(lsf), int(len(lsf)*15))
+        interppoints = np.linspace(0, len(lsf), int(len(lsf)*20))
         # just making the lsf sampling grid longer # i.e. sampled at more points 
         broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
         temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
@@ -456,7 +456,7 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
             print "Current best fit log(age [yr]):", "{:.2}".format(age)
             print "Current best fit Tau [Gyr]:", "{:.2}".format(tau)
             print "Current best fit Tau_V:", tauv
-            plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
+            #plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
 
             #print "Current best fit model parameters are:"
             #print "Age:"
@@ -742,7 +742,7 @@ if __name__ == '__main__':
     # get original photo-z first
     current_id = 69419
     current_field = 'GOODS-S'
-    redshift = 0.9
+    redshift = 0.75
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S

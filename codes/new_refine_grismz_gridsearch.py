@@ -29,12 +29,12 @@ import fast_chi2_jackknife_massive_galaxies as fcjm
 import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
 
-def get_chi2(flam, ferr, object_lam_grid, model_comp_spec, model_resampling_lam_grid):
+def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_lam_grid):
 
     # chop the model to be consistent with the objects lam grid
     model_lam_grid_indx_low = np.argmin(abs(model_resampling_lam_grid - object_lam_grid[0]))
     model_lam_grid_indx_high = np.argmin(abs(model_resampling_lam_grid - object_lam_grid[-1]))
-    model_spec_in_objlamgrid = model_comp_spec[:, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+    model_spec_in_objlamgrid = model_comp_spec_mod[:, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
     # make sure that the arrays are the same length
     if int(model_spec_in_objlamgrid.shape[1]) != len(object_lam_grid):
