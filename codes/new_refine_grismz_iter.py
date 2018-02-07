@@ -250,7 +250,7 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
         #ax1.plot(model_lam_grid_z, model_comp_spec[k])
         #ax1.set_xlim(5000, 10500)
 
-        model_comp_spec[k] = convolve_fft(model_comp_spec[k], lsf)#, boundary='extend')
+        #model_comp_spec[k] = convolve_fft(model_comp_spec[k], lsf)#, boundary='extend')
         # seems like boundary='extend' is not implemented 
         # currently for convolve_fft(). It works with convolve() though.
 
@@ -258,7 +258,7 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
         #ax2.set_xlim(5000, 10500)
 
         # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, len(lsf), int(len(lsf)*16))
+        interppoints = np.linspace(0, len(lsf), int(len(lsf)*3))
         # just making the lsf sampling grid longer # i.e. sampled at more points 
         broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
         temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
@@ -411,9 +411,6 @@ def shift_in_wav_get_new_z(flam, ferr, lam_obs, model_lam_grid, previous_z, spec
 def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid, \
     model_lam_grid, total_models, model_comp_spec, model_spec_hdu):
 
-    #flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
-    #model_lam_grid, total_models, model_comp_spec, bc03_all_spec
-
     """
     flam, ferr, object_lam_grid are in observed wavelength space. Need to deredshift
     before fitting.
@@ -459,7 +456,7 @@ def do_fitting(flam, ferr, object_lam_obs, lsf, starting_z, resampling_lam_grid,
             print "Current best fit log(age [yr]):", "{:.2}".format(age)
             print "Current best fit Tau [Gyr]:", "{:.2}".format(tau)
             print "Current best fit Tau_V:", tauv
-            #plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
+            plot_fit_and_residual(object_lam_obs, flam, ferr, best_fit_model_in_objlamgrid, bestalpha)
 
             #print "Current best fit model parameters are:"
             #print "Age:"
@@ -813,9 +810,6 @@ if __name__ == '__main__':
     flam_obs = flam_em / (1 + redshift)
     ferr_obs = ferr_em / (1 + redshift)
     lam_obs = lam_em * (1 + redshift)
-    # I need them to be in the observed frame because the iterative process for 
-    # finding a new redshift will de-redshift them each time a new redshift is
-    # found. 
 
     # plot to check # Line useful for debugging. Do not remove. Just uncomment.
     #plotspectrum(lam_obs, flam_obs, ferr_obs)
