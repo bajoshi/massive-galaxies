@@ -57,7 +57,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.asarray([0.77]) #np.linspace(starting_z - 0.2, starting_z + 0.2, 41)
+    z_arr_to_check = np.linspace(starting_z - 0.15, starting_z + 0.1, 26)
     print "Will check the following redshifts:", z_arr_to_check
 
     # Loop over all redshifts to check
@@ -86,7 +86,8 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     min_idx_2d = np.unravel_index(min_idx, chi2.shape)
 
     print "Minimum chi2:", "{:.2}".format(chi2[min_idx_2d])
-    print "New redshift:", z_arr_to_check[min_idx_2d[0]]
+    z_grism = z_arr_to_check[min_idx_2d[0]]
+    print "New redshift:", z_grism
 
     # Get the best fit model parameters
     model_idx = int(min_idx_2d[1])
@@ -113,7 +114,18 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # chop model again to get the part within objects lam obs grid
     model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - lam_obs[0]))
     model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - lam_obs[-1]))
-    best_fit_model_in_objlamgrid = model_comp_spec[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+
+    # Will have to redo the model modifications at the new found z_grism
+    # You have to do this to plot the correct best fit model with its 
+    # modifications which was used for the fitting. 
+    # Either it has to be done this way or you will have to keep the 
+    # modified models in an array and then plot the best one here later.
+    model_comp_spec_modified = \
+    ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z_grism)
+    print "Model mods done (only for plotting purposes) at the new grism z:", z
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
+
+    best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
     # again make sure that the arrays are the same length
     if int(best_fit_model_in_objlamgrid.shape[0]) != len(lam_obs):
@@ -124,7 +136,14 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     # This chi2 map can also be visualized as an image. 
     # Run imshow() and check what it looks like.
-    plt.imshow(chi2, cmap='viridis')
+    fig = plt.figure(figsize=(4,4))
+    ax = fig.add_subplot(111)
+
+    ax.imshow(chi2)
+
+    ax.set_xscale('log')
+    ax.set_xlim(1,total_models)
+    
     plt.show()
 
     return None
@@ -143,7 +162,7 @@ if __name__ == '__main__':
     # --------------------------------------------- GET OBS DATA ------------------------------------------- #
     current_id = 69419
     current_field = 'GOODS-S'
-    redshift = 0.9  # photo-z estimate
+    redshift = 0.85  # photo-z estimate
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
