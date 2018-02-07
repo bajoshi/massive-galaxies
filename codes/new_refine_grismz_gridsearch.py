@@ -47,7 +47,7 @@ def get_chi2(flam, ferr, object_lam_grid, model_comp_spec, model_resampling_lam_
     return chi2_, alpha_
 
 def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, \
-        model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist):
+        model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time):
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -57,7 +57,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(starting_z - 0.1, starting_z + 0.05, 16)
+    z_arr_to_check = np.asarray([0.77]) #np.linspace(starting_z - 0.2, starting_z + 0.2, 41)
     print "Will check the following redshifts:", z_arr_to_check
 
     # Loop over all redshifts to check
@@ -74,7 +74,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         # first modify the models at the current redshift to be able to compare with data
         model_comp_spec_modified = \
         ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z)
-        print "Model mods done at current z:", z, "\n", "Total time taken up to now --", time.time() - start, "seconds."
+        print "Model mods done at current z:", z, "\n", "Total time taken up to now --", time.time() - start_time, "seconds."
 
         # Now do the chi2 computation
         chi2[count], alpha[count] = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec, resampling_lam_grid)
@@ -85,7 +85,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     min_idx = np.argmin(chi2)
     min_idx_2d = np.unravel_index(min_idx, chi2.shape)
 
-    print "Minimum chi2:", "{:.2}".format(min_chi2)
+    print "Minimum chi2:", "{:.2}".format(chi2[min_idx_2d])
     print "New redshift:", z_arr_to_check[min_idx_2d[0]]
 
     # Get the best fit model parameters
@@ -116,7 +116,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     best_fit_model_in_objlamgrid = model_comp_spec[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
     # again make sure that the arrays are the same length
-    if int(best_fit_model_in_objlamgrid.shape[1]) != len(lam_obs):
+    if int(best_fit_model_in_objlamgrid.shape[0]) != len(lam_obs):
         print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
         sys.exit(0)
     # plot
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     # --------------------------------------------- GET OBS DATA ------------------------------------------- #
     current_id = 69419
     current_field = 'GOODS-S'
-    redshift = 0.8  # photo-z estimate
+    redshift = 0.9  # photo-z estimate
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
@@ -203,6 +203,6 @@ if __name__ == '__main__':
 
     # call actual fitting function
     do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
-        model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist)
+        model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start)
 
     sys.exit(0)
