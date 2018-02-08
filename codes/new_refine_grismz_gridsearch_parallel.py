@@ -58,9 +58,9 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # Now do the chi2 computation
-    chi2, alpha = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
+    chi2_temp, alpha_temp = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
 
-    return chi2, alpha
+    return chi2_temp, alpha_temp
 
 def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, \
         model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time):
@@ -73,28 +73,35 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.array([0.84])  #np.linspace(starting_z - 0.1, starting_z + 0.03, 14)
+    z_arr_to_check = np.linspace(starting_z - 0.03, starting_z + 0.03, 7)
     print "Will check the following redshifts:", z_arr_to_check
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
-    # set up chi2 array
+    # set up chi2 and alpha arrays
     chi2 = np.empty((len(z_arr_to_check), total_models))
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 1
-    chi2[i], alpha[i] = Parallel(n_jobs=num_cores) (delayed(get_chi2_alpha_at_z)(z_arr_to_check[i], \
-        flam_obs, ferr_obs, lam_obs, model_lam_grid, \
-        model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
-        for i in range(len(z_arr_to_check)))
+    num_cores = 7
+    chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
+    flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
+    for z in z_arr_to_check)
+
+    # the parallel code seems to like returning only a list
+    # so I have to unpack the list
+    for i in range(len(z_arr_to_check)):
+        chi2[i], alpha[i] = chi2_alpha_list[i]
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Find the minimum chi2
     min_idx = np.argmin(chi2)
     min_idx_2d = np.unravel_index(min_idx, chi2.shape)
 
-    print "Minimum chi2:", "{:.2}".format(chi2[min_idx_2d])
+    # Simply the minimum chi2 might not be right
+    # Should 
+
+    print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
     z_grism = z_arr_to_check[min_idx_2d[0]]
     print "New redshift:", z_grism
 
@@ -114,8 +121,8 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         tau = -99.0
         tauv = -99.0
 
-    print "Current best fit log(age [yr]):", "{:.2}".format(age)
-    print "Current best fit Tau [Gyr]:", "{:.2}".format(tau)
+    print "Current best fit log(age [yr]):", "{:.4}".format(age)
+    print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
     print "Current best fit Tau_V:", tauv
 
     ####### ------------------------------------------ Plotting ------------------------------------------ #######
@@ -172,9 +179,9 @@ if __name__ == '__main__':
     print "Starting at --", dt.now()
 
     # --------------------------------------------- GET OBS DATA ------------------------------------------- #
-    current_id = 61447
-    current_field = 'GOODS-S'
-    redshift = 0.92  # photo-z estimate
+    current_id = 32497
+    current_field = 'GOODS-N'
+    redshift = 0.95  # photo-z estimate
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
@@ -191,7 +198,7 @@ if __name__ == '__main__':
     lam_obs = lam_em * (1 + redshift)
 
     # plot to check # Line useful for debugging. Do not remove. Just uncomment.
-    #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
+    ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
     # --------------------------------------------- Quality checks ------------------------------------------- #
 
     # ---------------------------------------------- MODELS ----------------------------------------------- #

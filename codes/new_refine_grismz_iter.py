@@ -258,7 +258,7 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
         #ax2.set_xlim(5000, 10500)
 
         # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, len(lsf), int(len(lsf)*12))
+        interppoints = np.linspace(0, len(lsf), int(len(lsf)*10))
         # just making the lsf sampling grid longer # i.e. sampled at more points 
         broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
         temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
@@ -661,7 +661,7 @@ def get_mock_spec():
     #ax = fig.add_subplot(111)
     ###ax.plot(lam_obs, flam_obs)  # Use this line if you're plotting before resampling
     ###ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')  
-    ### Use this above line if you're plotting before resampling
+    ### Use these above lines if you're plotting before resampling
     #ax.plot(mock_resample_lam_grid, flam_obs)
     #ax.fill_between(mock_resample_lam_grid, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
     #plt.show()
@@ -740,15 +740,26 @@ if __name__ == '__main__':
 
     # start fitting
     # get original photo-z first
-    current_id = 69419
+    current_id = 43997
     current_field = 'GOODS-S'
-    redshift = 0.75
+    redshift = 0.64
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
     # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673 # spec-z 0.97
     lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
     d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+
+    # the original function (fileprep in grid_coadd) will give quantities in rest frame
+    # but I need these to be in the observed frame so I will redshift them again.
+    # It gives them in the rest frame because getting the d4000 and the average 
+    # lambda separation needs to be figured out in the rest frame.
+    flam_obs = flam_em / (1 + redshift)
+    ferr_obs = ferr_em / (1 + redshift)
+    lam_obs = lam_em * (1 + redshift)
+
+    # plot to check # Line useful for debugging. Do not remove. Just uncomment.
+    #plotspectrum(lam_obs, flam_obs, ferr_obs)
 
     if verbose:
         print current_field, current_id, pa_chosen, netsig_chosen  # GOODS-S 65620 PA200 657.496906164
@@ -803,17 +814,6 @@ if __name__ == '__main__':
     print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
     # now call the actual fitting function
-    # the original function (fileprep in grid_coadd) will give quantities in rest frame
-    # but I need these to be in the observed frame so I will redshift them again.
-    # It gives them in the rest frame because getting the d4000 and the average 
-    # lambda separation needs to be figured out in the rest frame.
-    flam_obs = flam_em / (1 + redshift)
-    ferr_obs = ferr_em / (1 + redshift)
-    lam_obs = lam_em * (1 + redshift)
-
-    # plot to check # Line useful for debugging. Do not remove. Just uncomment.
-    #plotspectrum(lam_obs, flam_obs, ferr_obs)
-
     # extend lam_grid to be able to move the lam_grid later 
     avg_dlam = old_ref.get_avg_dlam(lam_obs)
 
