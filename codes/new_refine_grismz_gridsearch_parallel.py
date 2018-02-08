@@ -4,6 +4,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve_fft, convolve, Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
+import multiprocessing as mp
 
 import os
 import sys
@@ -122,7 +123,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # modified models in an array and then plot the best one here later.
     model_comp_spec_modified = \
     ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z_grism)
-    print "Model mods done (only for plotting purposes) at the new grism z:", z
+    print "Model mods done (only for plotting purposes) at the new grism z:", z_grism
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
