@@ -25,7 +25,7 @@ figs_dir = home + "/Desktop/FIGS/"
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 import grid_coadd as gd
-import fast_chi2_jackknife_massive_galaxies as fcjm
+#import fast_chi2_jackknife_massive_galaxies as fcjm
 import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
 
@@ -55,9 +55,10 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     For each iteration through the redshift list it computes a chi2 for each model.
     So there are 
     """
-
+    
+    ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(starting_z - 0.1, starting_z + 0.03, 14)
+    z_arr_to_check = np.linspace(starting_z - 0.02, starting_z + 0.15, 18)
     print "Will check the following redshifts:", z_arr_to_check
 
     # Loop over all redshifts to check
@@ -81,6 +82,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
         count += 1
 
+    ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Find the minimum chi2
     min_idx = np.argmin(chi2)
     min_idx_2d = np.unravel_index(min_idx, chi2.shape)
@@ -109,6 +111,8 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     print "Current best fit Tau [Gyr]:", "{:.2}".format(tau)
     print "Current best fit Tau_V:", tauv
 
+    ####### ------------------------------------------ Plotting ------------------------------------------ #######
+    #### -------- Plot spectrum: Data, best fit model, and the residual --------- ####
     # get things needed to plot and plot
     bestalpha = alpha[min_idx_2d]
     # chop model again to get the part within objects lam obs grid
@@ -122,7 +126,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # modified models in an array and then plot the best one here later.
     model_comp_spec_modified = \
     ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z_grism)
-    print "Model mods done (only for plotting purposes) at the new grism z:", z
+    print "Model mods done (only for plotting purposes) at the new grism z:", z_grism
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
@@ -134,15 +138,17 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # plot
     ni.plot_fit_and_residual(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha)
 
+    #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
     # Run imshow() and check what it looks like.
+    # You can also save it as fit and mess with it in ds9
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
 
     ax.imshow(chi2)
 
     ax.set_xscale('log')
-    ax.set_xlim(1,total_models)
+    ax.set_xlim(1, total_models)
     
     plt.show()
 
@@ -160,13 +166,17 @@ if __name__ == '__main__':
     print "Starting at --", dt.now()
 
     # --------------------------------------------- GET OBS DATA ------------------------------------------- #
-    current_id = 61447
+    current_id = 54977
     current_field = 'GOODS-S'
-    redshift = 0.92  # photo-z estimate
+    redshift = 1.06  # photo-z estimate
+    # For 69419 GOODS-S
+    # 0.75 Ferreras+2009 # photo-z 0.75
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
     # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673 # spec-z 0.97
+    # For 54977 GOODS-S
+    # spec-z 1.18 # photo-z 0.06
     lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
 
     # now make sure that the quantities are all in observer frame

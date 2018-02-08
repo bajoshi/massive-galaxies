@@ -4,7 +4,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve_fft, convolve, Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
-import multiprocessing as mp
+from joblib import Parallel, delayed
 
 import os
 import sys
@@ -47,6 +47,21 @@ def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_
 
     return chi2_, alpha_
 
+def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf):
+
+    print "\n", "Currently at redshift:", z
+
+    # first modify the models at the current redshift to be able to compare with data
+    model_comp_spec_modified = \
+    ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z)
+    print "Model mods done at current z:", z,
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
+
+    # Now do the chi2 computation
+    chi2, alpha = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
+
+    return chi2, alpha
+
 def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, \
         model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time):
     """
@@ -67,20 +82,11 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    count = 0
-    for z in z_arr_to_check:
-
-        print "\n", "Currently at redshift:", z
-
-        # first modify the models at the current redshift to be able to compare with data
-        model_comp_spec_modified = \
-        ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z)
-        print "Model mods done at current z:", z, "\n", "Total time taken up to now --", time.time() - start_time, "seconds."
-
-        # Now do the chi2 computation
-        chi2[count], alpha[count] = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
-
-        count += 1
+    num_cores = 3
+    chi2[i], alpha[i] = a = Parallel(n_jobs=num_cores) (delayed(get_chi2_alpha_at_z)(z_arr_to_check[i], \
+        flam_obs, ferr_obs, lam_obs, model_lam_grid, \
+        model_comp_spec, resampling_lam_grid, total_models, lsf) \
+        for i in range(len(z_arr_to_check)))
 
     # Find the minimum chi2
     min_idx = np.argmin(chi2)

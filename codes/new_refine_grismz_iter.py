@@ -258,7 +258,7 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
         #ax2.set_xlim(5000, 10500)
 
         # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, len(lsf), int(len(lsf)*20))
+        interppoints = np.linspace(0, len(lsf), int(len(lsf)*12))
         # just making the lsf sampling grid longer # i.e. sampled at more points 
         broad_lsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
         temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
