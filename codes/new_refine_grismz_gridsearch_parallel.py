@@ -47,14 +47,14 @@ def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_
 
     return chi2_, alpha_
 
-def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf):
+def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time):
 
     print "\n", "Currently at redshift:", z
 
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = \
     ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z)
-    print "Model mods done at current z:", z,
+    print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # Now do the chi2 computation
@@ -73,21 +73,23 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(starting_z - 0.1, starting_z + 0.03, 14)
+    z_arr_to_check = np.array([0.84])  #np.linspace(starting_z - 0.1, starting_z + 0.03, 14)
     print "Will check the following redshifts:", z_arr_to_check
 
+    ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
     # set up chi2 array
     chi2 = np.empty((len(z_arr_to_check), total_models))
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 3
-    chi2[i], alpha[i] = a = Parallel(n_jobs=num_cores) (delayed(get_chi2_alpha_at_z)(z_arr_to_check[i], \
+    num_cores = 1
+    chi2[i], alpha[i] = Parallel(n_jobs=num_cores) (delayed(get_chi2_alpha_at_z)(z_arr_to_check[i], \
         flam_obs, ferr_obs, lam_obs, model_lam_grid, \
-        model_comp_spec, resampling_lam_grid, total_models, lsf) \
+        model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
         for i in range(len(z_arr_to_check)))
 
+    ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Find the minimum chi2
     min_idx = np.argmin(chi2)
     min_idx_2d = np.unravel_index(min_idx, chi2.shape)
@@ -116,6 +118,8 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     print "Current best fit Tau [Gyr]:", "{:.2}".format(tau)
     print "Current best fit Tau_V:", tauv
 
+    ####### ------------------------------------------ Plotting ------------------------------------------ #######
+    #### -------- Plot spectrum: Data, best fit model, and the residual --------- ####
     # get things needed to plot and plot
     bestalpha = alpha[min_idx_2d]
     # chop model again to get the part within objects lam obs grid
@@ -141,12 +145,13 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # plot
     ni.plot_fit_and_residual(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha)
 
+    #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
     # Run imshow() and check what it looks like.
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
 
-    ax.imshow(chi2)
+    ax.imshow(np.log10(chi2))
 
     ax.set_xscale('log')
     ax.set_xlim(1,total_models)
