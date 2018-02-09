@@ -73,7 +73,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(starting_z - 0.03, starting_z + 0.03, 7)
+    z_arr_to_check = np.linspace(starting_z - 0.08, starting_z + 0.08, 17)
     print "Will check the following redshifts:", z_arr_to_check
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
@@ -83,7 +83,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 7
+    num_cores = 6
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -97,9 +97,6 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # Find the minimum chi2
     min_idx = np.argmin(chi2)
     min_idx_2d = np.unravel_index(min_idx, chi2.shape)
-
-    # Simply the minimum chi2 might not be right
-    # Should 
 
     print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
     z_grism = z_arr_to_check[min_idx_2d[0]]
@@ -124,6 +121,13 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     print "Current best fit log(age [yr]):", "{:.4}".format(age)
     print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
     print "Current best fit Tau_V:", tauv
+
+    # Simply the minimum chi2 might not be right
+    # Should check if the minimum is global or local
+    min_chi2 = chi2[min_idx_2d]
+    low_chi2_idx = np.where(chi2 < min_chi2 + 0.1*min_chi2)
+    print len(low_chi2_idx[0].ravel())
+    print low_chi2_idx
 
     ####### ------------------------------------------ Plotting ------------------------------------------ #######
     #### -------- Plot spectrum: Data, best fit model, and the residual --------- ####
@@ -158,11 +162,11 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
 
-    ax.imshow(np.log10(chi2))
+    chi2[low_chi2_idx] = 0.0
+    ax.imshow(chi2)
 
     ax.set_xscale('log')
     ax.set_xlim(1,total_models)
-    
     plt.show()
 
     return None
@@ -179,9 +183,9 @@ if __name__ == '__main__':
     print "Starting at --", dt.now()
 
     # --------------------------------------------- GET OBS DATA ------------------------------------------- #
-    current_id = 32497
+    current_id = 36639
     current_field = 'GOODS-N'
-    redshift = 0.95  # photo-z estimate
+    redshift = 0.88  # photo-z estimate
     # for 61447 GOODS-S
     # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
     # for 65620 GOODS-S
@@ -198,7 +202,7 @@ if __name__ == '__main__':
     lam_obs = lam_em * (1 + redshift)
 
     # plot to check # Line useful for debugging. Do not remove. Just uncomment.
-    ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
+    #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
     # --------------------------------------------- Quality checks ------------------------------------------- #
 
     # ---------------------------------------------- MODELS ----------------------------------------------- #
