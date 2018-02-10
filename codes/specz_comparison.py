@@ -216,6 +216,7 @@ if __name__ == '__main__':
     skipped = 0
     weird = 0
     catcount = 0
+    spec_count = 0
     for cat in all_spec_cats:  # dummy loop variable. I know I could use it but I like the clarity of the current way better.
         
         if catcount == 0:
@@ -223,6 +224,8 @@ if __name__ == '__main__':
             spec_ind = specz_n_ind
             pears_cat = pears_cat_n
             pears_ind = pears_n_ind
+            #print spec_cat[spec_ind]
+            #sys.exit(0)
 
         elif catcount == 1:
             spec_cat = cdfs_cat
@@ -230,7 +233,7 @@ if __name__ == '__main__':
             pears_cat = pears_cat_s
             pears_ind = pears_s_ind
 
-        #print len(spec_cat['z_spec'][spec_ind])
+        print "In field", catcount, "with", len(spec_cat['z_spec'][spec_ind]), "objects."
 
         for i in range(len(spec_cat['z_spec'][spec_ind])):
     
@@ -254,10 +257,21 @@ if __name__ == '__main__':
                 imag = pears_master_scat['imag'][idarg]
                 netsig_corr = pears_master_scat['netsig_corr'][idarg]
 
+            if current_specz_qual == 'A' or current_specz_qual == '4':
+                if current_specz_source == '3D_HST':
+                    continue
+                else:
+                    spec_count += 1
+                    print "\n", "At id:", current_id, "in", current_field,
+                    print "Corrected NetSig:", netsig_corr, "  i-band mag:", imag
+                    print "Spec-z is", current_specz, "from", current_specz_source, "with quality", current_specz_qual,
+                    print "Photo-z is", pears_cat['old_z'][pears_ind][i]
+
+            """
             #if abs(spec_cat['z_spec'][spec_ind][i] - pears_cat['new_z'][pears_ind][i]) >= 0.03:
 
-            if (current_grismz > 1.235) or (current_grismz < 0.6):
-                continue
+            #if (current_grismz > 1.235) or (current_grismz < 0.6):
+            #    continue
             # skip if grism z is not within range
             # this condition probalby shouldn't be here
             # i hsould be checking if the spec_z is in range
@@ -271,7 +285,7 @@ if __name__ == '__main__':
                 continue
 
             try:
-                if (int(current_specz_qual) < 3):
+                if (int(current_specz_qual) < 4):
                     skipped += 1
                     continue
             except ValueError as e:
@@ -281,7 +295,11 @@ if __name__ == '__main__':
                 skipped += 1
                 continue
     
-            #print current_specz_source  #, netsig_corr, netsig_chosen_specz, imag
+            print "\n", "At id:", current_id, "in", current_field
+            print "Spec-z is", current_specz, "from", current_specz_source, "with quality", current_specz_qual
+            print "Photo-z is", pears_cat['old_z'][pears_ind][i]
+            print "Corrected NetSig:", netsig_corr, "  i-band mag:", imag
+
             spec_z_source_list.append(current_specz_source)
             z_spec_plot.append(spec_cat['z_spec'][spec_ind][i])
             z_grism_plot.append(pears_cat['new_z'][pears_ind][i])
@@ -294,16 +312,16 @@ if __name__ == '__main__':
             specz_sample_z.append(current_specz)
 
             # find which galaxies have large (z_spec - z_grism)/(1+z_spec)
-            if abs((current_specz - current_grismz)/(1 + current_specz)) > 0.05:
-                weird += 1
-                print "large diff between spec and grism z", current_grismz, current_specz, current_id, current_field, current_photz
-                lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                #lam_em_photz, flam_em_photz, ferr_photz, specname_photz, pa_forlsf_photz, netsig_chosen_photz = gd.fileprep(current_id, current_photz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
-                current_d4000 = pears_cat['d4000'][pears_ind][i]
-                current_err_frac = np.sum(abs(ferr_specz)) / np.sum(abs(flam_em_specz))
-                print "D(4000), Netsig, and Overall error fraction is", current_d4000, netsig_chosen_specz, current_err_frac, '\n'
-                plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz, flam_em_grismz, current_grismz)
+            #if abs((current_specz - current_grismz)/(1 + current_specz)) > 0.05:
+            #    weird += 1
+            #    print "large diff between spec and grism z", current_grismz, current_specz, current_id, current_field, current_photz
+            #    lam_em_specz, flam_em_specz, ferr_specz, specname_specz, pa_forlsf_specz, netsig_chosen_specz = gd.fileprep(current_id, current_specz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+            #    lam_em_grismz, flam_em_grismz, ferr_grismz, specname_grismz, pa_forlsf_grismz, netsig_chosen_grismz = gd.fileprep(current_id, current_grismz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+            #    #lam_em_photz, flam_em_photz, ferr_photz, specname_photz, pa_forlsf_photz, netsig_chosen_photz = gd.fileprep(current_id, current_photz, current_field, apply_smoothing=True, width=1.5, kernel_type='gauss')
+            #    current_d4000 = pears_cat['d4000'][pears_ind][i]
+            #    current_err_frac = np.sum(abs(ferr_specz)) / np.sum(abs(flam_em_specz))
+            #    print "D(4000), Netsig, and Overall error fraction is", current_d4000, netsig_chosen_specz, current_err_frac, '\n'
+            #    #plot_z_comparison(lam_em_specz, flam_em_specz, current_specz, lam_em_grismz, flam_em_grismz, current_grismz)
 
             #else:
             #    if current_specz_source == "3D_HST":
@@ -315,8 +333,12 @@ if __name__ == '__main__':
             #    z_phot_plot.append(pears_cat['old_z'][pears_ind][i])
             #    z_grism_std_plot.append(pears_cat['new_z_err'][pears_ind][i])
             #    imag_plot.append(imag)
+            """
 
         catcount += 1
+
+    print "Total number in high quality specz sample:", spec_count
+    sys.exit(0)
 
     print skipped, "galaxies were skipped due to bad spectroscopic z quality."
     print weird, "galaxies have (z_spec - z_grism) >= 0.03."
