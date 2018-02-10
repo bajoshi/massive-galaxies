@@ -73,7 +73,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(starting_z - 0.08, starting_z + 0.08, 17)
+    z_arr_to_check = np.linspace(starting_z - 0.05, starting_z + 0.05, 11)
     print "Will check the following redshifts:", z_arr_to_check
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
@@ -97,6 +97,17 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # Find the minimum chi2
     min_idx = np.argmin(chi2)
     min_idx_2d = np.unravel_index(min_idx, chi2.shape)
+
+    # Make sure that the age is physically meaningful
+    sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
+
+    for k in range(len(chi2.ravel())):
+        
+        current_z = z_arr_to_check[]
+        age_at_z = cosmo.age(current_z).value * 1e9 # in yr
+        if (best_age < np.log10(age_at_z)) & (best_age > 9 + np.log10(0.1)):
+
+
 
     print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
     z_grism = z_arr_to_check[min_idx_2d[0]]
@@ -159,15 +170,15 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
     # Run imshow() and check what it looks like.
-    fig = plt.figure(figsize=(6,6))
-    ax = fig.add_subplot(111)
+    #fig = plt.figure(figsize=(6,6))
+    #ax = fig.add_subplot(111)
 
-    chi2[low_chi2_idx] = 0.0
-    ax.imshow(chi2)
+    #chi2[low_chi2_idx] = 0.0
+    #ax.imshow(chi2)
 
-    ax.set_xscale('log')
-    ax.set_xlim(1,total_models)
-    plt.show()
+    #ax.set_xscale('log')
+    #ax.set_xlim(1,total_models)
+    #plt.show()
 
     return None
 
@@ -183,13 +194,9 @@ if __name__ == '__main__':
     print "Starting at --", dt.now()
 
     # --------------------------------------------- GET OBS DATA ------------------------------------------- #
-    current_id = 36639
+    current_id = 124386
     current_field = 'GOODS-N'
-    redshift = 0.88  # photo-z estimate
-    # for 61447 GOODS-S
-    # 0.84 Ferreras+2009  # candels 0.976 # 3dhst 0.9198
-    # for 65620 GOODS-S
-    # 0.97 Ferreras+2009  # candels 0.972 # 3dhst 0.9673 # spec-z 0.97
+    redshift = 0.82  # photo-z estimate
     lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
 
     # now make sure that the quantities are all in observer frame
@@ -202,7 +209,7 @@ if __name__ == '__main__':
     lam_obs = lam_em * (1 + redshift)
 
     # plot to check # Line useful for debugging. Do not remove. Just uncomment.
-    #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
+    ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
     # --------------------------------------------- Quality checks ------------------------------------------- #
 
     # ---------------------------------------------- MODELS ----------------------------------------------- #
