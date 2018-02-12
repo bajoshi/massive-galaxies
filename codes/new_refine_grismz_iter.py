@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+import numpy.ma as ma
 from astropy.io import fits
 from astropy.convolution import convolve_fft, convolve, Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
@@ -235,11 +236,32 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
     # redshift flux
     model_comp_spec = model_comp_spec / (1 + z)    # figure added to be able to debug
 
-    # Interpolate the LSF to the rest frame delta lambda grid of the galaxy
-    #dlam_obs = old_ref.get_avg_dlam(object_lam_obs)
-    #dlam_em = dlam_obs / (1+z)
-    #interppoints = np.linspace(0, len(lsf), int(len(lsf)*dlam_em))
-    #interplsf = np.interp(interppoints, xp=np.arange(len(lsf)), fp=lsf)
+    # ---------------- Mask potential emission lines ----------------- #
+    # Will mask one point on each side of line center i.e. approx 80 A masked
+    # These are all vacuum wavelengths
+    oiii_4363 = 4364.44
+    oiii_5007 = 5008.24
+    oiii_4959 = 4960.30
+    hbeta = 4862.69
+    hgamma = 4341.69
+    oii_3727 = 3728.5  
+    # these two lines (3727 and 3729) are so close to each other 
+    # that the line will always blend in grism spectra. 
+    # avg wav of the two written here
+
+    # Set up line mask 
+    line_mask = np.zeros(len(resampling_lam_grid))
+
+    # Get redshifted wavelengths and mask
+    oii_3727_idx = np.argmin(abs(resampling_lam_grid - oii_3727*(1 + z)))
+    oiii_5007_idx = np.argmin(abs(resampling_lam_grid - oiii_5007*(1 + z)))
+    oiii_4959_idx = np.argmin(abs(resampling_lam_grid - oiii_4959*(1 + z)))
+    oiii_4363_idx = np.argmin(abs(resampling_lam_grid - oiii_4363*(1 + z)))
+
+    line_mask[oii_3727_idx-1 : oii_3727_idx+2] = 1.0
+    line_mask[oiii_5007_idx-1 : oiii_5007_idx+2] = 1.0
+    line_mask[oiii_4959_idx-1 : oiii_4959_idx+2] = 1.0
+    line_mask[oiii_4363_idx-1 : oiii_4363_idx+2] = 1.0
 
     for k in range(total_models):
 
@@ -284,6 +306,9 @@ def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resa
             #resampled_flam[i] = np.mean(model_comp_spec[k][new_ind])
 
             resampled_flam_broadlsf[i] = np.mean(temp_broadlsf_model[new_ind])
+
+        # Now mask the flux at these wavelengths using the mask generated before the for loop
+        resampled_flam_broadlsf = ma.array(resampled_flam_broadlsf, mask=line_mask)
 
         model_comp_spec_modified[k] = resampled_flam_broadlsf
 

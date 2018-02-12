@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+import numpy.ma as ma
 from astropy.io import fits
 from astropy.convolution import convolve_fft, convolve, Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
@@ -74,8 +75,9 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(starting_z - 0.05, starting_z + 0.05, 11)
+    z_arr_to_check = np.array([0.98]) ##np.linspace(starting_z - 0.02, starting_z + 0.08, 11)
     print "Will check the following redshifts:", z_arr_to_check
+
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -84,7 +86,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 3
+    num_cores = 1
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -202,9 +204,9 @@ if __name__ == '__main__':
     print "Starting at --", dt.now()
 
     # --------------------------------------------- GET OBS DATA ------------------------------------------- #
-    current_id = 124386
-    current_field = 'GOODS-N'
-    redshift = 0.82  # photo-z estimate
+    current_id = 13499
+    current_field = 'GOODS-S'
+    redshift = 0.92  # photo-z estimate
     lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
 
     # now make sure that the quantities are all in observer frame
@@ -218,6 +220,7 @@ if __name__ == '__main__':
 
     # plot to check # Line useful for debugging. Do not remove. Just uncomment.
     #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
+
     # --------------------------------------------- Quality checks ------------------------------------------- #
 
     # ---------------------------------------------- MODELS ----------------------------------------------- #
