@@ -1,17 +1,17 @@
 from __future__ import division
 
 import numpy as np
-cimport numpy as np
 import numpy.ma as ma
+cimport numpy as np
 
 from astropy.convolution import convolve_fft
 
 import os
 import sys
 
-DTYPE = np.float64
+DTYPE = np.float
 
-ctypedef np.float64_t DTYPE_t
+ctypedef np.float_t DTYPE_t
 
 def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarray[DTYPE_t, ndim=1] model_lam_grid, \
     np.ndarray[DTYPE_t, ndim=2] model_comp_spec, np.ndarray[DTYPE_t, ndim=1] resampling_lam_grid, \
@@ -89,8 +89,8 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     # more type definitions
     cdef int k
     cdef int i
-    cdef int lam_step_low
-    cdef int lam_step_high
+    cdef double lam_step_low
+    cdef double lam_step_high
     cdef np.ndarray[DTYPE_t, ndim=1] interppoints
     cdef np.ndarray[DTYPE_t, ndim=1] broad_lsf
     cdef np.ndarray[DTYPE_t, ndim=1] temp_broadlsf_model

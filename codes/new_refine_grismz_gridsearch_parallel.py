@@ -30,6 +30,7 @@ import grid_coadd as gd
 import fast_chi2_jackknife_massive_galaxies as fcjm
 import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
+import model_mods_cython
 
 def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_lam_grid):
 
@@ -53,9 +54,18 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
 
     print "\n", "Currently at redshift:", z
 
+    print lam_obs.dtype
+    print model_lam_grid.dtype
+    print model_comp_spec.dtype
+    print resampling_lam_grid.dtype
+    print type(total_models)
+    print lsf.dtype
+    print type(z)
+
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = \
-    ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z)
+    model_mods_cython.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, \
+        resampling_lam_grid, total_models, lsf, z)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
@@ -77,7 +87,6 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # Set up redshift grid to check
     z_arr_to_check = np.array([0.98]) ##np.linspace(starting_z - 0.02, starting_z + 0.08, 11)
     print "Will check the following redshifts:", z_arr_to_check
-
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -164,7 +173,8 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # Either it has to be done this way or you will have to keep the 
     # modified models in an array and then plot the best one here later.
     model_comp_spec_modified = \
-    ni.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z_grism)
+    model_mods_cython.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, \
+        resampling_lam_grid, total_models, lsf, z_grism)
     print "Model mods done (only for plotting purposes) at the new grism z:", z_grism
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
@@ -235,7 +245,7 @@ if __name__ == '__main__':
     example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
     bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
     model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
-    model_comp_spec = np.zeros([total_models, len(model_lam_grid)], dtype=np.float64)
+    model_comp_spec = np.zeros((total_models, len(model_lam_grid)), dtype=np.float64)
     for j in range(total_models):
         model_comp_spec[j] = bc03_all_spec_hdulist[j+1].data
 
