@@ -1,21 +1,27 @@
 from __future__ import division
 
+from scipy.signal import fftconvolve
 import numpy as np
 import numpy.ma as ma
+
 cimport numpy as np
+cimport cython
 
-from astropy.convolution import convolve_fft
+#from astropy.convolution import convolve_fft
+# check if there is an existing C function to do--
+# convolution
+# mean
+# interpolation
+# seems like len() and abs() are already as optimized as they can be
+# check the list at http://docs.cython.org/en/latest/src/userguide/language_basics.html#language-basics
 
-import os
-import sys
+DTYPE = np.float64
 
-DTYPE = np.float
-
-ctypedef np.float_t DTYPE_t
+ctypedef np.float64_t DTYPE_t
 
 def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarray[DTYPE_t, ndim=1] model_lam_grid, \
     np.ndarray[DTYPE_t, ndim=2] model_comp_spec, np.ndarray[DTYPE_t, ndim=1] resampling_lam_grid, \
-    int total_models, np.ndarray[DTYPE_t, ndim=1] lsf, double z):
+    int total_models, np.ndarray[DTYPE_t, ndim=1] lsf, DTYPE_t z):
 
     # Before fitting
     # 0. get lsf and models (supplied as arguments to this function)
@@ -27,19 +33,18 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     cdef int resampling_lam_grid_length
     cdef int lsf_length
 
-    cdef np.ndarray[DTYPE_t, ndim=1] model_lam_grid_z
-
     # hardcoded lengths
     # Can len() be redefined as a C function to be faster?
     resampling_lam_grid_length = len(resampling_lam_grid)
     lsf_length = len(lsf)
 
     # create empty array in which final modified models will be stored
-    cdef np.ndarray[DTYPE_t, ndim=2] model_comp_spec_modified = np.empty((total_models, resampling_lam_grid_length), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=2] model_comp_spec_modified = \
+    np.empty((total_models, resampling_lam_grid_length), dtype=DTYPE)
 
     # redshift lambda grid for model 
     # this is the lambda grid at the model's native resolution
-    model_lam_grid_z = model_lam_grid * (1 + z)
+    cdef np.ndarray[DTYPE_t, ndim=1] model_lam_grid_z = model_lam_grid * (1 + z)
 
     # redshift flux
     model_comp_spec = model_comp_spec / (1 + z)
@@ -66,9 +71,7 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     # avg wav of the two written here
 
     # Set up line mask
-    cdef np.ndarray[DTYPE_t, ndim=1] line_mask
-
-    line_mask = np.zeros(resampling_lam_grid_length)
+    cdef np.ndarray[long, ndim=1] line_mask = np.zeros(resampling_lam_grid_length, dtype=np.int)
 
     # Get redshifted wavelengths and mask
     cdef int oii_3727_idx
@@ -81,10 +84,10 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     oiii_4959_idx = np.argmin(abs(resampling_lam_grid - oiii_4959*(1 + z)))
     oiii_4363_idx = np.argmin(abs(resampling_lam_grid - oiii_4363*(1 + z)))
 
-    line_mask[oii_3727_idx-1 : oii_3727_idx+2] = 1.0
-    line_mask[oiii_5007_idx-1 : oiii_5007_idx+2] = 1.0
-    line_mask[oiii_4959_idx-1 : oiii_4959_idx+2] = 1.0
-    line_mask[oiii_4363_idx-1 : oiii_4363_idx+2] = 1.0
+    line_mask[oii_3727_idx-1 : oii_3727_idx+2] = 1
+    line_mask[oiii_5007_idx-1 : oiii_5007_idx+2] = 1
+    line_mask[oiii_4959_idx-1 : oiii_4959_idx+2] = 1
+    line_mask[oiii_4363_idx-1 : oiii_4363_idx+2] = 1
 
     # more type definitions
     cdef int k
@@ -94,16 +97,16 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     cdef np.ndarray[DTYPE_t, ndim=1] interppoints
     cdef np.ndarray[DTYPE_t, ndim=1] broad_lsf
     cdef np.ndarray[DTYPE_t, ndim=1] temp_broadlsf_model
-    cdef np.ndarray[DTYPE_t, ndim=1] new_ind
+    cdef np.ndarray[long, ndim=1] new_ind
     cdef np.ndarray[DTYPE_t, ndim=1] resampled_flam_broadlsf
 
     for k in range(total_models):
 
         # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, lsf_length, int(lsf_length*10))
+        interppoints = np.linspace(0, lsf_length, lsf_length*10)
         # just making the lsf sampling grid longer # i.e. sampled at more points 
         broad_lsf = np.interp(interppoints, xp=np.arange(lsf_length), fp=lsf)
-        temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
+        temp_broadlsf_model = fftconvolve(model_comp_spec[k], broad_lsf)
 
         # resample to object resolution
         resampled_flam_broadlsf = np.zeros(resampling_lam_grid_length, dtype=DTYPE)
@@ -126,8 +129,6 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
             resampled_flam_broadlsf[i] = np.mean(temp_broadlsf_model[new_ind])
 
         # Now mask the flux at these wavelengths using the mask generated before the for loop
-        resampled_flam_broadlsf = ma.array(resampled_flam_broadlsf, mask=line_mask)
-
-        model_comp_spec_modified[k] = resampled_flam_broadlsf
+        model_comp_spec_modified[k] = ma.array(resampled_flam_broadlsf, mask=line_mask)
 
     return model_comp_spec_modified
