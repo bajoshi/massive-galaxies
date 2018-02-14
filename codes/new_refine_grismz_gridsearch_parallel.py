@@ -54,13 +54,14 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
 
     print "\n", "Currently at redshift:", z
 
-    print lam_obs.dtype
-    print model_lam_grid.dtype
-    print model_comp_spec.dtype
-    print resampling_lam_grid.dtype
-    print type(total_models)
-    print lsf.dtype
-    print type(z)
+    # make sure the types are correct before passing to cython code
+    lam_obs = lam_obs.astype(np.float64)
+    model_lam_grid = model_lam_grid.astype(np.float64)
+    model_comp_spec = model_comp_spec.astype(np.float64)
+    resampling_lam_grid = resampling_lam_grid.astype(np.float64)
+    total_models = int(total_models)
+    lsf = lsf.astype(np.float64)
+    #z = float(z)
 
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = \
@@ -167,6 +168,15 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - lam_obs[0]))
     model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - lam_obs[-1]))
 
+    # make sure the types are correct before passing to cython code
+    lam_obs = lam_obs.astype(np.float64)
+    model_lam_grid = model_lam_grid.astype(np.float64)
+    model_comp_spec = model_comp_spec.astype(np.float64)
+    resampling_lam_grid = resampling_lam_grid.astype(np.float64)
+    total_models = int(total_models)
+    lsf = lsf.astype(np.float64)
+    #z = float(z)
+
     # Will have to redo the model modifications at the new found z_grism
     # You have to do this to plot the correct best fit model with its 
     # modifications which was used for the fitting. 
@@ -213,26 +223,6 @@ if __name__ == '__main__':
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
-    # --------------------------------------------- GET OBS DATA ------------------------------------------- #
-    current_id = 13499
-    current_field = 'GOODS-S'
-    redshift = 0.92  # photo-z estimate
-    lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
-
-    # now make sure that the quantities are all in observer frame
-    # the original function (fileprep in grid_coadd) will give quantities in rest frame
-    # but I need these to be in the observed frame so I will redshift them again.
-    # It gives them in the rest frame because getting the d4000 and the average 
-    # lambda separation needs to be figured out in the rest frame.
-    flam_obs = flam_em / (1 + redshift)
-    ferr_obs = ferr_em / (1 + redshift)
-    lam_obs = lam_em * (1 + redshift)
-
-    # plot to check # Line useful for debugging. Do not remove. Just uncomment.
-    #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
-
-    # --------------------------------------------- Quality checks ------------------------------------------- #
-
     # ---------------------------------------------- MODELS ----------------------------------------------- #
     # put all models into one single fits file
     #ni.get_model_set()
@@ -252,27 +242,57 @@ if __name__ == '__main__':
     # total run time up to now
     print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
-    # ---------------------------------------------- FITTING ----------------------------------------------- #
-    # Read in LSF
-    if current_field == 'GOODS-N':
-        lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
-    elif current_field == 'GOODS-S':
-        lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+    # Read in Specz comparison catalogs
+    specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
+    specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
-    # read in LSF file
-    lsf = np.loadtxt(lsf_filename)
+    all_speccats = [specz_goodsn, specz_goodss]
 
-    # extend lam_grid to be able to move the lam_grid later 
-    avg_dlam = old_ref.get_avg_dlam(lam_obs)
+    for cat in all_speccats:
 
-    lam_low_to_insert = np.arange(5000, lam_obs[0], avg_dlam)
-    lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 10500, avg_dlam)
+        for i in range():
 
-    resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
-    resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+            # --------------------------------------------- GET OBS DATA ------------------------------------------- #
+            current_id = 13499
+            current_field = 'GOODS-S'
+            redshift = 0.92  # photo-z estimate
+            lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
 
-    # call actual fitting function
-    do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
-        model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start)
+            # now make sure that the quantities are all in observer frame
+            # the original function (fileprep in grid_coadd) will give quantities in rest frame
+            # but I need these to be in the observed frame so I will redshift them again.
+            # It gives them in the rest frame because getting the d4000 and the average 
+            # lambda separation needs to be figured out in the rest frame.
+            flam_obs = flam_em / (1 + redshift)
+            ferr_obs = ferr_em / (1 + redshift)
+            lam_obs = lam_em * (1 + redshift)
+
+            # plot to check # Line useful for debugging. Do not remove. Just uncomment.
+            #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
+
+            # --------------------------------------------- Quality checks ------------------------------------------- #
+
+            # ---------------------------------------------- FITTING ----------------------------------------------- #
+            # Read in LSF
+            if current_field == 'GOODS-N':
+                lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+            elif current_field == 'GOODS-S':
+                lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+
+            # read in LSF file
+            lsf = np.loadtxt(lsf_filename)
+
+            # extend lam_grid to be able to move the lam_grid later 
+            avg_dlam = old_ref.get_avg_dlam(lam_obs)
+
+            lam_low_to_insert = np.arange(5000, lam_obs[0], avg_dlam)
+            lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 10500, avg_dlam)
+
+            resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
+            resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+
+            # call actual fitting function
+            do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
+                model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start)
 
     sys.exit(0)

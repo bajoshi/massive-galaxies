@@ -93,6 +93,14 @@ if __name__ == '__main__':
         total_objects = len(spec_ind)
         print "In field", current_field, "with", total_objects, "objects."
 
+        id_list = []
+        field_list = []
+        imag_list = []
+        netsig_list = []
+        specz_list = []
+        specz_source_list = []
+        specz_qual_list = []
+
         for i in range(total_objects):
 
             current_id = pears_cat['id'][pears_ind][i]
@@ -125,6 +133,35 @@ if __name__ == '__main__':
                         print "Spec-z is", current_specz, "from", current_specz_source, "with quality", current_specz_qual
                         #print "Photo-z is", pears_cat['old_z'][pears_ind][i]
 
+                        id_list.append(current_id)
+                        field_list.append(current_field)
+                        imag_list.append(imag)
+                        netsig_list.append(netsig_corr)
+                        specz_list.append(current_specz)
+                        specz_source_list.append(current_specz_source)
+                        specz_qual_list.append(current_specz_qual)
+
+        # convert lists to numpy arrays for writing with savetxt
+        id_list = np.asarray(id_list)
+        field_list = np.asarray(field_list, dtype='|S7')
+        imag_list = np.asarray(imag_list)
+        netsig_list = np.asarray(netsig_list)
+        specz_list = np.asarray(specz_list)
+        specz_source_list = np.asarray(specz_source_list, dtype='|S10')
+        specz_qual_list = np.asarray(specz_qual_list, dtype='|S1')
+
+        data = np.array(zip(id_list, field_list, imag_list, netsig_list, specz_list, specz_source_list, specz_qual_list), \
+            dtype=[('id_list', int), ('field_list', '|S7'), ('imag_list', float), ('netsig_list', float), \
+            ('specz_list', float), ('specz_source_list', '|S10'), ('specz_qual_list', '|S1')])
+        if current_field == 'GOODS-N':
+            np.savetxt(massive_galaxies_dir + 'specz_comparison_sample_' + current_field + '.txt', data,\
+            fmt=['%d', '%s', '%.4f', '%.2f', '%.3f', '%s', '%s'], delimiter=' ',\
+            header = 'pearsid field imag netsig specz specz_source specz_qual')
+        elif current_field == 'GOODS-S':
+            np.savetxt(massive_galaxies_dir + 'specz_comparison_sample_' + current_field + '.txt', data, \
+                fmt=['%d', '%s', '%.4f', '%.2f', '%.3f', '%s', '%s'], delimiter=' ', \
+                header = 'pearsid field imag netsig specz specz_source specz_qual')
+        
         catcount += 1
 
     print "Total", spec_count, "spec redshifts in z range with highest quality"
