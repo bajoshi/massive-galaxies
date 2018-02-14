@@ -76,7 +76,9 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
     return chi2_temp, alpha_temp
 
 def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, \
-        model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time):
+    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
+    obj_id, obj_field, specz, photoz):
+
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -86,7 +88,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.array([0.98]) ##np.linspace(starting_z - 0.02, starting_z + 0.08, 11)
+    z_arr_to_check = np.linspace(starting_z - 0.1, starting_z + 0.1, 21)
     print "Will check the following redshifts:", z_arr_to_check
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
@@ -195,7 +197,8 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
         sys.exit(0)
     # plot
-    ni.plot_fit_and_residual(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha)
+    plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
+        obj_id, obj_field, specz, photoz, z_grism, chi2[min_idx_2d])
 
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
@@ -212,10 +215,51 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     return None
 
+def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
+    obj_id, obj_field, specz, photoz, grismz, chi2):
+
+    fig = plt.figure()
+    gs = gridspec.GridSpec(10,10)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
+
+    ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA]}$')
+    ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
+    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
+
+    ax1 = fig.add_subplot(gs[:8,:])
+    ax2 = fig.add_subplot(gs[8:,:])
+
+    ax1.plot(lam_obs, flam_obs, ls='-', color='k')
+    ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
+    ax1.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
+
+    resid_fit = (flam_obs - bestalpha*best_fit_model_in_objlamgrid) / ferr_obs
+    ax2.plot(lam_obs, resid_fit, ls='-', color='k')
+
+    # text for info
+    ax1.text(0.8, 0.4, obj_field + ' ' + str(obj_id), verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+    ax1.text(0.8, 0.35, r'$\mathrm{z_{spec}}$' + "{:.2}".format(specz), \
+        verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+    ax1.text(0.8, 0.3, r'$\mathrm{z_{phot}}$' + "{:.2}".format(photoz), \
+        verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+    ax1.text(0.8, 0.25, r'$\mathrm{z_{grism}}$' + "{:.2}".format(grismz), \
+        verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+    ax1.text(0.8, 0.25, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+        verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+
+    fig.savefig(figs_dir + 'new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '.png', \
+        dpi=300, bbox_inches='tight')
+
+    return None
+
 if __name__ == '__main__':
     """
-    The __main__ part of this code is almost exactly similar to that in new_refine_grismz_iter.py
-
+    The __main__ part of this code is similar to that in new_refine_grismz_iter.py
     """
     
     # Start time
@@ -242,6 +286,12 @@ if __name__ == '__main__':
     # total run time up to now
     print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
+    # read in matched files to get photo-z
+    matched_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', \
+        dtype=None, names=True, skip_header=1)
+    matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
+        dtype=None, names=True, skip_header=1)
+
     # Read in Specz comparison catalogs
     specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
     specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
@@ -250,12 +300,23 @@ if __name__ == '__main__':
 
     for cat in all_speccats:
 
-        for i in range():
+        for i in range(len(cat)):
 
             # --------------------------------------------- GET OBS DATA ------------------------------------------- #
-            current_id = 13499
-            current_field = 'GOODS-S'
-            redshift = 0.92  # photo-z estimate
+            current_id = cat['pearsid'][i]
+            current_field = cat['field'][i]
+
+            if current_field == 'GOODS-N':
+                match_cat = matched_cat_n
+            elif current_field == 'GOODS-S':
+                match_cat = matched_cat_s
+
+            photo_z_idx = np.where(match_cat['pearsid'] == current_id)[0]
+            redshift = float(match_cat['zphot'][photo_z_idx])
+            current_specz = float(cat['specz'][i])
+
+            print "At ID", current_id, "in", current_field 
+
             lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
 
             # now make sure that the quantities are all in observer frame
@@ -293,6 +354,7 @@ if __name__ == '__main__':
 
             # call actual fitting function
             do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
-                model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start)
+                model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
+                current_id, current_field, current_specz, redshift)
 
     sys.exit(0)

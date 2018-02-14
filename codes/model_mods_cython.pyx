@@ -30,13 +30,10 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     # 3. resample the models
 
     # Cython type declarations for the variables
-    cdef int resampling_lam_grid_length
-    cdef int lsf_length
-
     # hardcoded lengths
     # Can len() be redefined as a C function to be faster?
-    resampling_lam_grid_length = len(resampling_lam_grid)
-    lsf_length = len(lsf)
+    cdef int resampling_lam_grid_length = len(resampling_lam_grid)
+    cdef int lsf_length = len(lsf)
 
     # create empty array in which final modified models will be stored
     cdef np.ndarray[DTYPE_t, ndim=2] model_comp_spec_modified = \
@@ -94,7 +91,7 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     cdef int i
     cdef double lam_step_low
     cdef double lam_step_high
-    cdef np.ndarray[DTYPE_t, ndim=1] interppoints
+    cdef np.ndarray[long, ndim=1] interppoints
     cdef np.ndarray[DTYPE_t, ndim=1] broad_lsf
     cdef np.ndarray[DTYPE_t, ndim=1] temp_broadlsf_model
     cdef np.ndarray[long, ndim=1] new_ind
