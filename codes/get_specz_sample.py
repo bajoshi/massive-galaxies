@@ -52,7 +52,7 @@ if __name__ == '__main__':
     # north
     deltaRA, deltaDEC, specz_n_ra_matches, specz_n_dec_matches, pears_n_ra_matches, pears_n_dec_matches, \
     specz_n_ind, pears_n_ind, num_single_matches = \
-    mt.match(specz_n_ra, specz_n_dec, pears_n_ra, pears_n_dec, lim=0.3*1/3600)
+    mt.match(specz_n_ra, specz_n_dec, pears_n_ra, pears_n_dec, lim=0.1*1/3600)
 
     print "There were", num_single_matches, "single matches found out of", len(pears_master_ncat), 
     print "objects in the PEARS NORTH catalog with spec z catalog from N. Hathi."
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # south
     deltaRA, deltaDEC, specz_s_ra_matches, specz_s_dec_matches, pears_s_ra_matches, pears_s_dec_matches, \
     specz_s_ind, pears_s_ind, num_single_matches = \
-    mt.match(specz_s_ra, specz_s_dec, pears_s_ra, pears_s_dec, lim=0.3*1/3600)
+    mt.match(specz_s_ra, specz_s_dec, pears_s_ra, pears_s_dec, lim=0.1*1/3600)
 
     print "There were", num_single_matches, "single matches found out of", len(pears_master_scat), 
     print "objects in the PEARS SOUTH catalog with spec z catalog from N. Hathi."
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     #plt.show()
 
     # Now find how many are in your redshift range
-    all_spec_cats = [goods_n_specz_cat]#, goods_s_specz_cat]
+    all_spec_cats = [goods_n_specz_cat, goods_s_specz_cat]
 
     spec_count = 0
     catcount = 0
@@ -102,7 +102,7 @@ if __name__ == '__main__':
             current_specz_source = spec_cat['catname'][spec_ind][i]
             current_specz_qual = spec_cat['z_qual'][spec_ind][i]
 
-            print current_field, current_id, current_specz, current_specz_source, current_specz_qual
+            #print current_field, current_id, current_specz, current_specz_source, current_specz_qual
 
             # get i band mag
             if current_field == 'GOODS-N':
@@ -114,15 +114,15 @@ if __name__ == '__main__':
                 imag = pears_master_scat['imag'][idarg]
                 netsig_corr = pears_master_scat['netsig_corr'][idarg]
 
-            if current_specz >= 0.6 and current_specz <= 1.235:
+            if (current_specz >= 0.6) & (current_specz <= 1.235):
                 if current_specz_qual == 'A' or current_specz_qual == '4':
                     if current_specz_source == '3D_HST':
                         continue
                     else:
                         spec_count += 1
-                        #print "\n", "At id:", current_id, "in", current_field,
-                        #print "Corrected NetSig:", netsig_corr, "  i-band mag:", imag
-                        #print "Spec-z is", current_specz, "from", current_specz_source, "with quality", current_specz_qual
+                        print "\n", "At id:", current_id, "in", current_field,
+                        print "Corrected NetSig:", netsig_corr, "  i-band mag:", imag
+                        print "Spec-z is", current_specz, "from", current_specz_source, "with quality", current_specz_qual
                         #print "Photo-z is", pears_cat['old_z'][pears_ind][i]
 
         catcount += 1
