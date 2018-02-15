@@ -15,6 +15,9 @@ import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib import rc
+
+rc('text', usetex=True)
 
 home = os.getenv('HOME')
 pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
@@ -274,13 +277,13 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.5, 0.4,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    ax1.text(0.46, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.5, 0.35, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    ax1.text(0.46, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.5, 0.3, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    ax1.text(0.46, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
