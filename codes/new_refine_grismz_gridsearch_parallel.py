@@ -210,7 +210,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         sys.exit(0)
     # plot
     plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, z_grism, (chi2[min_idx_2d]/len(lam_obs)))
+        obj_id, obj_field, specz, photoz, z_grism, (chi2[min_idx_2d]/len(lam_obs)), age, tau, (tauv/1.086))
 
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
@@ -228,7 +228,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     return None
 
 def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-    obj_id, obj_field, specz, photoz, grismz, chi2):
+    obj_id, obj_field, specz, photoz, grismz, chi2, age, tau, av):
 
     fig = plt.figure()
     gs = gridspec.GridSpec(10,10)
@@ -271,6 +271,16 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
     ax1.text(0.75, 0.2, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.5, 0.4,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.5, 0.35, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.5, 0.3, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
