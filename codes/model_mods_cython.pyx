@@ -1,13 +1,14 @@
 from __future__ import division
 
-from scipy.signal import fftconvolve
+#from scipy.signal import fftconvolve
 import numpy as np
-import numpy.ma as ma
+#import numpy.ma as ma
 
 cimport numpy as np
-cimport cython
+#cimport cython
 
-#from astropy.convolution import convolve_fft
+from astropy.convolution import convolve_fft
+import matplotlib.pyplot as plt
 # check if there is an existing C function to do--
 # convolution
 # mean
@@ -19,9 +20,9 @@ DTYPE = np.float64
 
 ctypedef np.float64_t DTYPE_t
 
-def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarray[DTYPE_t, ndim=1] model_lam_grid, \
+def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] model_lam_grid, \
     np.ndarray[DTYPE_t, ndim=2] model_comp_spec, np.ndarray[DTYPE_t, ndim=1] resampling_lam_grid, \
-    int total_models, np.ndarray[DTYPE_t, ndim=1] lsf, DTYPE_t z):
+    int total_models, np.ndarray[DTYPE_t, ndim=1] lsf, float z):
 
     # Before fitting
     # 0. get lsf and models (supplied as arguments to this function)
@@ -35,6 +36,18 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     cdef int resampling_lam_grid_length = len(resampling_lam_grid)
     cdef int lsf_length = len(lsf)
 
+    # assert types
+    assert model_lam_grid.dtype == DTYPE and resampling_lam_grid.dtype == DTYPE
+    assert model_comp_spec.dtype == DTYPE and lsf.dtype == DTYPE
+    assert type(total_models) is int
+    assert type(z) is float
+    #print type(z)
+    #if type(z) is DTYPE:
+    #    print "All okay here."
+    ##assert type(z) is DTYPE
+    #z = np.float64(z)
+    #print type(z)
+
     # create empty array in which final modified models will be stored
     cdef np.ndarray[DTYPE_t, ndim=2] model_comp_spec_modified = \
     np.empty((total_models, resampling_lam_grid_length), dtype=DTYPE)
@@ -47,17 +60,16 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     model_comp_spec = model_comp_spec / (1 + z)
 
     # ---------------- Mask potential emission lines ----------------- #
+    """
     # Will mask one point on each side of line center i.e. approx 80 A masked
     # These are all vacuum wavelengths
     # first define all variables
-    cdef double oiii_4363
     cdef double oiii_5007
     cdef double oiii_4959
     cdef double hbeta
     cdef double hgamma
     cdef double oii_3727
 
-    oiii_4363 = 4364.44
     oiii_5007 = 5008.24
     oiii_4959 = 4960.30
     hbeta = 4862.69
@@ -74,24 +86,22 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
     cdef int oii_3727_idx
     cdef int oiii_5007_idx
     cdef int oiii_4959_idx
-    cdef int oiii_4363_idx
 
     oii_3727_idx = np.argmin(abs(resampling_lam_grid - oii_3727*(1 + z)))
     oiii_5007_idx = np.argmin(abs(resampling_lam_grid - oiii_5007*(1 + z)))
     oiii_4959_idx = np.argmin(abs(resampling_lam_grid - oiii_4959*(1 + z)))
-    oiii_4363_idx = np.argmin(abs(resampling_lam_grid - oiii_4363*(1 + z)))
 
     line_mask[oii_3727_idx-1 : oii_3727_idx+2] = 1
     line_mask[oiii_5007_idx-1 : oiii_5007_idx+2] = 1
     line_mask[oiii_4959_idx-1 : oiii_4959_idx+2] = 1
-    line_mask[oiii_4363_idx-1 : oiii_4363_idx+2] = 1
+    """
 
     # more type definitions
     cdef int k
     cdef int i
     cdef double lam_step_low
     cdef double lam_step_high
-    cdef np.ndarray[long, ndim=1] interppoints
+    cdef np.ndarray[DTYPE_t, ndim=1] interppoints
     cdef np.ndarray[DTYPE_t, ndim=1] broad_lsf
     cdef np.ndarray[DTYPE_t, ndim=1] temp_broadlsf_model
     cdef np.ndarray[long, ndim=1] new_ind
@@ -99,11 +109,22 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
 
     for k in range(total_models):
 
+        #fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+        #ax1.plot(model_lam_grid_z, model_comp_spec[k])
+        #ax1.set_xlim(5000, 10500)
+
+        #model_comp_spec[k] = convolve_fft(model_comp_spec[k], lsf)#, boundary='extend')
+        # seems like boundary='extend' is not implemented 
+        # currently for convolve_fft(). It works with convolve() though.
+
         # using a broader lsf just to see if that can do better
-        interppoints = np.linspace(0, lsf_length, lsf_length*10)
+        interppoints = np.linspace(start=0, stop=lsf_length, num=lsf_length*10, dtype=DTYPE)
         # just making the lsf sampling grid longer # i.e. sampled at more points 
         broad_lsf = np.interp(interppoints, xp=np.arange(lsf_length), fp=lsf)
-        temp_broadlsf_model = fftconvolve(model_comp_spec[k], broad_lsf)
+        temp_broadlsf_model = convolve_fft(model_comp_spec[k], broad_lsf)
+
+        #ax2.plot(model_lam_grid_z, temp_broadlsf_model)
+        #ax2.set_xlim(5000, 10500)
 
         # resample to object resolution
         resampled_flam_broadlsf = np.zeros(resampling_lam_grid_length, dtype=DTYPE)
@@ -126,6 +147,15 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] object_lam_obs, np.ndarra
             resampled_flam_broadlsf[i] = np.mean(temp_broadlsf_model[new_ind])
 
         # Now mask the flux at these wavelengths using the mask generated before the for loop
-        model_comp_spec_modified[k] = ma.array(resampled_flam_broadlsf, mask=line_mask)
+        #model_comp_spec_modified[k] = ma.array(resampled_flam_broadlsf, mask=line_mask)
+        model_comp_spec_modified[k] = resampled_flam_broadlsf
+
+        #ax3.plot(resampling_lam_grid, resampled_flam_broadlsf)
+        #ax3.set_xlim(5000, 10500)
+
+        #plt.show()
+        #plt.cla()
+        #plt.clf()
+        #plt.close()
 
     return model_comp_spec_modified

@@ -55,17 +55,16 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
     print "\n", "Currently at redshift:", z
 
     # make sure the types are correct before passing to cython code
-    lam_obs = lam_obs.astype(np.float64)
-    model_lam_grid = model_lam_grid.astype(np.float64)
-    model_comp_spec = model_comp_spec.astype(np.float64)
-    resampling_lam_grid = resampling_lam_grid.astype(np.float64)
+    #lam_obs = lam_obs.astype(np.float64)
+    #model_lam_grid = model_lam_grid.astype(np.float64)
+    #model_comp_spec = model_comp_spec.astype(np.float64)
+    #resampling_lam_grid = resampling_lam_grid.astype(np.float64)
     total_models = int(total_models)
-    lsf = lsf.astype(np.float64)
-    #z = float(z)
+    #lsf = lsf.astype(np.float64)
 
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = \
-    model_mods_cython.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, \
+    model_mods_cython.do_model_modifications(model_lam_grid, model_comp_spec, \
         resampling_lam_grid, total_models, lsf, z)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
@@ -88,7 +87,9 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(starting_z - 0.1, starting_z + 0.1, 21)
+    z_arr_to_check = np.linspace(start=starting_z - 0.1, stop=starting_z + 0.1, num=21, dtype=np.float64)
+    #np.array([0.84], dtype=np.float64)
+    #np.linspace(start=starting_z - 0.1, stop=starting_z + 0.1, num=21, dtype=np.float64)
     print "Will check the following redshifts:", z_arr_to_check
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
@@ -98,7 +99,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 1
+    num_cores = 4
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -107,6 +108,18 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+
+    # regular for loop 
+    # use this if you dont want to use the parallel for loop above
+    # comment it out if you don't 
+    """
+    count = 0
+    for z in z_arr_to_check:
+        chi2[count], alpha[count] = get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, \
+            model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time)
+
+        count += 1
+    """
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
@@ -171,13 +184,13 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - lam_obs[-1]))
 
     # make sure the types are correct before passing to cython code
-    lam_obs = lam_obs.astype(np.float64)
-    model_lam_grid = model_lam_grid.astype(np.float64)
-    model_comp_spec = model_comp_spec.astype(np.float64)
-    resampling_lam_grid = resampling_lam_grid.astype(np.float64)
+    #lam_obs = lam_obs.astype(np.float64)
+    #model_lam_grid = model_lam_grid.astype(np.float64)
+    #model_comp_spec = model_comp_spec.astype(np.float64)
+    #resampling_lam_grid = resampling_lam_grid.astype(np.float64)
     total_models = int(total_models)
-    lsf = lsf.astype(np.float64)
-    #z = float(z)
+    #lsf = lsf.astype(np.float64)
+    z = np.float64(z)
 
     # Will have to redo the model modifications at the new found z_grism
     # You have to do this to plot the correct best fit model with its 
@@ -185,7 +198,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # Either it has to be done this way or you will have to keep the 
     # modified models in an array and then plot the best one here later.
     model_comp_spec_modified = \
-    model_mods_cython.do_model_modifications(lam_obs, model_lam_grid, model_comp_spec, \
+    model_mods_cython.do_model_modifications(model_lam_grid, model_comp_spec, \
         resampling_lam_grid, total_models, lsf, z_grism)
     print "Model mods done (only for plotting purposes) at the new grism z:", z_grism
     print "Total time taken up to now --", time.time() - start_time, "seconds."
@@ -198,7 +211,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         sys.exit(0)
     # plot
     plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, z_grism, chi2[min_idx_2d])
+        obj_id, obj_field, specz, photoz, z_grism, (chi2[min_idx_2d]/len(lam_obs)))
 
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
@@ -222,12 +235,12 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     gs = gridspec.GridSpec(10,10)
     gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
 
+    ax1 = fig.add_subplot(gs[:8,:])
+    ax2 = fig.add_subplot(gs[8:,:])
+
     ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA]}$')
     ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
     ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
-
-    ax1 = fig.add_subplot(gs[:8,:])
-    ax2 = fig.add_subplot(gs[8:,:])
 
     ax1.plot(lam_obs, flam_obs, ls='-', color='k')
     ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
@@ -236,23 +249,33 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     resid_fit = (flam_obs - bestalpha*best_fit_model_in_objlamgrid) / ferr_obs
     ax2.plot(lam_obs, resid_fit, ls='-', color='k')
 
-    # text for info
-    ax1.text(0.8, 0.4, obj_field + ' ' + str(obj_id), verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
-    ax1.text(0.8, 0.35, r'$\mathrm{z_{spec}}$' + "{:.2}".format(specz), \
-        verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
-    ax1.text(0.8, 0.3, r'$\mathrm{z_{phot}}$' + "{:.2}".format(photoz), \
-        verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
-    ax1.text(0.8, 0.25, r'$\mathrm{z_{grism}}$' + "{:.2}".format(grismz), \
-        verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
-    ax1.text(0.8, 0.25, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
-        verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
+    # minor ticks
+    ax1.minorticks_on()
+    ax1.tick_params('both', width=1, length=3, which='minor')
+    ax1.tick_params('both', width=1, length=4.7, which='major')
 
-    fig.savefig(figs_dir + 'new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '.png', \
+    ax2.minorticks_on()
+    ax2.tick_params('both', width=1, length=3, which='minor')
+    ax2.tick_params('both', width=1, length=4.7, which='major')
+
+    # text for info
+    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.35, r'$\mathrm{z_{grism}\, =\, }$' + "{:.2}".format(grismz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.3, r'$\mathrm{z_{spec}\, =\, }$' + "{:.2}".format(specz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.25, r'$\mathrm{z_{phot}\, =\, }$' + "{:.2}".format(photoz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.2, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    fig.savefig(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '_par.png', \
         dpi=300, bbox_inches='tight')
 
     return None
@@ -279,6 +302,7 @@ if __name__ == '__main__':
     example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
     bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
     model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
+    model_lam_grid = model_lam_grid.astype(np.float64)
     model_comp_spec = np.zeros((total_models, len(model_lam_grid)), dtype=np.float64)
     for j in range(total_models):
         model_comp_spec[j] = bc03_all_spec_hdulist[j+1].data
@@ -315,7 +339,15 @@ if __name__ == '__main__':
             redshift = float(match_cat['zphot'][photo_z_idx])
             current_specz = float(cat['specz'][i])
 
-            print "At ID", current_id, "in", current_field 
+            # If you want to run it for a single galaxy then 
+            # give the info here and put a sys.exit(0) after 
+            # do_fitting()
+            current_id = 61447
+            current_field = 'GOODS-S'
+            redshift = 0.92
+            current_specz = 0.84
+
+            print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift
 
             lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
 
@@ -327,6 +359,8 @@ if __name__ == '__main__':
             flam_obs = flam_em / (1 + redshift)
             ferr_obs = ferr_em / (1 + redshift)
             lam_obs = lam_em * (1 + redshift)
+
+            lam_obs = lam_obs.astype(np.float64)
 
             # plot to check # Line useful for debugging. Do not remove. Just uncomment.
             #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
@@ -342,12 +376,13 @@ if __name__ == '__main__':
 
             # read in LSF file
             lsf = np.loadtxt(lsf_filename)
+            lsf = lsf.astype(np.float64)
 
             # extend lam_grid to be able to move the lam_grid later 
             avg_dlam = old_ref.get_avg_dlam(lam_obs)
 
-            lam_low_to_insert = np.arange(5000, lam_obs[0], avg_dlam)
-            lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 10500, avg_dlam)
+            lam_low_to_insert = np.arange(5000, lam_obs[0], avg_dlam, dtype=np.float64)
+            lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 10500, avg_dlam, dtype=np.float64)
 
             resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
@@ -356,5 +391,7 @@ if __name__ == '__main__':
             do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
+
+            sys.exit(0)
 
     sys.exit(0)
