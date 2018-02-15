@@ -99,7 +99,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 4
+    num_cores = 7
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -190,7 +190,6 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     #resampling_lam_grid = resampling_lam_grid.astype(np.float64)
     total_models = int(total_models)
     #lsf = lsf.astype(np.float64)
-    z = np.float64(z)
 
     # Will have to redo the model modifications at the new found z_grism
     # You have to do this to plot the correct best fit model with its 
@@ -342,10 +341,12 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
+            """
             current_id = 61447
             current_field = 'GOODS-S'
             redshift = 0.92
             current_specz = 0.84
+            """
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift
 
@@ -391,7 +392,5 @@ if __name__ == '__main__':
             do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
-
-            sys.exit(0)
 
     sys.exit(0)

@@ -54,10 +54,11 @@ def do_model_modifications(np.ndarray[DTYPE_t, ndim=1] model_lam_grid, \
 
     # redshift lambda grid for model 
     # this is the lambda grid at the model's native resolution
-    cdef np.ndarray[DTYPE_t, ndim=1] model_lam_grid_z = model_lam_grid * (1 + z)
+    cdef np.float64_t redshift_factor = 1 + z
+    cdef np.ndarray[DTYPE_t, ndim=1] model_lam_grid_z = model_lam_grid * redshift_factor
 
     # redshift flux
-    model_comp_spec = model_comp_spec / (1 + z)
+    model_comp_spec = model_comp_spec / redshift_factor
 
     # ---------------- Mask potential emission lines ----------------- #
     """
