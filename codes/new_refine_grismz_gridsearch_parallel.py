@@ -176,7 +176,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     min_chi2 = chi2[min_idx_2d]
     low_chi2_idx = np.where(chi2 < min_chi2 + 0.1*min_chi2)
     print len(low_chi2_idx[0].ravel())
-    print low_chi2_idx
+    #print low_chi2_idx
 
     ####### ------------------------------------------ Plotting ------------------------------------------ #######
     #### -------- Plot spectrum: Data, best fit model, and the residual --------- ####
@@ -264,26 +264,30 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.35, r'$\mathrm{z_{grism}\, =\, }$' + "{:.2}".format(grismz), \
+    ax1.text(0.75, 0.35, r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.3, r'$\mathrm{z_{spec}\, =\, }$' + "{:.2}".format(specz), \
+    ax1.text(0.75, 0.3, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.25, r'$\mathrm{z_{phot}\, =\, }$' + "{:.2}".format(photoz), \
+    ax1.text(0.75, 0.25, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
     ax1.text(0.75, 0.2, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.46, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.46, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.46, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+
+    if av < 0:
+        av = -99.0
+
+    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
@@ -332,7 +336,7 @@ if __name__ == '__main__':
     specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
     specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
-    all_speccats = [specz_goodsn, specz_goodss]
+    all_speccats = [specz_goodss]  # [specz_goodsn, specz_goodss]
 
     for cat in all_speccats:
 
@@ -348,6 +352,9 @@ if __name__ == '__main__':
                 match_cat = matched_cat_s
 
             photo_z_idx = np.where(match_cat['pearsid'] == current_id)[0]
+            if len(photo_z_idx) == 0:
+                print "Skipping because no photo-z found for ID", current_id, "in", current_field
+                continue
             redshift = float(match_cat['zphot'][photo_z_idx])
             current_specz = float(cat['specz'][i])
 
@@ -389,8 +396,12 @@ if __name__ == '__main__':
                 lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
 
             # read in LSF file
-            lsf = np.loadtxt(lsf_filename)
-            lsf = lsf.astype(np.float64)
+            try:
+                lsf = np.loadtxt(lsf_filename)
+                lsf = lsf.astype(np.float64)
+            except IOError:
+                print "LSF not found. Moving to next galaxy."
+                continue
 
             # extend lam_grid to be able to move the lam_grid later 
             avg_dlam = old_ref.get_avg_dlam(lam_obs)
