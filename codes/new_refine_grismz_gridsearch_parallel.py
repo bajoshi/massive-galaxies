@@ -29,11 +29,12 @@ figs_dir = home + "/Desktop/FIGS/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
+sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import grid_coadd as gd
 import fast_chi2_jackknife_massive_galaxies as fcjm
 import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
-import model_mods_cython
+import model_mods_cython_copytoedit as model_mods_cython
 
 def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_lam_grid):
 
@@ -90,7 +91,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - 0.1, stop=starting_z + 0.1, num=21, dtype=np.float64)
+    z_arr_to_check = np.linspace(start=starting_z - 0.09, stop=starting_z + 0.02, num=12, dtype=np.float64)
     #np.array([0.84], dtype=np.float64)
     #np.linspace(start=starting_z - 0.1, stop=starting_z + 0.1, num=21, dtype=np.float64)
     print "Will check the following redshifts:", z_arr_to_check
@@ -102,10 +103,12 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 7
+    """
+    num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
+    """
 
     # the parallel code seems to like returning only a list
     # so I have to unpack the list
@@ -115,14 +118,12 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't 
-    """
     count = 0
     for z in z_arr_to_check:
         chi2[count], alpha[count] = get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, \
             model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time)
 
         count += 1
-    """
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
@@ -361,12 +362,10 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
-            """
             current_id = 61447
             current_field = 'GOODS-S'
             redshift = 0.92
             current_specz = 0.84
-            """
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift
 
@@ -416,5 +415,7 @@ if __name__ == '__main__':
             do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
+
+            sys.exit(0)
 
     sys.exit(0)
