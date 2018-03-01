@@ -10,8 +10,11 @@ import matplotlib.pyplot as plt
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
+stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
+sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
+import grid_coadd as gd
 import mag_hist as mh
 
 def constrain(spec_cat):
@@ -20,18 +23,50 @@ def constrain(spec_cat):
     based on their D4000, NetSig, and overall error.
     """
 
+    z_spec_plot = []
+    z_grism_plot = []
+    z_phot_plot = []
+
     for i in range(len(spec_cat)):
 
         # read in data
-        current_id = 
-        current_field = 
+        current_id = spec_cat['id'][i]
+        current_field = spec_cat['field'][i]
+        current_redshift = spec_cat['zspec'][i]
+
+        if current_field == 'goodsn':
+            current_field = 'GOODS-N'
+        elif current_field == 'goodss':
+            current_field = 'GOODS-S'
 
         lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, current_redshift, current_field)
 
+        # you only want data in the observed frame
         flam_obs = flam_em / (1 + current_redshift)
         ferr_obs = ferr_em / (1 + current_redshift)
         lam_obs = lam_em * (1 + current_redshift)
     
+        # D4000 check
+        # Netsig check
+        if netsig_chosen < 200:
+            #print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
+            continue
+
+        # Overall error check
+        if np.sum(abs(ferr_obs)) > 0.2 * np.sum(abs(flam_obs)):
+            #print "Skipping", current_id, "in", current_field, "because of overall error."
+            continue
+
+        z_spec_plot.append(spec_cat['zspec'][i])
+        z_grism_plot.append(spec_cat['zgrism'][i])
+        z_phot_plot.append(spec_cat['zphot'][i])
+
+        print "Selected", current_id, "in", current_field, "for comparison.",
+        print "This object has NetSig:", netsig_chosen
+
+    z_spec_plot = np.asarray(z_spec_plot)
+    z_grism_plot = np.asarray(z_grism_plot)
+    z_phot_plot = np.asarray(z_phot_plot)
 
     return z_spec_plot, z_grism_plot, z_phot_plot
 
@@ -56,8 +91,8 @@ if __name__ == '__main__':
     grism_resid_hist_arr = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
     photz_resid_hist_arr = (z_spec_plot - z_phot_plot)/(1+z_spec_plot)
 
-    ax.hist(photz_resid_hist_arr, 20, range=[-0.05,0.05], color=myred, alpha=0.75, zorder=10)
-    ax.hist(grism_resid_hist_arr, 20, range=[-0.05,0.05], color=myblue, alpha=0.6, zorder=10)
+    ax.hist(photz_resid_hist_arr, 12, range=[-0.06,0.06], color=myred, alpha=0.75, zorder=10)
+    ax.hist(grism_resid_hist_arr, 12, range=[-0.06,0.06], color=myblue, alpha=0.6, zorder=10)
     
     # If you don't want to restrict the range
     #ax.hist(photz_resid_hist_arr, 15, color=myred, alpha=0.75, zorder=10)
