@@ -108,12 +108,12 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
-    """
 
     # the parallel code seems to like returning only a list
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+    """
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
@@ -292,7 +292,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    fig.savefig(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '_par.png', \
+    fig.savefig(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '_fast1.png', \
         dpi=300, bbox_inches='tight')
 
     return None
