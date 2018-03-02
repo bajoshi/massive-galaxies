@@ -35,6 +35,48 @@ import fast_chi2_jackknife_massive_galaxies as fcjm
 import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
 import model_mods_cython_copytoedit as model_mods_cython
+#import model_mods_cython
+
+def get_line_mask():
+
+    # ---------------- Mask potential emission lines ----------------- #
+    """
+    # Will mask one point on each side of line center i.e. approx 80 A masked
+    # These are all vacuum wavelengths
+    # first define all variables
+    cdef double oiii_5007
+    cdef double oiii_4959
+    cdef double hbeta
+    cdef double hgamma
+    cdef double oii_3727
+
+    oiii_5007 = 5008.24
+    oiii_4959 = 4960.30
+    hbeta = 4862.69
+    hgamma = 4341.69
+    oii_3727 = 3728.5
+    # these two lines (3727 and 3729) are so close to each other 
+    # that the line will always blend in grism spectra. 
+    # avg wav of the two written here
+
+    # Set up line mask
+    cdef np.ndarray[long, ndim=1] line_mask = np.zeros(resampling_lam_grid_length, dtype=np.int)
+
+    # Get redshifted wavelengths and mask
+    cdef int oii_3727_idx
+    cdef int oiii_5007_idx
+    cdef int oiii_4959_idx
+
+    oii_3727_idx = np.argmin(abs(resampling_lam_grid - oii_3727*(1 + z)))
+    oiii_5007_idx = np.argmin(abs(resampling_lam_grid - oiii_5007*(1 + z)))
+    oiii_4959_idx = np.argmin(abs(resampling_lam_grid - oiii_4959*(1 + z)))
+
+    line_mask[oii_3727_idx-1 : oii_3727_idx+2] = 1
+    line_mask[oiii_5007_idx-1 : oiii_5007_idx+2] = 1
+    line_mask[oiii_4959_idx-1 : oiii_4959_idx+2] = 1
+    """
+
+    return None
 
 def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_lam_grid):
 
@@ -91,9 +133,10 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - 0.09, stop=starting_z + 0.02, num=12, dtype=np.float64)
-    #np.array([0.84], dtype=np.float64)
-    #np.linspace(start=starting_z - 0.1, stop=starting_z + 0.1, num=21, dtype=np.float64)
+    z_arr_to_check = np.linspace(start=starting_z - 0.3, stop=starting_z + 0.3, num=301, dtype=np.float64)
+    print z_arr_to_check
+    z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
+    z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
@@ -103,8 +146,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    """
-    num_cores = 3
+    num_cores = 7
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -113,17 +155,15 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
-    """
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't 
-    count = 0
-    for z in z_arr_to_check:
-        chi2[count], alpha[count] = get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, \
-            model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time)
-
-        count += 1
+    #count = 0
+    #for z in z_arr_to_check:
+    #    chi2[count], alpha[count] = get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, \
+    #        model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time)
+    #    count += 1
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
@@ -183,6 +223,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     #### -------- Plot spectrum: Data, best fit model, and the residual --------- ####
     # get things needed to plot and plot
     bestalpha = alpha[min_idx_2d]
+    print "Vertical scaling factor for best fit model:", bestalpha
     # chop model again to get the part within objects lam obs grid
     model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - lam_obs[0]))
     model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - lam_obs[-1]))
@@ -337,7 +378,7 @@ if __name__ == '__main__':
     specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
     specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
-    all_speccats = [specz_goodss]  # [specz_goodsn, specz_goodss]
+    all_speccats = [specz_goodsn, specz_goodss]
 
     for cat in all_speccats:
 
@@ -362,10 +403,10 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
-            current_id = 61447
-            current_field = 'GOODS-S'
-            redshift = 0.92
-            current_specz = 0.84
+            #current_id = 77715
+            #current_field = 'GOODS-N'
+            #redshift = 0.9805
+            #current_specz = 0.851
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift
 
@@ -386,6 +427,15 @@ if __name__ == '__main__':
             #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
 
             # --------------------------------------------- Quality checks ------------------------------------------- #
+            # Netsig check
+            if netsig_chosen < 200:
+                print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
+                continue
+
+            # Overall error check
+            if np.sum(abs(ferr_obs)) > 0.2 * np.sum(abs(flam_obs)):
+                print "Skipping", current_id, "in", current_field, "because of overall error."
+                continue
 
             # ---------------------------------------------- FITTING ----------------------------------------------- #
             # Read in LSF
@@ -416,6 +466,6 @@ if __name__ == '__main__':
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
-            sys.exit(0)
+            #sys.exit(0)
 
     sys.exit(0)
