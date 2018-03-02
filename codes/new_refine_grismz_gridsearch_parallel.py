@@ -134,7 +134,6 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     # Set up redshift grid to check
     z_arr_to_check = np.linspace(start=starting_z - 0.3, stop=starting_z + 0.3, num=301, dtype=np.float64)
-    print z_arr_to_check
     z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
@@ -270,7 +269,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     #ax.set_xlim(1,total_models)
     #plt.show()
 
-    return None
+    return z_grism
 
 def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     obj_id, obj_field, specz, photoz, grismz, chi2, age, tau, av):
@@ -380,6 +379,12 @@ if __name__ == '__main__':
 
     all_speccats = [specz_goodsn, specz_goodss]
 
+    # save lists for comparing after code is done
+    zgrism_list = []
+    zspec_list = []
+    zphot_list = []
+
+    # start looping
     for cat in all_speccats:
 
         for i in range(len(cat)):
@@ -462,10 +467,18 @@ if __name__ == '__main__':
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
             # call actual fitting function
-            do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
+            zg = do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
+            zgrism_list.append(zg)
+            zspec_list.append(redshift)
+            zphot_list.append(current_specz)
+
             #sys.exit(0)
+
+    print zgrism_list
+    print zspec_list
+    print zphot_list
 
     sys.exit(0)
