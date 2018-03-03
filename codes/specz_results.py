@@ -6,6 +6,18 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+import matplotlib
+print matplotlib.matplotlib_fname()
+
+from matplotlib import rcParams
+rcParams['xtick.direction'] = 'in'
+rcParams['ytick.direction'] = 'in'
+"""
+I've set the x and y axis tick direction to be 'in'
+in the matplotlibrc file but it is not working for
+some reason. So I have to explicitly set these here.
+Need to figure this out.
+"""
 
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -48,7 +60,7 @@ def constrain(spec_cat):
     
         # D4000 check
         # Netsig check
-        if netsig_chosen < 200:
+        if netsig_chosen < 150:
             #print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
             continue
 
@@ -77,7 +89,27 @@ if __name__ == '__main__':
 
     print "Total", len(spec_res_cat), "galaxies that are in PEARS and have a ground-based redshift",
     print "and the ground-based redshift is also within 0.6 < zspec <= 1.235"
-    z_spec_plot, z_grism_plot, z_phot_plot = constrain(spec_res_cat)
+    #z_spec_plot, z_grism_plot, z_phot_plot = constrain(spec_res_cat)
+
+    z_grism_plot = np.array([  0.7223, -99.0, 0.7665, 0.9298, 0.8756,   0.6002,\
+    0.8461,   0.9377,   0.976,    0.992,    0.601,    0.723,    0.601,    0.602,\
+    0.902,    1.032,   0.687,    0.636,    0.76,     0.735,    0.95,     0.976,\
+    0.666,    0.601,   0.964,    1.063,    0.854,    0.943,    1.08,     0.6   ])
+
+    z_spec_plot = np.array([0.7603, 0.0846, 0.9805, 0.9698, 0.8516, 0.6382, \
+        0.8181, 0.8197, 0.682, 1.012, 0.637, 0.641, 0.745, 0.58, 0.858, \
+        1.122, 0.623, 0.618, 0.634, 0.713, 0.976, 0.97, 0.638, 0.659, 0.91, \
+        1.015, 0.658, 0.923, 1.38, 0.794])
+
+    z_phot_plot = np.array([0.761, 0.682, 0.851, 0.942, 0.857, 0.634, 0.841, \
+        0.836, 0.734, 0.998, 0.605, 0.726, 0.738, 0.615, 0.831, 1.129, 0.668, \
+        0.668, 0.67, 0.735, 1.036, 0.955, 0.67, 0.989, 0.954, 1.015, 0.667, \
+        0.978, 1.22, 0.783])
+
+    valid_idx = np.where((z_grism_plot >= 0.6) & (z_grism_plot <= 1.235))[0]
+    z_grism_plot = z_grism_plot[valid_idx]
+    z_spec_plot = z_spec_plot[valid_idx]
+    z_phot_plot = z_phot_plot[valid_idx]
     print "Only", len(z_spec_plot), "galaxies within the", len(spec_res_cat), "pass the D4000, NetSig, and overall error constraints."
 
     # plot
@@ -91,12 +123,12 @@ if __name__ == '__main__':
     grism_resid_hist_arr = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
     photz_resid_hist_arr = (z_spec_plot - z_phot_plot)/(1+z_spec_plot)
 
-    ax.hist(photz_resid_hist_arr, 12, range=[-0.06,0.06], color=myred, alpha=0.75, zorder=10)
-    ax.hist(grism_resid_hist_arr, 12, range=[-0.06,0.06], color=myblue, alpha=0.6, zorder=10)
+    ax.hist(photz_resid_hist_arr, 15, range=[-0.12,0.12], histtype='step', color=myred, alpha=0.75, zorder=10)
+    ax.hist(grism_resid_hist_arr, 15, range=[-0.12,0.12], histtype='step', color=myblue, alpha=0.6, zorder=10)
     
     # If you don't want to restrict the range
-    #ax.hist(photz_resid_hist_arr, 15, color=myred, alpha=0.75, zorder=10)
-    #ax.hist(grism_resid_hist_arr, 15, color=myblue, alpha=0.6, zorder=10)
+    #ax.hist(photz_resid_hist_arr, 20, histtype='step', color=myred, alpha=0.75, zorder=10)
+    #ax.hist(grism_resid_hist_arr, 20, histtype='step', color=myblue, alpha=0.6, zorder=10)
 
     # this plot really needs an alpha channel
     # otherwise you wont see that the photo-z histogram under the grism-z histogram
@@ -117,11 +149,8 @@ if __name__ == '__main__':
     transform=ax.transAxes, color=myred, size=14)
 
     ax.minorticks_on()
-    ax.tick_params('both', width=1, length=3, which='minor')
-    ax.tick_params('both', width=1, length=4.7, which='major')
-    ax.grid(True, alpha=0.5)
 
-    #fig.savefig(massive_figures_dir + 'residual_histogram.png', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'new_specz_sample_fits/residual_histogram.png', dpi=300, bbox_inches='tight')
     # has to be png NOT eps. This plot needs an alpha channel.
 
     plt.show()

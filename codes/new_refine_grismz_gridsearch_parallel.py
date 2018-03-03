@@ -382,6 +382,8 @@ if __name__ == '__main__':
     all_speccats = [specz_goodsn, specz_goodss]
 
     # save lists for comparing after code is done
+    id_list = []
+    field_list = []
     zgrism_list = []
     zspec_list = []
     zphot_list = []
@@ -435,7 +437,7 @@ if __name__ == '__main__':
 
             # --------------------------------------------- Quality checks ------------------------------------------- #
             # Netsig check
-            if netsig_chosen < 200:
+            if netsig_chosen < 100:
                 print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
                 continue
 
@@ -473,12 +475,26 @@ if __name__ == '__main__':
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
+            id_list.append(current_id)
+            field_list.append(current_field)
             zgrism_list.append(zg)
             zspec_list.append(redshift)
             zphot_list.append(current_specz)
 
             #sys.exit(0)
 
+    print id_list
+    print field_list
+    print zgrism_list
+    print zspec_list
+    print zphot_list
+
+    zgrism_list = np.asarray(zgrism_list)
+    zspec_list = np.asarray(zspec_list)
+    zphot_list = np.asarray(zphot_list)
+
+    print id_list
+    print field_list
     print zgrism_list
     print zspec_list
     print zphot_list
