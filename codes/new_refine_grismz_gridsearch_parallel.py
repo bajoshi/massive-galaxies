@@ -72,6 +72,8 @@ def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_
     # make sure that the arrays are the same length
     if int(model_spec_in_objlamgrid.shape[1]) != len(object_lam_grid):
         print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
+        print "Model spectrum array shape:", model_spec_in_objlamgrid.shape
+        print "Object spectrum length:", len(object_lam_grid)
         sys.exit(0)
 
     alpha_ = np.sum(flam * model_spec_in_objlamgrid / (ferr**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / ferr**2, axis=1)
@@ -98,6 +100,7 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
         resampling_lam_grid, total_models, lsf, z)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print model_comp_spec_modified.shape
 
     # Mask emission lines
     line_mask = get_line_mask(lam_obs, z)
