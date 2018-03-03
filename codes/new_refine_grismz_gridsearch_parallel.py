@@ -15,9 +15,6 @@ import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from matplotlib import rc
-
-rc('text', usetex=True)
 
 home = os.getenv('HOME')
 pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
@@ -37,19 +34,11 @@ import refine_redshifts_dn4000 as old_ref
 import model_mods_cython_copytoedit as model_mods_cython
 #import model_mods_cython
 
-def get_line_mask():
+def get_line_mask(lam_grid, z):
 
     # ---------------- Mask potential emission lines ----------------- #
-    """
     # Will mask one point on each side of line center i.e. approx 80 A masked
     # These are all vacuum wavelengths
-    # first define all variables
-    cdef double oiii_5007
-    cdef double oiii_4959
-    cdef double hbeta
-    cdef double hgamma
-    cdef double oii_3727
-
     oiii_5007 = 5008.24
     oiii_4959 = 4960.30
     hbeta = 4862.69
@@ -60,23 +49,18 @@ def get_line_mask():
     # avg wav of the two written here
 
     # Set up line mask
-    cdef np.ndarray[long, ndim=1] line_mask = np.zeros(resampling_lam_grid_length, dtype=np.int)
+    line_mask = np.zeros(len(lam_grid), dtype=np.int)
 
     # Get redshifted wavelengths and mask
-    cdef int oii_3727_idx
-    cdef int oiii_5007_idx
-    cdef int oiii_4959_idx
-
-    oii_3727_idx = np.argmin(abs(resampling_lam_grid - oii_3727*(1 + z)))
-    oiii_5007_idx = np.argmin(abs(resampling_lam_grid - oiii_5007*(1 + z)))
-    oiii_4959_idx = np.argmin(abs(resampling_lam_grid - oiii_4959*(1 + z)))
+    oii_3727_idx = np.argmin(abs(lam_grid - oii_3727*(1 + z)))
+    oiii_5007_idx = np.argmin(abs(lam_grid - oiii_5007*(1 + z)))
+    oiii_4959_idx = np.argmin(abs(lam_grid - oiii_4959*(1 + z)))
 
     line_mask[oii_3727_idx-1 : oii_3727_idx+2] = 1
     line_mask[oiii_5007_idx-1 : oiii_5007_idx+2] = 1
     line_mask[oiii_4959_idx-1 : oiii_4959_idx+2] = 1
-    """
 
-    return None
+    return line_mask
 
 def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_lam_grid):
 
@@ -114,6 +98,12 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
         resampling_lam_grid, total_models, lsf, z)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
+
+    # Mask emission lines
+    line_mask = get_line_mask(lam_obs, z)
+    flam_obs = ma.array(flam_obs, mask=line_mask)
+    ferr_obs = ma.array(ferr_obs, mask=line_mask)
+    lam_obs = ma.array(lam_obs, mask=line_mask)
 
     # Now do the chi2 computation
     chi2_temp, alpha_temp = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
