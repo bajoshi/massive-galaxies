@@ -1,0 +1,32 @@
+from __future__ import division
+
+import numpy as np
+from scipy.signal import fftconvolve
+
+import os
+import sys
+
+home = os.getenv('HOME')
+
+if __name__ == '__main__':
+    
+    galaxy_id = 26326
+    field = 'GOODS-S'
+    num_pa = 3
+
+    # reading in avg lsf for now
+    if field == 'GOODS-S':
+        lsf = np.genfromtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/south_lsfs/s' + str(galaxy_id) + '_avg_lsf.txt')
+    elif field == 'GOODS-N':
+        lsf = np.genfromtxt(home + '/Desktop/FIGS/new_codes/pears_lsfs/north_lsfs/n' + str(galaxy_id) + '_avg_lsf.txt')
+
+    # divide by total number of PA because avg LSF is not actually averaged
+    lsf /= num_pa
+
+    # do checks
+    print "Total LSF length", len(lsf)
+    print "Maxima in LSF occurs at:", np.argmax(lsf)
+
+    # read in model spectra
+
+    sys.exit(0)
