@@ -24,8 +24,10 @@ if __name__ == '__main__':
     lsf /= num_pa
 
     # do checks
-    print "Total LSF length", len(lsf)
+    print "Total LSF length:", len(lsf)
     print "Maxima in LSF occurs at:", np.argmax(lsf)
+    print "Total non-zero elements in LSF:", len(np.nonzero(lsf)[0])
+    print "Non-zero element indices in LSF:", np.nonzero(lsf)
 
     # read in model spectra
 
