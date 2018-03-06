@@ -100,13 +100,11 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
         resampling_lam_grid, total_models, lsf, z)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
-    print model_comp_spec_modified.shape
 
     # Mask emission lines
     line_mask = get_line_mask(lam_obs, z)
     flam_obs = ma.array(flam_obs, mask=line_mask)
     ferr_obs = ma.array(ferr_obs, mask=line_mask)
-    lam_obs = ma.array(lam_obs, mask=line_mask)
 
     # Now do the chi2 computation
     chi2_temp, alpha_temp = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
@@ -122,11 +120,10 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     z_arr_to_check. Then the model modifications are done at that redshift.
 
     For each iteration through the redshift list it computes a chi2 for each model.
-    So there are 
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - 0.3, stop=starting_z + 0.3, num=301, dtype=np.float64)
+    z_arr_to_check = np.linspace(start=starting_z - 0.2, stop=starting_z + 0.2, num=201, dtype=np.float64)
     z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
@@ -327,7 +324,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    fig.savefig(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '_fast1.png', \
+    fig.savefig(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '_linemask.png', \
         dpi=300, bbox_inches='tight')
 
     return None
@@ -430,7 +427,7 @@ if __name__ == '__main__':
 
             # --------------------------------------------- Quality checks ------------------------------------------- #
             # Netsig check
-            if netsig_chosen < 100:
+            if netsig_chosen < 30:
                 print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
                 continue
 
@@ -448,7 +445,7 @@ if __name__ == '__main__':
 
             # read in LSF file
             try:
-                lsf = np.loadtxt(lsf_filename)
+                lsf = np.genfromtxt(lsf_filename)
                 lsf = lsf.astype(np.float64)
             except IOError:
                 print "LSF not found. Moving to next galaxy."

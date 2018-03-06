@@ -10,9 +10,9 @@ home = os.getenv('HOME')
 
 if __name__ == '__main__':
     
-    galaxy_id = 26326
+    galaxy_id = 78415
     field = 'GOODS-S'
-    num_pa = 3
+    num_pa = 8
 
     # reading in avg lsf for now
     if field == 'GOODS-S':
