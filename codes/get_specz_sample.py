@@ -123,23 +123,23 @@ if __name__ == '__main__':
                 netsig_corr = pears_master_scat['netsig_corr'][idarg]
 
             if (current_specz >= 0.6) & (current_specz <= 1.235):
-                if current_specz_qual == 'A' or current_specz_qual == '4':
-                    if current_specz_source == '3D_HST':
-                        continue
-                    else:
-                        spec_count += 1
-                        print "\n", "At id:", current_id, "in", current_field,
-                        print "Corrected NetSig:", netsig_corr, "  i-band mag:", imag
-                        print "Spec-z is", current_specz, "from", current_specz_source, "with quality", current_specz_qual
-                        #print "Photo-z is", pears_cat['old_z'][pears_ind][i]
+                #if current_specz_qual == 'A' or current_specz_qual == '4':
+                if current_specz_source == '3D_HST':
+                    continue
+                else:
+                    spec_count += 1
+                    print "\n", "At id:", current_id, "in", current_field,
+                    print "Corrected NetSig:", netsig_corr, "  i-band mag:", imag
+                    print "Spec-z is", current_specz, "from", current_specz_source, "with quality", current_specz_qual
+                    #print "Photo-z is", pears_cat['old_z'][pears_ind][i]
 
-                        id_list.append(current_id)
-                        field_list.append(current_field)
-                        imag_list.append(imag)
-                        netsig_list.append(netsig_corr)
-                        specz_list.append(current_specz)
-                        specz_source_list.append(current_specz_source)
-                        specz_qual_list.append(current_specz_qual)
+                    id_list.append(current_id)
+                    field_list.append(current_field)
+                    imag_list.append(imag)
+                    netsig_list.append(netsig_corr)
+                    specz_list.append(current_specz)
+                    specz_source_list.append(current_specz_source)
+                    specz_qual_list.append(current_specz_qual)
 
         # convert lists to numpy arrays for writing with savetxt
         id_list = np.asarray(id_list)

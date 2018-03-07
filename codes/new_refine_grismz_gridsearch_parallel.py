@@ -123,7 +123,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - 0.2, stop=starting_z + 0.2, num=201, dtype=np.float64)
+    z_arr_to_check = np.linspace(start=starting_z - 0.2, stop=starting_z + 0.2, num=81, dtype=np.float64)
     z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
