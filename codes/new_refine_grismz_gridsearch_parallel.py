@@ -324,7 +324,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    fig.savefig(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '_linemask.png', \
+    fig.savefig(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '_broadlsf_linemask.png', \
         dpi=300, bbox_inches='tight')
 
     return None
@@ -386,7 +386,7 @@ def get_data(pears_index, field):
  
     # Check that contamination level is not too high
     if np.nansum(contam) > 0.2 * np.nansum(flam_obs):
-    	print pears_index, " in ", field, " has an too high a level of contamination. Returning empty array..."
+    	print pears_index, " in ", field, " has an too high a level of contamination. This galaxy will be skipped."
     	return_code = 0
     	return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
 
@@ -403,6 +403,10 @@ def get_data(pears_index, field):
     lam_obs = lam_obs[arg6000:arg9500]
     flam_obs = flam_obs[arg6000:arg9500]
     ferr = ferr[arg6000:arg9500]
+    contam = contam[arg6000:arg9500]
+
+    # subtract contamination if all okay
+    flam_obs -= contam
     
     return_code = 1
     return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
@@ -488,12 +492,11 @@ if __name__ == '__main__':
             lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
             if return_code == 0:
-            	print "Skipping due to an error with the obs data. See the error messafe just above this one.",
+            	print "Skipping due to an error with the obs data. See the error message just above this one.",
             	print "Moving to the next galaxy."
             	continue
 
-            # Force dtype for cython code
-            lam_obs = lam_obs.astype(np.float64)
+            lam_obs = lam_obs.astype(np.float64)  # Force dtype for cython code
 
             # plot to check # Line useful for debugging. Do not remove. Just uncomment.
             #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
@@ -519,11 +522,27 @@ if __name__ == '__main__':
             # read in LSF file
             try:
                 lsf = np.genfromtxt(lsf_filename)
-                lsf = lsf.astype(np.float64)
+                lsf = lsf.astype(np.float64)  # Force dtype for cython code
             except IOError:
                 print "LSF not found. Moving to next galaxy."
                 continue
 
+            # -------- Broaden the LSF ------- #
+            # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
+            # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
+            # fit
+            lsf_length = len(lsf)
+            gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
+            fit_gauss = fitting.LevMarLSQFitter()
+            x_arr = np.arange(lsf_length)
+            g = fit_gauss(gauss_init, x_arr, lsf)
+            # get broaden kernel std.dev. and create a gaussian to broaden
+            kernel_std = 1.118 * g.parameters[2]
+            broaden_kernel = Gaussian1DKernel(kernel_std)
+            # broaden LSF
+            broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
+
+            # ------- Make new resampling grid ------- # 
             # extend lam_grid to be able to move the lam_grid later 
             avg_dlam = old_ref.get_avg_dlam(lam_obs)
 
@@ -533,11 +552,12 @@ if __name__ == '__main__':
             resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
-            # call actual fitting function
-            zg, chi2_red = do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
+            # ------------- Call actual fitting function ------------- #
+            zg, chi2_red = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, redshift, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
+            # ---------------------------------------------- SAVE PARAMETERS ----------------------------------------------- #
             id_list.append(current_id)
             field_list.append(current_field)
             zgrism_list.append(zg)
@@ -556,13 +576,13 @@ if __name__ == '__main__':
     chi2_list = np.asarray(chi2_list)
     netsig_list = np.asarray(netsig_list)
 
-    np.save(figs_dir + 'massive-galaxies-figures/id_list.npy', id_list)
-    np.save(figs_dir + 'massive-galaxies-figures/field_list.npy', field_list)
-    np.save(figs_dir + 'massive-galaxies-figures/zgrism_list.npy', zgrism_list)
-    np.save(figs_dir + 'massive-galaxies-figures/zspec_list.npy', zspec_list)
-    np.save(figs_dir + 'massive-galaxies-figures/zphot_list.npy', zphot_list)
-    np.save(figs_dir + 'massive-galaxies-figures/chi2_list.npy', chi2_list)
-    np.save(figs_dir + 'massive-galaxies-figures/netsig_list.npy', netsig_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/id_list.npy', id_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/field_list.npy', field_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/zgrism_list.npy', zgrism_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/zspec_list.npy', zspec_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/zphot_list.npy', zphot_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/chi2_list.npy', chi2_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/netsig_list.npy', netsig_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start))
