@@ -128,7 +128,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
     if not z_arr_to_check.size:
-        return -99.0
+        return -99.0, -99.0
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -261,7 +261,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     #ax.set_xlim(1,total_models)
     #plt.show()
 
-    return z_grism
+    return z_grism, (chi2[min_idx_2d]/len(lam_obs))
 
 def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     obj_id, obj_field, specz, photoz, grismz, chi2, age, tau, av):
@@ -329,11 +329,85 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
 
     return None
 
-if __name__ == '__main__':
+def get_data(pears_index, field):
+
     """
-    The __main__ part of this code is similar to that in new_refine_grismz_iter.py
+    Using code from fileprep in this function; not including 
+    everything because it does a few things that I don't 
+    actually need also there is no contamination checking
     """
+
+    # read in spectrum file
+    data_path = home + "/Documents/PEARS/data_spectra_only/"
+    # Get the correct filename and the number of extensions
+    if field == 'GOODS-N':
+        filename = data_path + 'h_pears_n_id' + str(pears_index) + '.fits'
+    elif field == 'GOODS-S':
+        filename = data_path + 'h_pears_s_id' + str(pears_index) + '.fits'
+
+    fitsfile = fits.open(filename)
+    n_ext = fitsfile[0].header['NEXTEND']
+
+    # Loop over all extensions and get the best PA
+    # Get highest netsig to find the spectrum to be added
+    if n_ext > 1:
+        netsiglist = []
+        palist = []
+        for count in range(n_ext):
+            #print "At PA", fitsfile[count+1].header['POSANG']  # Line useful for debugging. Do not remove. Just uncomment.
+            fitsdata = fitsfile[count+1].data
+            netsig = gd.get_net_sig(fitsdata)
+            netsiglist.append(netsig)
+            palist.append(fitsfile[count+1].header['POSANG'])
+            #print "At PA", fitsfile[count+1].header['POSANG'], "with NetSig", netsig  
+            # Above line also useful for debugging. Do not remove. Just uncomment.
+        netsiglist = np.array(netsiglist)
+        maxnetsigarg = np.argmax(netsiglist)
+        netsig_chosen = np.max(netsiglist)
+        spec_toadd = fitsfile[maxnetsigarg+1].data
+        pa_chosen = fitsfile[maxnetsigarg+1].header['POSANG']
+    elif n_ext == 1:
+        spec_toadd = fitsfile[1].data
+        pa_chosen = fitsfile[1].header['POSANG']
+        netsig_chosen = gd.get_net_sig(fitsfile[1].data)
+        
+    # Now get the spectrum to be added
+    lam_obs = spec_toadd['LAMBDA']
+    flam_obs = spec_toadd['FLUX']
+    ferr = spec_toadd['FERROR']
+    contam = spec_toadd['CONTAM']
+
+    """
+    In the next few lines within this function, I'm using a flag called
+    return_code. This flag is used to tell the next part of the code,
+    which is using the output from this function, if this function thinks 
+    it returned anything useful. 1 = Useful. 0 = Not useful.
+    """
+ 
+    # Check that contamination level is not too high
+    if np.nansum(contam) > 0.2 * np.nansum(flam_obs):
+    	print pears_index, " in ", field, " has an too high a level of contamination. Returning empty array..."
+    	return_code = 0
+    	return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
+
+    # check that input wavelength array is not empty
+    if not lam_obs.size:
+        print pears_index, " in ", field, " has an empty wav array. Returning empty array..."
+        return_code = 0
+        return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
+
+    # Now chop off the ends and only look at the observed spectrum from 6000A to 9500A
+    arg6000 = np.argmin(abs(lam_obs - 6000))
+    arg9500 = np.argmin(abs(lam_obs - 9500))
+        
+    lam_obs = lam_obs[arg6000:arg9500]
+    flam_obs = flam_obs[arg6000:arg9500]
+    ferr = ferr[arg6000:arg9500]
     
+    return_code = 1
+    return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
+
+if __name__ == '__main__':
     # Start time
     start = time.time()
     dt = datetime.datetime
@@ -377,6 +451,8 @@ if __name__ == '__main__':
     zgrism_list = []
     zspec_list = []
     zphot_list = []
+    chi2_list = []
+    netsig_list = []
 
     # start looping
     for cat in all_speccats:
@@ -409,17 +485,14 @@ if __name__ == '__main__':
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift
 
-            lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, redshift, current_field)
+            lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
-            # now make sure that the quantities are all in observer frame
-            # the original function (fileprep in grid_coadd) will give quantities in rest frame
-            # but I need these to be in the observed frame so I will redshift them again.
-            # It gives them in the rest frame because getting the d4000 and the average 
-            # lambda separation needs to be figured out in the rest frame.
-            flam_obs = flam_em / (1 + redshift)
-            ferr_obs = ferr_em / (1 + redshift)
-            lam_obs = lam_em * (1 + redshift)
+            if return_code == 0:
+            	print "Skipping due to an error with the obs data. See the error messafe just above this one.",
+            	print "Moving to the next galaxy."
+            	continue
 
+            # Force dtype for cython code
             lam_obs = lam_obs.astype(np.float64)
 
             # plot to check # Line useful for debugging. Do not remove. Just uncomment.
@@ -427,7 +500,7 @@ if __name__ == '__main__':
 
             # --------------------------------------------- Quality checks ------------------------------------------- #
             # Netsig check
-            if netsig_chosen < 30:
+            if netsig_chosen < 10:
                 print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
                 continue
 
@@ -461,7 +534,7 @@ if __name__ == '__main__':
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
             # call actual fitting function
-            zg = do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
+            zg, chi2_red = do_fitting(flam_obs, ferr_obs, lam_obs, lsf, redshift, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
@@ -470,23 +543,27 @@ if __name__ == '__main__':
             zgrism_list.append(zg)
             zspec_list.append(redshift)
             zphot_list.append(current_specz)
+            chi2_list.append(chi2_red)
+            netsig_list.append(netsig_chosen)
 
             #sys.exit(0)
 
-    print id_list
-    print field_list
-    print zgrism_list
-    print zspec_list
-    print zphot_list
-
+    id_list = np.asarray(id_list)
+    field_list = np.asarray(field_list)
     zgrism_list = np.asarray(zgrism_list)
     zspec_list = np.asarray(zspec_list)
     zphot_list = np.asarray(zphot_list)
+    chi2_list = np.asarray(chi2_list)
+    netsig_list = np.asarray(netsig_list)
 
-    print id_list
-    print field_list
-    print zgrism_list
-    print zspec_list
-    print zphot_list
+    np.save(figs_dir + 'massive-galaxies-figures/id_list.npy', id_list)
+    np.save(figs_dir + 'massive-galaxies-figures/field_list.npy', field_list)
+    np.save(figs_dir + 'massive-galaxies-figures/zgrism_list.npy', zgrism_list)
+    np.save(figs_dir + 'massive-galaxies-figures/zspec_list.npy', zspec_list)
+    np.save(figs_dir + 'massive-galaxies-figures/zphot_list.npy', zphot_list)
+    np.save(figs_dir + 'massive-galaxies-figures/chi2_list.npy', chi2_list)
+    np.save(figs_dir + 'massive-galaxies-figures/netsig_list.npy', netsig_list)
 
+    # Total time taken
+    print "Total time taken --", str("{:.2f}".format(time.time() - start))
     sys.exit(0)

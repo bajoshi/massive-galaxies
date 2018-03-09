@@ -35,9 +35,9 @@ def constrain(spec_cat):
     based on their D4000, NetSig, and overall error.
     """
 
-    z_spec_plot = []
-    z_grism_plot = []
-    z_phot_plot = []
+    zspec_plot = []
+    zgrism_plot = []
+    zphot_plot = []
 
     for i in range(len(spec_cat)):
 
@@ -70,18 +70,18 @@ def constrain(spec_cat):
             #print "Skipping", current_id, "in", current_field, "because of overall error."
             continue
 
-        z_spec_plot.append(spec_cat['zspec'][i])
-        z_grism_plot.append(spec_cat['zgrism'][i])
-        z_phot_plot.append(spec_cat['zphot'][i])
+        zspec_plot.append(spec_cat['zspec'][i])
+        zgrism_plot.append(spec_cat['zgrism'][i])
+        zphot_plot.append(spec_cat['zphot'][i])
 
         print "Selected", current_id, "in", current_field, "for comparison.",
         print "This object has NetSig:", netsig_chosen
 
-    z_spec_plot = np.asarray(z_spec_plot)
-    z_grism_plot = np.asarray(z_grism_plot)
-    z_phot_plot = np.asarray(z_phot_plot)
+    zspec_plot = np.asarray(zspec_plot)
+    zgrism_plot = np.asarray(zgrism_plot)
+    zphot_plot = np.asarray(zphot_plot)
 
-    return z_spec_plot, z_grism_plot, z_phot_plot
+    return zspec_plot, zgrism_plot, zphot_plot
 
 if __name__ == '__main__':
     
@@ -90,31 +90,31 @@ if __name__ == '__main__':
 
     print "Total", len(spec_res_cat), "galaxies that are in PEARS and have a ground-based redshift",
     print "and the ground-based redshift is also within 0.6 < zspec <= 1.235"
-    z_spec_plot, z_grism_plot, z_phot_plot = constrain(spec_res_cat)
+    #zspec_plot, zgrism_plot, zphot_plot = constrain(spec_res_cat)
 
-    use_new = False
+    use_new = True
     if use_new:
-        z_grism_plot = np.array([  0.7223, -99.0, 0.7665, 0.9298, 0.8756,   0.6002,\
-        0.8461,   0.9377,   0.976,    0.992,    0.601,    0.723,    0.601,    0.602,\
-        0.902,    1.032,   0.687,    0.636,    0.76,     0.735,    0.95,     0.976,\
-        0.666,    0.601,   0.964,    1.063,    0.854,    0.943,    1.08,     0.6   ])
+        # Read in arrays
+        id_arr = np.load(massive_figures_dir + 'id_list.npy')
+        field_arr = np.load(massive_figures_dir + 'field_list.npy')
+        zgrism_arr = np.load(massive_figures_dir + 'zgrism_list.npy')
+        zspec_arr = np.load(massive_figures_dir + 'zspec_list.npy')
+        zphot_arr = np.load(massive_figures_dir + 'zphot_list.npy')
+        #chi2_arr = np.load(massive_figures_dir + 'chi2_list.npy')
+        #netsig_arr = np.load(massive_figures_dir + 'netsig_list.npy')
 
-        z_spec_plot = np.array([0.7603, 0.0846, 0.9805, 0.9698, 0.8516, 0.6382, \
-            0.8181, 0.8197, 0.682, 1.012, 0.637, 0.641, 0.745, 0.58, 0.858, \
-            1.122, 0.623, 0.618, 0.634, 0.713, 0.976, 0.97, 0.638, 0.659, 0.91, \
-            1.015, 0.658, 0.923, 1.38, 0.794])
+        # Place some more cuts
+        valid_idx = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
+        #valid_idx2 = np.where(chi2_arr <= 2.0)[0]
+        #valid_idx = np.concatenate((valid_idx1, valid_idx2))
 
-        z_phot_plot = np.array([0.761, 0.682, 0.851, 0.942, 0.857, 0.634, 0.841, \
-            0.836, 0.734, 0.998, 0.605, 0.726, 0.738, 0.615, 0.831, 1.129, 0.668, \
-            0.668, 0.67, 0.735, 1.036, 0.955, 0.67, 0.989, 0.954, 1.015, 0.667, \
-            0.978, 1.22, 0.783])
+        zgrism_plot = zgrism_arr[valid_idx]
+        zspec_plot = zspec_arr[valid_idx]
+        zphot_plot = zphot_arr[valid_idx]
+        #chi2_plot = chi2_arr[valid_idx]
+        #netsig_plot = netsig_arr[valid_idx]
 
-        valid_idx = np.where((z_grism_plot >= 0.6) & (z_grism_plot <= 1.235))[0]
-        z_grism_plot = z_grism_plot[valid_idx]
-        z_spec_plot = z_spec_plot[valid_idx]
-        z_phot_plot = z_phot_plot[valid_idx]
-
-    print "Only", len(z_spec_plot), "galaxies within the", len(spec_res_cat), "pass the D4000, NetSig, and overall error constraints."
+    print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), "pass the D4000, NetSig, and overall error constraints."
 
     # plot
     fig = plt.figure()
@@ -124,19 +124,24 @@ if __name__ == '__main__':
     myblue = mh.rgb_to_hex(0, 100, 180)
     myred = mh.rgb_to_hex(214, 39, 40)  # tableau 20 red
 
-    grism_resid_hist_arr = (z_spec_plot - z_grism_plot)/(1+z_spec_plot)
-    photz_resid_hist_arr = (z_spec_plot - z_phot_plot)/(1+z_spec_plot)
+    grism_resid_hist_arr = (zspec_plot - zgrism_plot)/(1+zspec_plot)
+    photz_resid_hist_arr = (zspec_plot - zphot_plot)/(1+zspec_plot)
 
-    ax.hist(photz_resid_hist_arr, 15, range=[-0.15,0.22], histtype='step', color=myred, alpha=0.75, zorder=10)
-    ax.hist(grism_resid_hist_arr, 15, range=[-0.15,0.22], histtype='step', color=myblue, alpha=0.6, zorder=10)
-    
-    # If you don't want to restrict the range
-    #ax.hist(photz_resid_hist_arr, 15, histtype='step', color=myred, alpha=0.75, zorder=10)
-    #ax.hist(grism_resid_hist_arr, 15, histtype='step', color=myblue, alpha=0.6, zorder=10)
+    fullrange = True
+    if fullrange:
+        # If you don't want to restrict the range
+        ax.hist(photz_resid_hist_arr, 50, histtype='step', color=myred, zorder=10)
+        ax.hist(grism_resid_hist_arr, 50, histtype='step', color=myblue, zorder=10)
+    else:
+        ax.hist(photz_resid_hist_arr, 50, range=[-0.15,0.15], histtype='step', color=myred, zorder=10)
+        ax.hist(grism_resid_hist_arr, 50, range=[-0.15,0.15], histtype='step', color=myblue, zorder=10)
 
-    # this plot really needs an alpha channel
+    # this plot needs an alpha channel if you fill in the face color
     # otherwise you wont see that the photo-z histogram under the grism-z histogram
     # is actually fatter around 0 whereas the grism-z histogram is thinner.
+    # It does not need an alpha channel if you do histtype='step'
+
+    ax.axvline(x=0.0, ls='--', color='k')
 
     ax.text(0.72, 0.97, r'$\mathrm{Grism{-}z}$' + '\n' + r'$\mathrm{residuals}$',\
     verticalalignment='top', horizontalalignment='left', \
@@ -154,8 +159,10 @@ if __name__ == '__main__':
 
     ax.minorticks_on()
 
-    fig.savefig(massive_figures_dir + 'new_specz_sample_fits/residual_histogram_netsig_100.png', dpi=300, bbox_inches='tight')
-    # has to be png NOT eps. This plot needs an alpha channel.
+    if fullrange:
+        fig.savefig(massive_figures_dir + 'new_specz_sample_fits/residual_histogram_netsig_30_fullrange.png', dpi=300, bbox_inches='tight')
+    else:
+        fig.savefig(massive_figures_dir + 'new_specz_sample_fits/residual_histogram_netsig_30.png', dpi=300, bbox_inches='tight')
 
     plt.show()
 
