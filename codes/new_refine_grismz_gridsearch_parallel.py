@@ -2,8 +2,10 @@ from __future__ import division
 
 import numpy as np
 import numpy.ma as ma
+from scipy.signal import fftconvolve
 from astropy.io import fits
-from astropy.convolution import convolve_fft, convolve, Gaussian1DKernel
+from astropy.modeling import models, fitting
+from astropy.convolution import Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
 from joblib import Parallel, delayed
 
@@ -373,7 +375,7 @@ def get_data(pears_index, field):
     # Now get the spectrum to be added
     lam_obs = spec_toadd['LAMBDA']
     flam_obs = spec_toadd['FLUX']
-    ferr = spec_toadd['FERROR']
+    ferr_obs = spec_toadd['FERROR']
     contam = spec_toadd['CONTAM']
 
     """
@@ -384,16 +386,17 @@ def get_data(pears_index, field):
     """
  
     # Check that contamination level is not too high
-    if np.nansum(contam) > 0.2 * np.nansum(flam_obs):
-    	print pears_index, " in ", field, " has an too high a level of contamination. This galaxy will be skipped."
+    if np.nansum(contam) > 0.33 * np.nansum(flam_obs):
+    	print pears_index, " in ", field, " has an too high a level of contamination.",
+    	print "Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped."
     	return_code = 0
-    	return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
+    	return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Check that input wavelength array is not empty
     if not lam_obs.size:
         print pears_index, " in ", field, " has an empty wav array. Returning empty array..."
         return_code = 0
-        return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
+        return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Now chop off the ends and only look at the observed spectrum from 6000A to 9500A
     arg6000 = np.argmin(abs(lam_obs - 6000))
@@ -401,14 +404,14 @@ def get_data(pears_index, field):
         
     lam_obs = lam_obs[arg6000:arg9500]
     flam_obs = flam_obs[arg6000:arg9500]
-    ferr = ferr[arg6000:arg9500]
+    ferr_obs = ferr_obs[arg6000:arg9500]
     contam = contam[arg6000:arg9500]
 
     # subtract contamination if all okay
     flam_obs -= contam
     
     return_code = 1
-    return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
+    return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
 if __name__ == '__main__':
     # Start time
@@ -491,14 +494,20 @@ if __name__ == '__main__':
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift
 
-            lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
+            lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
             if return_code == 0:
             	print "Skipping due to an error with the obs data. See the error message just above this one.",
             	print "Moving to the next galaxy."
             	continue
 
-            lam_obs = lam_obs.astype(np.float64)  # Force dtype for cython code
+            # Force dtype for cython code
+            # Apparently this (i.e. for flam_obs and ferr_obs) has  
+            # to be done to avoid an obscure error from parallel in joblib --
+            # AttributeError: 'numpy.ndarray' object has no attribute 'offset'
+            lam_obs = lam_obs.astype(np.float64)
+            flam_obs = flam_obs.astype(np.float64)
+            ferr_obs = ferr_obs.astype(np.float64)
 
             # plot to check # Line useful for debugging. Do not remove. Just uncomment.
             #ni.plotspectrum(lam_obs, flam_obs, ferr_obs)
@@ -543,6 +552,7 @@ if __name__ == '__main__':
             broaden_kernel = Gaussian1DKernel(kernel_std)
             # broaden LSF
             broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
+            broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
 
             # ------- Make new resampling grid ------- # 
             # extend lam_grid to be able to move the lam_grid later 
