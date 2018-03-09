@@ -32,7 +32,6 @@ import fast_chi2_jackknife_massive_galaxies as fcjm
 import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
 import model_mods_cython_copytoedit as model_mods_cython
-#import model_mods_cython
 
 def get_line_mask(lam_grid, z):
 
@@ -128,7 +127,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
     if not z_arr_to_check.size:
-        return -99.0, -99.0
+        return -99.0, -99.0, -99.0, -99.0, -99.0
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -261,7 +260,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     #ax.set_xlim(1,total_models)
     #plt.show()
 
-    return z_grism, (chi2[min_idx_2d]/len(lam_obs))
+    return z_grism, (chi2[min_idx_2d]/len(lam_obs)), age, tau, (tauv/1.086)
 
 def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     obj_id, obj_field, specz, photoz, grismz, chi2, age, tau, av):
@@ -390,7 +389,7 @@ def get_data(pears_index, field):
     	return_code = 0
     	return lam_obs, flam_obs, ferr, pa_chosen, netsig_chosen, return_code
 
-    # check that input wavelength array is not empty
+    # Check that input wavelength array is not empty
     if not lam_obs.size:
         print pears_index, " in ", field, " has an empty wav array. Returning empty array..."
         return_code = 0
@@ -457,6 +456,9 @@ if __name__ == '__main__':
     zphot_list = []
     chi2_list = []
     netsig_list = []
+    age_list = []
+    tau_list = []
+    av_list = []
 
     # start looping
     for cat in all_speccats:
@@ -536,7 +538,7 @@ if __name__ == '__main__':
             fit_gauss = fitting.LevMarLSQFitter()
             x_arr = np.arange(lsf_length)
             g = fit_gauss(gauss_init, x_arr, lsf)
-            # get broaden kernel std.dev. and create a gaussian to broaden
+            # get fit std.dev. and create a gaussian kernel with which to broaden
             kernel_std = 1.118 * g.parameters[2]
             broaden_kernel = Gaussian1DKernel(kernel_std)
             # broaden LSF
@@ -553,7 +555,7 @@ if __name__ == '__main__':
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
             # ------------- Call actual fitting function ------------- #
-            zg, chi2_red = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, redshift, resampling_lam_grid, \
+            zg, chi2_red, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, redshift, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
@@ -565,6 +567,9 @@ if __name__ == '__main__':
             zphot_list.append(current_specz)
             chi2_list.append(chi2_red)
             netsig_list.append(netsig_chosen)
+            age_list.append(age)
+            tau_list.append(tau)
+            av_list.append(av)
 
             #sys.exit(0)
 
@@ -575,6 +580,9 @@ if __name__ == '__main__':
     zphot_list = np.asarray(zphot_list)
     chi2_list = np.asarray(chi2_list)
     netsig_list = np.asarray(netsig_list)
+    age_list = np.asarray(age_list)
+    tau_list = np.asarray(tau_list)
+    av_list = np.asarray(av_list)
 
     np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/id_list.npy', id_list)
     np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/field_list.npy', field_list)
@@ -583,6 +591,9 @@ if __name__ == '__main__':
     np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/zphot_list.npy', zphot_list)
     np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/chi2_list.npy', chi2_list)
     np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/netsig_list.npy', netsig_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/age_list.npy', age_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/tau_list.npy', tau_list)
+    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/av_list.npy', av_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start))
