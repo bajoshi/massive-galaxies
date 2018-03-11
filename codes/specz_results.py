@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+from functools import reduce
 
 import os
 import sys
@@ -28,94 +29,95 @@ sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 import grid_coadd as gd
 import mag_hist as mh
+import new_refine_grismz_gridsearch_parallel as ngp
+import dn4000_catalog as dc
 
-def constrain(spec_cat):
-    """
-    This function will constrain the galaxy spectra to be plotted for comparison
-    based on their D4000, NetSig, and overall error.
-    """
+def get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss):
 
-    zspec_plot = []
-    zgrism_plot = []
-    zphot_plot = []
+    d4000_list = []
+    d4000_err_list = []
+    specz_qual_list = []
+    specz_source_list = []
 
-    for i in range(len(spec_cat)):
+    # loop over all objects
+    for i in range(len(id_arr)):
 
-        # read in data
-        current_id = spec_cat['id'][i]
-        current_field = spec_cat['field'][i]
-        current_redshift = spec_cat['zspec'][i]
+        # get obs data, deredshift and get d4000
+        lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(id_arr[i], field_arr[i])
+        #print "At ID", id_arr[i], "in", field_arr[i], "Return Code was:", return_code
 
-        if current_field == 'goodsn':
-            current_field = 'GOODS-N'
-        elif current_field == 'goodss':
-            current_field = 'GOODS-S'
+        lam_em = lam_obs / (1 + zspec_arr[i])
+        flam_em = flam_obs * (1 + zspec_arr[i])
+        ferr_em = ferr_obs * (1 + zspec_arr[i])
 
-        lam_em, flam_em, ferr_em, specname, pa_chosen, netsig_chosen = gd.fileprep(current_id, current_redshift, current_field)
+        d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
-        # you only want data in the observed frame
-        flam_obs = flam_em / (1 + current_redshift)
-        ferr_obs = ferr_em / (1 + current_redshift)
-        lam_obs = lam_em * (1 + current_redshift)
-    
-        # D4000 check
-        # Netsig check
-        #if (netsig_chosen < 10) or (netsig_chosen > 100):
-        if netsig_chosen < 100:
-            #print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
-            continue
+        # now get specz quality
+        if field_arr[i] == 'GOODS-N':
+            idx = np.where(specz_goodsn['pearsid'] == id_arr[i])[0]
+            specz_qual = specz_goodsn['specz_qual'][idx]
+            specz_source = specz_goodsn['specz_source'][idx]
+        elif field_arr[i] == 'GOODS-S':
+            idx = np.where(specz_goodss['pearsid'] == id_arr[i])[0]
+            specz_qual = specz_goodss['specz_qual'][idx]
+            specz_source = specz_goodss['specz_source'][idx]
 
-        # Overall error check
-        if np.sum(abs(ferr_obs)) > 0.2 * np.sum(abs(flam_obs)):
-            #print "Skipping", current_id, "in", current_field, "because of overall error."
-            continue
+        # append
+        d4000_list.append(d4000)
+        d4000_err_list.append(d4000_err)
+        specz_qual_list.append(specz_qual)
+        specz_source_list.append(specz_source)
 
-        zspec_plot.append(spec_cat['zspec'][i])
-        zgrism_plot.append(spec_cat['zgrism'][i])
-        zphot_plot.append(spec_cat['zphot'][i])
+    # convert to numpy arrays
+    d4000_list = np.asarray(d4000_list)
+    d4000_err_list = np.asarray(d4000_err_list)
+    specz_qual_list = np.asarray(specz_qual_list)
+    specz_source_list = np.asarray(specz_source_list)
 
-        print "Selected", current_id, "in", current_field, "for comparison.",
-        print "This object has NetSig:", netsig_chosen
+    specz_qual_list = specz_qual_list.ravel()
+    specz_source_list = specz_source_list.ravel()
+    # added these lines to ravel after checking htat the returned shape was (N, 1) instead of just (N)
 
-    zspec_plot = np.asarray(zspec_plot)
-    zgrism_plot = np.asarray(zgrism_plot)
-    zphot_plot = np.asarray(zphot_plot)
-
-    return zspec_plot, zgrism_plot, zphot_plot
+    return d4000_list, d4000_err_list, specz_qual_list, specz_source_list
 
 if __name__ == '__main__':
     
-    #spec_res_cat = np.genfromtxt(massive_figures_dir + "new_specz_sample_fits/specz_results/specz_sample_results.txt", \
-    #    dtype=None, names=True, skip_header=15)
+    # Read in arrays
+    id_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/id_list.npy')
+    field_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/field_list.npy')
+    zgrism_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zgrism_list.npy')
+    zspec_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zspec_list.npy')
+    zphot_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zphot_list.npy')
+    chi2_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/chi2_list.npy')
+    netsig_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/netsig_list.npy')
+    print "Code ran for", len(zgrism_arr), "galaxies."
 
-    #print "Total", len(spec_res_cat), "galaxies that are in PEARS and have a ground-based redshift",
-    #print "and the ground-based redshift is also within 0.6 < zspec <= 1.235"
-    #zspec_plot, zgrism_plot, zphot_plot = constrain(spec_res_cat)
+    # get d4000 and also specz quality for all galaxies
+    # Read in Specz comparison catalogs
+    specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
+    specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
-    use_new = True
-    if use_new:
-        # Read in arrays
-        id_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/id_list.npy')
-        field_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/field_list.npy')
-        zgrism_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zgrism_list.npy')
-        zspec_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zspec_list.npy')
-        zphot_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zphot_list.npy')
-        chi2_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/chi2_list.npy')
-        netsig_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/netsig_list.npy')
-        print "Code ran for", len(zgrism_arr), "galaxies."
+    d4000_list, d4000_err_list, specz_qual_list, specz_source_list = \
+    get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss)
 
-        # Place some more cuts
-        valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
-        valid_idx2 = np.where(chi2_arr < 2.0)[0]
-        valid_idx = np.intersect1d(valid_idx1, valid_idx2)
+    # Place some more cuts
+    valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
+    valid_idx2 = np.where(chi2_arr < 2.0)[0]
+    valid_idx3 = np.where(d4000_list >= 1.5)[0]
+    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3))
 
-        id_plot = id_arr[valid_idx]
-        field_plot = field_arr[valid_idx]
-        zgrism_plot = zgrism_arr[valid_idx]
-        zspec_plot = zspec_arr[valid_idx]
-        zphot_plot = zphot_arr[valid_idx]
-        chi2_plot = chi2_arr[valid_idx]
-        netsig_plot = netsig_arr[valid_idx]
+    id_plot = id_arr[valid_idx]
+    field_plot = field_arr[valid_idx]
+    zgrism_plot = zgrism_arr[valid_idx]
+    zspec_plot = zspec_arr[valid_idx]
+    zphot_plot = zphot_arr[valid_idx]
+    chi2_plot = chi2_arr[valid_idx]
+    netsig_plot = netsig_arr[valid_idx]
+
+    d4000_list = d4000_list[valid_idx]
+    d4000_err_list = d4000_err_list[valid_idx]
+    specz_qual_list = specz_qual_list[valid_idx]
+    specz_source_list = specz_source_list[valid_idx]
 
     print len(zgrism_plot), "galaxies in plot."
     #print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), 
@@ -140,18 +142,28 @@ if __name__ == '__main__':
     #print zgrism_plot[large_diff_idx]
     #print zspec_plot[large_diff_idx]
     #print zphot_plot[large_diff_idx]
-    print netsig_plot[large_diff_idx]
+    #print netsig_plot[large_diff_idx]
     print chi2_plot[large_diff_idx]
+    print specz_qual_list[large_diff_idx]
+    print d4000_list[large_diff_idx]
+    print specz_source_list[large_diff_idx]
     #print len(np.where(chi2_plot[large_diff_idx] >= 2.0)[0])
 
-    fullrange = True
+    fullrange = False
     if fullrange:
         # If you don't want to restrict the range
-        ax.hist(photz_resid_hist_arr, 50, histtype='step', color=myred, zorder=10)
-        ax.hist(grism_resid_hist_arr, 50, histtype='step', color=myblue, zorder=10)
+        photz_min = np.min(photz_resid_hist_arr)
+        photz_max = np.max(photz_resid_hist_arr)
+        grismz_min = np.min(grism_resid_hist_arr)
+        grismz_max = np.max(grism_resid_hist_arr)
+        binwidth = 0.005
+        ax.hist(photz_resid_hist_arr, bins=np.arange(photz_min, photz_max+binwidth, binwidth), \
+            histtype='step', color=myred, zorder=10)
+        ax.hist(grism_resid_hist_arr, bins=np.arange(grismz_min, grismz_max+binwidth, binwidth), \
+            histtype='step', color=myblue, zorder=10)
     else:
-        ax.hist(photz_resid_hist_arr, 50, range=[-0.15,0.15], histtype='step', color=myred, zorder=10)
-        ax.hist(grism_resid_hist_arr, 50, range=[-0.15,0.15], histtype='step', color=myblue, zorder=10)
+        ax.hist(photz_resid_hist_arr, 20, range=[-0.05,0.05], histtype='step', color=myred, zorder=10)
+        ax.hist(grism_resid_hist_arr, 20, range=[-0.05,0.05], histtype='step', color=myblue, zorder=10)
 
     # this plot needs an alpha channel if you fill in the face color
     # otherwise you wont see that the photo-z histogram under the grism-z histogram
@@ -178,11 +190,11 @@ if __name__ == '__main__':
 
     if fullrange:
         fig.savefig(massive_figures_dir + \
-            'new_specz_sample_fits/residual_histogram_netsig_30_fullrange.png', \
+            'new_specz_sample_fits/residual_histogram_netsig_10_fullrange.png', \
             dpi=300, bbox_inches='tight')
     else:
         fig.savefig(massive_figures_dir + \
-            'new_specz_sample_fits/residual_histogram_netsig_30.png', \
+            'new_specz_sample_fits/residual_histogram_netsig_10.png', \
             dpi=300, bbox_inches='tight')
 
     plt.show()

@@ -334,7 +334,6 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     return None
 
 def get_data(pears_index, field):
-
     """
     Using code from fileprep in this function; not including 
     everything because it does a few things that I don't 
