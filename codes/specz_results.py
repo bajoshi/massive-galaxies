@@ -85,21 +85,21 @@ def constrain(spec_cat):
 
 if __name__ == '__main__':
     
-    spec_res_cat = np.genfromtxt(massive_figures_dir + "new_specz_sample_fits/specz_results/specz_sample_results.txt", \
-        dtype=None, names=True, skip_header=15)
+    #spec_res_cat = np.genfromtxt(massive_figures_dir + "new_specz_sample_fits/specz_results/specz_sample_results.txt", \
+    #    dtype=None, names=True, skip_header=15)
 
-    print "Total", len(spec_res_cat), "galaxies that are in PEARS and have a ground-based redshift",
-    print "and the ground-based redshift is also within 0.6 < zspec <= 1.235"
+    #print "Total", len(spec_res_cat), "galaxies that are in PEARS and have a ground-based redshift",
+    #print "and the ground-based redshift is also within 0.6 < zspec <= 1.235"
     #zspec_plot, zgrism_plot, zphot_plot = constrain(spec_res_cat)
 
     use_new = True
     if use_new:
         # Read in arrays
-        id_arr = np.load(massive_figures_dir + 'id_list.npy')
-        field_arr = np.load(massive_figures_dir + 'field_list.npy')
-        zgrism_arr = np.load(massive_figures_dir + 'zgrism_list.npy')
-        zspec_arr = np.load(massive_figures_dir + 'zspec_list.npy')
-        zphot_arr = np.load(massive_figures_dir + 'zphot_list.npy')
+        id_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/from_run_with_linemask_and_defaultlsf_all_netsigGTR30_speczmatches/id_list.npy')
+        field_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/from_run_with_linemask_and_defaultlsf_all_netsigGTR30_speczmatches/field_list.npy')
+        zgrism_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/from_run_with_linemask_and_defaultlsf_all_netsigGTR30_speczmatches/zgrism_list.npy')
+        zspec_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/from_run_with_linemask_and_defaultlsf_all_netsigGTR30_speczmatches/zphot_list.npy')
+        zphot_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/from_run_with_linemask_and_defaultlsf_all_netsigGTR30_speczmatches/zspec_list.npy')
         #chi2_arr = np.load(massive_figures_dir + 'chi2_list.npy')
         #netsig_arr = np.load(massive_figures_dir + 'netsig_list.npy')
 
@@ -108,13 +108,16 @@ if __name__ == '__main__':
         #valid_idx2 = np.where(chi2_arr <= 2.0)[0]
         #valid_idx = np.concatenate((valid_idx1, valid_idx2))
 
+        id_plot = id_arr[valid_idx]
+        field_plot = field_arr[valid_idx]
         zgrism_plot = zgrism_arr[valid_idx]
         zspec_plot = zspec_arr[valid_idx]
         zphot_plot = zphot_arr[valid_idx]
         #chi2_plot = chi2_arr[valid_idx]
         #netsig_plot = netsig_arr[valid_idx]
 
-    print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), "pass the D4000, NetSig, and overall error constraints."
+    print len(zgrism_plot), "galaxies in plot."
+    #print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), "pass the D4000, NetSig, and overall error constraints."
 
     # plot
     fig = plt.figure()
@@ -126,6 +129,14 @@ if __name__ == '__main__':
 
     grism_resid_hist_arr = (zspec_plot - zgrism_plot)/(1+zspec_plot)
     photz_resid_hist_arr = (zspec_plot - zphot_plot)/(1+zspec_plot)
+
+    large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.05)[0]
+    print len(large_diff_idx)
+    print id_plot[large_diff_idx]
+    print field_plot[large_diff_idx]
+    print zgrism_plot[large_diff_idx]
+    print zspec_plot[large_diff_idx]
+    print zphot_plot[large_diff_idx]
 
     fullrange = True
     if fullrange:
@@ -160,9 +171,13 @@ if __name__ == '__main__':
     ax.minorticks_on()
 
     if fullrange:
-        fig.savefig(massive_figures_dir + 'new_specz_sample_fits/residual_histogram_netsig_30_fullrange.png', dpi=300, bbox_inches='tight')
+        fig.savefig(massive_figures_dir + \
+            'new_specz_sample_fits/from_run_with_linemask_and_defaultlsf_all_netsigGTR30_speczmatches/residual_histogram_netsig_30_fullrange.png', \
+            dpi=300, bbox_inches='tight')
     else:
-        fig.savefig(massive_figures_dir + 'new_specz_sample_fits/residual_histogram_netsig_30.png', dpi=300, bbox_inches='tight')
+        fig.savefig(massive_figures_dir + \
+            'new_specz_sample_fits/from_run_with_linemask_and_defaultlsf_all_netsigGTR30_speczmatches/residual_histogram_netsig_30.png', \
+            dpi=300, bbox_inches='tight')
 
     plt.show()
 

@@ -17,6 +17,9 @@ import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib as mpl
+
+mpl.rcParams['text.usetex'] = True
 
 home = os.getenv('HOME')
 pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
