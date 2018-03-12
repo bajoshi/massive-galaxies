@@ -7,6 +7,7 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import matplotlib
 print matplotlib.matplotlib_fname()
 
@@ -101,9 +102,11 @@ if __name__ == '__main__':
     get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss)
 
     # Place some more cuts
+    chi2_thresh = 2.0
+    d4000_thresh = 1.5
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
-    valid_idx2 = np.where(chi2_arr < 2.0)[0]
-    valid_idx3 = np.where(d4000_arr >= 1.5)[0]
+    valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
+    valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
     valid_idx4 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
     valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4))
     # I'm not making a cut on netsig 
@@ -121,13 +124,17 @@ if __name__ == '__main__':
     specz_qual_arr = specz_qual_arr[valid_idx]
     specz_source_arr = specz_source_arr[valid_idx]
 
-    print len(zgrism_plot), "galaxies in plot."
+    N_gal = len(zgrism_plot)
+    print N_gal, "galaxies in plot."
     #print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), 
     #print "pass the D4000, NetSig, and overall error constraints."
 
     # plot
     fig = plt.figure()
     ax = fig.add_subplot(111)
+
+    ax.set_xlabel('Residuals', fontsize=15)
+    ax.set_ylabel('N', fontsize=15)
 
     # define colors
     myblue = mh.rgb_to_hex(0, 100, 180)
@@ -162,6 +169,11 @@ if __name__ == '__main__':
         data_min = np.min([photz_min, grismz_min])
         data_max = np.max([photz_max, grismz_max])
 
+        # changing data min and max to fixed endpoints for 
+        # all d4000_thresh just to be able to compare them easily.
+        data_min = -0.12
+        data_max= 0.12
+
         binwidth = 0.005
 
         ax.hist(photz_resid_hist_arr, bins=np.arange(data_min, data_max+binwidth, binwidth), \
@@ -193,18 +205,28 @@ if __name__ == '__main__':
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color=myred, size=14)
 
+    ax.text(0.72, 0.78, r'$\mathrm{D4000\geq\,}$' + str(d4000_thresh), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='black', size=12)
+    ax.text(0.72, 0.73, r'$\mathrm{N=\,}$' + str(N_gal), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='black', size=12)
+
     ax.minorticks_on()
+
+    # force integer tick labels
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
     if fullrange:
         fig.savefig(massive_figures_dir + \
-            'new_specz_sample_fits/residual_histogram_netsig_10_fullrange.png', \
+            'new_specz_sample_fits/residual_histogram_netsig_10_fullrange_d4000_' + str(d4000_thresh).replace('.', 'p') + '.png', \
             dpi=300, bbox_inches='tight')
     else:
         fig.savefig(massive_figures_dir + \
             'new_specz_sample_fits/residual_histogram_netsig_10.png', \
             dpi=300, bbox_inches='tight')
 
-    plt.show()
+    #plt.show()
 
     plt.cla()
     plt.clf()
