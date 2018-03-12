@@ -97,14 +97,16 @@ if __name__ == '__main__':
     specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
     specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
-    d4000_list, d4000_err_list, specz_qual_list, specz_source_list = \
+    d4000_arr, d4000_err_arr, specz_qual_arr, specz_source_arr = \
     get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss)
 
     # Place some more cuts
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < 2.0)[0]
-    valid_idx3 = np.where(d4000_list >= 1.5)[0]
-    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3))
+    valid_idx3 = np.where(d4000_arr >= 1.5)[0]
+    valid_idx4 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
+    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4))
+    # I'm not making a cut on netsig 
 
     id_plot = id_arr[valid_idx]
     field_plot = field_arr[valid_idx]
@@ -114,10 +116,10 @@ if __name__ == '__main__':
     chi2_plot = chi2_arr[valid_idx]
     netsig_plot = netsig_arr[valid_idx]
 
-    d4000_list = d4000_list[valid_idx]
-    d4000_err_list = d4000_err_list[valid_idx]
-    specz_qual_list = specz_qual_list[valid_idx]
-    specz_source_list = specz_source_list[valid_idx]
+    d4000_arr = d4000_arr[valid_idx]
+    d4000_err_arr = d4000_err_arr[valid_idx]
+    specz_qual_arr = specz_qual_arr[valid_idx]
+    specz_source_arr = specz_source_arr[valid_idx]
 
     print len(zgrism_plot), "galaxies in plot."
     #print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), 
@@ -144,22 +146,27 @@ if __name__ == '__main__':
     #print zphot_plot[large_diff_idx]
     #print netsig_plot[large_diff_idx]
     print chi2_plot[large_diff_idx]
-    print specz_qual_list[large_diff_idx]
-    print d4000_list[large_diff_idx]
-    print specz_source_list[large_diff_idx]
-    #print len(np.where(chi2_plot[large_diff_idx] >= 2.0)[0])
+    print specz_qual_arr[large_diff_idx]
+    print d4000_arr[large_diff_idx]
+    print specz_source_arr[large_diff_idx]
+    #print len(np.where(specz_qual_arr == 'Z')[0])
 
-    fullrange = False
+    fullrange = True
     if fullrange:
         # If you don't want to restrict the range
         photz_min = np.min(photz_resid_hist_arr)
         photz_max = np.max(photz_resid_hist_arr)
         grismz_min = np.min(grism_resid_hist_arr)
         grismz_max = np.max(grism_resid_hist_arr)
+
+        data_min = np.min([photz_min, grismz_min])
+        data_max = np.max([photz_max, grismz_max])
+
         binwidth = 0.005
-        ax.hist(photz_resid_hist_arr, bins=np.arange(photz_min, photz_max+binwidth, binwidth), \
+
+        ax.hist(photz_resid_hist_arr, bins=np.arange(data_min, data_max+binwidth, binwidth), \
             histtype='step', color=myred, zorder=10)
-        ax.hist(grism_resid_hist_arr, bins=np.arange(grismz_min, grismz_max+binwidth, binwidth), \
+        ax.hist(grism_resid_hist_arr, bins=np.arange(data_min, data_max+binwidth, binwidth), \
             histtype='step', color=myblue, zorder=10)
     else:
         ax.hist(photz_resid_hist_arr, 20, range=[-0.05,0.05], histtype='step', color=myred, zorder=10)
