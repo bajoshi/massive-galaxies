@@ -328,7 +328,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    fig.savefig(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/' + obj_field + '_' + str(obj_id) + '_broadlsf_linemask.png', \
+    fig.savefig(figs_dir + 'massive-galaxies-figures/full_run/' + obj_field + '_' + str(obj_id) + '_broadlsf_linemask.png', \
         dpi=300, bbox_inches='tight')
 
     return None
@@ -441,6 +441,7 @@ if __name__ == '__main__':
     # total run time up to now
     print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
+    # ----------------------------------------- READ IN CATALOGS ----------------------------------------- #
     # read in matched files to get photo-z
     matched_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', \
         dtype=None, names=True, skip_header=1)
@@ -452,6 +453,7 @@ if __name__ == '__main__':
     specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
     all_speccats = [specz_goodsn, specz_goodss]
+    all_match_cats = [matched_cat_n, matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
@@ -466,25 +468,42 @@ if __name__ == '__main__':
     av_list = []
 
     # start looping
-    for cat in all_speccats:
+    catcount = 0
+    for cat in all_match_cats:
 
         for i in range(len(cat)):
 
             # --------------------------------------------- GET OBS DATA ------------------------------------------- #
             current_id = cat['pearsid'][i]
-            current_field = cat['field'][i]
 
-            if current_field == 'GOODS-N':
-                match_cat = matched_cat_n
-            elif current_field == 'GOODS-S':
-                match_cat = matched_cat_s
+            if catcount == 0:
+                current_field = 'GOODS-N'
+                spec_cat = specz_goodsn
+            elif catcount == 1: 
+                current_field = 'GOODS-S'
+                spec_cat = specz_goodss
 
-            photo_z_idx = np.where(match_cat['pearsid'] == current_id)[0]
-            if len(photo_z_idx) == 0:
-                print "Skipping because no photo-z found for ID", current_id, "in", current_field
-                continue
-            redshift = float(match_cat['zphot'][photo_z_idx])
-            current_specz = float(cat['specz'][i])
+            # Get specz if it exists as initial guess, otherwise get photoz
+            specz_idx = np.where(spec_cat['pearsid'] == current_id)[0]
+
+            if len(specz_idx) == 1:
+                current_specz = float(spec_cat['specz'][specz_idx])
+                redshift = float(cat['zphot'][i])
+                starting_z = current_specz
+            elif len(specz_idx) == 0:
+                current_specz = -99.0
+                redshift = float(cat['zphot'][i])
+                starting_z = redshift
+            else:
+            	print "Got other than 1 or 0 matches for the specz for ID", current_id, "in", current_field
+            	print "This much be fixed. Check why it happens. Exiting now."
+            	sys.exit(0)
+
+            # Check that the starting redshfit is within the required range
+            if (starting_z < 0.6) or (starting_z > 1.235):
+            	print "Current galaxy", current_id, current_field, "at starting_z", starting_z, "not within redshift range.",
+            	print "Moving to the next galaxy."
+            	continue
 
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
@@ -520,10 +539,12 @@ if __name__ == '__main__':
                 print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
                 continue
 
-            # Overall error check
+            # Overall error check. Suppressed for now.
+            """
             if np.sum(abs(ferr_obs)) > 0.2 * np.sum(abs(flam_obs)):
                 print "Skipping", current_id, "in", current_field, "because of overall error."
                 continue
+            """
 
             # ---------------------------------------------- FITTING ----------------------------------------------- #
             # Read in LSF
@@ -567,7 +588,7 @@ if __name__ == '__main__':
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
             # ------------- Call actual fitting function ------------- #
-            zg, chi2_red, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, redshift, resampling_lam_grid, \
+            zg, chi2_red, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
@@ -583,7 +604,7 @@ if __name__ == '__main__':
             tau_list.append(tau)
             av_list.append(av)
 
-            #sys.exit(0)
+        catcount += 1
 
     id_list = np.asarray(id_list)
     field_list = np.asarray(field_list)
@@ -596,16 +617,16 @@ if __name__ == '__main__':
     tau_list = np.asarray(tau_list)
     av_list = np.asarray(av_list)
 
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/id_list.npy', id_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/field_list.npy', field_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/zgrism_list.npy', zgrism_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/zspec_list.npy', zspec_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/zphot_list.npy', zphot_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/chi2_list.npy', chi2_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/netsig_list.npy', netsig_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/age_list.npy', age_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/tau_list.npy', tau_list)
-    np.save(figs_dir + 'massive-galaxies-figures/new_specz_sample_fits/av_list.npy', av_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/id_list.npy', id_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/field_list.npy', field_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/zgrism_list.npy', zgrism_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/zspec_list.npy', zspec_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/zphot_list.npy', zphot_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/chi2_list.npy', chi2_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/netsig_list.npy', netsig_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/age_list.npy', age_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/tau_list.npy', tau_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/av_list.npy', av_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start))

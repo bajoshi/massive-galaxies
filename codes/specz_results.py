@@ -101,7 +101,7 @@ if __name__ == '__main__':
     d4000_arr, d4000_err_arr, specz_qual_arr, specz_source_arr = \
     get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss)
 
-    # Place some more cuts
+    # Place some cuts
     chi2_thresh = 2.0
     d4000_thresh = 1.5
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
