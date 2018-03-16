@@ -37,6 +37,7 @@ import fast_chi2_jackknife_massive_galaxies as fcjm
 import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
 import model_mods_cython_copytoedit as model_mods_cython
+import dn4000_catalog as dc
 
 def get_line_mask(lam_grid, z):
 
@@ -538,6 +539,20 @@ if __name__ == '__main__':
             if netsig_chosen < 10:
                 print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
                 continue
+
+            # D4000 check # accept only if D4000 greater than 1.2
+            # get d4000
+            # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
+            # This is way I'm letting some lower D4000 values into my sample. Just so I don't anything.
+            # A few of the galaxies with really wrong starting_z will of course be missed.
+            lam_em = lam_obs / (1 + starting_z)
+            flam_em = flam_obs * (1 + starting_z)
+            ferr_em = ferr_obs * (1 + starting_z)
+
+            d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+            if d4000 < 1.2:
+            	print "Skipping", current_id, "in", current_field, "due to low D4000:", d4000
+            	continue
 
             # Overall error check. Suppressed for now.
             """
