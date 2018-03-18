@@ -210,9 +210,15 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
+    ############# -------------------------- Errors on z and other derived params ----------------------------- #############
     min_chi2 = chi2[min_idx_2d]
-    low_chi2_idx = np.where(chi2 < min_chi2 + 0.1*min_chi2)
-    print len(low_chi2_idx[0].ravel())
+    chi2_red_arr = chi2 / len(lam_obs)
+    min_chi2_red = min_chi2 / len(lam_obs)
+    low_chi2_idx = np.where((chi2_red_arr < min_chi2_red + 0.5*min_chi2_red) & (chi2_red_arr > min_chi2_red - 0.5*min_chi2_red))[0]
+
+    
+
+    #print len(low_chi2_idx.ravel())
     #print low_chi2_idx
 
     ####### ------------------------------------------ Plotting ------------------------------------------ #######
