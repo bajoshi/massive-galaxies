@@ -212,12 +212,17 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # Should check if the minimum is global or local
     ############# -------------------------- Errors on z and other derived params ----------------------------- #############
     min_chi2 = chi2[min_idx_2d]
-    chi2_red_arr = chi2 / len(lam_obs)
-    min_chi2_red = min_chi2 / len(lam_obs)
-    low_chi2_idx = np.where((chi2_red_arr < min_chi2_red + 0.5*min_chi2_red) & (chi2_red_arr > min_chi2_red - 0.5*min_chi2_red))[0]
+    dof = len(lam_obs) - 4  # The degrees of freedom are the total points being fit 
+    # minus the total number of parameters being fit. In this case, I'm fitting for
+    # grism redshift, age, exp. SFH timescale, and dust extinction i.e., (z_grism, t, tau, av).
+    chi2_red_arr = chi2 / dof
+    min_chi2_red = min_chi2 / dof
 
-    
 
+    # These low chi2 indices are useful as a first attempt to figure
+    # out the spread in chi2 but otherwise not too enlightening.
+    # I'm keeping these lines in here for now.
+    #low_chi2_idx = np.where((chi2_red_arr < min_chi2_red + 0.5*min_chi2_red) & (chi2_red_arr > min_chi2_red - 0.5*min_chi2_red))[0]
     #print len(low_chi2_idx.ravel())
     #print low_chi2_idx
 
@@ -257,7 +262,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         sys.exit(0)
     # plot
     plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, z_grism, (chi2[min_idx_2d]/len(lam_obs)), age, tau, (tauv/1.086))
+        obj_id, obj_field, specz, photoz, z_grism, min_chi2_red, age, tau, (tauv/1.086))
 
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
@@ -396,10 +401,10 @@ def get_data(pears_index, field):
  
     # Check that contamination level is not too high
     if np.nansum(contam) > 0.33 * np.nansum(flam_obs):
-    	print pears_index, " in ", field, " has an too high a level of contamination.",
-    	print "Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped."
-    	return_code = 0
-    	return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
+        print pears_index, " in ", field, " has an too high a level of contamination.",
+        print "Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped."
+        return_code = 0
+        return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Check that input wavelength array is not empty
     if not lam_obs.size:
@@ -423,6 +428,7 @@ def get_data(pears_index, field):
     return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
 if __name__ == '__main__':
+    
     # Start time
     start = time.time()
     dt = datetime.datetime
@@ -473,6 +479,8 @@ if __name__ == '__main__':
     age_list = []
     tau_list = []
     av_list = []
+    d4000_list = []
+    d4000_err_list = []
 
     # start looping
     catcount = 0
@@ -502,15 +510,15 @@ if __name__ == '__main__':
                 redshift = float(cat['zphot'][i])
                 starting_z = redshift
             else:
-            	print "Got other than 1 or 0 matches for the specz for ID", current_id, "in", current_field
-            	print "This much be fixed. Check why it happens. Exiting now."
-            	sys.exit(0)
+                print "Got other than 1 or 0 matches for the specz for ID", current_id, "in", current_field
+                print "This much be fixed. Check why it happens. Exiting now."
+                sys.exit(0)
 
             # Check that the starting redshfit is within the required range
             if (starting_z < 0.6) or (starting_z > 1.235):
-            	print "Current galaxy", current_id, current_field, "at starting_z", starting_z, "not within redshift range.",
-            	print "Moving to the next galaxy."
-            	continue
+                print "Current galaxy", current_id, current_field, "at starting_z", starting_z, "not within redshift range.",
+                print "Moving to the next galaxy."
+                continue
 
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
@@ -525,9 +533,9 @@ if __name__ == '__main__':
             lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
             if return_code == 0:
-            	print "Skipping due to an error with the obs data. See the error message just above this one.",
-            	print "Moving to the next galaxy."
-            	continue
+                print "Skipping due to an error with the obs data. See the error message just above this one.",
+                print "Moving to the next galaxy."
+                continue
 
             # Force dtype for cython code
             # Apparently this (i.e. for flam_obs and ferr_obs) has  
@@ -557,8 +565,8 @@ if __name__ == '__main__':
 
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
             if d4000 < 1.2:
-            	print "Skipping", current_id, "in", current_field, "due to low D4000:", d4000
-            	continue
+                print "Skipping", current_id, "in", current_field, "due to low D4000:", d4000
+                continue
 
             # Overall error check. Suppressed for now.
             """
@@ -624,6 +632,8 @@ if __name__ == '__main__':
             age_list.append(age)
             tau_list.append(tau)
             av_list.append(av)
+            d4000_list.append(d4000)
+            d4000_err_list.append(d4000_err)
 
         catcount += 1
 
@@ -637,6 +647,8 @@ if __name__ == '__main__':
     age_list = np.asarray(age_list)
     tau_list = np.asarray(tau_list)
     av_list = np.asarray(av_list)
+    d4000_list = np.asarray(d4000_list)
+    d4000_err_list = np.asarray(d4000_err_list)
 
     np.save(figs_dir + 'massive-galaxies-figures/full_run/id_list.npy', id_list)
     np.save(figs_dir + 'massive-galaxies-figures/full_run/field_list.npy', field_list)
@@ -648,6 +660,8 @@ if __name__ == '__main__':
     np.save(figs_dir + 'massive-galaxies-figures/full_run/age_list.npy', age_list)
     np.save(figs_dir + 'massive-galaxies-figures/full_run/tau_list.npy', tau_list)
     np.save(figs_dir + 'massive-galaxies-figures/full_run/av_list.npy', av_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/d4000_list.npy', d4000_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/d4000_err_list.npy', d4000_err_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start))
