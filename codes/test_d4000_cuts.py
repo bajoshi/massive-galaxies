@@ -134,6 +134,8 @@ if __name__ == '__main__':
             total_galaxies += 1
             d4000_list.append(d4000)
 
+        catcount += 1
+
     d4000_list = np.asarray(d4000_list)
 
     print "Started with", len(matched_cat_n), "+", len(matched_cat_s), "galaxies."
@@ -144,6 +146,6 @@ if __name__ == '__main__':
     np.save(figs_dir + 'massive-galaxies-figures/full_run/d4000_list_test.npy', d4000_list)
 
     # Total time taken
-    print "Total time taken --", str("{:.2f}".format(time.time() - start))
+    print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
     sys.exit(0)
 

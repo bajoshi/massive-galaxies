@@ -428,7 +428,7 @@ def get_data(pears_index, field):
     return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
 if __name__ == '__main__':
-    
+
     # Start time
     start = time.time()
     dt = datetime.datetime
@@ -664,5 +664,5 @@ if __name__ == '__main__':
     np.save(figs_dir + 'massive-galaxies-figures/full_run/d4000_err_list.npy', d4000_err_list)
 
     # Total time taken
-    print "Total time taken --", str("{:.2f}".format(time.time() - start))
+    print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
     sys.exit(0)
