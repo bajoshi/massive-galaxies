@@ -212,17 +212,16 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # Should check if the minimum is global or local
     ############# -------------------------- Errors on z and other derived params ----------------------------- #############
     min_chi2 = chi2[min_idx_2d]
-    dof = len(lam_obs) - 4  # The degrees of freedom are the total points being fit 
-    # minus the total number of parameters being fit. In this case, I'm fitting for
-    # grism redshift, age, exp. SFH timescale, and dust extinction i.e., (z_grism, t, tau, av).
-    chi2_red_arr = chi2 / dof
-    min_chi2_red = min_chi2 / dof
-
+    # See Andrae+ 2010. I'm not including the model paramets in the "effective degrees of freedom".
+    # Actually what I'm doing here is not exactly right either. See the Andrae paper for details.
+    # The number of d.o.f. for non-linear models is not well defined and reduced chi2 should really 
+    # not be used.
+    print "Standard deviation in chi-square distribution:", np.std(chi2)
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
     # I'm keeping these lines in here for now.
-    #low_chi2_idx = np.where((chi2_red_arr < min_chi2_red + 0.5*min_chi2_red) & (chi2_red_arr > min_chi2_red - 0.5*min_chi2_red))[0]
+    #low_chi2_idx = np.where((chi2 < min_chi2 + 0.5*min_chi2) & (chi2 > min_chi2 - 0.5*min_chi2))[0]
     #print len(low_chi2_idx.ravel())
     #print low_chi2_idx
 
@@ -262,7 +261,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         sys.exit(0)
     # plot
     plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, z_grism, min_chi2_red, age, tau, (tauv/1.086))
+        obj_id, obj_field, specz, photoz, z_grism, min_chi2, age, tau, (tauv/1.086))
 
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
@@ -322,7 +321,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     ax1.text(0.75, 0.25, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.2, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.75, 0.2, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
@@ -617,7 +616,7 @@ if __name__ == '__main__':
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
             # ------------- Call actual fitting function ------------- #
-            zg, chi2_red, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
+            zg, min_chi2, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
@@ -627,7 +626,7 @@ if __name__ == '__main__':
             zgrism_list.append(zg)
             zspec_list.append(current_specz)
             zphot_list.append(redshift)
-            chi2_list.append(chi2_red)
+            chi2_list.append(min_chi2)
             netsig_list.append(netsig_chosen)
             age_list.append(age)
             tau_list.append(tau)

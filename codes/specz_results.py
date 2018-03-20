@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh = 1.5
+    d4000_thresh = 1.4
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
@@ -142,6 +142,13 @@ if __name__ == '__main__':
 
     grism_resid_hist_arr = (zspec_plot - zgrism_plot)/(1+zspec_plot)
     photz_resid_hist_arr = (zspec_plot - zphot_plot)/(1+zspec_plot)
+
+    print "Grism-z resid mean:", np.mean(grism_resid_hist_arr)
+    print "Grism-z resid std:", np.std(grism_resid_hist_arr)
+    print "photo-z resid mean:", np.mean(photz_resid_hist_arr)
+    print "photo-z resid std:", np.std(photz_resid_hist_arr)
+
+    sys.exit(0)
 
     large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.04)[0]
     np.set_printoptions(precision=2, suppress=True)
