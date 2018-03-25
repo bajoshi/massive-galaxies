@@ -20,6 +20,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 
 mpl.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
 
 home = os.getenv('HOME')
 pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
@@ -33,8 +34,8 @@ sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import grid_coadd as gd
-import fast_chi2_jackknife_massive_galaxies as fcjm
-import new_refine_grismz_iter as ni
+#import fast_chi2_jackknife_massive_galaxies as fcjm
+#import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
 import model_mods_cython_copytoedit as model_mods_cython
 import dn4000_catalog as dc
@@ -212,11 +213,31 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # Should check if the minimum is global or local
     ############# -------------------------- Errors on z and other derived params ----------------------------- #############
     min_chi2 = chi2[min_idx_2d]
-    # See Andrae+ 2010. I'm not including the model paramets in the "effective degrees of freedom".
-    # Actually what I'm doing here is not exactly right either. See the Andrae paper for details.
-    # The number of d.o.f. for non-linear models is not well defined and reduced chi2 should really 
-    # not be used.
-    print "Standard deviation in chi-square distribution:", np.std(chi2)
+    # See Andrae+ 2010;arXiv:1012.3754. The number of d.o.f. for non-linear models 
+    # is not well defined and reduced chi2 should really not be used.
+    # Seth's comment: My model is actually linear. Its just a factor 
+    # times a set of fixed points. And this is linear, because each
+    # model is simply a function of lambda, which is fixed for a given 
+    # model. So every model only has one single free parameter which is
+    # alpha i.e. the vertical scaling factor; that's true since alpha is 
+    # the only one I'm actually solving for to get a min chi2. I'm not 
+    # varying the other parameters - age, tau, av, metallicity, or 
+    # z_grism - within a given model. Therefore, I can safely use the 
+    # methods described in Andrae+ 2010 for linear models.
+    dof = len(lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+    chi2_red = chi2 / dof
+    chi2_red_error = np.sqrt(2/dof)
+    min_chi2_red = min_chi2 / dof
+    print "Error in reduced chi-square:", chi2_red_error
+    chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
+    print "Indices within 1-sigma of reduced chi-square:", chi2_red_2didx
+    # use first dimension indices to get error on grism-z
+    z_grism_range = z_arr_to_check[chi2_red_2didx[0]]
+    print "z_grism range", z_grism_range
+    low_z_lim = np.min(z_grism_range)
+    upper_z_lim = np.max(z_grism_range)
+    print "Min z_grism within 1-sigma error:", low_z_lim
+    print "Max z_grism within 1-sigma error:", upper_z_lim
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
@@ -261,7 +282,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         sys.exit(0)
     # plot
     plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, z_grism, min_chi2, age, tau, (tauv/1.086))
+        obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086))
 
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
@@ -276,10 +297,10 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     #ax.set_xlim(1,total_models)
     #plt.show()
 
-    return z_grism, (chi2[min_idx_2d]/len(lam_obs)), age, tau, (tauv/1.086)
+    return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
 def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-    obj_id, obj_field, specz, photoz, grismz, chi2, age, tau, av):
+    obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av):
 
     fig = plt.figure()
     gs = gridspec.GridSpec(10,10)
@@ -312,16 +333,22 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.35, r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz), \
+
+    low_zerr = grismz - low_z_lim
+    high_zerr = upper_z_lim - grismz
+
+    ax1.text(0.75, 0.35, \
+    r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.3, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.25, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
+    ax1.text(0.75, 0.22, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.2, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+
+    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
@@ -348,7 +375,7 @@ def get_data(pears_index, field):
     """
     Using code from fileprep in this function; not including 
     everything because it does a few things that I don't 
-    actually need also there is no contamination checking
+    actually need; also there is no contamination checking
     """
 
     # read in spectrum file
@@ -464,13 +491,15 @@ if __name__ == '__main__':
     specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
     specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
-    all_speccats = [specz_goodsn, specz_goodss]
-    all_match_cats = [matched_cat_n, matched_cat_s]
+    all_speccats = [specz_goodsn]  #[specz_goodsn, specz_goodss]
+    all_match_cats = [matched_cat_n]  #[matched_cat_n, matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
     field_list = []
     zgrism_list = []
+    zgrism_lowerr_list = []
+    zgrism_uperr_list = []
     zspec_list = []
     zphot_list = []
     chi2_list = []
@@ -522,10 +551,11 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
-            #current_id = 77715
+            #current_id = 36105
             #current_field = 'GOODS-N'
-            #redshift = 0.9805
-            #current_specz = 0.851
+            #redshift = 0.9072
+            #current_specz = 0.931
+            #starting_z = current_specz
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift
 
@@ -616,7 +646,7 @@ if __name__ == '__main__':
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
             # ------------- Call actual fitting function ------------- #
-            zg, min_chi2, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
+            zg, zerr_low, zerr_up, min_chi2, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift)
 
@@ -624,6 +654,8 @@ if __name__ == '__main__':
             id_list.append(current_id)
             field_list.append(current_field)
             zgrism_list.append(zg)
+            zgrism_lowerr_list.append(zerr_low)
+            zgrism_uperr_list.append(zerr_up)
             zspec_list.append(current_specz)
             zphot_list.append(redshift)
             chi2_list.append(min_chi2)
@@ -639,6 +671,8 @@ if __name__ == '__main__':
     id_list = np.asarray(id_list)
     field_list = np.asarray(field_list)
     zgrism_list = np.asarray(zgrism_list)
+    zgrism_lowerr_list = np.asarray(zgrism_lowerr_list)
+    zgrism_uperr_list = np.asarray(zgrism_uperr_list)
     zspec_list = np.asarray(zspec_list)
     zphot_list = np.asarray(zphot_list)
     chi2_list = np.asarray(chi2_list)
@@ -652,6 +686,8 @@ if __name__ == '__main__':
     np.save(figs_dir + 'massive-galaxies-figures/full_run/id_list.npy', id_list)
     np.save(figs_dir + 'massive-galaxies-figures/full_run/field_list.npy', field_list)
     np.save(figs_dir + 'massive-galaxies-figures/full_run/zgrism_list.npy', zgrism_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/zgrism_lowerr_list.npy', zgrism_lowerr_list)
+    np.save(figs_dir + 'massive-galaxies-figures/full_run/zgrism_uperr_list.npy', zgrism_uperr_list)
     np.save(figs_dir + 'massive-galaxies-figures/full_run/zspec_list.npy', zspec_list)
     np.save(figs_dir + 'massive-galaxies-figures/full_run/zphot_list.npy', zphot_list)
     np.save(figs_dir + 'massive-galaxies-figures/full_run/chi2_list.npy', chi2_list)
