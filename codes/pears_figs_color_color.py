@@ -13,7 +13,7 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 
 if __name__ == '__main__':
     """
-    Only using FIGS for now.
+    Only selecting using FIGS for now.
     """
 
     # Read in FIGS catalogs # latest version v1.2
@@ -39,8 +39,8 @@ if __name__ == '__main__':
     gn2_f160w_mag = -2.5 * np.log10(gn2cat['f160w_flux'] * 1e-9) + 8.9
 
     # Apply color cuts
-    color_cut_idx_gn1 = np.where((gn1_f160w_mag < 24) & (gn1_f105w_mag - gn1_f125w_mag >= 0.9))[0]
-    color_cut_idx_gn2 = np.where((gn2_f160w_mag < 24) & (gn2_f105w_mag - gn2_f125w_mag >= 0.9))[0]
+    color_cut_idx_gn1 = np.where((gn1_f160w_mag < 24) & (gn1_f105w_mag - gn1_f125w_mag >= 1.0))[0]
+    color_cut_idx_gn2 = np.where((gn2_f160w_mag < 24) & (gn2_f105w_mag - gn2_f125w_mag >= 1.0))[0]
 
     # make arrays of selected objects which passed the cuts
     obj_figsid = []
@@ -54,8 +54,8 @@ if __name__ == '__main__':
         if not np.isfinite(f105_125_color):
             continue
         else:
-            #print gn1cat['id'][color_cut_idx_gn1[i]], gn1cat['ra'][color_cut_idx_gn1[i]], gn1cat['dec'][color_cut_idx_gn1[i]], \
-            #gn1_f160w_mag[color_cut_idx_gn1[i]]
+            #print gn1cat['id'][color_cut_idx_gn1[i]], gn1cat['ra'][color_cut_idx_gn1[i]], \
+            # gn1cat['dec'][color_cut_idx_gn1[i]], gn1_f160w_mag[color_cut_idx_gn1[i]]
 
             obj_figsid.append(gn1cat['id'][color_cut_idx_gn1[i]])
             obj_ra.append(gn1cat['ra'][color_cut_idx_gn1[i]])
@@ -68,8 +68,8 @@ if __name__ == '__main__':
         if not np.isfinite(f105_125_color):
             continue
         else:
-            #print gn2cat['id'][color_cut_idx_gn2[i]], gn2cat['ra'][color_cut_idx_gn2[i]], gn2cat['dec'][color_cut_idx_gn2[i]], \
-            #gn2_f160w_mag[color_cut_idx_gn2[i]]
+            #print gn2cat['id'][color_cut_idx_gn2[i]], gn2cat['ra'][color_cut_idx_gn2[i]], \
+            # gn2cat['dec'][color_cut_idx_gn2[i]], gn2_f160w_mag[color_cut_idx_gn2[i]]
 
             obj_figsid.append(gn2cat['id'][color_cut_idx_gn2[i]])
             obj_ra.append(gn2cat['ra'][color_cut_idx_gn2[i]])
@@ -80,7 +80,8 @@ if __name__ == '__main__':
     # Match with MOSDEF catalog to make sure that they havent already taken data on this object
     # Match with Barger+ 2008 catalog to get Ks magnitudes whcih should be <21 for you to be able to obseve with MMIRS
     # Read in MOSDEF and Barger catalogs
-    mosdef_cat = np.genfromtxt(home + '/Desktop/MOSDEF_survey_final_redshift_release.txt', dtype=None, names=True, skip_header=1)
+    mosdef_cat = np.genfromtxt(home + '/Desktop/MOSDEF_survey_final_redshift_release.txt', \
+    	dtype=None, names=True, skip_header=1)
     
     # the Barger catalog has to be read line by line because it has gaps and can't be read with genfromtxt
     with open(home + '/Desktop/barger_2008_specz.cat') as f:
@@ -120,6 +121,7 @@ if __name__ == '__main__':
     # Now match and take out the matches
     # ONLY if they are in the MOSDEF catalog 
     # and append to final arrays
+    # Don't take out any matches with 3DHST and Barger et al.
     final_obj_figsid = []
     final_obj_ra = []
     final_obj_dec = []
@@ -137,20 +139,24 @@ if __name__ == '__main__':
 
         # checked with a tolerance of 1.0 arcseconds as well
         # got the exact same result
-        mosdef_idx = np.where((abs(mosdef_cat['RA'] - current_ra) < 0.5/3600) & (abs(mosdef_cat['DEC'] - current_dec) < 0.5/3600))[0]
+        mosdef_idx = np.where((abs(mosdef_cat['RA'] - current_ra) < 0.5/3600) & \
+        	(abs(mosdef_cat['DEC'] - current_dec) < 0.5/3600))[0]
         barger_idx = np.where((abs(barger_ra - current_ra) < 0.5/3600) & (abs(barger_dec - current_dec) < 0.5/3600))[0]
-        threed_idx = np.where((abs(threed_v41_phot[1].data['ra'] - current_ra) < 0.5/3600) & (abs(threed_v41_phot[1].data['dec'] - current_dec) < 0.5/3600))[0]
+        threed_idx = np.where((abs(threed_v41_phot[1].data['ra'] - current_ra) < 0.5/3600) & \
+        	(abs(threed_v41_phot[1].data['dec'] - current_dec) < 0.5/3600))[0]
 
         # In here, if I use the 3DHST z_spec column instead of z_peak then I get -1 for z_spec for all of them
         # i.e. 3DHST does not have a spec_z for these galaxies
         if threed_idx.size:
-            print "3DHST match", threed_v41_phot[1].data['ra'][threed_idx], current_ra, \
-            threed_v41_phot[1].data['dec'][threed_idx], current_dec, threed_v41_phot[1].data['z_peak'][threed_idx], \
+            print "3DHST match", threed_v41_phot[1].data['id'][threed_idx], threed_v41_phot[1].data['ra'][threed_idx], \
+            current_ra, threed_v41_phot[1].data['dec'][threed_idx], current_dec, \
+            threed_v41_phot[1].data['z_peak'][threed_idx], \
             threed_v41_phot[1].data['lmass'][threed_idx], current_f160w_mag, current_id
 
         if barger_idx.size:
             print "BARGER match", barger_ra[barger_idx], current_ra, \
-            barger_dec[barger_idx], current_dec, barger_zspec[barger_idx], barger_kmag[barger_idx], current_f160w_mag, current_id
+            barger_dec[barger_idx], current_dec, barger_zspec[barger_idx], \
+            barger_kmag[barger_idx], current_f160w_mag, current_id
 
         if mosdef_idx.size:
             #if float(mosdef_cat['Z_MOSFIRE'][mosdef_idx]) != -1.0:
@@ -168,7 +174,32 @@ if __name__ == '__main__':
 
     # Reprint object list to terminal
     for i in range(len(final_obj_ra)):
-        print final_obj_figsid[i], final_obj_ra[i], final_obj_dec[i], final_obj_105_125_color[i], final_obj_f160w_mag[i], final_obj_stellarmass[i], final_obj_zphot[i]
+        print final_obj_figsid[i], final_obj_ra[i], final_obj_dec[i], \
+        final_obj_105_125_color[i], final_obj_f160w_mag[i], final_obj_stellarmass[i], final_obj_zphot[i]
+    
+    # Find which ones match with PEARS to plot their spectra
+    # i.e. PEARS + FIGS + 3DHST side by side
+    # Read PEARS north cat
+    pears_ncat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_north_master.cat', dtype=None,\
+                               names=['id', 'ra', 'dec', 'imag'], usecols=(0,1,2,3))
+
+    dec_offset_goodsn_v19 = 0.32/3600 # from GOODS v2.0 readme
+    pears_ncat['dec'] = pears_ncat['dec'] - dec_offset_goodsn_v19
+
+    data_path = home + "/Documents/PEARS/data_spectra_only/"
+
+    for i in range(len(final_obj_ra)):
+
+    	current_ra = final_obj_ra[i]
+    	current_dec = final_obj_dec[i]
+    	current_id = final_obj_figsid[i]
+
+    	pears_idx = np.where((abs(pears_ncat['ra'] - current_ra) < 0.5/3600) & \
+        	(abs(pears_ncat['dec'] - current_dec) < 0.5/3600))[0]
+
+    	print pears_ncat['id'][pears_idx], current_id, current_ra, current_dec
+
+    sys.exit(0)
 
     # Plot RA dec on sky along with GOODS-N field and MMIRS MOS FoV overlaid
     fig = plt.figure()
