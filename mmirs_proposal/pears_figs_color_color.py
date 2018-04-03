@@ -81,7 +81,7 @@ if __name__ == '__main__':
     # Match with Barger+ 2008 catalog to get Ks magnitudes whcih should be <21 for you to be able to obseve with MMIRS
     # Read in MOSDEF and Barger catalogs
     mosdef_cat = np.genfromtxt(home + '/Desktop/MOSDEF_survey_final_redshift_release.txt', \
-    	dtype=None, names=True, skip_header=1)
+        dtype=None, names=True, skip_header=1)
     
     # the Barger catalog has to be read line by line because it has gaps and can't be read with genfromtxt
     with open(home + '/Desktop/barger_2008_specz.cat') as f:
@@ -140,10 +140,10 @@ if __name__ == '__main__':
         # checked with a tolerance of 1.0 arcseconds as well
         # got the exact same result
         mosdef_idx = np.where((abs(mosdef_cat['RA'] - current_ra) < 0.5/3600) & \
-        	(abs(mosdef_cat['DEC'] - current_dec) < 0.5/3600))[0]
+            (abs(mosdef_cat['DEC'] - current_dec) < 0.5/3600))[0]
         barger_idx = np.where((abs(barger_ra - current_ra) < 0.5/3600) & (abs(barger_dec - current_dec) < 0.5/3600))[0]
         threed_idx = np.where((abs(threed_v41_phot[1].data['ra'] - current_ra) < 0.5/3600) & \
-        	(abs(threed_v41_phot[1].data['dec'] - current_dec) < 0.5/3600))[0]
+            (abs(threed_v41_phot[1].data['dec'] - current_dec) < 0.5/3600))[0]
 
         # In here, if I use the 3DHST z_spec column instead of z_peak then I get -1 for z_spec for all of them
         # i.e. 3DHST does not have a spec_z for these galaxies
@@ -188,18 +188,25 @@ if __name__ == '__main__':
 
     data_path = home + "/Documents/PEARS/data_spectra_only/"
 
+    ra_plotlist = []
+    dec_plotlist = []
+
     for i in range(len(final_obj_ra)):
 
-    	current_ra = final_obj_ra[i]
-    	current_dec = final_obj_dec[i]
-    	current_id = final_obj_figsid[i]
+        current_ra = final_obj_ra[i]
+        current_dec = final_obj_dec[i]
+        current_id = final_obj_figsid[i]
+        current_f160w_mag = final_obj_f160w_mag[i]
 
-    	pears_idx = np.where((abs(pears_ncat['ra'] - current_ra) < 0.5/3600) & \
-        	(abs(pears_ncat['dec'] - current_dec) < 0.5/3600))[0]
+        pears_idx = np.where((abs(pears_ncat['ra'] - current_ra) < 0.5/3600) & \
+            (abs(pears_ncat['dec'] - current_dec) < 0.5/3600))[0]
 
-    	print pears_ncat['id'][pears_idx], current_id, current_ra, current_dec
+        if current_f160w_mag <= 23.4:
+            ra_plotlist.append(current_ra)
+            dec_plotlist.append(current_dec)
 
-    sys.exit(0)
+            #print pears_ncat['id'][pears_idx], current_id, current_ra, current_dec, current_f160w_mag
+            print current_id, current_ra, current_dec, current_f160w_mag
 
     # Plot RA dec on sky along with GOODS-N field and MMIRS MOS FoV overlaid
     fig = plt.figure()
@@ -208,7 +215,10 @@ if __name__ == '__main__':
     ax.set_xlabel(r'$\mathrm{RA}$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{DEC}$', fontsize=15)   
 
-    ax.plot(final_obj_ra, final_obj_dec, 'o', markersize=2, color='k')
+    ax.plot(ra_plotlist, dec_plotlist, 'o', markersize=2, color='k')
+    ax.scatter(final_obj_ra, final_obj_dec, s=50, edgecolors='r', facecolor='None')
+
+    ax.set_xlim(189.45,189.05)
 
     plt.show()
 

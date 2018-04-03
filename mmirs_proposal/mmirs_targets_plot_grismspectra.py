@@ -14,30 +14,26 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 
 if __name__ == '__main__':
 
-    """
-    Only doing this for the two galaxies that are selected for MMIRS 
-    and they also have data from PEARS, FIGS, and 3DHST.
-    """
-
     # Alll in GOODS-N
     # Define ids
-    figs_id1 = 300665
-    figs_id2 = 300648
+    figs_id1 = 300648
+    figs_id2 = 400048
     figs_id3 = 400772
     figs_id4 = 400456
 
-    threed_id1 = 34028
-    threed_id2 = 33780
+    threed_id1 = 33780
+    threed_id2 = 37116
     threed_id3 = 33181
     threed_id4 = 35405
 
     # read spectra
     threed_data_dir_gn16 = home + '/Desktop/3dhst_data/goodsn-16/1D/FITS/'
+    threed_data_dir_gn18 = home + '/Desktop/3dhst_data/goodsn-18/1D/FITS/'
     threed_data_dir_gn27 = home + '/Desktop/3dhst_data/goodsn-27/1D/FITS/'
     threed_data_dir_gn28 = home + '/Desktop/3dhst_data/goodsn-28/1D/FITS/'
 
     spec_hdu1 = fits.open(threed_data_dir_gn16 + 'goodsn-16-G141_' + str(threed_id1) + '.1D.fits')
-    spec_hdu2 = fits.open(threed_data_dir_gn16 + 'goodsn-16-G141_' + str(threed_id2) + '.1D.fits')
+    spec_hdu2 = fits.open(threed_data_dir_gn18 + 'goodsn-18-G141_' + str(threed_id2) + '.1D.fits')
     spec_hdu3 = fits.open(threed_data_dir_gn27 + 'goodsn-27-G141_' + str(threed_id3) + '.1D.fits')
     spec_hdu4 = fits.open(threed_data_dir_gn28 + 'goodsn-28-G141_' + str(threed_id4) + '.1D.fits')
 
@@ -72,8 +68,8 @@ if __name__ == '__main__':
     ax3.set_xlim(10900, 16500)
     ax4.set_xlim(10900, 16500)
 
-    ax1.set_ylim(-0.05, 0.1)
-    ax2.set_ylim(-0.05, 0.2)
+    ax1.set_ylim(-0.05, 0.2)
+    ax2.set_ylim(-0.05, 0.1)
     ax3.set_ylim(-0.05, 0.1)
     ax4.set_ylim(-0.05, 0.1)
 
@@ -100,38 +96,38 @@ if __name__ == '__main__':
 
     # labels
     ax3.set_xlabel(r'$\mathrm{Wavelength\ [microns]}$', fontsize=12)
-    ax3.set_ylabel(r'$\mathrm{Flux\ [1E-17\ CGS]}$', fontsize=12)
+    ax3.set_ylabel(r'$\mathrm{Flux\ [10^{-17}\ CGS]}$', fontsize=12)
 
     ax3.xaxis.set_label_coords(1.05, -0.14)
     ax3.yaxis.set_label_coords(-0.03, 1.05)
 
     # text on plot
-    ax1.text(0.65, 0.9, r"$\mathrm{FIGS\ ID\ }$" + str(figs_id1), verticalalignment='top', horizontalalignment='left', \
+    ax1.text(0.65, 0.44, r"$\mathrm{FIGS\ ID\ }$" + str(figs_id1), verticalalignment='top', horizontalalignment='left', \
             transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.65, 0.83, r"$\mathrm{M_s\sim11.21\,M_\odot}$", verticalalignment='top', horizontalalignment='left', \
+    ax1.text(0.65, 0.37, r"$\mathrm{M_s\sim11.29\,M_\odot}$", verticalalignment='top', horizontalalignment='left', \
             transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.65, 0.76, r"$\mathrm{z_{phot}\sim2.68}$", verticalalignment='top', horizontalalignment='left', \
+    ax1.text(0.65, 0.3, r"$\mathrm{z_{phot}\sim1.86}$", verticalalignment='top', horizontalalignment='left', \
             transform=ax1.transAxes, color='k', size=8)
 
-    ax2.text(0.65, 0.44, r"$\mathrm{FIGS\ ID\ }$" + str(figs_id2), verticalalignment='top', horizontalalignment='left', \
+    ax2.text(0.65, 0.93, r"$\mathrm{FIGS\ ID\ }$" + str(figs_id2), verticalalignment='top', horizontalalignment='left', \
             transform=ax2.transAxes, color='k', size=8)
-    ax2.text(0.65, 0.37, r"$\mathrm{M_s\sim11.29\,M_\odot}$", verticalalignment='top', horizontalalignment='left', \
+    ax2.text(0.65, 0.86, r"$\mathrm{M_s\sim10.71\,M_\odot}$", verticalalignment='top', horizontalalignment='left', \
             transform=ax2.transAxes, color='k', size=8)
-    ax2.text(0.65, 0.3, r"$\mathrm{z_{phot}\sim1.86}$", verticalalignment='top', horizontalalignment='left', \
+    ax2.text(0.65, 0.79, r"$\mathrm{z_{phot}\sim2.16}$", verticalalignment='top', horizontalalignment='left', \
             transform=ax2.transAxes, color='k', size=8)
 
-    ax3.text(0.65, 0.9, r"$\mathrm{FIGS\ ID\ }$" + str(figs_id3), verticalalignment='top', horizontalalignment='left', \
+    ax3.text(0.65, 0.93, r"$\mathrm{FIGS\ ID\ }$" + str(figs_id3), verticalalignment='top', horizontalalignment='left', \
             transform=ax3.transAxes, color='k', size=8)
-    ax3.text(0.65, 0.83, r"$\mathrm{M_s\sim10.77\,M_\odot}$", verticalalignment='top', horizontalalignment='left', \
+    ax3.text(0.65, 0.86, r"$\mathrm{M_s\sim10.77\,M_\odot}$", verticalalignment='top', horizontalalignment='left', \
             transform=ax3.transAxes, color='k', size=8)
-    ax3.text(0.65, 0.76, r"$\mathrm{z_{phot}\sim2.22}$", verticalalignment='top', horizontalalignment='left', \
+    ax3.text(0.65, 0.79, r"$\mathrm{z_{phot}\sim2.22}$", verticalalignment='top', horizontalalignment='left', \
             transform=ax3.transAxes, color='k', size=8)
 
-    ax4.text(0.65, 0.9, r"$\mathrm{FIGS\ ID\ }$" + str(figs_id4), verticalalignment='top', horizontalalignment='left', \
+    ax4.text(0.65, 0.93, r"$\mathrm{FIGS\ ID\ }$" + str(figs_id4), verticalalignment='top', horizontalalignment='left', \
             transform=ax4.transAxes, color='k', size=8)
-    ax4.text(0.65, 0.83, r"$\mathrm{M_s\sim10.66\,M_\odot}$", verticalalignment='top', horizontalalignment='left', \
+    ax4.text(0.65, 0.86, r"$\mathrm{M_s\sim10.66\,M_\odot}$", verticalalignment='top', horizontalalignment='left', \
             transform=ax4.transAxes, color='k', size=8)
-    ax4.text(0.65, 0.76, r"$\mathrm{z_{phot}\sim2.08}$", verticalalignment='top', horizontalalignment='left', \
+    ax4.text(0.65, 0.79, r"$\mathrm{z_{phot}\sim2.08}$", verticalalignment='top', horizontalalignment='left', \
             transform=ax4.transAxes, color='k', size=8)
 
     fig.savefig(home + '/Desktop/mmirs_targets_example_grismspectra.png', dpi=300, bbox_inches='tight')
