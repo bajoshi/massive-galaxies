@@ -79,7 +79,7 @@ if __name__ == '__main__':
     # pasted it into the file I'm reading here
     acs_wfc_fov_side = 202/3600  # arcseconds converted to degrees
 
-    with open(figs_dir + 'massive-galaxies/grismz_pipeline/pears_pointings.txt') as f:
+    with open(figs_dir + 'massive-galaxies/grismz_pipeline/pears_goodsn_pointings.txt') as f:
         lines = f.readlines()
         for line in lines[4:]:
             current_pointing_set = []
@@ -90,21 +90,29 @@ if __name__ == '__main__':
             if 'Position Angle' in line:
                 # this indicates the PA
                 # Store it and continue
-                print line.split(' ')
-                pa = float(line.split(' ')[-1])
+                current_pa = float(line.split(' ')[-1])
                 continue
 
-            current_ra_str = line.split(' ')[1:4]
-            current_dec_str = line.split(' ')[4:7]
-            current_ra = get_ra_deg(current_ra_str)
-            current_dec = get_dec_deg(current_dec_str)
+            if 'G800L' in line:
+                current_ra_str = " ".join(line.split(' ')[2:5])
+                current_dec_str = " ".join(line.split(' ')[5:8])
 
-            print current_ra, current_dec, current_pa
+                current_ra = get_ra_deg(current_ra_str)
+                current_dec = get_dec_deg(current_dec_str)
 
-            #r = Rectangle((current_ra, current_dec), \
-            #    width=acs_wfc_fov_side / np.cos(current_dec * np.pi/180.0), height=acs_wfc_fov_side, \
-            #    angle=current_pa, edgecolor='red', facecolor='red', transform=ax.get_transform('fk5'), alpha=0.1)
-            #ax.add_patch(r)
+                print current_ra_str, current_dec_str, current_ra, current_dec, current_pa
+
+                # What you have are coordinates of the center of the pointing
+                # You need to give matplotlib the coords of the bottom left
+                current_ra_bl = current_ra + acs_wfc_fov_side / 2.0
+                current_dec_bl = current_dec - acs_wfc_fov_side / 2.0
+
+                r = Rectangle((current_ra_bl, current_dec_bl), \
+                    width=acs_wfc_fov_side / np.cos(current_dec * np.pi/180.0), height=acs_wfc_fov_side, \
+                    edgecolor='red', facecolor='red', transform=ax.get_transform('fk5'), alpha=0.02)
+                t = mpl.transforms.Affine2D().rotate_around(current_ra, current_dec, current_pa*np.pi/180)
+                r.set_transform(t + ax.transData)
+                ax.add_patch(r)
 
     # Add text for field name
 

@@ -8,18 +8,6 @@ import sys
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-import matplotlib
-print matplotlib.matplotlib_fname()
-
-from matplotlib import rcParams
-rcParams['xtick.direction'] = 'in'
-rcParams['ytick.direction'] = 'in'
-"""
-I've set the x and y axis tick direction to be 'in'
-in the matplotlibrc file but it is not working for
-some reason. So I have to explicitly set these here.
-Need to figure this out.
-"""
 
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -103,7 +91,7 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh = 1.4
+    d4000_thresh = 1.5
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
@@ -148,8 +136,6 @@ if __name__ == '__main__':
     print "photo-z resid mean:", np.mean(photz_resid_hist_arr)
     print "photo-z resid std:", np.std(photz_resid_hist_arr)
 
-    sys.exit(0)
-
     large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.04)[0]
     np.set_printoptions(precision=2, suppress=True)
     print len(large_diff_idx)
@@ -165,7 +151,9 @@ if __name__ == '__main__':
     print specz_source_arr[large_diff_idx]
     #print len(np.where(specz_qual_arr == 'Z')[0])
 
-    fullrange = True
+    fullrange = True  
+    # this fullrange parameter simply tells the program whether or not 
+    # to plot the entire range of residual values.
     if fullrange:
         # If you don't want to restrict the range
         photz_min = np.min(photz_resid_hist_arr)
@@ -226,12 +214,10 @@ if __name__ == '__main__':
 
     if fullrange:
         fig.savefig(massive_figures_dir + \
-            'new_specz_sample_fits/residual_histogram_netsig_10_fullrange_d4000_' + str(d4000_thresh).replace('.', 'p') + '.png', \
+            'residual_histogram_netsig_10_fullrange_d4000_' + str(d4000_thresh).replace('.', 'p') + '.eps', \
             dpi=300, bbox_inches='tight')
     else:
-        fig.savefig(massive_figures_dir + \
-            'new_specz_sample_fits/residual_histogram_netsig_10.png', \
-            dpi=300, bbox_inches='tight')
+        fig.savefig(massive_figures_dir + 'residual_histogram_netsig_10.png', dpi=300, bbox_inches='tight')
 
     #plt.show()
 
