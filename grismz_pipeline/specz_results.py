@@ -69,6 +69,108 @@ def get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_go
 
     return d4000_list, d4000_err_list, specz_qual_list, specz_source_list
 
+def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
+
+    import matplotlib as mpl
+    import matplotlib.gridspec as gridspec
+    from astropy.modeling import models, fitting
+
+    mpl.rcParams['axes.grid'] = True
+
+    # z_grism vs z_phot vs z_spec plot
+    gs = gridspec.GridSpec(15,34)
+    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=1.0, hspace=0.0)
+
+    fig_gs = plt.figure(figsize=(12.8, 9.6))
+    ax1 = fig_gs.add_subplot(gs[:10,:10])
+    ax2 = fig_gs.add_subplot(gs[10:,:10])
+    ax3 = fig_gs.add_subplot(gs[:10,12:22])
+    ax4 = fig_gs.add_subplot(gs[10:,12:22])
+    ax5 = fig_gs.add_subplot(gs[:10,24:])
+    ax6 = fig_gs.add_subplot(gs[10:,24:])
+
+    # ------------------------------------------------------------------------------------------------- #
+    # first panel # z_spec vs z_grism
+    ax1.plot(z_spec, z_grism, 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax1.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
+
+    ax1.set_xlim(0.6, 1.24)
+    ax1.set_ylim(0.6, 1.24)
+
+    ax1.set_ylabel(r'$\mathrm{z_g}$', fontsize=18, labelpad=1)
+
+    ax1.xaxis.set_ticklabels([])
+    ax1.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
+
+    # residuals for first panel
+    ax2.plot(z_spec, (z_spec - z_grism)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax2.axhline(y=0, linestyle='--', color='r')
+
+    ax2.set_xlim(0.6, 1.24)
+    ax2.set_ylim(-0.2, 0.2)
+
+    ax2.set_xticklabels(ax2.get_xticks().tolist(), size='x-large', rotation=45)
+    ax2.set_yticklabels(ax2.get_yticks().tolist(), size='x-large', rotation=45)
+
+    ax2.set_xlabel(r'$\mathrm{z_s}$', fontsize=18)
+    ax2.set_ylabel(r'$(\mathrm{z_s - z_g})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
+
+    # ------------------------------------------------------------------------------------------------- #
+    # second panel # z_spec vs z_phot
+    ax3.plot(z_spec, z_phot, 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax3.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
+
+    ax3.set_xlim(0.6, 1.24)
+    ax3.set_ylim(0.6, 1.24)
+
+    ax3.set_ylabel(r'$\mathrm{z_p}$', fontsize=18, labelpad=1)
+
+    ax3.xaxis.set_ticklabels([])
+    ax3.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
+
+    # residuals for second panel
+    ax4.plot(z_spec, (z_spec - z_phot)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax4.axhline(y=0, linestyle='--', color='r')
+
+    ax4.set_xlim(0.6, 1.24)
+    ax4.set_ylim(-0.2, 0.2)
+
+    ax4.set_xticklabels(ax4.get_xticks().tolist(), size='x-large', rotation=45)
+    ax4.set_yticklabels(ax4.get_yticks().tolist(), size='x-large', rotation=45)
+
+    ax4.set_xlabel(r'$\mathrm{z_s}$', fontsize=18)
+    ax4.set_ylabel(r'$(\mathrm{z_s - z_p})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
+
+    # ------------------------------------------------------------------------------------------------- #
+    # third panel # z_spec vs z_phot
+    ax5.plot(z_grism, z_phot, 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax5.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
+
+    ax5.set_xlim(0.6, 1.24)
+    ax5.set_ylim(0.6, 1.24)
+
+    ax5.set_ylabel(r'$\mathrm{z_p}$', fontsize=18, labelpad=1)
+
+    ax5.xaxis.set_ticklabels([])
+    ax5.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
+
+    # residuals for third panel
+    ax6.plot(z_grism, (z_grism - z_phot)/(1+z_grism), 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax6.axhline(y=0, linestyle='--', color='r')
+
+    ax6.set_xlim(0.6, 1.24)
+    ax6.set_ylim(-0.2, 0.2)
+
+    ax6.set_xticklabels(ax6.get_xticks().tolist(), size='x-large', rotation=45)
+    ax6.set_yticklabels(ax6.get_yticks().tolist(), size='x-large', rotation=45)
+
+    ax6.set_xlabel(r'$\mathrm{z_g}$', fontsize=18)
+    ax6.set_ylabel(r'$(\mathrm{z_g - z_p})/(1+\mathrm{z_g})$', fontsize=18, labelpad=-2)
+
+    fig_gs.savefig(massive_figures_dir + "zspec_comparison.eps", dpi=300, bbox_inches='tight')
+
+    return None
+
 if __name__ == '__main__':
     
     # Read in arrays
@@ -116,6 +218,9 @@ if __name__ == '__main__':
     print N_gal, "galaxies in plot."
     #print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), 
     #print "pass the D4000, NetSig, and overall error constraints."
+
+    make_zspec_comparison_plot(zspec_plot, zgrism_plot, zphot_plot)
+    sys.exit(0)
 
     # plot
     fig = plt.figure()
