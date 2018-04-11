@@ -69,11 +69,14 @@ def get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_go
 
     return d4000_list, d4000_err_list, specz_qual_list, specz_source_list
 
+def line_func(x, slope, intercept):
+    return slope*x + intercept
+
 def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
 
     import matplotlib as mpl
     import matplotlib.gridspec as gridspec
-    from astropy.modeling import models, fitting
+    from scipy.optimize import curve_fit
 
     mpl.rcParams['axes.grid'] = True
 
@@ -91,8 +94,8 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
 
     # ------------------------------------------------------------------------------------------------- #
     # first panel # z_spec vs z_grism
-    ax1.plot(z_spec, z_grism, 'o', markersize=5.0, color='k', markeredgecolor='k')
-    ax1.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
+    ax1.plot(z_spec, z_grism, 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
+    ax1.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
 
     ax1.set_xlim(0.6, 1.24)
     ax1.set_ylim(0.6, 1.24)
@@ -102,12 +105,30 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     ax1.xaxis.set_ticklabels([])
     ax1.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
 
+    # do the fit with scipy
+    popt, pcov = curve_fit(line_func, z_spec, z_grism, p0=[1.0, 0.6])
+    #print popt
+    #print pcov
+
+    # Find stddev for the residuals
+    resid = (z_spec - z_grism)/(1+z_spec)
+    mu = np.mean(resid)
+    sigma = np.std(resid)
+
+    x_plot = np.arange(0.2,1.5,0.01)
+
+    ax1.plot(x_plot, (mu+sigma) + (1+mu+sigma)*x_plot, '-', color='lightblue', linewidth=2.0)
+    ax1.plot(x_plot, (mu-sigma) + (1+mu-sigma)*x_plot, '-', color='lightblue', linewidth=2.0)
+
     # residuals for first panel
-    ax2.plot(z_spec, (z_spec - z_grism)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax2.plot(z_spec, (z_spec - z_grism)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
     ax2.axhline(y=0, linestyle='--', color='r')
 
+    ax2.axhline(y=sigma, ls='-', color='lightblue', linewidth=2.0)
+    ax2.axhline(y=-1*sigma, ls='-', color='lightblue', linewidth=2.0)
+
     ax2.set_xlim(0.6, 1.24)
-    ax2.set_ylim(-0.2, 0.2)
+    ax2.set_ylim(-0.1, 0.1)
 
     ax2.set_xticklabels(ax2.get_xticks().tolist(), size='x-large', rotation=45)
     ax2.set_yticklabels(ax2.get_yticks().tolist(), size='x-large', rotation=45)
@@ -117,8 +138,8 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
 
     # ------------------------------------------------------------------------------------------------- #
     # second panel # z_spec vs z_phot
-    ax3.plot(z_spec, z_phot, 'o', markersize=5.0, color='k', markeredgecolor='k')
-    ax3.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
+    ax3.plot(z_spec, z_phot, 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
+    ax3.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
 
     ax3.set_xlim(0.6, 1.24)
     ax3.set_ylim(0.6, 1.24)
@@ -128,12 +149,23 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     ax3.xaxis.set_ticklabels([])
     ax3.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
 
+    # Find stddev for the residuals
+    resid = (z_spec - z_phot)/(1+z_spec)
+    mu = np.mean(resid)
+    sigma = np.std(resid)
+
+    ax3.plot(x_plot, (mu+sigma) + (1+mu+sigma)*x_plot, '-', color='lightblue', linewidth=2.0)
+    ax3.plot(x_plot, (mu-sigma) + (1+mu-sigma)*x_plot, '-', color='lightblue', linewidth=2.0)
+
     # residuals for second panel
-    ax4.plot(z_spec, (z_spec - z_phot)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax4.plot(z_spec, (z_spec - z_phot)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
     ax4.axhline(y=0, linestyle='--', color='r')
 
+    ax4.axhline(y=sigma, ls='-', color='lightblue', linewidth=2.0)
+    ax4.axhline(y=-1*sigma, ls='-', color='lightblue', linewidth=2.0)
+
     ax4.set_xlim(0.6, 1.24)
-    ax4.set_ylim(-0.2, 0.2)
+    ax4.set_ylim(-0.1, 0.1)
 
     ax4.set_xticklabels(ax4.get_xticks().tolist(), size='x-large', rotation=45)
     ax4.set_yticklabels(ax4.get_yticks().tolist(), size='x-large', rotation=45)
@@ -143,8 +175,8 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
 
     # ------------------------------------------------------------------------------------------------- #
     # third panel # z_spec vs z_phot
-    ax5.plot(z_grism, z_phot, 'o', markersize=5.0, color='k', markeredgecolor='k')
-    ax5.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r')
+    ax5.plot(z_grism, z_phot, 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
+    ax5.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
 
     ax5.set_xlim(0.6, 1.24)
     ax5.set_ylim(0.6, 1.24)
@@ -154,12 +186,22 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     ax5.xaxis.set_ticklabels([])
     ax5.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
 
+    # Find stddev for the residuals
+    resid = (z_grism - z_phot)/(1+z_grism)
+    sigma = np.std(resid)
+
+    ax5.plot(x_plot, x_plot + (1+x_plot)*sigma, '-', color='lightblue', linewidth=2.0)
+    ax5.plot(x_plot, x_plot - (1+x_plot)*sigma, '-', color='lightblue', linewidth=2.0)
+
     # residuals for third panel
-    ax6.plot(z_grism, (z_grism - z_phot)/(1+z_grism), 'o', markersize=5.0, color='k', markeredgecolor='k')
+    ax6.plot(z_grism, (z_grism - z_phot)/(1+z_grism), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
     ax6.axhline(y=0, linestyle='--', color='r')
 
+    ax6.axhline(y=sigma, ls='-', color='lightblue', linewidth=2.0)
+    ax6.axhline(y=-1*sigma, ls='-', color='lightblue', linewidth=2.0)
+
     ax6.set_xlim(0.6, 1.24)
-    ax6.set_ylim(-0.2, 0.2)
+    ax6.set_ylim(-0.1, 0.1)
 
     ax6.set_xticklabels(ax6.get_xticks().tolist(), size='x-large', rotation=45)
     ax6.set_yticklabels(ax6.get_yticks().tolist(), size='x-large', rotation=45)
