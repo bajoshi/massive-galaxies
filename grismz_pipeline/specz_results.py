@@ -82,9 +82,9 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
 
     # z_grism vs z_phot vs z_spec plot
     gs = gridspec.GridSpec(15,34)
-    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=1.0, hspace=0.0)
+    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=2.0, hspace=0.0)
 
-    fig_gs = plt.figure(figsize=(12.8, 9.6))
+    fig_gs = plt.figure(figsize=(13, 9))
     ax1 = fig_gs.add_subplot(gs[:10,:10])
     ax2 = fig_gs.add_subplot(gs[10:,:10])
     ax3 = fig_gs.add_subplot(gs[:10,12:22])
@@ -110,22 +110,25 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     #print popt
     #print pcov
 
+    # plot line fit
+    x_plot = np.arange(0.2,1.5,0.01)
+    ax1.plot(x_plot, line_func(x_plot, popt[0], popt[1]), '-', color='#41ab5d', linewidth=2.0)
+
     # Find stddev for the residuals
     resid = (z_spec - z_grism)/(1+z_spec)
     mu = np.mean(resid)
     sigma = np.std(resid)
 
-    x_plot = np.arange(0.2,1.5,0.01)
-
-    ax1.plot(x_plot, (mu+sigma) + (1+mu+sigma)*x_plot, '-', color='lightblue', linewidth=2.0)
-    ax1.plot(x_plot, (mu-sigma) + (1+mu-sigma)*x_plot, '-', color='lightblue', linewidth=2.0)
+    #ax1.plot(x_plot, (mu+sigma) + (1+mu+sigma)*x_plot, '-', color='#3690c0', linewidth=2.0)
+    #ax1.plot(x_plot, (mu-sigma) + (1+mu-sigma)*x_plot, '-', color='#3690c0', linewidth=2.0)
 
     # residuals for first panel
     ax2.plot(z_spec, (z_spec - z_grism)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
     ax2.axhline(y=0, linestyle='--', color='r')
 
-    ax2.axhline(y=sigma, ls='-', color='lightblue', linewidth=2.0)
-    ax2.axhline(y=-1*sigma, ls='-', color='lightblue', linewidth=2.0)
+    ax2.axhline(y=mu + sigma, ls='-', color='#3690c0', linewidth=2.0)
+    ax2.axhline(y=mu - sigma, ls='-', color='#3690c0', linewidth=2.0)
+    ax2.axhline(y=mu, ls='-', color='b', linewidth=2.0)
 
     ax2.set_xlim(0.6, 1.24)
     ax2.set_ylim(-0.1, 0.1)
@@ -149,20 +152,28 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     ax3.xaxis.set_ticklabels([])
     ax3.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
 
+    # do the fit with scipy
+    popt, pcov = curve_fit(line_func, z_spec, z_phot, p0=[1.0, 0.6])
+
+    # plot line fit
+    x_plot = np.arange(0.2,1.5,0.01)
+    ax3.plot(x_plot, line_func(x_plot, popt[0], popt[1]), '-', color='#41ab5d', linewidth=2.0)
+
     # Find stddev for the residuals
     resid = (z_spec - z_phot)/(1+z_spec)
     mu = np.mean(resid)
     sigma = np.std(resid)
 
-    ax3.plot(x_plot, (mu+sigma) + (1+mu+sigma)*x_plot, '-', color='lightblue', linewidth=2.0)
-    ax3.plot(x_plot, (mu-sigma) + (1+mu-sigma)*x_plot, '-', color='lightblue', linewidth=2.0)
+    #ax3.plot(x_plot, line_func(x_plot, popt[0] + sigma, popt[1]), '-', color='#3690c0', linewidth=2.0)
+    #ax3.plot(x_plot, line_func(x_plot, popt[0] - sigma, popt[1]), '-', color='#3690c0', linewidth=2.0)
 
     # residuals for second panel
     ax4.plot(z_spec, (z_spec - z_phot)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
     ax4.axhline(y=0, linestyle='--', color='r')
 
-    ax4.axhline(y=sigma, ls='-', color='lightblue', linewidth=2.0)
-    ax4.axhline(y=-1*sigma, ls='-', color='lightblue', linewidth=2.0)
+    ax4.axhline(y=mu + sigma, ls='-', color='#3690c0', linewidth=2.0)
+    ax4.axhline(y=mu - sigma, ls='-', color='#3690c0', linewidth=2.0)
+    ax4.axhline(y=mu, ls='-', color='blue', linewidth=2.0)
 
     ax4.set_xlim(0.6, 1.24)
     ax4.set_ylim(-0.1, 0.1)
@@ -190,15 +201,17 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     resid = (z_grism - z_phot)/(1+z_grism)
     sigma = np.std(resid)
 
-    ax5.plot(x_plot, x_plot + (1+x_plot)*sigma, '-', color='lightblue', linewidth=2.0)
-    ax5.plot(x_plot, x_plot - (1+x_plot)*sigma, '-', color='lightblue', linewidth=2.0)
+    #ax5.plot(x_plot, x_plot + (1+x_plot)*sigma, '-', color='#3690c0', linewidth=2.0)
+    #ax5.plot(x_plot, x_plot - (1+x_plot)*sigma, '-', color='#3690c0', linewidth=2.0)
+    ax5.plot(x_plot, line_func(x_plot, popt[0], popt[1]), '-', color='#41ab5d', linewidth=2.0)
 
     # residuals for third panel
     ax6.plot(z_grism, (z_grism - z_phot)/(1+z_grism), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
     ax6.axhline(y=0, linestyle='--', color='r')
 
-    ax6.axhline(y=sigma, ls='-', color='lightblue', linewidth=2.0)
-    ax6.axhline(y=-1*sigma, ls='-', color='lightblue', linewidth=2.0)
+    ax6.axhline(y=mu + sigma, ls='-', color='#3690c0', linewidth=2.0)
+    ax6.axhline(y=mu - sigma, ls='-', color='#3690c0', linewidth=2.0)
+    ax6.axhline(y=mu, ls='-', color='blue', linewidth=2.0)
 
     ax6.set_xlim(0.6, 1.24)
     ax6.set_ylim(-0.1, 0.1)
