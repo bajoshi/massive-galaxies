@@ -147,6 +147,7 @@ if __name__ == '__main__':
     ax.grid(True)
 
     ax.set_ylim(0.5, 4.0)
+    ax.set_xlim(0.5, 1.3)
 
     # parallel x axis for age of the Universe
     # This solution came from 
@@ -155,13 +156,11 @@ if __name__ == '__main__':
     ages = np.arange(3,9,0.5)*u.Gyr
 
     ageticks = [z_at_value(Planck15.age, age) for age in ages]
-    ageticks = np.asarray(ageticks)
-    ageticks = ageticks[::-1]
+    print ageticks
     ax2.set_xticks(ageticks)
-    ax2.set_xticklabels(['{:g}'.format(age) for age in ages.value])
-
-    ax.set_xlim(0.5,1.3)
-    ax2.set_xlim(0.5,1.3)
+    ages_ticklabels = ['{:g}'.format(age) for age in ages.value]
+    print ages_ticklabels
+    ax2.set_xticklabels(ages_ticklabels)
 
     ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$', fontsize=15)
 
