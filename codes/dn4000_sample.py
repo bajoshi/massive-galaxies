@@ -12,7 +12,7 @@ from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, AnchoredText
 
 home = os.getenv('HOME')  # Does not have a trailing slash at the end
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
-massive_figures_dir = massive_galaxies_dir + "figures/"
+massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 newcodes_dir = home + "/Desktop/FIGS/new_codes/"
 

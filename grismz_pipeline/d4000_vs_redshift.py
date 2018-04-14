@@ -146,61 +146,44 @@ if __name__ == '__main__':
     ax.set_ylabel(r'$\mathrm{D}4000$', fontsize=15)
     ax.grid(True)
 
-    ax.set_ylim(0.5, 4.0)
-    ax.set_xlim(0.5, 1.3)
-
     # parallel x axis for age of the Universe
     # This solution came from 
     # http://www.astropy.org/astropy-tutorials/edshift_plot.html
     ax2 = ax.twiny()
-    ages = np.arange(3,9,0.5)*u.Gyr
 
+    ages = np.arange(3,9,0.5)*u.Gyr
     ageticks = [z_at_value(Planck15.age, age) for age in ages]
-    print ageticks
     ax2.set_xticks(ageticks)
+
     ages_ticklabels = ['{:g}'.format(age) for age in ages.value]
-    print ages_ticklabels
     ax2.set_xticklabels(ages_ticklabels)
+
+    ax2.set_xlim(0.5, 1.3)
+    ax.set_xlim(0.5, 1.3)
+    ax.set_ylim(0.5, 4.0)
 
     ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$', fontsize=15)
 
-    # -------------
+    # Turn on minor ticks
+    ax.minorticks_on()  # Only ax and not ax2. See comment below.
+
     """
-    ax.set_xticklabels(ax.get_xticks())
-    ax.set_yticklabels(ax.get_yticks())
+    Struggled iwth the following error for a couple days (!!)
+    Everytime I tried to show the figure or save it, I got the error:
+    /Users/bhavinjoshi/anaconda/lib/python2.7/site-packages/matplotlib/ticker.py:2531: 
+    RuntimeWarning: invalid value encountered in log10
+    x = int(np.round(10 ** (np.log10(majorstep) % 1)))
+    ValueError: cannot convert float NaN to integer
 
-    ax2.set_yticklabels(ax2.get_yticks())
-
-    print ageticks
-    print ax.get_xticks()
-    print ax.get_yticks()
-
-    l1_list = ax.get_xticklabels()
-    l2_list = ax.get_yticklabels()
-    
-    print ax2.get_xticks()
-    print ax2.get_yticks()
-    
-    l3_list = ax2.get_xticklabels()
-    l4_list = ax2.get_yticklabels()
-
-    for l1 in l1_list:
-        print l1.get_text()
-
-    for l2 in l2_list:
-        print l2.get_text()
-
-    for l3 in l3_list:
-        print l3.get_text()
-
-    for l4 in l4_list:
-        print l4.get_text()
+    Later, I turned off the plotting of minor ticks that I'd turned on
+    in my matplotlibrc by default and it worked. I think, the reason for 
+    it to fail with that error is because I was giving it these "weird" 
+    locations for the major ticks on ax2 (age ticks) and then when I 
+    asked to turn on minor ticks on the ax2 axis it has no clue where 
+    to put them.
     """
-    # --------------
-
-    plt.show()
 
     # save the figure
-    #fig.savefig(massive_figures_dir + 'd4000_redshift.png', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'd4000_redshift.eps', dpi=300, bbox_inches='tight')
 
     sys.exit(0)
