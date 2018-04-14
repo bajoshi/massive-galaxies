@@ -108,8 +108,8 @@ def get_all_d4000():
 
     return redshift_pears_arr, d4000_pears_arr, d4000_err_pears_arr
 
-if __name__ == '__main__':
-    
+def make_d4000_vs_redshift_plot():
+
     # Only need to run this function once
     # So it can store data. After that simply
     # read the stored data. Commented out 
@@ -185,5 +185,50 @@ if __name__ == '__main__':
 
     # save the figure
     fig.savefig(massive_figures_dir + 'd4000_redshift.eps', dpi=300, bbox_inches='tight')
+
+    return None
+
+def make_d4000_hist():
+
+    # read arrays
+    d4000_pears_arr = np.load(massive_figures_dir + 'all_d4000_arr.npy')
+
+    # Only consider finite elements
+    valid_idx = np.where(np.isfinite(d4000_pears_arr))[0]
+    d4000_pears_plot = d4000_pears_arr[valid_idx]
+
+    # ----------------------- PLOT ----------------------- #
+    # PEARS dn4000 histogram
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # get total bins and plot histogram
+    iqr = np.std(d4000_pears_plot, dtype=np.float64)
+    binsize = 2*iqr*np.power(len(d4000_pears_plot),-1/3)
+    totalbins = np.floor((max(d4000_pears_plot) - min(d4000_pears_plot))/binsize)
+
+    ncount, edges, patches = ax.hist(d4000_pears_plot, totalbins, range=[0.0,4.0], color='lightgray', align='mid', zorder=10)
+    ax.grid(True)
+
+    # shade the selection region
+    edges_plot = np.where(edges >= 1.4)[0]
+    patches_plot = [patches[edge_ind] for edge_ind in edges_plot[:-1]]
+    # I put in the [:-1] because for some reason edges was 1 element longer than patches
+    col = np.full(len(patches_plot), 'lightblue', dtype='|S9')
+    # make sure the length of the string given in the array initialization is the same as the color name
+    for c, p in zip(col, patches_plot):
+        plt.setp(p, 'facecolor', c)
+
+    ax.set_xlabel(r'$\mathrm{D}4000$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
+
+    # save figure
+    fig.savefig(massive_figures_dir + 'pears_d4000_hist.eps', dpi=300, bbox_inches='tight')
+
+    return None
+
+if __name__ == '__main__':
+    
+    make_d4000_hist()
 
     sys.exit(0)
