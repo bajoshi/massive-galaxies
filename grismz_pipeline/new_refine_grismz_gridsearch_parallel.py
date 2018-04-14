@@ -322,12 +322,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
 
     # minor ticks
     ax1.minorticks_on()
-    ax1.tick_params('both', width=1, length=3, which='minor')
-    ax1.tick_params('both', width=1, length=4.7, which='major')
-
     ax2.minorticks_on()
-    ax2.tick_params('both', width=1, length=3, which='minor')
-    ax2.tick_params('both', width=1, length=4.7, which='major')
 
     # text for info
     ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \

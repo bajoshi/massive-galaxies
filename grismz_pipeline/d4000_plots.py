@@ -211,7 +211,7 @@ def make_d4000_hist():
     ax.grid(True)
 
     # shade the selection region
-    edges_plot = np.where(edges >= 1.4)[0]
+    edges_plot = np.where(edges >= 1.5)[0]
     patches_plot = [patches[edge_ind] for edge_ind in edges_plot[:-1]]
     # I put in the [:-1] because for some reason edges was 1 element longer than patches
     col = np.full(len(patches_plot), 'lightblue', dtype='|S9')
