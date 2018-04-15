@@ -13,6 +13,7 @@ import time
 import datetime
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -30,7 +31,7 @@ import refine_redshifts_dn4000 as old_ref
 
 def get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, resampling_lam_grid, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, grismz, specz, photoz, d4000, d4000_err):
+    obj_id, obj_field, grismz, specz, photoz, d4000, d4000_err, low_zerr, high_zerr):
 
     chi2, alpha = ngp.get_chi2_alpha_at_z(grismz, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, \
         resampling_lam_grid, total_models, lsf, start_time)
@@ -76,26 +77,13 @@ def get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, resampling_lam_gri
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
-    # Error on zgrism
-    dof = len(lam_obs) - 1  # i.e. total data points minus the single fitting parameter
-    chi2_red = chi2 / dof
-    chi2_red_error = np.sqrt(2/dof)
-    min_chi2_red = min_chi2 / dof
-    print "Error in reduced chi-square:", chi2_red_error
-    chi2_red_idx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
-    # use first dimension indices to get error on grism-z
-    z_grism_range = z_arr_to_check[chi2_red_idx[0]]
-    print "z_grism range", z_grism_range
-    low_z_lim = np.min(z_grism_range)
-    upper_z_lim = np.max(z_grism_range)
-
     makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, d4000, d4000_err)
+        obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, chi2, d4000, d4000_err)
 
     return None
 
 def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-    obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, d4000, d4000_err):
+    obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, chi2, d4000, d4000_err):
 
     fig = plt.figure()
     gs = gridspec.GridSpec(10,10)
@@ -124,9 +112,6 @@ def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalph
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    low_zerr = grismz - low_z_lim
-    high_zerr = upper_z_lim - grismz
-
     ax1.text(0.75, 0.35, \
     r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
@@ -142,7 +127,7 @@ def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalph
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.75, 0.12, r'$\mathrm{\D4000\, =\, }$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
+    ax1.text(0.75, 0.12, r'$\mathrm{D4000\, =\, }$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
@@ -179,6 +164,12 @@ if __name__ == '__main__':
     zphot_n = np.load(massive_figures_dir + 'full_run/zphot_list_gn.npy')
     zphot_s = np.load(massive_figures_dir + 'full_run/zphot_list_gs.npy')
 
+    zgrism_lowerr_n = np.load(massive_figures_dir + 'full_run/zgrism_lowerr_list_gn.npy')
+    zgrism_lowerr_s = np.load(massive_figures_dir + 'full_run/zgrism_lowerr_list_gs.npy')
+
+    zgrism_uperr_n = np.load(massive_figures_dir + 'full_run/zgrism_uperr_list_gn.npy')
+    zgrism_uperr_s = np.load(massive_figures_dir + 'full_run/zgrism_uperr_list_gs.npy')
+
     # ---------------------------------------------- MODELS ----------------------------------------------- #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
@@ -207,23 +198,29 @@ if __name__ == '__main__':
             fieldname = 'GOODS-N'
             id_arr = id_n
             zgrism_arr = zgrism_n
+            zgrism_lowerr_arr = zgrism_lowerr_n
+            zgrism_uperr_arr = zgrism_uperr_n
             zphot_arr = zphot_n
             zspec_arr = zspec_n
         elif current_field == 's':
             fieldname = 'GOODS-S'
             id_arr = id_s
             zgrism_arr = zgrism_s
+            zgrism_lowerr_arr = zgrism_lowerr_s
+            zgrism_uperr_arr = zgrism_uperr_s
             zphot_arr = zphot_s
             zspec_arr = zspec_s
 
         id_idx = np.where(id_arr == current_id)[0]
         current_zgrism = zgrism_arr[id_idx]
+        current_zgrism_lowerr = current_zgrism - zgrism_lowerr_arr[id_idx]
+        current_zgrism_uperr = zgrism_uperr_arr[id_idx] - current_zgrism
         current_zspec = zspec_arr[id_idx]
         current_zphot = zphot_arr[id_idx]
 
         # get data and then d4000
         lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, fieldname)
-        print current_id, fieldname, current_zgrism, return_code
+        print current_id, fieldname, current_zgrism, current_zgrism_lowerr, current_zgrism_uperr, return_code
 
         lam_em = lam_obs / (1 + current_zgrism)
         flam_em = flam_obs * (1 + current_zgrism)
@@ -268,6 +265,7 @@ if __name__ == '__main__':
 
         get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf, resampling_lam_grid, \
         model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
-        current_id, fieldname, current_zgrism, current_zspec, current_zphot, d4000, d4000_err)
+        current_id, fieldname, current_zgrism, current_zspec, current_zphot, d4000, d4000_err, \
+        current_zgrism_lowerr, current_zgrism_uperr)
 
     sys.exit(0)
