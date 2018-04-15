@@ -31,7 +31,7 @@ import refine_redshifts_dn4000 as old_ref
 
 def get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, resampling_lam_grid, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, grismz, specz, photoz, d4000, d4000_err, low_zerr, high_zerr):
+    obj_id, obj_field, grismz, specz, photoz, d4000, d4000_err, low_zerr, high_zerr, fig, ax1, ax2):
 
     chi2, alpha = ngp.get_chi2_alpha_at_z(grismz, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, \
         resampling_lam_grid, total_models, lsf, start_time)
@@ -64,6 +64,9 @@ def get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, resampling_lam_gri
     min_chi2 = chi2[min_idx]
     print "Minimum chi2:", "{:.4}".format(min_chi2)
 
+    dof = len(lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+    min_chi2_red = min_chi2 / dof
+
     # Plotting stuff #
     bestalpha = alpha[min_idx]
     print "Vertical scaling factor for best fit model:", bestalpha
@@ -77,24 +80,13 @@ def get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, resampling_lam_gri
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
-    makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, chi2, d4000, d4000_err)
+    fig, ax1, ax2 = makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
+        obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, min_chi2_red, d4000, d4000_err, fig, ax1, ax2)
 
-    return None
+    return fig
 
 def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-    obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, chi2, d4000, d4000_err):
-
-    fig = plt.figure()
-    gs = gridspec.GridSpec(10,10)
-    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
-
-    ax1 = fig.add_subplot(gs[:8,:])
-    ax2 = fig.add_subplot(gs[8:,:])
-
-    ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA]}$')
-    ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
-    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
+    obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, chi2, d4000, d4000_err, fig, ax1, ax2):
 
     ax1.plot(lam_obs, flam_obs, ls='-', color='k')
     ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
@@ -108,33 +100,30 @@ def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalph
     ax2.minorticks_on()
 
     # text for info
-    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.1, 0.95, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.75, 0.35, \
+    ax1.text(0.1, 0.9, \
     r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.1, 0.85, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.22, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.1, 0.8, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=8)
 
-    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.1, 0.75, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=8)
 
-    ax1.text(0.75, 0.12, r'$\mathrm{D4000\, =\, }$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
+    ax1.text(0.1, 0.7, r'$\mathrm{D4000\, =\, }$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=8)
 
-    fig.savefig(figs_dir + 'massive-galaxies-figures/' + obj_field + '_' + str(obj_id) + '.png', \
-        dpi=300, bbox_inches='tight')
-
-    return None
+    return fig, ax1, ax2
 
 if __name__ == '__main__':
 
@@ -144,12 +133,10 @@ if __name__ == '__main__':
     print "Starting at --", dt.now()
 
     # id list that I want. I chose these by eye.
-    ids_to_plot = [36105, 40991, 46766, 53471, 57792, 58084, 61291, \
-    76098, 88566, 88929, 119879, 124386, \
-    74060, 88671, 103146, 104774, 113298, 127226]
-    fields_to_plot = ['n', 'n', 'n', 'n', 'n', 'n', 'n', \
-    'n', 'n', 'n', 'n', 'n', \
-    's', 's', 's', 's', 's', 's']
+    ids_to_plot = [36105, 57792, 58084, 61291, \
+    88566, 88929, 124386, 74060, 88671, 103146, 104774, 127226]
+    fields_to_plot = ['n', 'n', 'n', 'n', \
+    'n', 'n', 'n', 's', 's', 's', 's', 's']
 
     # read all arrays from full run
     id_n = np.load(massive_figures_dir + 'full_run/id_list_gn.npy')
@@ -187,8 +174,62 @@ if __name__ == '__main__':
     # total run time up to now
     print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
+    # Plotting prelimaries
+    fig_gs = plt.figure(figsize=(6.5, 8))
+    gs = gridspec.GridSpec(20,15)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
+
+    # axes must be defined individually for all 12 galaxies fits and residuals
+    ax1_spfit_gal1 = fig_gs.add_subplot(gs[:4,:5])
+    ax2_resid_gal1 = fig_gs.add_subplot(gs[4:5,:5])
+
+    ax1_spfit_gal2 = fig_gs.add_subplot(gs[:4,5:10])
+    ax2_resid_gal2 = fig_gs.add_subplot(gs[4:5,5:10])
+
+    ax1_spfit_gal3 = fig_gs.add_subplot(gs[:4,10:15])
+    ax2_resid_gal3 = fig_gs.add_subplot(gs[4:5,10:15])
+
+    # ------------
+    ax1_spfit_gal4 = fig_gs.add_subplot(gs[5:9,:5])
+    ax2_resid_gal4 = fig_gs.add_subplot(gs[9:10,:5])
+
+    ax1_spfit_gal5 = fig_gs.add_subplot(gs[5:9,5:10])
+    ax2_resid_gal5 = fig_gs.add_subplot(gs[9:10,5:10])
+
+    ax1_spfit_gal6 = fig_gs.add_subplot(gs[5:9,10:15])
+    ax2_resid_gal6 = fig_gs.add_subplot(gs[9:10,10:15])
+
+    # ------------
+    ax1_spfit_gal7 = fig_gs.add_subplot(gs[10:14,:5])
+    ax2_resid_gal7 = fig_gs.add_subplot(gs[14:15,:5])
+
+    ax1_spfit_gal8 = fig_gs.add_subplot(gs[10:14,5:10])
+    ax2_resid_gal8 = fig_gs.add_subplot(gs[14:15,5:10])
+
+    ax1_spfit_gal9 = fig_gs.add_subplot(gs[10:14,10:15])
+    ax2_resid_gal9 = fig_gs.add_subplot(gs[14:15,10:15])
+
+    # ------------
+    ax1_spfit_gal10 = fig_gs.add_subplot(gs[15:19,:5])
+    ax2_resid_gal10 = fig_gs.add_subplot(gs[19:20,:5])
+
+    ax1_spfit_gal11 = fig_gs.add_subplot(gs[15:19,5:10])
+    ax2_resid_gal11 = fig_gs.add_subplot(gs[19:20,5:10])
+
+    ax1_spfit_gal12 = fig_gs.add_subplot(gs[15:19,10:15])
+    ax2_resid_gal12 = fig_gs.add_subplot(gs[19:20,10:15])
+
+    # container for all axes
+    all_axes = [ax1_spfit_gal1, ax2_resid_gal1, ax1_spfit_gal2, ax2_resid_gal2, \
+    ax1_spfit_gal3, ax2_resid_gal3, ax1_spfit_gal4, ax2_resid_gal4, \
+    ax1_spfit_gal5, ax2_resid_gal5, ax1_spfit_gal6, ax2_resid_gal6, \
+    ax1_spfit_gal7, ax2_resid_gal7, ax1_spfit_gal8, ax2_resid_gal8, \
+    ax1_spfit_gal9, ax2_resid_gal9, ax1_spfit_gal10, ax2_resid_gal10, \
+    ax1_spfit_gal11, ax2_resid_gal11, ax1_spfit_gal12, ax2_resid_gal12]
+
     # ---------------------------------------------- FITTING ----------------------------------------------- #
     # Loop over all the above ids and plot them on a grid
+    galaxy_count = 0
     for i in range(len(ids_to_plot)):
 
         current_id = ids_to_plot[i]
@@ -212,15 +253,15 @@ if __name__ == '__main__':
             zspec_arr = zspec_s
 
         id_idx = np.where(id_arr == current_id)[0]
-        current_zgrism = zgrism_arr[id_idx]
-        current_zgrism_lowerr = current_zgrism - zgrism_lowerr_arr[id_idx]
-        current_zgrism_uperr = zgrism_uperr_arr[id_idx] - current_zgrism
-        current_zspec = zspec_arr[id_idx]
-        current_zphot = zphot_arr[id_idx]
+        current_zgrism = float(zgrism_arr[id_idx])
+        current_zgrism_lowerr = float(current_zgrism - zgrism_lowerr_arr[id_idx])
+        current_zgrism_uperr = float(zgrism_uperr_arr[id_idx] - current_zgrism)
+        current_zspec = float(zspec_arr[id_idx])
+        current_zphot = float(zphot_arr[id_idx])
 
         # get data and then d4000
         lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, fieldname)
-        print current_id, fieldname, current_zgrism, current_zgrism_lowerr, current_zgrism_uperr, return_code
+        print '\n', current_id, fieldname, current_zgrism, current_zgrism_lowerr, current_zgrism_uperr, return_code
 
         lam_em = lam_obs / (1 + current_zgrism)
         flam_em = flam_obs * (1 + current_zgrism)
@@ -263,9 +304,72 @@ if __name__ == '__main__':
         resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
         resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
-        get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf, resampling_lam_grid, \
+        fig_gs = get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf, resampling_lam_grid, \
         model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
         current_id, fieldname, current_zgrism, current_zspec, current_zphot, d4000, d4000_err, \
-        current_zgrism_lowerr, current_zgrism_uperr)
+        current_zgrism_lowerr, current_zgrism_uperr, fig_gs, all_axes[2*galaxy_count], all_axes[2*galaxy_count + 1])
+
+        galaxy_count += 1
+
+    # clean up the plot
+    # ----------- axis labels ---------- #
+    ax1_spfit_gal7.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA]}$', fontsize=15)
+    ax1_spfit_gal7.yaxis.set_label_coords(-0.11, 1.1)
+    ax2_resid_gal11.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$', fontsize=15, labelpad=-0.05)
+    #ax.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
+
+    # Turn off tick labels for some of thtem
+    ax1_spfit_gal2.set_xticklabels([])
+    ax1_spfit_gal2.set_yticklabels([])
+    ax2_resid_gal2.set_xticklabels([])
+    ax2_resid_gal2.set_yticklabels([])
+
+    ax1_spfit_gal3.set_xticklabels([])
+    ax1_spfit_gal3.set_yticklabels([])
+    ax2_resid_gal3.set_xticklabels([])
+    ax2_resid_gal3.set_yticklabels([])
+
+    # ----------
+    ax1_spfit_gal5.set_xticklabels([])
+    ax1_spfit_gal5.set_yticklabels([])
+    ax2_resid_gal5.set_xticklabels([])
+    ax2_resid_gal5.set_yticklabels([])
+
+    ax1_spfit_gal6.set_xticklabels([])
+    ax1_spfit_gal6.set_yticklabels([])
+    ax2_resid_gal6.set_xticklabels([])
+    ax2_resid_gal6.set_yticklabels([])
+
+    # ----------
+    ax1_spfit_gal8.set_xticklabels([])
+    ax1_spfit_gal8.set_yticklabels([])
+    ax2_resid_gal8.set_xticklabels([])
+    ax2_resid_gal8.set_yticklabels([])
+
+    ax1_spfit_gal9.set_xticklabels([])
+    ax1_spfit_gal9.set_yticklabels([])
+    ax2_resid_gal9.set_xticklabels([])
+    ax2_resid_gal9.set_yticklabels([])
+
+    # --------
+    ax1_spfit_gal1.set_xticklabels([])
+    ax2_resid_gal1.set_xticklabels([])
+
+    ax1_spfit_gal4.set_xticklabels([])
+    ax2_resid_gal4.set_xticklabels([])
+
+    ax1_spfit_gal7.set_xticklabels([])
+    ax2_resid_gal7.set_xticklabels([])
+
+    ax1_spfit_gal10.set_xticklabels([])
+
+    # -----
+    ax1_spfit_gal11.set_yticklabels([])
+    ax2_resid_gal11.set_yticklabels([])
+
+    ax1_spfit_gal12.set_yticklabels([])
+    ax2_resid_gal12.set_yticklabels([])
+
+    fig.savefig(massive_figures_dir + 'example_spectra_grid.eps', dpi=300, bbox_inches='tight')
 
     sys.exit(0)
