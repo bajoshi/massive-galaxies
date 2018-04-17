@@ -118,7 +118,7 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     # Find stddev for the residuals
     resid = (z_spec - z_grism)/(1+z_spec)
     mu = np.mean(resid)
-    sigma = np.std(resid)
+    sigma_nmad = 1.48 * np.median(abs(((z_spec - z_grism) - np.median(z_spec - z_grism)) / (1 + z_spec)))
 
     #ax1.plot(x_plot, (mu+sigma) + (1+mu+sigma)*x_plot, '-', color='#3690c0', linewidth=2.0)
     #ax1.plot(x_plot, (mu-sigma) + (1+mu-sigma)*x_plot, '-', color='#3690c0', linewidth=2.0)
@@ -127,8 +127,8 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     ax2.plot(z_spec, (z_spec - z_grism)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
     ax2.axhline(y=0, linestyle='--', color='r')
 
-    ax2.axhline(y=mu + sigma, ls='-', color='#3690c0', linewidth=2.0)
-    ax2.axhline(y=mu - sigma, ls='-', color='#3690c0', linewidth=2.0)
+    ax2.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=2.0)
+    ax2.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=2.0)
     ax2.axhline(y=mu, ls='-', color='b', linewidth=2.0)
 
     ax2.set_xlim(0.6, 1.24)
@@ -163,7 +163,7 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     # Find stddev for the residuals
     resid = (z_spec - z_phot)/(1+z_spec)
     mu = np.mean(resid)
-    sigma = np.std(resid)
+    sigma_nmad = 1.48 * np.median(abs(((z_spec - z_phot) - np.median(z_spec - z_phot)) / (1 + z_spec)))
 
     #ax3.plot(x_plot, line_func(x_plot, popt[0] + sigma, popt[1]), '-', color='#3690c0', linewidth=2.0)
     #ax3.plot(x_plot, line_func(x_plot, popt[0] - sigma, popt[1]), '-', color='#3690c0', linewidth=2.0)
@@ -172,8 +172,8 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
     ax4.plot(z_spec, (z_spec - z_phot)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
     ax4.axhline(y=0, linestyle='--', color='r')
 
-    ax4.axhline(y=mu + sigma, ls='-', color='#3690c0', linewidth=2.0)
-    ax4.axhline(y=mu - sigma, ls='-', color='#3690c0', linewidth=2.0)
+    ax4.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=2.0)
+    ax4.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=2.0)
     ax4.axhline(y=mu, ls='-', color='blue', linewidth=2.0)
 
     ax4.set_xlim(0.6, 1.24)
@@ -184,44 +184,6 @@ def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
 
     ax4.set_xlabel(r'$\mathrm{z_s}$', fontsize=18)
     ax4.set_ylabel(r'$(\mathrm{z_s - z_p})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
-
-    # ------------------------------------------------------------------------------------------------- #
-    # third panel # z_spec vs z_phot
-    ax5.plot(z_grism, z_phot, 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
-    ax5.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
-
-    ax5.set_xlim(0.6, 1.24)
-    ax5.set_ylim(0.6, 1.24)
-
-    ax5.set_ylabel(r'$\mathrm{z_p}$', fontsize=18, labelpad=1)
-
-    ax5.xaxis.set_ticklabels([])
-    ax5.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
-
-    # Find stddev for the residuals
-    resid = (z_grism - z_phot)/(1+z_grism)
-    sigma = np.std(resid)
-
-    #ax5.plot(x_plot, x_plot + (1+x_plot)*sigma, '-', color='#3690c0', linewidth=2.0)
-    #ax5.plot(x_plot, x_plot - (1+x_plot)*sigma, '-', color='#3690c0', linewidth=2.0)
-    ax5.plot(x_plot, line_func(x_plot, popt[0], popt[1]), '-', color='#41ab5d', linewidth=2.0)
-
-    # residuals for third panel
-    ax6.plot(z_grism, (z_grism - z_phot)/(1+z_grism), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
-    ax6.axhline(y=0, linestyle='--', color='r')
-
-    ax6.axhline(y=mu + sigma, ls='-', color='#3690c0', linewidth=2.0)
-    ax6.axhline(y=mu - sigma, ls='-', color='#3690c0', linewidth=2.0)
-    ax6.axhline(y=mu, ls='-', color='blue', linewidth=2.0)
-
-    ax6.set_xlim(0.6, 1.24)
-    ax6.set_ylim(-0.1, 0.1)
-
-    ax6.set_xticklabels(ax6.get_xticks().tolist(), size='x-large', rotation=45)
-    ax6.set_yticklabels(ax6.get_yticks().tolist(), size='x-large', rotation=45)
-
-    ax6.set_xlabel(r'$\mathrm{z_g}$', fontsize=18)
-    ax6.set_ylabel(r'$(\mathrm{z_g - z_p})/(1+\mathrm{z_g})$', fontsize=18, labelpad=-2)
 
     fig_gs.savefig(massive_figures_dir + "zspec_comparison.eps", dpi=300, bbox_inches='tight')
 
@@ -249,7 +211,7 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh = 1.4
+    d4000_thresh = 1.5
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
@@ -275,8 +237,8 @@ if __name__ == '__main__':
     #print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), 
     #print "pass the D4000, NetSig, and overall error constraints."
 
-    make_zspec_comparison_plot(zspec_plot, zgrism_plot, zphot_plot)
-    sys.exit(0)
+    #make_zspec_comparison_plot(zspec_plot, zgrism_plot, zphot_plot)
+    #sys.exit(0)
 
     # plot
     fig = plt.figure()
@@ -296,6 +258,14 @@ if __name__ == '__main__':
     print "Grism-z resid std:", np.std(grism_resid_hist_arr)
     print "photo-z resid mean:", np.mean(photz_resid_hist_arr)
     print "photo-z resid std:", np.std(photz_resid_hist_arr)
+
+    sigma_nmad_grism = 1.48 * np.median(abs(((zspec_plot - zgrism_plot) - np.median(zspec_plot - zgrism_plot)) / (1 + zspec_plot)))
+    sigma_nmad_photo = 1.48 * np.median(abs(((zspec_plot - zphot_plot) - np.median(zspec_plot - zphot_plot)) / (1 + zspec_plot)))
+
+    print "Grism-z Sigma_NMAD:", sigma_nmad_grism
+    print "Photo-z Sigma_NMAD:", sigma_nmad_photo
+
+    sys.exit(0)
 
     large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.04)[0]
     np.set_printoptions(precision=2, suppress=True)
