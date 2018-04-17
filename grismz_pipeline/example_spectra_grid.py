@@ -24,6 +24,7 @@ figs_dir = home + "/Desktop/FIGS/"
 sys.path.append(massive_galaxies_dir + 'grism_pipeline/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
+import mag_hist as mh
 import model_mods_cython_copytoedit as model_mods_cython
 import new_refine_grismz_gridsearch_parallel as ngp
 import dn4000_catalog as dc
@@ -88,6 +89,11 @@ def get_best_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, resampling_lam_gri
 def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, chi2, d4000, d4000_err, fig, ax1, ax2):
 
+    # define colors
+    myblue = mh.rgb_to_hex(0, 100, 180)
+    myred = mh.rgb_to_hex(214, 39, 40)  # tableau 20 red
+
+    # plot
     ax1.plot(lam_obs, flam_obs, ls='-', color='k')
     ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
     ax1.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
@@ -108,20 +114,23 @@ def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalph
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
-    ax1.text(0.45, 0.36, \
+    ax1.text(0.45, 0.42, \
     r'$\mathrm{z_{grism}\, =\,}$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.45, 0.29, r'$\mathrm{z_{spec}\, =\,}$' + "{:.4}".format(specz), \
+    ax1.text(0.45, 0.3, r'$\mathrm{z_{spec}\, =\,}$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.45, 0.22, r'$\mathrm{z_{phot}\, =\,}$' + "{:.4}".format(photoz), \
+    ax1.text(0.45, 0.23, r'$\mathrm{z_{phot}\, =\,}$' + "{:.4}".format(photoz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
-    ax1.text(0.45, 0.15, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.45, 0.13, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
+
+    # add horizontal line to residual plot
+    ax2.axhline(y=0.0, ls='--', color=myblue)
 
     return fig, ax1, ax2
 
