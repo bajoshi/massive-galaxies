@@ -6,6 +6,7 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -136,7 +137,7 @@ if __name__ == '__main__':
     ax.hist(imag_onep, 24, color='k', range=[18,26], ls='--', histtype='step', align='mid', zorder=10, \
         label=r'$\mathrm{\frac{\left<\sigma_{grism}\right>}{1+z_{grism}} \leq 0.01;}$' + r'$\mathrm{N}$' + '=' + str(total_onep_within_imag_range))
 
-    ax.grid(True, color='lavender')
+    ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
 
     ax.legend(loc='upper left', frameon=False, fontsize=13)
 
@@ -165,7 +166,7 @@ if __name__ == '__main__':
 
     ax.hist(avg_error, totalbins, color='k', ls='-', histtype='step', align='mid', zorder=10)
 
-    ax.grid(True, color='lavender')
+    ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
 
     ax.set_xlabel(r'$\mathrm{\frac{\left<\sigma_{grism}\right>}{1+z_{grism}}}$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
