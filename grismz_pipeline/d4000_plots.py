@@ -211,7 +211,7 @@ def make_d4000_hist():
     ax.grid(True)
 
     # shade the selection region
-    edges_plot = np.where(edges >= 1.5)[0]
+    edges_plot = np.where(edges >= 1.4)[0]
     patches_plot = [patches[edge_ind] for edge_ind in edges_plot[:-1]]
     # I put in the [:-1] because for some reason edges was 1 element longer than patches
     col = np.full(len(patches_plot), 'lightblue', dtype='|S9')
@@ -227,8 +227,43 @@ def make_d4000_hist():
 
     return None
 
+def make_redshift_hist():
+
+    # read arrays
+    zgrism_n = np.load(massive_figures_dir + 'full_run/zgrism_list_gn.npy')
+    zgrism_s = np.load(massive_figures_dir + 'full_run/zgrism_list_gs.npy')
+
+    # concatenate
+    redshift_pears_arr = np.concatenate((zgrism_n, zgrism_s))
+
+    # Only consider finite elements
+    valid_idx = np.where(np.isfinite(redshift_pears_arr))[0]
+    redshift_pears_plot = redshift_pears_arr[valid_idx]
+
+    # ----------------------- PLOT ----------------------- #
+    # PEARS dn4000 histogram
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # get total bins and plot histogram
+    iqr = np.std(redshift_pears_plot, dtype=np.float64)
+    binsize = 2*iqr*np.power(len(redshift_pears_plot),-1/3)
+    totalbins = np.floor((max(redshift_pears_plot) - min(redshift_pears_plot))/binsize)
+
+    ncount, edges, patches = ax.hist(redshift_pears_plot, totalbins, \
+        color='red', histtype='step', align='mid', zorder=10)
+    ax.grid(True)
+
+    ax.set_xlabel(r'$\mathrm{z_{grism}}$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
+
+    # save figure
+    fig.savefig(massive_figures_dir + 'pears_redshift_hist.eps', dpi=300, bbox_inches='tight')
+
+    return None
+
 if __name__ == '__main__':
     
-    make_d4000_hist()
+    make_redshift_hist()
 
     sys.exit(0)

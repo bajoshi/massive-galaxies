@@ -100,26 +100,26 @@ def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalph
     ax2.minorticks_on()
 
     # text for info
-    ax1.text(0.1, 0.95, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.05, 0.95, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=9)
 
-    ax1.text(0.1, 0.9, \
-    r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
-    verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.1, 0.85, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
-    verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.1, 0.8, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
+    ax1.text(0.05, 0.87, r'$\mathrm{D4000\, =\,}$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
-    ax1.text(0.1, 0.75, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.45, 0.36, \
+    r'$\mathrm{z_{grism}\, =\,}$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.45, 0.29, r'$\mathrm{z_{spec}\, =\,}$' + "{:.4}".format(specz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.45, 0.22, r'$\mathrm{z_{phot}\, =\,}$' + "{:.4}".format(photoz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
-    ax1.text(0.1, 0.7, r'$\mathrm{D4000\, =\, }$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
+    ax1.text(0.45, 0.15, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
@@ -362,14 +362,43 @@ if __name__ == '__main__':
     ax2_resid_gal7.set_xticklabels([])
 
     ax1_spfit_gal10.set_xticklabels([])
+    ax1_spfit_gal11.set_xticklabels([])
+    ax1_spfit_gal12.set_xticklabels([])
 
-    # -----
+    # -------
     ax1_spfit_gal11.set_yticklabels([])
     ax2_resid_gal11.set_yticklabels([])
 
     ax1_spfit_gal12.set_yticklabels([])
     ax2_resid_gal12.set_yticklabels([])
 
-    fig.savefig(massive_figures_dir + 'example_spectra_grid.eps', dpi=300, bbox_inches='tight')
+    # --------
+    ax1_spfit_gal1.set_yticklabels([])
+    ax1_spfit_gal4.set_yticklabels([])
+    ax1_spfit_gal7.set_yticklabels([])
+    ax1_spfit_gal10.set_yticklabels([])
+
+    # -------------- Limits -------------- #
+    ax2_resid_gal1.set_ylim(-3,3)
+    ax2_resid_gal2.set_ylim(-3,3)
+    ax2_resid_gal3.set_ylim(-3,3)
+
+    # ------------
+    ax2_resid_gal4.set_ylim(-3,3)
+    ax2_resid_gal5.set_ylim(-3,3)
+    ax2_resid_gal6.set_ylim(-3,3)
+
+    # ------------
+    ax2_resid_gal7.set_ylim(-3,3)
+    ax2_resid_gal8.set_ylim(-3,3)
+    ax2_resid_gal9.set_ylim(-3,3)
+
+    # ------------
+    ax2_resid_gal10.set_ylim(-3,3)
+    ax2_resid_gal11.set_ylim(-3,3)
+    ax2_resid_gal12.set_ylim(-3,3)
+
+    #----------------
+    fig_gs.savefig(massive_figures_dir + 'example_spectra_grid.eps', dpi=300, bbox_inches='tight')
 
     sys.exit(0)
