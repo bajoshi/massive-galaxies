@@ -425,12 +425,14 @@ def get_data(pears_index, field):
         print pears_index, " in ", field, " has an too high a level of contamination.",
         print "Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped."
         return_code = 0
+        fitsfile.close()
         return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Check that input wavelength array is not empty
     if not lam_obs.size:
         print pears_index, " in ", field, " has an empty wav array. Returning empty array..."
         return_code = 0
+        fitsfile.close()
         return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Now chop off the ends and only look at the observed spectrum from 6000A to 9500A
@@ -446,6 +448,7 @@ def get_data(pears_index, field):
     flam_obs -= contam
     
     return_code = 1
+    fitsfile.close()
     return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
 if __name__ == '__main__':

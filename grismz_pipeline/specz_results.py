@@ -254,16 +254,18 @@ if __name__ == '__main__':
     grism_resid_hist_arr = (zspec_plot - zgrism_plot)/(1+zspec_plot)
     photz_resid_hist_arr = (zspec_plot - zphot_plot)/(1+zspec_plot)
 
-    print "Grism-z resid mean:", np.mean(grism_resid_hist_arr)
-    print "Grism-z resid std:", np.std(grism_resid_hist_arr)
-    print "photo-z resid mean:", np.mean(photz_resid_hist_arr)
-    print "photo-z resid std:", np.std(photz_resid_hist_arr)
+    sigma_nmad_grism = 1.48 * np.median(abs(((zspec_plot - zgrism_plot) - np.median((zspec_plot - zgrism_plot))) / (1 + zspec_plot)))
+    sigma_nmad_photo = 1.48 * np.median(abs(((zspec_plot - zphot_plot) - np.median((zspec_plot - zphot_plot))) / (1 + zspec_plot)))
 
-    sigma_nmad_grism = 1.48 * np.median(abs(((zspec_plot - zgrism_plot) - np.median(zspec_plot - zgrism_plot)) / (1 + zspec_plot)))
-    sigma_nmad_photo = 1.48 * np.median(abs(((zspec_plot - zphot_plot) - np.median(zspec_plot - zphot_plot)) / (1 + zspec_plot)))
+    print "Photo-z resid mean:", "{:.4}".format(np.mean(photz_resid_hist_arr))
+    print "Photo-z Sigma_NMAD:", "{:.4}".format(sigma_nmad_photo)
+    print "Grism-z resid mean:", "{:.4}".format(np.mean(grism_resid_hist_arr))
+    print "Grism-z Sigma_NMAD:", "{:.4}".format(sigma_nmad_grism)
 
-    print "Grism-z Sigma_NMAD:", sigma_nmad_grism
-    print "Photo-z Sigma_NMAD:", sigma_nmad_photo
+    print "{:.4}".format(np.mean(photz_resid_hist_arr)), "&",
+    print "{:.4}".format(sigma_nmad_photo), "&",
+    print "{:.4}".format(np.mean(grism_resid_hist_arr)), "&",
+    print "{:.4}".format(sigma_nmad_grism), "\\\ "
 
     sys.exit(0)
 

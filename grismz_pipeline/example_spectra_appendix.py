@@ -168,7 +168,8 @@ def plot_individual(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, b
     # add horizontal line to residual plot
     ax2.axhline(y=0.0, ls='--', color=myblue)
 
-    fig.savefig(figs_dir + 'massive-galaxies-figures/fits_for_d4000_geq_1p4/' + obj_field + '_' + str(obj_id) + '.png', \
+    fig.savefig(figs_dir + 'massive-galaxies-figures/fits_for_d4000_geq_1p3/failures/' \
+        + obj_field + '_' + str(obj_id) + '.png', \
         dpi=300, bbox_inches='tight')
 
     return None
@@ -273,50 +274,59 @@ if __name__ == '__main__':
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
             # check d4000
-            d4000_thresh = 1.4
+            d4000_thresh = 1.3
             if d4000 < d4000_thresh:
                 continue
             elif d4000 >= d4000_thresh:
 
-                # Read in LSF
-                if fieldname == 'GOODS-N':
-                    lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
-                elif fieldname == 'GOODS-S':
-                    lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+                avg_error = (current_zgrism_lowerr + current_zgrism_uperr) / 2
 
-                # read in LSF file
-                lsf = np.genfromtxt(lsf_filename)
-                lsf = lsf.astype(np.float64)  # Force dtype for cython code
+                if current_zspec != -99.0:
+                    avg_error /= (1+current_zspec)
+                else:
+                    avg_error /= (1+current_zgrism)
 
-                # -------- Broaden the LSF ------- #
-                # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
-                # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
-                lsf_length = len(lsf)
-                gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
-                fit_gauss = fitting.LevMarLSQFitter()
-                x_arr = np.arange(lsf_length)
-                g = fit_gauss(gauss_init, x_arr, lsf)
-                # get fit std.dev. and create a gaussian kernel with which to broaden
-                kernel_std = 1.118 * g.parameters[2]
-                broaden_kernel = Gaussian1DKernel(kernel_std)
-                # broaden LSF
-                broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
-                broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
+                if avg_error > 0.08:  # i.e. only plot the failures for now
 
-                # ------- Make new resampling grid ------- # 
-                # extend lam_grid to be able to move the lam_grid later 
-                avg_dlam = old_ref.get_avg_dlam(lam_obs)
+                    # Read in LSF
+                    if fieldname == 'GOODS-N':
+                        lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+                    elif fieldname == 'GOODS-S':
+                        lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
 
-                lam_low_to_insert = np.arange(5000, lam_obs[0], avg_dlam, dtype=np.float64)
-                lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 10500, avg_dlam, dtype=np.float64)
+                    # read in LSF file
+                    lsf = np.genfromtxt(lsf_filename)
+                    lsf = lsf.astype(np.float64)  # Force dtype for cython code
 
-                resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
-                resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+                    # -------- Broaden the LSF ------- #
+                    # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
+                    # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
+                    lsf_length = len(lsf)
+                    gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
+                    fit_gauss = fitting.LevMarLSQFitter()
+                    x_arr = np.arange(lsf_length)
+                    g = fit_gauss(gauss_init, x_arr, lsf)
+                    # get fit std.dev. and create a gaussian kernel with which to broaden
+                    kernel_std = 1.118 * g.parameters[2]
+                    broaden_kernel = Gaussian1DKernel(kernel_std)
+                    # broaden LSF
+                    broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
+                    broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
 
-                fig_gs = fit_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf, resampling_lam_grid, \
-                model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
-                current_id, fieldname, current_zgrism, current_zspec, current_zphot, d4000, d4000_err, \
-                current_zgrism_lowerr, current_zgrism_uperr)
+                    # ------- Make new resampling grid ------- # 
+                    # extend lam_grid to be able to move the lam_grid later 
+                    avg_dlam = old_ref.get_avg_dlam(lam_obs)
+
+                    lam_low_to_insert = np.arange(5000, lam_obs[0], avg_dlam, dtype=np.float64)
+                    lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 10500, avg_dlam, dtype=np.float64)
+
+                    resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
+                    resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+
+                    fig_gs = fit_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf, resampling_lam_grid, \
+                    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
+                    current_id, fieldname, current_zgrism, current_zspec, current_zphot, d4000, d4000_err, \
+                    current_zgrism_lowerr, current_zgrism_uperr)
 
         fieldcount += 1
 
