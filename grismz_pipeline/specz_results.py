@@ -73,119 +73,247 @@ def get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_go
 def line_func(x, slope, intercept):
     return slope*x + intercept
 
-def make_zspec_comparison_plot(z_spec, z_grism, z_phot):
+def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, z_grism_1p5, z_phot_1p5):
 
     import matplotlib as mpl
     import matplotlib.gridspec as gridspec
     from scipy.optimize import curve_fit
 
     mpl.rcParams['axes.grid'] = True
+    mpl.rcParams['grid.color'] = mh.rgb_to_hex(240, 240, 240)
 
     # z_grism vs z_phot vs z_spec plot
-    gs = gridspec.GridSpec(15,34)
+    gs = gridspec.GridSpec(20,10)
     gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=2.0, hspace=0.0)
 
-    fig_gs = plt.figure(figsize=(13, 9))
-    ax1 = fig_gs.add_subplot(gs[:10,:10])
-    ax2 = fig_gs.add_subplot(gs[10:,:10])
-    ax3 = fig_gs.add_subplot(gs[:10,12:22])
-    ax4 = fig_gs.add_subplot(gs[10:,12:22])
-    ax5 = fig_gs.add_subplot(gs[:10,24:])
-    ax6 = fig_gs.add_subplot(gs[10:,24:])
+    fig_gs = plt.figure(figsize=(10, 10))
+    ax1 = fig_gs.add_subplot(gs[:8,:5])
+    ax2 = fig_gs.add_subplot(gs[8:10,:5])
+    
+    ax3 = fig_gs.add_subplot(gs[:8,5:])
+    ax4 = fig_gs.add_subplot(gs[8:10,5:])
+    
+    ax5 = fig_gs.add_subplot(gs[10:18,:5])
+    ax6 = fig_gs.add_subplot(gs[18:,:5])
+
+    ax7 = fig_gs.add_subplot(gs[10:18,5:])
+    ax8 = fig_gs.add_subplot(gs[18:,5:])
 
     # ------------------------------------------------------------------------------------------------- #
-    # first panel # z_spec vs z_grism
-    ax1.plot(z_spec, z_grism, 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
+    # first panel # z_spec vs z_phot # D4000>1.4
+    ax1.plot(z_spec_1p4, z_phot_1p4, 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
     ax1.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
 
     ax1.set_xlim(0.6, 1.24)
     ax1.set_ylim(0.6, 1.24)
 
-    ax1.set_ylabel(r'$\mathrm{z_g}$', fontsize=18, labelpad=1)
+    ax1.set_ylabel(r'$\mathrm{z_p}$', fontsize=18, labelpad=-2)
 
     ax1.xaxis.set_ticklabels([])
-    ax1.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
+    ax1.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='large', rotation=45)
 
     # do the fit with scipy
-    popt, pcov = curve_fit(line_func, z_spec, z_grism, p0=[1.0, 0.6])
-    #print popt
-    #print pcov
+    popt, pcov = curve_fit(line_func, z_spec_1p4, z_phot_1p4, p0=[1.0, 0.6])
 
     # plot line fit
     x_plot = np.arange(0.2,1.5,0.01)
     ax1.plot(x_plot, line_func(x_plot, popt[0], popt[1]), '-', color='#41ab5d', linewidth=2.0)
 
     # Find stddev for the residuals
-    resid = (z_spec - z_grism)/(1+z_spec)
+    resid = (z_spec_1p4 - z_phot_1p4)/(1+z_spec_1p4)
     mu = np.mean(resid)
-    sigma_nmad = 1.48 * np.median(abs(((z_spec - z_grism) - np.median(z_spec - z_grism)) / (1 + z_spec)))
+    sigma_nmad = 1.48 * np.median(abs(((z_spec_1p4 - z_phot_1p4) - np.median((z_spec_1p4 - z_phot_1p4))) / (1 + z_spec_1p4)))
 
-    #ax1.plot(x_plot, (mu+sigma) + (1+mu+sigma)*x_plot, '-', color='#3690c0', linewidth=2.0)
-    #ax1.plot(x_plot, (mu-sigma) + (1+mu-sigma)*x_plot, '-', color='#3690c0', linewidth=2.0)
+    #ax1.plot(x_plot, line_func(x_plot, popt[0] + sigma, popt[1]), '-', color='#3690c0', linewidth=2.0)
+    #ax1.plot(x_plot, line_func(x_plot, popt[0] - sigma, popt[1]), '-', color='#3690c0', linewidth=2.0)
 
-    # residuals for first panel
-    ax2.plot(z_spec, (z_spec - z_grism)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
+    # Info text 
+    ax1.text(0.05, 0.93, r'$\mathrm{D4000\geq 1.4}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=17)
+    ax1.text(0.05, 0.83, r'$\mathrm{N=57}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=17)
+
+    ax1.axhline(y=0.75, xmin=0.52, xmax=0.64, ls='-', lw=2.0, color='#41ab5d')
+    ax1.text(0.65, 0.26, 'Best fit line', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=14)
+
+    ax1.axhline(y=0.7, xmin=0.52, xmax=0.64, ls='-', lw=2.0, color='blue')
+    ax1.text(0.65, 0.18, 'Residual Mean', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=14)
+
+    ax1.axhline(y=0.65, xmin=0.52, xmax=0.64, ls='-', lw=2.0, color='#3690c0')
+    ax1.text(0.65, 0.1, r'$\mathrm{\pm 1\ \sigma_{NMAD}}$', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=14)
+
+    # ------- residuals for first panel ------- #
+    ax2.plot(z_spec_1p4, (z_spec_1p4 - z_phot_1p4)/(1+z_spec_1p4), 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
     ax2.axhline(y=0, linestyle='--', color='r')
 
-    ax2.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=2.0)
-    ax2.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=2.0)
-    ax2.axhline(y=mu, ls='-', color='b', linewidth=2.0)
+    ax2.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax2.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax2.axhline(y=mu, ls='-', color='blue', linewidth=1.5)
 
     ax2.set_xlim(0.6, 1.24)
     ax2.set_ylim(-0.1, 0.1)
 
-    ax2.set_xticklabels(ax2.get_xticks().tolist(), size='x-large', rotation=45)
-    ax2.set_yticklabels(ax2.get_yticks().tolist(), size='x-large', rotation=45)
-
-    ax2.set_xlabel(r'$\mathrm{z_s}$', fontsize=18)
-    ax2.set_ylabel(r'$(\mathrm{z_s - z_g})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
+    ax2.set_xticklabels([])
+    ax2.set_yticklabels(ax2.get_yticks().tolist(), size='large', rotation=45)
+    ax2.set_ylabel('Residuals', fontsize=16, labelpad=-1)
+    #ax2.set_ylabel(r'$(\mathrm{z_s - z_p})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
 
     # ------------------------------------------------------------------------------------------------- #
-    # second panel # z_spec vs z_phot
-    ax3.plot(z_spec, z_phot, 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
+    # second panel # z_spec vs z_grism # D4000>1.4
+    ax3.plot(z_spec_1p4, z_grism_1p4, 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
     ax3.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
 
     ax3.set_xlim(0.6, 1.24)
     ax3.set_ylim(0.6, 1.24)
 
-    ax3.set_ylabel(r'$\mathrm{z_p}$', fontsize=18, labelpad=1)
+    ax3.set_ylabel(r'$\mathrm{z_g}$', fontsize=18, labelpad=-2)
 
     ax3.xaxis.set_ticklabels([])
-    ax3.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='x-large', rotation=45)
+    ax3.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='large', rotation=45)
 
     # do the fit with scipy
-    popt, pcov = curve_fit(line_func, z_spec, z_phot, p0=[1.0, 0.6])
+    popt, pcov = curve_fit(line_func, z_spec_1p4, z_grism_1p4, p0=[1.0, 0.6])
 
     # plot line fit
     x_plot = np.arange(0.2,1.5,0.01)
     ax3.plot(x_plot, line_func(x_plot, popt[0], popt[1]), '-', color='#41ab5d', linewidth=2.0)
 
     # Find stddev for the residuals
-    resid = (z_spec - z_phot)/(1+z_spec)
+    resid = (z_spec_1p4 - z_grism_1p4)/(1+z_spec_1p4)
     mu = np.mean(resid)
-    sigma_nmad = 1.48 * np.median(abs(((z_spec - z_phot) - np.median(z_spec - z_phot)) / (1 + z_spec)))
+    sigma_nmad = 1.48 * np.median(abs(((z_spec_1p4 - z_grism_1p4) - np.median((z_spec_1p4 - z_grism_1p4))) / (1 + z_spec_1p4)))
 
-    #ax3.plot(x_plot, line_func(x_plot, popt[0] + sigma, popt[1]), '-', color='#3690c0', linewidth=2.0)
-    #ax3.plot(x_plot, line_func(x_plot, popt[0] - sigma, popt[1]), '-', color='#3690c0', linewidth=2.0)
+    # Info text 
+    ax3.text(0.05, 0.93, r'$\mathrm{D4000\geq 1.4}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=17)
+    ax3.text(0.05, 0.83, r'$\mathrm{N=57}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=17)
 
-    # residuals for second panel
-    ax4.plot(z_spec, (z_spec - z_phot)/(1+z_spec), 'o', markersize=5.0, color='k', markeredgecolor='k', zorder=10)
+    # ------- residuals for second panel ------- #
+    ax4.plot(z_spec_1p4, (z_spec_1p4 - z_grism_1p4)/(1+z_spec_1p4), 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
     ax4.axhline(y=0, linestyle='--', color='r')
 
-    ax4.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=2.0)
-    ax4.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=2.0)
-    ax4.axhline(y=mu, ls='-', color='blue', linewidth=2.0)
+    ax4.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax4.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax4.axhline(y=mu, ls='-', color='b', linewidth=1.5)
 
     ax4.set_xlim(0.6, 1.24)
     ax4.set_ylim(-0.1, 0.1)
 
-    ax4.set_xticklabels(ax4.get_xticks().tolist(), size='x-large', rotation=45)
-    ax4.set_yticklabels(ax4.get_yticks().tolist(), size='x-large', rotation=45)
+    ax4.set_xticklabels([])
+    ax4.set_yticklabels(ax4.get_yticks().tolist(), size='large', rotation=45)
+    ax4.set_ylabel('Residuals', fontsize=16, labelpad=-1)
+    #ax4.set_ylabel(r'$(\mathrm{z_s - z_g})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
 
-    ax4.set_xlabel(r'$\mathrm{z_s}$', fontsize=18)
-    ax4.set_ylabel(r'$(\mathrm{z_s - z_p})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
+    # ------------------------------------------------------------------------------------------------- #
+    # third panel # z_spec vs z_phot # D4000>1.5
+    ax5.plot(z_spec_1p5, z_phot_1p5, 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
+    ax5.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
 
-    fig_gs.savefig(massive_figures_dir + "zspec_comparison.eps", dpi=300, bbox_inches='tight')
+    ax5.set_xlim(0.6, 1.24)
+    ax5.set_ylim(0.6, 1.24)
+
+    ax5.set_ylabel(r'$\mathrm{z_p}$', fontsize=18, labelpad=-1)
+
+    ax5.xaxis.set_ticklabels([])
+    ax5.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='large', rotation=45)
+
+    # do the fit with scipy
+    popt, pcov = curve_fit(line_func, z_spec_1p5, z_phot_1p5, p0=[1.0, 0.6])
+
+    # plot line fit
+    x_plot = np.arange(0.2,1.5,0.01)
+    ax5.plot(x_plot, line_func(x_plot, popt[0], popt[1]), '-', color='#41ab5d', linewidth=2.0)
+
+    # Find stddev for the residuals
+    resid = (z_spec_1p5 - z_phot_1p5)/(1+z_spec_1p5)
+    mu = np.mean(resid)
+    sigma_nmad = 1.48 * np.median(abs(((z_spec_1p5 - z_phot_1p5) - np.median((z_spec_1p5 - z_phot_1p5))) / (1 + z_spec_1p5)))
+
+    # Info text 
+    ax5.text(0.05, 0.93, r'$\mathrm{D4000\geq 1.5}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax5.transAxes, color='k', size=17)
+    ax5.text(0.05, 0.83, r'$\mathrm{N=40}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax5.transAxes, color='k', size=17)
+
+    # ------- residuals for third panel ------- #
+    ax6.plot(z_spec_1p5, (z_spec_1p5 - z_phot_1p5)/(1+z_spec_1p5), 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
+    ax6.axhline(y=0, linestyle='--', color='r')
+
+    ax6.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax6.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax6.axhline(y=mu, ls='-', color='blue', linewidth=1.5)
+
+    ax6.set_xlim(0.6, 1.24)
+    ax6.set_ylim(-0.1, 0.1)
+
+    ax6.set_xticklabels(ax6.get_xticks().tolist(), size='large', rotation=45)
+    ax6.set_yticklabels(ax6.get_yticks().tolist(), size='large', rotation=45)
+    ax6.set_xlabel(r'$\mathrm{z_s}$', fontsize=18)
+    ax6.set_ylabel('Residuals', fontsize=16, labelpad=-1)
+    #ax6.set_ylabel(r'$(\mathrm{z_s - z_p})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
+
+    # ------------------------------------------------------------------------------------------------- #
+    # fourth panel # z_spec vs z_grism # D4000>1.4
+    ax7.plot(z_spec_1p5, z_grism_1p5, 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
+    ax7.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
+
+    ax7.set_xlim(0.6, 1.24)
+    ax7.set_ylim(0.6, 1.24)
+
+    ax7.set_ylabel(r'$\mathrm{z_g}$', fontsize=18, labelpad=-2)
+
+    ax7.xaxis.set_ticklabels([])
+    ax7.yaxis.set_ticklabels(['', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2'], fontsize='large', rotation=45)
+
+    # do the fit with scipy
+    popt, pcov = curve_fit(line_func, z_spec_1p5, z_grism_1p5, p0=[1.0, 0.6])
+
+    # plot line fit
+    x_plot = np.arange(0.2,1.5,0.01)
+    ax7.plot(x_plot, line_func(x_plot, popt[0], popt[1]), '-', color='#41ab5d', linewidth=2.0)
+
+    # Find stddev for the residuals
+    resid = (z_spec_1p5 - z_grism_1p5)/(1+z_spec_1p5)
+    mu = np.mean(resid)
+    sigma_nmad = 1.48 * np.median(abs(((z_spec_1p5 - z_grism_1p5) - np.median((z_spec_1p5 - z_grism_1p5))) / (1 + z_spec_1p5)))
+
+    # Info text 
+    ax7.text(0.05, 0.93, r'$\mathrm{D4000\geq 1.5}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax7.transAxes, color='k', size=17)
+    ax7.text(0.05, 0.83, r'$\mathrm{N=40}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax7.transAxes, color='k', size=17)
+
+    # residuals for fourth panel
+    ax8.plot(z_spec_1p5, (z_spec_1p5 - z_grism_1p5)/(1+z_spec_1p5), 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
+    ax8.axhline(y=0, linestyle='--', color='r')
+
+    ax8.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax8.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax8.axhline(y=mu, ls='-', color='b', linewidth=1.5)
+
+    ax8.set_xlim(0.6, 1.24)
+    ax8.set_ylim(-0.1, 0.1)
+
+    ax8.set_xticklabels(ax8.get_xticks().tolist(), size='large', rotation=45)
+    ax8.set_yticklabels(ax8.get_yticks().tolist(), size='large', rotation=45)
+    ax8.set_xlabel(r'$\mathrm{z_s}$', fontsize=18)
+    ax8.set_ylabel('Residuals', fontsize=16, labelpad=-1)
+    #ax8.set_ylabel(r'$(\mathrm{z_s - z_g})/(1+\mathrm{z_s})$', fontsize=18, labelpad=-2)
+
+    # Save
+    fig_gs.savefig(massive_figures_dir + "zspec_comparison_newgrid.eps", dpi=300, bbox_inches='tight')
 
     return None
 
@@ -211,13 +339,13 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh = 1.5
+    d4000_thresh = 1.4
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
     valid_idx4 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
     valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4))
-    # I'm not making a cut on netsig 
+    # I'm not making a cut on netsig here
 
     id_plot = id_arr[valid_idx]
     field_plot = field_arr[valid_idx]
@@ -227,18 +355,35 @@ if __name__ == '__main__':
     chi2_plot = chi2_arr[valid_idx]
     netsig_plot = netsig_arr[valid_idx]
 
-    d4000_arr = d4000_arr[valid_idx]
-    d4000_err_arr = d4000_err_arr[valid_idx]
-    specz_qual_arr = specz_qual_arr[valid_idx]
-    specz_source_arr = specz_source_arr[valid_idx]
+    #d4000_plot = d4000_arr[valid_idx]
+    #d4000_err_plot = d4000_err_arr[valid_idx]
+    #specz_qual_plot = specz_qual_arr[valid_idx]
+    #specz_source_plot = specz_source_arr[valid_idx]
 
     N_gal = len(zgrism_plot)
     print N_gal, "galaxies in plot."
     #print "Only", len(zspec_plot), "galaxies within the", len(spec_res_cat), 
     #print "pass the D4000, NetSig, and overall error constraints."
 
-    #make_zspec_comparison_plot(zspec_plot, zgrism_plot, zphot_plot)
-    #sys.exit(0)
+    # ---------- This block below is only for the zspec comparison plot ----------- #
+    zspec_plot_1p4 = zspec_plot
+    zgrism_plot_1p4 = zgrism_plot
+    zphot_plot_1p4 = zphot_plot
+
+    chi2_thresh = 2.0
+    d4000_thresh = 1.5
+    valid_idx1_1p5 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
+    valid_idx2_1p5 = np.where(chi2_arr < chi2_thresh)[0]
+    valid_idx3_1p5 = np.where(d4000_arr >= d4000_thresh)[0]
+    valid_idx4_1p5 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
+    valid_idx_new = reduce(np.intersect1d, (valid_idx1_1p5, valid_idx2_1p5, valid_idx3_1p5, valid_idx4_1p5))
+
+    zspec_plot_1p5 = zspec_arr[valid_idx_new]
+    zgrism_plot_1p5 = zgrism_arr[valid_idx_new]
+    zphot_plot_1p5 = zphot_arr[valid_idx_new]
+
+    make_zspec_comparison_plot(zspec_plot_1p4, zgrism_plot_1p4, zphot_plot_1p4, zspec_plot_1p5, zgrism_plot_1p5, zphot_plot_1p5)
+    sys.exit(0)
 
     # plot
     fig = plt.figure()
@@ -266,8 +411,6 @@ if __name__ == '__main__':
     print "{:.4}".format(sigma_nmad_photo), "&",
     print "{:.4}".format(np.mean(grism_resid_hist_arr)), "&",
     print "{:.4}".format(sigma_nmad_grism), "\\\ "
-
-    sys.exit(0)
 
     large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.04)[0]
     np.set_printoptions(precision=2, suppress=True)
