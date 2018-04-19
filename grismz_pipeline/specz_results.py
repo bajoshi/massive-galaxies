@@ -84,7 +84,7 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
 
     # z_grism vs z_phot vs z_spec plot
     gs = gridspec.GridSpec(20,10)
-    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=2.0, hspace=0.0)
+    gs.update(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=2.1, hspace=0.0)
 
     fig_gs = plt.figure(figsize=(10, 10))
     ax1 = fig_gs.add_subplot(gs[:8,:5])
@@ -132,6 +132,9 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=17)
     ax1.text(0.05, 0.83, r'$\mathrm{N=57}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=17)
+    ax1.text(0.05, 0.73, r'$\mathrm{(a)}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=17)
 
@@ -195,6 +198,9 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     ax3.text(0.05, 0.83, r'$\mathrm{N=57}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax3.transAxes, color='k', size=17)
+    ax3.text(0.05, 0.73, r'$\mathrm{(b)}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=17)
 
     # ------- residuals for second panel ------- #
     ax4.plot(z_spec_1p4, (z_spec_1p4 - z_grism_1p4)/(1+z_spec_1p4), 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
@@ -242,6 +248,9 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     verticalalignment='top', horizontalalignment='left', \
     transform=ax5.transAxes, color='k', size=17)
     ax5.text(0.05, 0.83, r'$\mathrm{N=40}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax5.transAxes, color='k', size=17)
+    ax5.text(0.05, 0.73, r'$\mathrm{(c)}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax5.transAxes, color='k', size=17)
 
@@ -292,6 +301,9 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     verticalalignment='top', horizontalalignment='left', \
     transform=ax7.transAxes, color='k', size=17)
     ax7.text(0.05, 0.83, r'$\mathrm{N=40}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax7.transAxes, color='k', size=17)
+    ax7.text(0.05, 0.73, r'$\mathrm{(d)}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax7.transAxes, color='k', size=17)
 
