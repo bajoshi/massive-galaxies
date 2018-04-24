@@ -13,7 +13,7 @@ import sys
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Polygon
 
 home = os.getenv('HOME')
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     
     norm = ImageNormalize(hdu[0].data, interval=ZScaleInterval(), stretch=LogStretch())
     orig_cmap = mpl.cm.Greys
-    #im = ax.imshow(hdu[0].data, origin='lower', cmap=orig_cmap, vmin=0.0, vmax=3.0, norm=norm)
+    im = ax.imshow(hdu[0].data, origin='lower', cmap=orig_cmap, vmin=0.0, vmax=3.0, norm=norm)
 
     # Set grid etc.
     #ax.set_autoscale_on(False)
@@ -50,11 +50,11 @@ if __name__ == '__main__':
 
     r0 = Rectangle((ra_br, dec_br), width=box_size, height=box_size, edgecolor='red', facecolor='red', \
         transform=ax.get_transform('icrs'), alpha=0.3)
-    #ax.add_patch(r0)
+    ax.add_patch(r0)
 
     r1 = Rectangle((ra_ctr, dec_ctr), width=box_size, height=box_size, edgecolor='green', facecolor='green', \
         transform=ax.get_transform('icrs'), angle=45, alpha=0.2)
-    #ax.add_patch(r1)
+    ax.add_patch(r1)
 
     """
     Tried all kinds of shit within matplotlib, astropy, and aplpy but nothing worked to properly 
@@ -64,10 +64,24 @@ if __name__ == '__main__':
         transform=ax.get_transform('icrs'), alpha=0.2)
     ts = ax.transData
     rc = ts.transform([ra_ctr, dec_ctr])
-    tr = mpl.transforms.Affine2D().rotate_deg_around(rc[0], rc[1], 60)
+    print ra_ctr, dec_ctr
+    print rc
+    inv = ax.transData.inverted()
+    print inv.transform((rc[0], rc[1]))
+    tr = mpl.transforms.Affine2D().rotate_deg(30)
     t = ts + tr
     r2.set_transform(t)
-    #ax.add_patch(r2)
+    ax.add_patch(r2)
+
+    # Check polygon patch
+    p = Polygon(np.array([[0.425, 23.502778], [0.4180556, 23.4966667], \
+        [0.425, 23.49166667], [0.431388, 23.4966667]]), closed=True, transform=ax.get_transform('icrs'), alpha=0.3)
+    ax.add_patch(p)
+    # So computing the polygon by hand and then plotting it will work for sure
+
+    ax.set_aspect('equal')
+    plt.show()
+    sys.exit(0)
     
     # ----------------------
     # Figure out the coords of all corners of the new rotated rectangle

@@ -26,9 +26,11 @@ newcodes_dir = home + "/Desktop/FIGS/new_codes/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
+sys.path.append(massive_galaxies_dir + 'grism_pipeline/')
 import grid_coadd as gd
 import fast_chi2_jackknife as fcj
 import get_stellar_prop_figs as getfigs
+import new_refine_grismz_gridsearch_parallel as ngp
 
 """
 I think this code should also have the same contamination tolerances that grid_coadd has.
@@ -465,17 +467,16 @@ if __name__ == '__main__':
 
             redshift = photz[count]
             print "At object", current_pears_index, "in", fieldname  # Line useful for debugging. Do not remove. Just uncomment.
-            lam_em, flam_em, ferr, specname, pa_chosen, netsig_chosen = gd.fileprep(current_pears_index, redshift, fieldname)
-            #print "At object", current_pears_index, "in", fieldname, "with NetSig", netsig_chosen  
-            # Above Line useful for debugging. Do not remove. Just uncomment.
+            # get data and then d4000
+            lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_pears_index, fieldname)
 
-            if not lam_em.size:
-                # i.e. skip galaxy if fileprep returned an empty array
-                # happens for-- (that I know of; I think there might be a few more)
-                # GOODS-S 78080
-                # GOODS-N 80787
-                print "Skipping", current_pears_index, "in", fieldname, "due to empty wavelength array."
-                continue
+            if return_code == 0:
+                print 'Got return code 0. Check the error. Exiting.', current_id, fieldname
+                sys.exit(0)
+
+            lam_em = lam_obs / (1 + redshift)
+            flam_em = flam_obs * (1 + redshift)
+            ferr_em = ferr_obs * (1 + redshift)
 
             if (lam_em[0] > 3780) or (lam_em[-1] < 4220):
                 # old limits (lam_em[0] > 3780) or (lam_em[-1] < 4220):

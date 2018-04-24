@@ -42,7 +42,7 @@ if __name__ == '__main__':
     zgrism_uperr_n = np.load(massive_figures_dir + 'full_run/zgrism_uperr_list_gn.npy')
     zgrism_uperr_s = np.load(massive_figures_dir + 'full_run/zgrism_uperr_list_gs.npy')
 
-    # loop over all objects with D4000>1.3 and get an 
+    # loop over all objects with D4000>1.4 and get an 
     # avg_error on the grism-z and i-band magnitude for them
     avg_error = []
     imag = []
@@ -122,7 +122,8 @@ if __name__ == '__main__':
     print "Total objects that the code ran for", 
     print "(i.e. all within z range and also have D4000>=1.2 + they passed all cuts):", len(zgrism_n) + len(zgrism_s)
     fail_idx = np.where(avg_error >= 0.1)[0]
-    print "Number of catastrophic failures:", len(fail_idx)
+    print "Number of catastrophic failures:", len(fail_idx), "out of total", len(zgrism_list), 
+    print "which have D4000>=", d4000_thresh, "and are within z range."
 
     imag_threep = imag[threepercent_idx]
     imag_onep = imag[onepercent_idx]
@@ -130,6 +131,9 @@ if __name__ == '__main__':
     imag_idx = np.where((imag >= 18) & (imag <= 26))[0]
     total_threep_within_imag_range = len(reduce(np.intersect1d, (threepercent_idx, imag_idx)))
     total_onep_within_imag_range = len(reduce(np.intersect1d, (onepercent_idx, imag_idx)))
+
+    print total_threep_within_imag_range, "have grism redshifts accurate to within <=0.03"
+    print total_onep_within_imag_range, "have grism redshifts accurate to within <=0.01"
 
     # get total bins and plot histogram
     ax.hist(imag_threep, 24, color='k', range=[18,26], ls='-', histtype='step', align='mid', zorder=10, \

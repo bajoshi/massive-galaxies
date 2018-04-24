@@ -150,6 +150,9 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     ax1.text(0.65, 0.1, r'$\mathrm{\pm 1\ \sigma_{NMAD}}$', verticalalignment='top', horizontalalignment='left', \
         transform=ax1.transAxes, color='k', size=14)
 
+    ax1.text(0.5, 1.06, 'Photometric redshifts', verticalalignment='top', horizontalalignment='center', \
+        transform=ax1.transAxes, color='k', size=14)
+
     # ------- residuals for first panel ------- #
     ax2.plot(z_spec_1p4, (z_spec_1p4 - z_phot_1p4)/(1+z_spec_1p4), 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
     ax2.axhline(y=0, linestyle='--', color='r')
@@ -201,6 +204,9 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     ax3.text(0.05, 0.73, r'$\mathrm{(b)}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax3.transAxes, color='k', size=17)
+
+    ax3.text(0.5, 1.06, 'Grism redshifts', verticalalignment='top', horizontalalignment='center', \
+        transform=ax3.transAxes, color='k', size=14)
 
     # ------- residuals for second panel ------- #
     ax4.plot(z_spec_1p4, (z_spec_1p4 - z_grism_1p4)/(1+z_spec_1p4), 'o', markersize=3.0, color='k', markeredgecolor='k', zorder=10)
@@ -423,6 +429,11 @@ if __name__ == '__main__':
     print "{:.4}".format(sigma_nmad_photo), "&",
     print "{:.4}".format(np.mean(grism_resid_hist_arr)), "&",
     print "{:.4}".format(sigma_nmad_grism), "\\\ "
+
+    fail_idx_grism = np.where(abs(grism_resid_hist_arr) >= 0.1)[0]
+    print "Number of outliers for grism-z (i.e. error>=0.1):", len(fail_idx_grism)
+    fail_idx_photo = np.where(abs(photz_resid_hist_arr) >= 0.1)[0]
+    print "Number of outliers for photo-z (i.e. error>=0.1):", len(fail_idx_photo)
 
     large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.04)[0]
     np.set_printoptions(precision=2, suppress=True)
