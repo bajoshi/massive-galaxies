@@ -95,12 +95,12 @@ def fit_and_plot(flam_obs, ferr_obs, lam_obs, lsf, resampling_lam_grid, \
 
     # plot
     plot_individual(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, min_chi2_red, age, tau, (tauv/1.086))
+        obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, min_chi2_red, age, tau, (tauv/1.086), d4000, d4000_err)
 
     return None
 
 def plot_individual(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-    obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, chi2, age, tau, av):
+    obj_id, obj_field, specz, photoz, grismz, low_zerr, high_zerr, chi2, age, tau, av, d4000, d4000_err):
 
     # define colors
     myblue = mh.rgb_to_hex(0, 100, 180)
@@ -120,9 +120,9 @@ def plot_individual(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, b
     ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
 
     # plot
-    ax1.plot(lam_obs, flam_obs, ls='-', color='k')
-    ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
-    ax1.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
+    ax1.plot(lam_obs, flam_obs, ls='-', color='k', zorder=10)
+    ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r', zorder=10)
+    ax1.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray', zorder=10)
 
     resid_fit = (flam_obs - bestalpha*best_fit_model_in_objlamgrid) / ferr_obs
     ax2.plot(lam_obs, resid_fit, ls='-', color='k')
@@ -132,42 +132,64 @@ def plot_individual(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, b
     ax2.minorticks_on()
 
     # text for info
-    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.05, 0.96, obj_field + ' ' + str(obj_id), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.05, 0.91, r'$\mathrm{D4000\, =\,}$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.75, 0.35, \
+    # --------- Params from fit -------- #
+    ax1.text(0.75, 0.23, \
     r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    ax1.text(0.75, 0.15, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.22, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
-    verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-
-    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.75, 0.1, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    ax1.text(0.75, 0.05, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+
+    # -------- Stellar props ------ # 
+    ax1.text(0.47, 0.15,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.47, 0.1, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
     if av < 0:
         av = -99.0
 
-    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    ax1.text(0.47, 0.05, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
     # add horizontal line to residual plot
     ax2.axhline(y=0.0, ls='--', color=myblue)
+    # add vertical line to mark 4000A break location
+    ax1.axvline(x=4000*(1+photoz), ls='--', color=mh.rgb_to_hex(65, 174, 118))
 
+    # Draw shaded bands that show D4000 measurement
+    shade_color = mh.rgb_to_hex(204,236,230)
+
+    arg3850 = np.argmin(abs(lam_obs - 3850*(1+photoz)))
+    arg4150 = np.argmin(abs(lam_obs - 4150*(1+photoz)))
+
+    x_fill = np.arange(3750*(1+photoz), 3951*(1+photoz), 1)
+    y0_fill = np.ones(len(x_fill)) * (flam_obs[arg3850] - 3*ferr_obs[arg3850])
+    y1_fill = np.ones(len(x_fill)) * (flam_obs[arg4150] + 3*ferr_obs[arg4150])
+    ax1.fill_between(x_fill, y0_fill, y1_fill, color=shade_color, zorder=2)
+
+    x_fill = np.arange(4050*(1+photoz), 4251*(1+photoz), 1)
+    ax1.fill_between(x_fill, y0_fill, y1_fill, color=shade_color, zorder=2)
+
+    # Save
     fig.savefig(figs_dir + 'massive-galaxies-figures/fits_for_d4000_geq_1p3/failures/' \
         + obj_field + '_' + str(obj_id) + '.png', \
         dpi=300, bbox_inches='tight')
