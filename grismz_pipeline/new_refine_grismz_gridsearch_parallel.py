@@ -119,7 +119,7 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
 
 def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz):
+    obj_id, obj_field, specz, photoz, search_range):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,
@@ -129,7 +129,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - 0.2, stop=starting_z + 0.2, num=81, dtype=np.float64)
+    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=81, dtype=np.float64)
     z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
@@ -143,7 +143,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 7
+    num_cores = 4
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -646,7 +646,7 @@ if __name__ == '__main__':
             # ------------- Call actual fitting function ------------- #
             zg, zerr_low, zerr_up, min_chi2, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
-                current_id, current_field, current_specz, redshift)
+                current_id, current_field, current_specz, redshift, 0.2)
 
             # ---------------------------------------------- SAVE PARAMETERS ----------------------------------------------- #
             id_list.append(current_id)
