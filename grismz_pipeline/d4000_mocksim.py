@@ -101,7 +101,7 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift):
 
 def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    search_range, d4000, d4000_err, count):
+    search_range, d4000_in, d4000_out, d4000_out_err, count):
 
     # Set up redshift grid to check
     z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=41, dtype=np.float64)
@@ -207,12 +207,12 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
     plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-    starting_z, z_grism, low_z_lim, upper_z_lim, min_chi2_red, d4000, d4000_err, count)
+    starting_z, z_grism, low_z_lim, upper_z_lim, min_chi2_red, d4000_in, d4000_out, d4000_out_err, count)
 
-    return None
+    return z_grism, low_z_lim, upper_z_lim
 
 def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-    starting_z, grismz, low_z_lim, upper_z_lim, chi2, d4000, d4000_err, count):
+    starting_z, grismz, low_z_lim, upper_z_lim, chi2, d4000_in, d4000_out, d4000_out_err, count):
 
     fig = plt.figure()
     gs = gridspec.GridSpec(10,10)
@@ -242,7 +242,10 @@ def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bes
     ax2.minorticks_on()
 
     # text for info
-    ax1.text(0.45, 0.31, r'$\mathrm{D4000\, =\,}$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
+    ax1.text(0.45, 0.36, r'$\mathrm{D4000_{intrinsic}\, =\,}$' + "{:.4}".format(d4000_in), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.45, 0.31, r'$\mathrm{D4000_{mock}\, =\,}$' + "{:.4}".format(d4000_out) + r'$\pm$' + "{:.2}".format(d4000_out_err), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
@@ -300,8 +303,18 @@ if __name__ == '__main__':
 
     # ---------------------------------------------- Loop ----------------------------------------------- #
 
-    d4000_in = []  # D4000 measured on model before doing model modifications
-    d4000_out = []  # D4000 measured on model after doing model modifications
+    d4000_in_list = []  # D4000 measured on model before doing model modifications
+    d4000_out_list = []  # D4000 measured on model after doing model modifications
+    d4000_out_err_list = []
+
+    # Create lists for saving later
+    mock_model_index_list = []
+    test_redshift_list = []
+    mock_zgrism_list = []
+    mock_zgrism_lowerr_list = []
+    mock_zgrism_higherr_list = []
+
+    galaxy_count = 0
 
     for i in range(total_models):
 
@@ -309,45 +322,45 @@ if __name__ == '__main__':
         model_flam = model_comp_spec[i]
         model_ferr = np.zeros(len(model_flam))
 
-        d4000, d4000_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr)
+        d4000_in, d4000_in_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr)
+
+        # Randomly pick a test redshift within 0.6 <= z <= 1.235
+        # Make sure that the age of the model is not older than 
+        # the age of the Universe at the chosen redshift
+        model_age = 10**(float(bc03_all_spec_hdulist[i + 1].header['LOG_AGE'])) / 1e9  # in Gyr
+        upper_z_lim_age = z_at_value(cosmo.age, model_age * u.Gyr)
+
+        if upper_z_lim_age <= 0.6:
+            print "Skipping this model because model age is older than the oldest age",
+            print "we can probe with the ACS grism, i.e. the age corresponding",
+            print "to the lowest redshift at which we can measure the 4000A break (z=0.6)."
+            continue
+
+        if upper_z_lim_age > 1.235:
+            upper_z_lim_age = 1.235
+
+        test_redshift = np.random.uniform(0.6, upper_z_lim_age, 1)
+        if type(test_redshift) is np.ndarray:
+            test_redshift = np.asscalar(test_redshift)
+
+        # Modify model and create mock spectrum
+        lam_obs, flam_obs, ferr_obs = get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift)
+
+        # Now de-redshift and find D4000
+        lam_em = lam_obs / (1 + test_redshift)
+        flam_em = flam_obs * (1 + test_redshift)
+        ferr_em = ferr_obs * (1 + test_redshift)
+
+        d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
         # Check D4000 value and only then proceed
-        if d4000 >= 1.2 and d4000 <= 1.4:
-            d4000_in.append(d4000)
-
-            # Randomly pick a test redshift within 0.6 <= z <= 1.235
-            # Make sure that the age of the model is not older than 
-            # the age of the Universe at the chosen redshift
-            model_age = 10**(float(bc03_all_spec_hdulist[i + 1].header['LOG_AGE'])) / 1e9  # in Gyr
-            upper_z_lim_age = z_at_value(cosmo.age, model_age * u.Gyr)
-
-            if upper_z_lim_age <= 0.6:
-                print "Skipping this model because model age is older than the oldest age",
-                print "we can probe with the ACS grism, i.e. the age corresponding",
-                print "to the lowest redshift at which we can measure the 4000A break (z=0.6)."
-                continue
-
-            if upper_z_lim_age > 1.235:
-                upper_z_lim_age = 1.235
-
-            test_redshift = np.random.uniform(0.6, upper_z_lim_age, 1)
-            if type(test_redshift) is np.ndarray:
-                test_redshift = np.asscalar(test_redshift)
-
+        if d4000_out >= 1.2 and d4000_out <= 1.4:
+            d4000_in_list.append(d4000_in)
+            d4000_out_list.append(d4000_out)
+            d4000_out_err_list.append(d4000_out_err)
             print "At model #", i+1, "with test redshift", test_redshift
-            print "Model has intrinsic D4000:", d4000
-
-            # Modify model and create mock spectrum
-            lam_obs, flam_obs, ferr_obs = get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift)
-
-            # Now de-redshift and find D4000
-            lam_em = lam_obs / (1 + test_redshift)
-            flam_em = flam_obs * (1 + test_redshift)
-            ferr_em = ferr_obs * (1 + test_redshift)
-
-            d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-            d4000_out.append(d4000)
-            print "Simulated mock spectrum has D4000:", d4000
+            print "Model has intrinsic D4000:", d4000_in
+            print "Simulated mock spectrum has D4000:", d4000_out
 
             # -------- Broaden the LSF ------- #
             broad_lsf = Gaussian1DKernel(10.0 * 1.118)
@@ -368,9 +381,45 @@ if __name__ == '__main__':
             current_zgrism = test_redshift
 
             # Fit 
-            fit_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf.array, test_redshift, resampling_lam_grid, \
+            mock_zgrism, mock_zgrism_lowlim, mock_zgrism_highlim = fit_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf.array, test_redshift, resampling_lam_grid, \
             model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
-            0.1, d4000, d4000_err, i+1)
+            0.1, d4000_in, d4000_out, d4000_out_err, i+1)
+
+            # Convert limits to errors
+            mock_zgrism_lowerr = mock_zgrism - mock_zgrism_lowlim
+            mock_zgrism_higherr = mock_zgrism_highlim - mock_zgrism
+
+            # Append to lists and save them as numpy arrays later
+            mock_model_index_list.append(i+1)
+            test_redshift_list.append(test_redshift)
+            mock_zgrism_list.append(mock_zgrism)
+            mock_zgrism_lowerr_list.append(mock_zgrism_lowerr)
+            mock_zgrism_higherr_list.append(mock_zgrism_higherr)
+
+            galaxy_count += 1
+
+            if galaxy_count > 100:
+                break
+
+    # convert to numpy arrays and save
+    d4000_in_list = np.asarray(d4000_in_list) 
+    d4000_out_list = np.asarray(d4000_out_list)
+    d4000_out_err_list = np.asarray(d4000_out_err_list) 
+    mock_model_index_list = np.asarray(mock_model_index_list)
+    test_redshift_list = np.asarray(test_redshift_list)
+    mock_zgrism_list = np.asarray(mock_zgrism_list)
+    mock_zgrism_lowerr_list = np.asarray(mock_zgrism_lowerr_list)
+    mock_zgrism_higherr_list = np.asarray(mock_zgrism_higherr_list)
+
+    # save
+    np.save(massive_figures_dir + 'd4000_in_list.npy', d4000_in_list)
+    np.save(massive_figures_dir + 'd4000_out_list.npy', d4000_out_list)
+    np.save(massive_figures_dir + 'd4000_out_err_list.npy', d4000_out_err_list)
+    np.save(massive_figures_dir + 'mock_model_index_list.npy', mock_model_index_list)
+    np.save(massive_figures_dir + 'test_redshift_list.npy', test_redshift_list)
+    np.save(massive_figures_dir + 'mock_zgrism_list.npy', mock_zgrism_list)
+    np.save(massive_figures_dir + 'mock_zgrism_lowerr_list.npy', mock_zgrism_lowerr_list)
+    np.save(massive_figures_dir + 'mock_zgrism_higherr_list.npy', mock_zgrism_higherr_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
