@@ -13,7 +13,7 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 
 sys.path.append(massive_galaxies_dir + 'codes/')
-sys.path.append(massive_galaxies_dir + 'grism_pipeline/')
+sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import mag_hist as mh
 import new_refine_grismz_gridsearch_parallel as ngp
 import dn4000_catalog as dc

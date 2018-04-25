@@ -21,7 +21,7 @@ massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 
-sys.path.append(massive_galaxies_dir + 'grism_pipeline/')
+sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import mag_hist as mh

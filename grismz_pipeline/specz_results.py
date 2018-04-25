@@ -16,7 +16,7 @@ stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
-sys.path.append(massive_galaxies_dir + 'grism_pipeline/')
+sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import grid_coadd as gd
 import mag_hist as mh
 import new_refine_grismz_gridsearch_parallel as ngp
