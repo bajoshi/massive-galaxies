@@ -7,6 +7,7 @@ from astropy.convolution import Gaussian1DKernel, convolve
 from astropy.cosmology import Planck15 as cosmo
 from astropy.cosmology import z_at_value
 import astropy.units as u
+from joblib import Parallel, delayed
 
 import os
 import sys
@@ -29,8 +30,8 @@ sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import model_mods_cython_copytoedit as model_mods_cython
 import refine_redshifts_dn4000 as old_ref
 import dn4000_catalog as dc
-import example_spectra_grid as exg
 import new_refine_grismz_gridsearch_parallel as ngp
+import mag_hist as mh
 
 def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift):
 
@@ -115,8 +116,8 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 4
-    chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
+    num_cores = 7
+    chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(ngp.get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
 
@@ -178,10 +179,8 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     min_chi2_red = min_chi2 / dof
     print "Error in reduced chi-square:", chi2_red_error
     chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
-    print "Indices within 1-sigma of reduced chi-square:", chi2_red_2didx
     # use first dimension indices to get error on grism-z
     z_grism_range = z_arr_to_check[chi2_red_2didx[0]]
-    print "z_grism range", z_grism_range
     low_z_lim = np.min(z_grism_range)
     upper_z_lim = np.max(z_grism_range)
     print "Min z_grism within 1-sigma error:", low_z_lim
@@ -210,7 +209,7 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     starting_z, z_grism, low_z_lim, upper_z_lim, min_chi2_red, d4000, d4000_err, count)
 
-    return fig
+    return None
 
 def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     starting_z, grismz, low_z_lim, upper_z_lim, chi2, d4000, d4000_err, count):
@@ -243,25 +242,25 @@ def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bes
     ax2.minorticks_on()
 
     # text for info
-    ax1.text(0.05, 0.87, r'$\mathrm{D4000\, =\,}$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
+    ax1.text(0.45, 0.31, r'$\mathrm{D4000\, =\,}$' + "{:.2}".format(d4000) + r'$\pm$' + "{:.2}".format(d4000_err), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
+    transform=ax1.transAxes, color='k', size=10)
 
     low_zerr = grismz - low_z_lim
     high_zerr = upper_z_lim - grismz
 
-    ax1.text(0.45, 0.42, \
+    ax1.text(0.45, 0.26, \
     r'$\mathrm{Test\ redshift\, =\,}$' + "{:.4}".format(starting_z), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.75, 0.35, \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.45, 0.21, \
     r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.45, 0.13, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.45, 0.12, r'$\mathrm{\chi^2_{red}\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
+    transform=ax1.transAxes, color='k', size=10)
 
     # add horizontal line to residual plot
     ax2.axhline(y=0.0, ls='--', color=myblue)
@@ -319,7 +318,7 @@ if __name__ == '__main__':
             # Randomly pick a test redshift within 0.6 <= z <= 1.235
             # Make sure that the age of the model is not older than 
             # the age of the Universe at the chosen redshift
-            model_age = 10**(bc03_all_spec_hdulist[i + 1].header['LOG_AGE']) / 1e9  # in Gyr
+            model_age = 10**(float(bc03_all_spec_hdulist[i + 1].header['LOG_AGE'])) / 1e9  # in Gyr
             upper_z_lim_age = z_at_value(cosmo.age, model_age * u.Gyr)
 
             if upper_z_lim_age <= 0.6:
@@ -332,7 +331,10 @@ if __name__ == '__main__':
                 upper_z_lim_age = 1.235
 
             test_redshift = np.random.uniform(0.6, upper_z_lim_age, 1)
-            print "At model #", i+1, "with test redshift", test_redshift,
+            if type(test_redshift) is np.ndarray:
+                test_redshift = np.asscalar(test_redshift)
+
+            print "At model #", i+1, "with test redshift", test_redshift
             print "Model has intrinsic D4000:", d4000
 
             # Modify model and create mock spectrum
@@ -345,6 +347,7 @@ if __name__ == '__main__':
 
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
             d4000_out.append(d4000)
+            print "Simulated mock spectrum has D4000:", d4000
 
             # -------- Broaden the LSF ------- #
             broad_lsf = Gaussian1DKernel(10.0 * 1.118)
@@ -365,9 +368,9 @@ if __name__ == '__main__':
             current_zgrism = test_redshift
 
             # Fit 
-            fit_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf, test_redshift, resampling_lam_grid, \
+            fit_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf.array, test_redshift, resampling_lam_grid, \
             model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
-            search_range, d4000, d4000_err, i)
+            0.1, d4000, d4000_err, i+1)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
