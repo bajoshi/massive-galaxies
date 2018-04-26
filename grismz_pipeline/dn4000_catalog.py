@@ -471,8 +471,8 @@ if __name__ == '__main__':
             lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_pears_index, fieldname)
 
             if return_code == 0:
-                print 'Got return code 0. Check the error. Exiting.', current_id, fieldname
-                sys.exit(0)
+                print 'Got return code 0. Skipping galaxy.', current_pears_index, fieldname
+                continue
 
             lam_em = lam_obs / (1 + redshift)
             flam_em = flam_obs * (1 + redshift)
@@ -502,7 +502,6 @@ if __name__ == '__main__':
                  lam_em[0], lam_em[-1]
                 continue
 
-            fitsfile = fits.open(pears_spectra_dir + specname)
             if topcat:
                 pears_ra.append(float(cat['col2'][redshift_indices][count]))  # col2 is the pears ra
                 pears_dec.append(float(cat['col3'][redshift_indices][count]))  # col3 is the pears dec
@@ -513,8 +512,8 @@ if __name__ == '__main__':
                 pears_dec.append(float(cat['pearsdec'][redshift_indices][count]))
                 redshift_source.append(cat['source'][redshift_indices][count])
 
-            dn4000_temp, dn4000_err_temp = get_dn4000(lam_em, flam_em, ferr)
-            d4000_temp, d4000_err_temp = get_d4000(lam_em, flam_em, ferr)
+            dn4000_temp, dn4000_err_temp = get_dn4000(lam_em, flam_em, ferr_em)
+            d4000_temp, d4000_err_temp = get_d4000(lam_em, flam_em, ferr_em)
             pearsfield.append(fieldname)
             pears_id_write.append(current_pears_index)
             photz_write.append(redshift)

@@ -357,12 +357,16 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh = 1.4
+    d4000_thresh = 1.2
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
     valid_idx4 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
     valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4))
+    invalid_idx2 = np.where(chi2_arr >= chi2_thresh)[0]
+    only_chi2_rejected = reduce(np.intersect1d, (valid_idx1, invalid_idx2, valid_idx3, valid_idx4))
+    print "Only rejected by chi2", len(only_chi2_rejected)
+    sys.exit(0)
     # I'm not making a cut on netsig here
 
     id_plot = id_arr[valid_idx]
