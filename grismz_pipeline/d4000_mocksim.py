@@ -424,18 +424,3 @@ if __name__ == '__main__':
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
     sys.exit(0)
-
-    # Convert to numpy arrays
-    d4000_in = np.asarray(d4000_in)
-    d4000_out = np.asarray(d4000_out)
-
-    #### Now make plot comparing D4000 before and after ####
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-    ax.plot(d4000_in, np.log10(d4000_in/d4000_out), 'o', markersize=1.0, color='k', markeredgecolor='k')
-    ax.axhline(y=0.0, ls='--', color='b')
-
-    plt.show()
-
-    sys.exit(0)
