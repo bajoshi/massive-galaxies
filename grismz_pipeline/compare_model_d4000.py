@@ -23,7 +23,7 @@ import mag_hist as mh
 
 def overplot_model_mockspectra(model_lam_grid, model_flam, lam_em, flam_em, ferr_em, d4000_in, d4000_out, d4000_out_err, test_redshift):
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10,10))
     ax = fig.add_subplot(111)
 
     flam_em /= 1e-12  
@@ -51,6 +51,18 @@ def overplot_model_mockspectra(model_lam_grid, model_flam, lam_em, flam_em, ferr
 
     x_fill = np.arange(4050, 4251, 1)
     ax.fill_between(x_fill, y0_fill, y1_fill, color=shade_color, zorder=2)
+
+    # Add text for D4000
+    ax.text(0.05, 0.87, r'$\mathrm{z=}$' + "{:.3}".format(test_redshift), \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=10)
+
+    ax.text(0.05, 0.82, r'$\mathrm{D4000_{instrinsic}=}$' + "{:.3}".format(d4000_in), \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=10)
+    ax.text(0.05, 0.77, r'$\mathrm{D4000_{mock}=}$' + "{:.3}".format(d4000_out) + r'$\pm$' + "{:.3}".format(d4000_out_err), \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=10)
 
     plt.show()
 
@@ -85,7 +97,7 @@ if __name__ == '__main__':
     d4000_out_list = []  # D4000 measured on model after doing model modifications
     d4000_out_err_list = []
 
-    for i in range(30,40):
+    for i in range(30,60):
 
         # Measure D4000 before doing modifications
         model_flam = model_comp_spec[i]
@@ -93,7 +105,7 @@ if __name__ == '__main__':
 
         d4000_in, d4000_in_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr)
 
-        test_redshift = 1.1
+        test_redshift = 0.85
 
         # Modify model and create mock spectrum
         lam_obs, flam_obs, ferr_obs = dm.get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift)

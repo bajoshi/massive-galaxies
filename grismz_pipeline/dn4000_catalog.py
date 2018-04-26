@@ -77,6 +77,10 @@ def get_d4000(lam, spec, spec_err):
         Make sure the supplied lambda is in angstroms and the spectrum is in f_lambda -- IN THE REST FRAME!!!
     """
 
+    # Estimate flux (f_nu) at the exact endpoints of the D4000 bandpasses
+    
+
+
     arg3750 = np.argmin(abs(lam - 3750))
     arg3950 = np.argmin(abs(lam - 3950))
     arg4050 = np.argmin(abs(lam - 4050))
@@ -92,13 +96,17 @@ def get_d4000(lam, spec, spec_err):
     flux_nu_err_sqr = spec_nu_err**2
 
     if ((len(flux_nu_err_sqr[arg4050:arg4250+1])-1) >= 1) and ((len(flux_nu_err_sqr[arg3750:arg3950+1])-1) >= 1):
+
         sum_up_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg4050:arg4250+1])-1))) * \
             (4*sum(flux_nu_err_sqr[arg4050+1:arg4250+1]) + flux_nu_err_sqr[arg4050] + flux_nu_err_sqr[arg4250]))
         sum_low_err = np.sqrt((delta_lam**2 / (2*(len(flux_nu_err_sqr[arg3750:arg3950+1])-1))) * \
             (4*sum(flux_nu_err_sqr[arg3750+1:arg3950+1]) + flux_nu_err_sqr[arg3750] + flux_nu_err_sqr[arg3950]))
+
     elif ((len(flux_nu_err_sqr[arg4050:arg4250+1])-1) == 0) and ((len(flux_nu_err_sqr[arg3750:arg3950+1])-1) == 0):
+
         sum_up_err = np.sqrt(flux_nu_err_sqr[arg4050:arg4250+1])
         sum_low_err = np.sqrt(flux_nu_err_sqr[arg3750:arg3950+1])
+
     else:
         return np.nan, np.nan
 
