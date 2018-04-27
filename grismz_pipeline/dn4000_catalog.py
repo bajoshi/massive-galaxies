@@ -72,28 +72,83 @@ def get_dn4000(lam, spec, spec_err):
     
     return dn4000, dn4000_err
 
-def get_d4000(lam, spec, spec_err):
+def get_d4000(lam, spec, spec_err, interpolate_flag=True, makeplot=False):
     """
         Make sure the supplied lambda is in angstroms and the spectrum is in f_lambda -- IN THE REST FRAME!!!
     """
 
-    # Estimate flux (f_nu) at the exact endpoints of the D4000 bandpasses
-    
+    speed_of_light = 2.99792458e10  # in cm/s
 
+    """
+    This interpolation method needs to be improved so that it checks first whether the wavelength 
+    that it is trying to interpolate to already exists. Once this fix is done the interpolate flag
+    in the function argument can be removed.
+    """
 
-    arg3750 = np.argmin(abs(lam - 3750))
-    arg3950 = np.argmin(abs(lam - 3950))
-    arg4050 = np.argmin(abs(lam - 4050))
-    arg4250 = np.argmin(abs(lam - 4250))
+    if interpolate_flag:
+        # Get flux (f_nu) at the exact endpoints of the D4000 bandpasses
+        # Convert to f_nu first
+        fnu = spec * lam**2 / speed_of_light  # spec is in f_lam units
+        fnu_err = spec_err * lam**2 / speed_of_light
 
-    fnu_plus = spec[arg4050:arg4250+1] * lam[arg4050:arg4250+1]**2 / 2.99792458e10
-    fnu_minus = spec[arg3750:arg3950+1] * lam[arg3750:arg3950+1]**2 / 2.99792458e10
+        # First interpolate and figure out the flux at 
+        # the exact endpoints of the D4000 bandpasses
+        from scipy import interpolate
 
-    d4000 = np.trapz(fnu_plus, x=lam[arg4050:arg4250+1]) / np.trapz(fnu_minus, x=lam[arg3750:arg3950+1])
+        # Now get new lambda and flux arrays with the exact
+        # required lambda and flux values inserted
+        # Find indices for insertion 
+        insert_idx_3750 = np.where(lam > 3750.0)[0][0]
+        insert_idx_3950 = np.where(lam > 3950.0)[0][0]
+        insert_idx_4050 = np.where(lam > 4050.0)[0][0]
+        insert_idx_4250 = np.where(lam > 4250.0)[0][0]
+
+        insert_idx = np.array([insert_idx_3750, insert_idx_3950, insert_idx_4050, insert_idx_4250])
+        insert_wav = np.array([3750.0, 3950.0, 4050.0, 4250.0])
+        lam_new = np.insert(lam, insert_idx, insert_wav)
+
+        # now find the interpolating function
+        f = interpolate.interp1d(lam, fnu)
+        fnu_insert_vals = f(insert_wav)
+        fnu_new = np.insert(fnu, insert_idx, fnu_insert_vals)
+
+        # Also find the error at the exact points
+        # I'm basically just interpolating the error array as well
+        fe = interpolate.interp1d(lam, fnu_err)
+        fnu_err_insert_vals = fe(insert_wav)
+        fnu_err_new = np.insert(fnu_err, insert_idx, fnu_err_insert_vals)
+
+        # plot to check
+        if makeplot:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+
+            ax.plot(lam_new, fnu_new, '.-', color='peru')
+            ax.plot(lam, f_nu, '.-', color='steelblue')
+
+            plt.show()
+
+    else:
+        # i.e. don't do interpolation if the user is sure that 
+        # flux measurements at the exact endpoints of the D4000
+        # bandpasses already exist
+        lam_new = lam
+        fnu_new = spec * lam**2 / speed_of_light
+        fnu_err_new = spec_err * lam**2 / speed_of_light
+
+    # -------------- D4000 computation ------------- # 
+    arg3750 = np.where(lam_new == 3750.0)[0]
+    arg3950 = np.where(lam_new == 3950.0)[0]
+    arg4050 = np.where(lam_new == 4050.0)[0]
+    arg4250 = np.where(lam_new == 4250.0)[0]
+
+    fnu_plus = fnu_new[arg4050:arg4250+1]
+    fnu_minus = fnu_new[arg3750:arg3950+1]
+
+    d4000 = np.trapz(fnu_plus, x=lam_new[arg4050:arg4250+1]) / np.trapz(fnu_minus, x=lam_new[arg3750:arg3950+1])
 
     delta_lam = 100
-    spec_nu_err = spec_err * lam**2 / 2.99792458e10
-    flux_nu_err_sqr = spec_nu_err**2
+    flux_nu_err_sqr = fnu_err_new**2
 
     if ((len(flux_nu_err_sqr[arg4050:arg4250+1])-1) >= 1) and ((len(flux_nu_err_sqr[arg3750:arg3950+1])-1) >= 1):
 
@@ -110,8 +165,8 @@ def get_d4000(lam, spec, spec_err):
     else:
         return np.nan, np.nan
 
-    sum_low = np.trapz(fnu_minus, x=lam[arg3750:arg3950+1])
-    sum_up = np.trapz(fnu_plus, x=lam[arg4050:arg4250+1])
+    sum_low = np.trapz(fnu_minus, x=lam_new[arg3750:arg3950+1])
+    sum_up = np.trapz(fnu_plus, x=lam_new[arg4050:arg4250+1])
     d4000_err = (1/sum_low**2) * np.sqrt(sum_up_err**2 * sum_low**2 + sum_up**2 * sum_low_err**2)
     
     return d4000, d4000_err
