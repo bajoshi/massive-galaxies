@@ -322,7 +322,7 @@ if __name__ == '__main__':
         model_flam = model_comp_spec[i]
         model_ferr = np.zeros(len(model_flam))
 
-        d4000_in, d4000_in_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr)
+        d4000_in, d4000_in_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr, interpolate_flag=False)
 
         # Randomly pick a test redshift within 0.6 <= z <= 1.235
         # Make sure that the age of the model is not older than 
