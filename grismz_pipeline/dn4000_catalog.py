@@ -142,6 +142,12 @@ def get_d4000(lam, spec, spec_err, interpolate_flag=True, makeplot=False):
     arg4050 = np.where(lam_new == 4050.0)[0]
     arg4250 = np.where(lam_new == 4250.0)[0]
 
+    # make sure these indices are scalars
+    arg3750 = np.asscalar(arg3750)
+    arg3950 = np.asscalar(arg3950)
+    arg4050 = np.asscalar(arg4050)
+    arg4250 = np.asscalar(arg4250)
+
     fnu_plus = fnu_new[arg4050:arg4250+1]
     fnu_minus = fnu_new[arg3750:arg3950+1]
 

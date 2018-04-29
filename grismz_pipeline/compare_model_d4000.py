@@ -97,15 +97,15 @@ if __name__ == '__main__':
     d4000_out_list = []  # D4000 measured on model after doing model modifications
     d4000_out_err_list = []
 
-    for i in range(30,60):
+    for i in range(total_models):
 
         # Measure D4000 before doing modifications
         model_flam = model_comp_spec[i]
         model_ferr = np.zeros(len(model_flam))
 
-        d4000_in, d4000_in_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr)
+        d4000_in, d4000_in_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr, interpolate_flag=False)
 
-        test_redshift = 0.85
+        test_redshift = 1.1
 
         # Modify model and create mock spectrum
         lam_obs, flam_obs, ferr_obs = dm.get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift)
@@ -123,9 +123,7 @@ if __name__ == '__main__':
         d4000_out_err_list.append(d4000_out_err)
 
         ##### Plot old and new mock spectra overlaid to check #####
-        overplot_model_mockspectra(model_lam_grid, model_flam, lam_em, flam_em, ferr_em, d4000_in, d4000_out, d4000_out_err, test_redshift)
-
-    sys.exit(0)
+        #overplot_model_mockspectra(model_lam_grid, model_flam, lam_em, flam_em, ferr_em, d4000_in, d4000_out, d4000_out_err, test_redshift)
 
     # Convert to numpy arrays
     d4000_in_list = np.asarray(d4000_in_list)
