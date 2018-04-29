@@ -71,11 +71,11 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift):
     flam_obs = resampled_flam
 
     # multiply flam by a constant to get to some realistic flux levels
-    flam_obs *= 1e-12
+    flam_obs *= 1e-14
 
     # assign a constant 5% error bar
     ferr_obs = np.ones(len(flam_obs))
-    ferr_obs = 0.05 * flam_obs
+    ferr_obs = 0.33 * flam_obs
 
     # put in random noise in the model
     for k in range(len(flam_obs)):
@@ -354,7 +354,7 @@ if __name__ == '__main__':
         d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
         # Check D4000 value and only then proceed
-        if d4000_out >= 1.2 and d4000_out <= 1.4:
+        if d4000_out >= 1.2 and d4000_out <= 1.3:
             d4000_in_list.append(d4000_in)
             d4000_out_list.append(d4000_out)
             d4000_out_err_list.append(d4000_out_err)
@@ -412,14 +412,15 @@ if __name__ == '__main__':
     mock_zgrism_higherr_list = np.asarray(mock_zgrism_higherr_list)
 
     # save
-    np.save(massive_figures_dir + 'd4000_in_list.npy', d4000_in_list)
-    np.save(massive_figures_dir + 'd4000_out_list.npy', d4000_out_list)
-    np.save(massive_figures_dir + 'd4000_out_err_list.npy', d4000_out_err_list)
-    np.save(massive_figures_dir + 'mock_model_index_list.npy', mock_model_index_list)
-    np.save(massive_figures_dir + 'test_redshift_list.npy', test_redshift_list)
-    np.save(massive_figures_dir + 'mock_zgrism_list.npy', mock_zgrism_list)
-    np.save(massive_figures_dir + 'mock_zgrism_lowerr_list.npy', mock_zgrism_lowerr_list)
-    np.save(massive_figures_dir + 'mock_zgrism_higherr_list.npy', mock_zgrism_higherr_list)
+    d4000_range = '_1p2to1p3'
+    np.save(massive_figures_dir + 'd4000_in_list' + d4000_range + '.npy', d4000_in_list)
+    np.save(massive_figures_dir + 'd4000_out_list' + d4000_range + '.npy', d4000_out_list)
+    np.save(massive_figures_dir + 'd4000_out_err_list' + d4000_range + '.npy', d4000_out_err_list)
+    np.save(massive_figures_dir + 'mock_model_index_list' + d4000_range + '.npy', mock_model_index_list)
+    np.save(massive_figures_dir + 'test_redshift_list' + d4000_range + '.npy', test_redshift_list)
+    np.save(massive_figures_dir + 'mock_zgrism_list' + d4000_range + '.npy', mock_zgrism_list)
+    np.save(massive_figures_dir + 'mock_zgrism_lowerr_list' + d4000_range + '.npy', mock_zgrism_lowerr_list)
+    np.save(massive_figures_dir + 'mock_zgrism_higherr_list' + d4000_range + '.npy', mock_zgrism_higherr_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
