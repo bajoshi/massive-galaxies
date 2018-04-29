@@ -37,6 +37,10 @@ if __name__ == '__main__':
 
     ax.hist(netsig, totalbins, histtype='step', color='k', align='mid')
 
-    plt.show()
+    ax.text(0.8, 0.9, r'$\mathrm{D4000\geq1.2}$', \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=12)
+
+    fig.savefig(massive_figures_dir + 'netsig_hist.eps', dpi=150, bbox_inches='tight')
 
     sys.exit(0)

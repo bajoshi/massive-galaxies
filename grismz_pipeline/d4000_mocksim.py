@@ -358,7 +358,7 @@ if __name__ == '__main__':
             d4000_in_list.append(d4000_in)
             d4000_out_list.append(d4000_out)
             d4000_out_err_list.append(d4000_out_err)
-            print "At model #", i+1, "with test redshift", test_redshift
+            print "Galaxies done so far:", galaxy_count, "Currently at model #", i+1, "with test redshift", test_redshift
             print "Model has intrinsic D4000:", d4000_in
             print "Simulated mock spectrum has D4000:", d4000_out
 
