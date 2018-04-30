@@ -413,14 +413,14 @@ if __name__ == '__main__':
 
     # save
     d4000_range = '_1p2to1p3'
-    np.save(massive_figures_dir + 'd4000_in_list' + d4000_range + '.npy', d4000_in_list)
-    np.save(massive_figures_dir + 'd4000_out_list' + d4000_range + '.npy', d4000_out_list)
-    np.save(massive_figures_dir + 'd4000_out_err_list' + d4000_range + '.npy', d4000_out_err_list)
-    np.save(massive_figures_dir + 'mock_model_index_list' + d4000_range + '.npy', mock_model_index_list)
-    np.save(massive_figures_dir + 'test_redshift_list' + d4000_range + '.npy', test_redshift_list)
-    np.save(massive_figures_dir + 'mock_zgrism_list' + d4000_range + '.npy', mock_zgrism_list)
-    np.save(massive_figures_dir + 'mock_zgrism_lowerr_list' + d4000_range + '.npy', mock_zgrism_lowerr_list)
-    np.save(massive_figures_dir + 'mock_zgrism_higherr_list' + d4000_range + '.npy', mock_zgrism_higherr_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_in_list' + d4000_range + '.npy', d4000_in_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_out_list' + d4000_range + '.npy', d4000_out_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_out_err_list' + d4000_range + '.npy', d4000_out_err_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/mock_model_index_list' + d4000_range + '.npy', mock_model_index_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/test_redshift_list' + d4000_range + '.npy', test_redshift_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_list' + d4000_range + '.npy', mock_zgrism_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_lowerr_list' + d4000_range + '.npy', mock_zgrism_lowerr_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_higherr_list' + d4000_range + '.npy', mock_zgrism_higherr_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."

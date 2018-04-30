@@ -97,6 +97,7 @@ if __name__ == '__main__':
     d4000_out_list = []  # D4000 measured on model after doing model modifications
     d4000_out_err_list = []
 
+    count = 0
     for i in range(total_models):
 
         # Measure D4000 before doing modifications
@@ -105,25 +106,30 @@ if __name__ == '__main__':
 
         d4000_in, d4000_in_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr, interpolate_flag=False)
 
-        test_redshift = 1.1
+        if d4000_in > 1.6:
+            test_redshift = 1.1
 
-        # Modify model and create mock spectrum
-        lam_obs, flam_obs, ferr_obs = dm.get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift)
+            # Modify model and create mock spectrum
+            lam_obs, flam_obs, ferr_obs = dm.get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift)
 
-        # Now de-redshift and find D4000
-        lam_em = lam_obs / (1 + test_redshift)
-        flam_em = flam_obs * (1 + test_redshift)
-        ferr_em = ferr_obs * (1 + test_redshift)
+            # Now de-redshift and find D4000
+            lam_em = lam_obs / (1 + test_redshift)
+            flam_em = flam_obs * (1 + test_redshift)
+            ferr_em = ferr_obs * (1 + test_redshift)
 
-        d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+            d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
-        # Append arrays
-        d4000_in_list.append(d4000_in)
-        d4000_out_list.append(d4000_out)
-        d4000_out_err_list.append(d4000_out_err)
+            # Append arrays
+            d4000_in_list.append(d4000_in)
+            d4000_out_list.append(d4000_out)
+            d4000_out_err_list.append(d4000_out_err)
 
-        ##### Plot old and new mock spectra overlaid to check #####
-        #overplot_model_mockspectra(model_lam_grid, model_flam, lam_em, flam_em, ferr_em, d4000_in, d4000_out, d4000_out_err, test_redshift)
+            ##### Plot old and new mock spectra overlaid to check #####
+            overplot_model_mockspectra(model_lam_grid, model_flam, lam_em, flam_em, ferr_em, d4000_in, d4000_out, d4000_out_err, test_redshift)
+
+            count += 1
+            if count > 10:
+                sys.exit(0)
 
     # Convert to numpy arrays
     d4000_in_list = np.asarray(d4000_in_list)
