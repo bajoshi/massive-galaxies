@@ -366,7 +366,7 @@ if __name__ == '__main__':
     invalid_idx2 = np.where(chi2_arr >= chi2_thresh)[0]
     only_chi2_rejected = reduce(np.intersect1d, (valid_idx1, invalid_idx2, valid_idx3, valid_idx4))
     print "Only rejected by chi2", len(only_chi2_rejected)
-    sys.exit(0)
+    #sys.exit(0)
     # I'm not making a cut on netsig here
 
     id_plot = id_arr[valid_idx]
@@ -388,6 +388,7 @@ if __name__ == '__main__':
     #print "pass the D4000, NetSig, and overall error constraints."
 
     # ---------- This block below is only for the zspec comparison plot ----------- #
+    """
     zspec_plot_1p4 = zspec_plot
     zgrism_plot_1p4 = zgrism_plot
     zphot_plot_1p4 = zphot_plot
@@ -406,6 +407,7 @@ if __name__ == '__main__':
 
     make_zspec_comparison_plot(zspec_plot_1p4, zgrism_plot_1p4, zphot_plot_1p4, zspec_plot_1p5, zgrism_plot_1p5, zphot_plot_1p5)
     sys.exit(0)
+    """
 
     # plot
     fig = plt.figure()
@@ -474,10 +476,8 @@ if __name__ == '__main__':
 
         binwidth = 0.005
 
-        ax.hist(photz_resid_hist_arr, bins=np.arange(data_min, data_max+binwidth, binwidth), \
-            histtype='step', color=myred, zorder=10)
-        ax.hist(grism_resid_hist_arr, bins=np.arange(data_min, data_max+binwidth, binwidth), \
-            histtype='step', color=myblue, zorder=10)
+        ax.hist(photz_resid_hist_arr, bins=np.arange(data_min, data_max+binwidth, binwidth), histtype='step', color=myred, zorder=10, linewidth=2)
+        ax.hist(grism_resid_hist_arr, bins=np.arange(data_min, data_max+binwidth, binwidth), histtype='step', color=myblue, zorder=10, linewidth=2)
     else:
         ax.hist(photz_resid_hist_arr, 20, range=[-0.05,0.05], histtype='step', color=myred, zorder=10)
         ax.hist(grism_resid_hist_arr, 20, range=[-0.05,0.05], histtype='step', color=myblue, zorder=10)
@@ -509,6 +509,15 @@ if __name__ == '__main__':
     ax.text(0.72, 0.73, r'$\mathrm{N=\,}$' + str(N_gal), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='black', size=12)
+
+    # ---------
+    ax.text(0.05, 0.95, r'$\mathrm{Grism{-}z}$', verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, color='k', size=12)
+    ax.text(0.05, 0.9, r'$\mathrm{\mu=}$' + "{:.3}".format(np.mean(grism_resid_hist_arr)), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, color='k', size=12)
+    ax.text(0.05, 0.85, r'$\mathrm{\sigma_{NMAD}=}$' + "{:.3}".format(sigma_nmad_grism), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, color='k', size=12)
+
+    ax.text(0.05, 0.76, r'$\mathrm{Photo{-}z}$', verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, color='k', size=12)
+    ax.text(0.05, 0.71, r'$\mathrm{\mu=}$' + "{:.3}".format(np.mean(photz_resid_hist_arr)), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, color='k', size=12)
+    ax.text(0.05, 0.66, r'$\mathrm{\sigma_{NMAD}=}$' + "{:.3}".format(sigma_nmad_photo), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, color='k', size=12)
 
     ax.minorticks_on()
 

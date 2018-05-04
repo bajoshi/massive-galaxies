@@ -108,13 +108,13 @@ def get_d4000(lam, spec, spec_err, interpolate_flag=True, makeplot=False):
         lam_new = np.insert(lam, insert_idx, insert_wav)
 
         # now find the interpolating function
-        f = interpolate.interp1d(lam, fnu)
+        f = interpolate.interp1d(lam, fnu, fill_value='extrapolate')
         fnu_insert_vals = f(insert_wav)
         fnu_new = np.insert(fnu, insert_idx, fnu_insert_vals)
 
         # Also find the error at the exact points
         # I'm basically just interpolating the error array as well
-        fe = interpolate.interp1d(lam, fnu_err)
+        fe = interpolate.interp1d(lam, fnu_err, fill_value='extrapolate')
         fnu_err_insert_vals = fe(insert_wav)
         fnu_err_new = np.insert(fnu_err, insert_idx, fnu_err_insert_vals)
 

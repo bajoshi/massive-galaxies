@@ -16,8 +16,11 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
+sys.path.append(massive_galaxies_dir + 'codes/')
+import mag_hist as mh
 import new_refine_grismz_gridsearch_parallel as ngp
 import dn4000_catalog as dc
+
 
 def get_all_d4000():
 
@@ -66,11 +69,12 @@ def get_all_d4000():
             flam_em = flam_obs * (1 + current_zphot)
             ferr_em = ferr_obs * (1 + current_zphot)
 
+            #print lam_em
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
-            # Now replace zphot with zgrism for those galaxies whose D4000 is >= 1.5
+            # Now replace zphot with zgrism for those galaxies whose D4000 is >= 1.4
             if np.isfinite(d4000) and np.isfinite(d4000_err):
-                if d4000 >= 1.5:
+                if d4000 >= 1.4:
 
                     if fieldname == 'GOODS-N':
                         id_idx = np.where(id_n == current_id)[0]
@@ -137,14 +141,14 @@ def make_d4000_vs_redshift_plot():
     ax = fig.add_subplot(111)
 
     ax.errorbar(redshift_pears_plot, d4000_pears_plot, yerr=d4000_err_pears_plot,\
-    fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=4, elinewidth=0.25)
+    fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=0.65, elinewidth=0.1)
 
     ax.axhline(y=1, linewidth=1, linestyle='--', color='r', zorder=10)
 
     # labels and grid
     ax.set_xlabel(r'$\mathrm{Redshift}$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{D}4000$', fontsize=15)
-    ax.grid(True)
+    ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
 
     # parallel x axis for age of the Universe
     # This solution came from 
@@ -166,6 +170,7 @@ def make_d4000_vs_redshift_plot():
 
     # Turn on minor ticks
     ax.minorticks_on()  # Only ax and not ax2. See comment below.
+    ax2.minorticks_off()
 
     """
     Struggled iwth the following error for a couple days (!!)
@@ -192,6 +197,8 @@ def make_d4000_hist():
 
     # read arrays
     d4000_pears_arr = np.load(massive_figures_dir + 'all_d4000_arr.npy')
+
+    print "Number of galaxies with D4000 measurements:", len(d4000_pears_arr)
 
     # Only consider finite elements
     valid_idx = np.where(np.isfinite(d4000_pears_arr))[0]
@@ -233,6 +240,8 @@ def make_redshift_hist():
     zgrism_n = np.load(massive_figures_dir + 'full_run/zgrism_list_gn.npy')
     zgrism_s = np.load(massive_figures_dir + 'full_run/zgrism_list_gs.npy')
 
+    print len(zgrism_n), len(zgrism_s)
+
     # concatenate
     redshift_pears_arr = np.concatenate((zgrism_n, zgrism_s))
 
@@ -264,6 +273,8 @@ def make_redshift_hist():
 
 if __name__ == '__main__':
     
+    make_d4000_vs_redshift_plot()
+    make_d4000_hist()
     make_redshift_hist()
 
     sys.exit(0)
