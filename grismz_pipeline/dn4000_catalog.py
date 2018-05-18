@@ -101,7 +101,14 @@ def get_d4000(lam, spec, spec_err, interpolate_flag=True, makeplot=False):
         insert_idx_3750 = np.where(lam > 3750.0)[0][0]
         insert_idx_3950 = np.where(lam > 3950.0)[0][0]
         insert_idx_4050 = np.where(lam > 4050.0)[0][0]
-        insert_idx_4250 = np.where(lam > 4250.0)[0][0]
+        # if there aren't any flux measurements above 4250 or the
+        # closest measurement is below 4250 
+        id_up = np.where(lam > 4250.0)[0]
+        if not id_up.size:
+            insert_idx_4250 = len(lam)
+            print '\033[91m' + 'HERE'
+        else:
+            insert_idx_4250 = np.where(lam > 4250.0)[0][0]
 
         insert_idx = np.array([insert_idx_3750, insert_idx_3950, insert_idx_4050, insert_idx_4250])
         insert_wav = np.array([3750.0, 3950.0, 4050.0, 4250.0])
