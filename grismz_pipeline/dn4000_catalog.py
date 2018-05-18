@@ -105,13 +105,44 @@ def get_d4000(lam, spec, spec_err, interpolate_flag=True, makeplot=False):
         # closest measurement is below 4250 
         id_up = np.where(lam > 4250.0)[0]
         if not id_up.size:
+            # If this is the case then insert the interpolated 
+            # flux measurement just after the last element
+            # numpy insert will insert the value before the provided index
+            # This is not a typical case
             insert_idx_4250 = len(lam)
-            print '\033[91m' + 'HERE'
         else:
             insert_idx_4250 = np.where(lam > 4250.0)[0][0]
 
-        insert_idx = np.array([insert_idx_3750, insert_idx_3950, insert_idx_4050, insert_idx_4250])
-        insert_wav = np.array([3750.0, 3950.0, 4050.0, 4250.0])
+        # Make sure that the spectrum you have does not already have any flux
+        # measurements at the exact wavelengths you are trying to insert
+        checkexact_arg3750 = np.where(lam == 3750.0)[0]
+        checkexact_arg3950 = np.where(lam == 3950.0)[0]
+        checkexact_arg4050 = np.where(lam == 4050.0)[0]
+        checkexact_arg4250 = np.where(lam == 4250.0)[0]
+
+        # if there are no flux measurements at the exact wavelengths
+        # This is the typical case
+        if (not checkexact_arg3750.size) and (not checkexact_arg3950.size) \
+        and (not checkexact_arg4050.size) and (not checkexact_arg4250.size):
+            insert_idx = np.array([insert_idx_3750, insert_idx_3950, insert_idx_4050, insert_idx_4250])
+            insert_wav = np.array([3750.0, 3950.0, 4050.0, 4250.0])
+
+        else:
+            # i.e. if there are one or more flux measurements at the exact D4000 bandpass wavelengths
+            allcheck_args = [checkexact_arg3750, checkexact_arg3950, checkexact_arg4050, checkexact_arg4250]
+            allinsert_idx = [insert_idx_3750, insert_idx_3950, insert_idx_4050, insert_idx_4250]
+            allinsert_wav = [3750.0, 3950.0, 4050.0, 4250.0]
+            insert_idx = []
+            insert_wav = []
+            for k in range(len(allcheck_args)):
+                if not allcheck_args[k].size:
+                    insert_idx.append(allinsert_idx[k])
+                    insert_wav.append(allinsert_wav[k])
+
+            insert_idx = np.asarray(insert_idx)
+            insert_wav = np.asarray(insert_wav)
+
+        # now do all the insertion
         lam_new = np.insert(lam, insert_idx, insert_wav)
 
         # now find the interpolating function
