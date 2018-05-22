@@ -23,7 +23,7 @@ if __name__ == '__main__':
     hdu = fits.open(home + '/Desktop/ipac/taffy_lzifu/taffy_xliners_figs_misc_data/taffy/SDSS/sdss_i_cutout.fits')
     wcs_sdss = WCS(hdu[0].header)
 
-    # Plot
+    # --------------------------------- Plot basic image --------------------------------- #
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111, projection=wcs_sdss)
     
@@ -36,12 +36,14 @@ if __name__ == '__main__':
     overlay = ax.get_coords_overlay('icrs')
     overlay.grid(color='white')
 
+    # --------------------------------- Basic info for patch --------------------------------- #
     # Show patch unrotated and rotated
     box_size = 30/3600  # arcseconds to degreees
     ra_ctr = 0.425
     dec_ctr = 23.497222
     rot_angle = 45  # degrees
 
+    # --------------------------------- Start adding patches --------------------------------- #
     # I think it expects bottom left coordinates 
     # but the RA axis on plots on the sky is usually 
     # flipped so convert it to the bottom right coords.
@@ -64,10 +66,10 @@ if __name__ == '__main__':
         transform=ax.get_transform('icrs'), alpha=0.2)
     ts = ax.transData
     rc = ts.transform([ra_ctr, dec_ctr])
-    print ra_ctr, dec_ctr
-    print rc
+    #print ra_ctr, dec_ctr
+    #print rc
     inv = ax.transData.inverted()
-    print inv.transform((rc[0], rc[1]))
+    #print inv.transform((rc[0], rc[1]))
     tr = mpl.transforms.Affine2D().rotate_deg(30)
     t = ts + tr
     r2.set_transform(t)
@@ -80,9 +82,65 @@ if __name__ == '__main__':
     # So computing the polygon by hand and then plotting it will work for sure
 
     ax.set_aspect('equal')
+
+    # ---------------------------------------------------------------------------------------------- #
+    # Now compute new FoV veritces using Rodrigues's formula
+    # You will need the cneter and the rotation angle
+    tl = (ra_ctr + box_size/2 , dec_ctr + box_size/2)
+    tr = (ra_ctr - box_size/2 , dec_ctr + box_size/2)
+    br = (ra_ctr - box_size/2 , dec_ctr - box_size/2)
+    bl = (ra_ctr + box_size/2 , dec_ctr - box_size/2)
+
+    # Say point A is top left
+    # Define vector for point
+    Ara = tl[0] * np.pi/180  # numpy cos and sin expect args in radians
+    Adec = tl[1] * np.pi/180
+    Ax = np.cos(Adec) * np.cos(Ara)
+    Ay = np.cos(Adec) * np.sin(Ara)
+    Az = np.sin(Adec)
+
+    # Define rotation axis vector i.e. vector for center of rectangle
+    Kra = ra_ctr * np.pi/180  # numpy cos and sin expect args in radians
+    Kdec = dec_ctr * np.pi/180
+    Kx = np.cos(Kdec) * np.cos(Kra)
+    Ky = np.cos(Kdec) * np.sin(Kra)
+    Kz = np.sin(Kdec)
+
+    # Compute cross product
+    A = np.array([Ax, Ay, Az])
+    K = np.array([Kx, Ky, Kz])
+
+    A = A - K
+
+    crossprod = np.cross(K, A)
+
+    print "Numpy cross product:", crossprod
+    print "Numpy dot product:", np.dot(A, K)
+
+    crossx = np.cos(Kdec) * np.sin(Kra) * np.sin(Adec) - np.sin(Kdec) * np.cos(Adec) * np.sin(Ara)
+    crossy = np.sin(Kdec) * np.cos(Adec) * np.cos(Ara) - np.sin(Adec) * np.cos(Kdec) * np.cos(Kra)
+    crossz = np.cos(Kdec) * np.cos(Kra) * np.cos(Adec) * np.sin(Ara) - np.cos(Kdec) * np.sin(Kra) * np.cos(Adec) * np.cos(Ara)
+
+    print "Hand cross product :", np.array([crossx, crossy, crossz])
+
+    # Get new vector in Cartesian
+    newx = Ax * np.cos(rot_angle * np.pi/180) + crossprod[0] * np.sin(rot_angle * np.pi/180)
+    newy = Ay * np.cos(rot_angle * np.pi/180) + crossprod[1] * np.sin(rot_angle * np.pi/180)
+    newz = Az * np.cos(rot_angle * np.pi/180) + crossprod[2] * np.sin(rot_angle * np.pi/180)
+
+    # Now convert new vector to spherical/astronomical
+    new_ra = np.arctan(newy/newx) * 180/np.pi
+    new_dec = np.arctan(newz/np.sqrt(newx*newx + newy*newy)) * 180/np.pi
+
+    # Plot old and new points
+    ax.scatter(tl[0], tl[1], s=12, color='magenta', transform=ax.get_transform('icrs'))
+    ax.scatter(ra_ctr, dec_ctr, s=12, color='blue', transform=ax.get_transform('icrs'))
+    ax.scatter(new_ra, new_dec, s=12, color='green', transform=ax.get_transform('icrs'))
+
     plt.show()
     sys.exit(0)
     
+    # ------------------- THIS STUFF BELOW DIDN'T WORK -------------------- #
     # ----------------------
     # Figure out the coords of all corners of the new rotated rectangle
     # by letting Astropy do the math here and then just plot the polygon patch.
@@ -142,8 +200,5 @@ if __name__ == '__main__':
     ax.scatter(tl_rot.lon.degree, tl_rot.lat.degree, s=10, color='green', transform=ax.get_transform('icrs'))
     ax.scatter(all_rot_ra_tocheck, all_rot_dec_tocheck, s=10, transform=ax.get_transform('icrs'))
 
-    #sys.exit(0)
-
-    # Also check by plotting the polygon patch
-
     plt.show()
+    #sys.exit(0)
