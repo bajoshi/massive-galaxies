@@ -10,7 +10,7 @@ import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Polygon
 
 home = os.getenv('HOME')
 figs_dir = home + "/Desktop/FIGS/"
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     ax.coords.frame.set_color('k')
 
     # Overlay coord grid
-    overlay = ax.get_coords_overlay('fk5')
+    overlay = ax.get_coords_overlay('icrs')
     overlay.grid(color='white')
 
     # Plot the pointings by looping over all positions
@@ -78,6 +78,8 @@ if __name__ == '__main__':
     # htat came with the master catalogs and 
     # pasted it into the file I'm reading here
     acs_wfc_fov_side = 202/3600  # arcseconds converted to degrees
+
+    ax.set_aspect('equal')
 
     with open(figs_dir + 'massive-galaxies/grismz_pipeline/pears_goodsn_pointings.txt') as f:
         lines = f.readlines()
@@ -102,17 +104,76 @@ if __name__ == '__main__':
 
                 print current_ra_str, current_dec_str, current_ra, current_dec, current_pa
 
-                # What you have are coordinates of the center of the pointing
-                # You need to give matplotlib the coords of the bottom left
-                current_ra_bl = current_ra + acs_wfc_fov_side / 2.0
-                current_dec_bl = current_dec - acs_wfc_fov_side / 2.0
+                # Coordinates of all four corners
+                tl = (current_ra + acs_wfc_fov_side/2 , current_dec + acs_wfc_fov_side/2)
+                tr = (current_ra - acs_wfc_fov_side/2 , current_dec + acs_wfc_fov_side/2)
+                br = (current_ra - acs_wfc_fov_side/2 , current_dec - acs_wfc_fov_side/2)
+                bl = (current_ra + acs_wfc_fov_side/2 , current_dec - acs_wfc_fov_side/2)
 
-                r = Rectangle((current_ra_bl, current_dec_bl), \
-                    width=acs_wfc_fov_side / np.cos(current_dec * np.pi/180.0), height=acs_wfc_fov_side, \
-                    edgecolor='red', facecolor='red', transform=ax.get_transform('fk5'), alpha=0.02)
-                t = mpl.transforms.Affine2D().rotate_around(current_ra, current_dec, current_pa*np.pi/180)
-                r.set_transform(t + ax.transData)
-                ax.add_patch(r)
+                fovpoints = [tl, tr, br, bl]
+                new_fovpoints = []
+
+                rot_angle = current_pa
+
+                ax.scatter(current_ra, current_dec, s=8, color='green', transform=ax.get_transform('icrs'))
+
+                # Loop over all points defining FoV
+                for i in range(4):
+
+                    # Define vector for point
+                    # I'm calling this vector 'A'
+                    Ara = fovpoints[i][0] * np.pi/180  # numpy cos and sin expect args in radians
+                    Adec = fovpoints[i][1] * np.pi/180
+                    Ax = np.cos(Adec) * np.cos(Ara)
+                    Ay = np.cos(Adec) * np.sin(Ara)
+                    Az = np.sin(Adec)
+
+                    # Define rotation axis vector i.e. vector for center of rectangle
+                    Kra = current_ra * np.pi/180  # numpy cos and sin expect args in radians
+                    Kdec = current_dec * np.pi/180
+                    Kx = np.cos(Kdec) * np.cos(Kra)
+                    Ky = np.cos(Kdec) * np.sin(Kra)
+                    Kz = np.sin(Kdec)
+
+                    # Compute cross product
+                    A = np.array([Ax, Ay, Az])
+                    K = np.array([Kx, Ky, Kz])
+
+                    # First get teh vector in the FoV plane
+                    # Because the older vector defined as 'A' above is 
+                    # from the origin to the point.
+                    # You want a vector drawn from teh FoV center to the point
+                    A_fovplane = A - K
+
+                    crossprod = np.cross(K, A_fovplane)
+
+                    Ax_fovplane = A_fovplane[0]
+                    Ay_fovplane = A_fovplane[1]
+                    Az_fovplane = A_fovplane[2]
+
+                    # Get new vector in Cartesian
+                    newx = Ax_fovplane * np.cos(rot_angle * np.pi/180) + crossprod[0] * np.sin(rot_angle * np.pi/180)
+                    newy = Ay_fovplane * np.cos(rot_angle * np.pi/180) + crossprod[1] * np.sin(rot_angle * np.pi/180)
+                    newz = Az_fovplane * np.cos(rot_angle * np.pi/180) + crossprod[2] * np.sin(rot_angle * np.pi/180)
+
+                    new_vector_fovplane = np.array([newx, newy, newz])
+                    new_vector = new_vector_fovplane + K
+
+                    newx = new_vector[0]
+                    newy = new_vector[1]
+                    newz = new_vector[2]
+
+                    # Now convert new vector to spherical/astronomical
+                    new_ra = np.arctan2(newy, newx) * 180/np.pi
+                    new_dec = np.arctan2(newz, np.sqrt(newx*newx + newy*newy)) * 180/np.pi
+
+                    # Save in list to plot polygon later
+                    new_fovpoints.append([new_ra, new_dec])
+
+                # Now plot new FoV polygon
+                print new_fovpoints
+                pnew = Polygon(np.array(new_fovpoints), facecolor='red', closed=True, transform=ax.get_transform('icrs'), alpha=0.05)
+                ax.add_patch(pnew)
 
     # Add text for field name
 

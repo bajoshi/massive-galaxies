@@ -101,6 +101,7 @@ if __name__ == '__main__':
     for i in range(4):
 
         # Define vector for point
+        # I'm calling this vector 'A'
         Ara = fovpoints[i][0] * np.pi/180  # numpy cos and sin expect args in radians
         Adec = fovpoints[i][1] * np.pi/180
         Ax = np.cos(Adec) * np.cos(Ara)
@@ -164,6 +165,7 @@ if __name__ == '__main__':
         new_fovpoints.append([new_ra, new_dec])
 
     # Now plot new FoV polygon
+    print new_fovpoints
     pnew = Polygon(np.array(new_fovpoints), facecolor='darkslategray', closed=True, transform=ax.get_transform('icrs'), alpha=0.7)
     ax.add_patch(pnew)
 
