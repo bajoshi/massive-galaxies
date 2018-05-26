@@ -97,6 +97,16 @@ if __name__ == '__main__':
     fovpoints = [tl, tr, br, bl]
     new_fovpoints = []
 
+    from astropy.coordinates import SkyCoord
+    from astropy import units as u
+
+    c1_orig = SkyCoord(str(fovpoints[0][0]), str(fovpoints[0][1]), frame='icrs', unit='deg')
+    c2_orig = SkyCoord(str(fovpoints[1][0]), str(fovpoints[1][1]), frame='icrs', unit='deg')
+    sep_orig = c1_orig.separation(c2_orig)
+    print "Original points:", c1_orig, c2_orig
+    print "Separation in arcseconds for original points:", sep_orig.arcsecond
+    sys.exit(0)
+
     # Loop over all points defining FoV
     for i in range(4):
 

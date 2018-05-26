@@ -33,6 +33,12 @@ def get_dec_deg(dec_str):
         dec = deg + (arcmin/60) + (arcsec/3600)
     return dec
 
+def get_vertices(ra_ctr, dec_ctr, box_size):
+
+    
+
+    return tl, tr, br, bl
+
 if __name__ == '__main__':
     
     # read in goods images which will have the pointings overlaid on them
@@ -105,13 +111,16 @@ if __name__ == '__main__':
                 print current_ra_str, current_dec_str, current_ra, current_dec, current_pa
 
                 # Coordinates of all four corners
-                tl = (current_ra + acs_wfc_fov_side/2 , current_dec + acs_wfc_fov_side/2)
-                tr = (current_ra - acs_wfc_fov_side/2 , current_dec + acs_wfc_fov_side/2)
-                br = (current_ra - acs_wfc_fov_side/2 , current_dec - acs_wfc_fov_side/2)
-                bl = (current_ra + acs_wfc_fov_side/2 , current_dec - acs_wfc_fov_side/2)
+                #tl = (current_ra + acs_wfc_fov_side/2 , current_dec + acs_wfc_fov_side/2)
+                #tr = (current_ra - acs_wfc_fov_side/2 , current_dec + acs_wfc_fov_side/2)
+                #br = (current_ra - acs_wfc_fov_side/2 , current_dec - acs_wfc_fov_side/2)
+                #bl = (current_ra + acs_wfc_fov_side/2 , current_dec - acs_wfc_fov_side/2)
+
+                tl, tr, br, bl = get_vertices(current_ra, current_dec, acs_wfc_fov_side)
 
                 fovpoints = [tl, tr, br, bl]
                 new_fovpoints = []
+                print fovpoints
 
                 rot_angle = current_pa
 
@@ -138,6 +147,9 @@ if __name__ == '__main__':
                     # Compute cross product
                     A = np.array([Ax, Ay, Az])
                     K = np.array([Kx, Ky, Kz])
+                    print "\n"
+                    print A
+                    print K
 
                     # First get teh vector in the FoV plane
                     # Because the older vector defined as 'A' above is 
@@ -146,6 +158,8 @@ if __name__ == '__main__':
                     A_fovplane = A - K
 
                     crossprod = np.cross(K, A_fovplane)
+                    print A_fovplane
+                    print crossprod
 
                     Ax_fovplane = A_fovplane[0]
                     Ay_fovplane = A_fovplane[1]
@@ -155,6 +169,7 @@ if __name__ == '__main__':
                     newx = Ax_fovplane * np.cos(rot_angle * np.pi/180) + crossprod[0] * np.sin(rot_angle * np.pi/180)
                     newy = Ay_fovplane * np.cos(rot_angle * np.pi/180) + crossprod[1] * np.sin(rot_angle * np.pi/180)
                     newz = Az_fovplane * np.cos(rot_angle * np.pi/180) + crossprod[2] * np.sin(rot_angle * np.pi/180)
+                    print Ax_fovplane * np.cos(rot_angle * np.pi/180), crossprod[0] * np.sin(rot_angle * np.pi/180)
 
                     new_vector_fovplane = np.array([newx, newy, newz])
                     new_vector = new_vector_fovplane + K
@@ -162,6 +177,8 @@ if __name__ == '__main__':
                     newx = new_vector[0]
                     newy = new_vector[1]
                     newz = new_vector[2]
+                    print new_vector_fovplane
+                    print new_vector
 
                     # Now convert new vector to spherical/astronomical
                     new_ra = np.arctan2(newy, newx) * 180/np.pi
@@ -169,6 +186,24 @@ if __name__ == '__main__':
 
                     # Save in list to plot polygon later
                     new_fovpoints.append([new_ra, new_dec])
+                    print new_fovpoints
+
+                    if i == 1:
+                        from astropy.coordinates import SkyCoord
+                        from astropy import units as u
+
+                        c1_orig = SkyCoord(str(fovpoints[0][0]), str(fovpoints[0][1]), frame='icrs', unit='deg')
+                        c2_orig = SkyCoord(str(fovpoints[1][0]), str(fovpoints[1][1]), frame='icrs', unit='deg')
+                        sep_orig = c1_orig.separation(c2_orig)
+                        print "Original points:", c1_orig, c2_orig
+                        print "Separation in arcseconds for original points:", sep_orig.arcsecond
+
+                        c1 = SkyCoord(str(new_fovpoints[0][0]), str(new_fovpoints[0][1]), frame='icrs', unit='deg')
+                        c2 = SkyCoord(str(new_fovpoints[1][0]), str(new_fovpoints[1][1]), frame='icrs', unit='deg')
+                        sep = c1.separation(c2)
+                        print "Rotated points:", c1, c2
+                        print "Separation in arcseconds for rotated points:", sep.arcsecond
+                        sys.exit(0)
 
                 # Now plot new FoV polygon
                 print new_fovpoints
