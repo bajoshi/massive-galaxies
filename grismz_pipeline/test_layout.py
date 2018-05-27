@@ -84,12 +84,75 @@ if __name__ == '__main__':
     ax.set_aspect('equal')
 
     # ---------------------------------------------------------------------------------------------- #
+    # ------------------------------------ NEW COORD CALCULATION ----------------------------------- #
+    # ---------------------------------------------------------------------------------------------- #
     # Now compute new FoV veritces using Rodrigues's formula
     # You will need the cneter and the rotation angle
-    tl = (ra_ctr + box_size/2 , dec_ctr + box_size/2)
-    tr = (ra_ctr - box_size/2 , dec_ctr + box_size/2)
-    br = (ra_ctr - box_size/2 , dec_ctr - box_size/2)
-    bl = (ra_ctr + box_size/2 , dec_ctr - box_size/2)
+    #tl = (ra_ctr + box_size/2 , dec_ctr + box_size/2)
+    #tr = (ra_ctr - box_size/2 , dec_ctr + box_size/2)
+    #br = (ra_ctr - box_size/2 , dec_ctr - box_size/2)
+    #bl = (ra_ctr + box_size/2 , dec_ctr - box_size/2)
+    from astropy.coordinates import SkyCoord
+    from astropy import units as u
+
+    print "Center:", ra_ctr, dec_ctr
+
+    # Get the vertices first 
+    # First vertex: Top Left
+    dec_top = (dec_ctr + box_size/2)
+
+    mu = np.cos(dec_top * np.pi/180) * np.cos(dec_ctr * np.pi/180) * np.cos(ra_ctr * np.pi/180)
+    nu = np.cos(dec_top * np.pi/180) * np.cos(dec_ctr * np.pi/180) * np.sin(ra_ctr * np.pi/180)
+    sigma = np.sin(dec_top* np.pi/180) * np.sin(dec_ctr * np.pi/180)
+    lam = np.cos(box_size * np.pi / (180*np.sqrt(2))) - sigma
+    print mu*lam
+    print np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4)
+
+    tr = (np.arccos((mu*lam + np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_top)
+    tl = (np.arccos((mu*lam - np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_top)
+
+    # -------------------------------------------------------------------------------------- #
+    dec_bottom = (dec_ctr - box_size/2)
+
+    mu = np.cos(dec_bottom * np.pi/180) * np.cos(dec_ctr * np.pi/180) * np.cos(ra_ctr * np.pi/180)
+    nu = np.cos(dec_bottom * np.pi/180) * np.cos(dec_ctr * np.pi/180) * np.sin(ra_ctr * np.pi/180)
+    sigma = np.sin(dec_bottom* np.pi/180) * np.sin(dec_ctr * np.pi/180)
+    lam = np.cos(box_size * np.pi / (180*np.sqrt(2))) - sigma
+
+    br = (np.arccos((mu*lam + np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_bottom)
+    bl = (np.arccos((mu*lam - np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_bottom)
+
+    ccen = SkyCoord(str(ra_ctr), str(dec_ctr), frame='icrs', unit='deg')
+    c1_orig = SkyCoord(str(tl[0]), str(tl[1]), frame='icrs', unit='deg')
+    c2_orig = SkyCoord(str(tr[0]), str(tr[1]), frame='icrs', unit='deg')
+    c3_orig = SkyCoord(str(br[0]), str(br[1]), frame='icrs', unit='deg')
+    c4_orig = SkyCoord(str(bl[0]), str(bl[1]), frame='icrs', unit='deg')
+
+    print "Original points at Top:" 
+    print c1_orig
+    print c2_orig
+    print "Original points at Bottom:" 
+    print c3_orig
+    print c4_orig
+
+    print "Size of Box (arcseconds):", box_size * 3600
+    print "Size of Box * sqrt(2) (arcseconds):", box_size * 3600 * np.sqrt(2)
+    print "Size of Box / sqrt(2) (arcseconds):", box_size * 3600 / np.sqrt(2)
+
+    print "Separation from center for A:", ccen.separation(c1_orig).arcsecond
+    print "Separation from center for B:", ccen.separation(c2_orig).arcsecond
+    print "Separation from center for C:", ccen.separation(c3_orig).arcsecond
+    print "Separation from center for D:", ccen.separation(c4_orig).arcsecond
+
+    print "Distance AB:", c1_orig.separation(c2_orig).arcsecond
+    print "Distance CD:", c3_orig.separation(c4_orig).arcsecond
+    print "Distance AD:", c1_orig.separation(c4_orig).arcsecond
+    print "Distance BC:", c2_orig.separation(c3_orig).arcsecond
+
+    print "Distance AC (diagonal):", c1_orig.separation(c3_orig).arcsecond
+    print "Distance BD (diagonal):", c2_orig.separation(c4_orig).arcsecond
+
+    sys.exit(0)
 
     # plot center point
     ax.scatter(ra_ctr, dec_ctr, s=12, color='blue', transform=ax.get_transform('icrs'))
