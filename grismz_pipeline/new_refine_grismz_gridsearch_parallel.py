@@ -366,7 +366,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
 
     return None
 
-def get_data(pears_index, field):
+def get_data(pears_index, field, check_contam=True):
     """
     Using code from fileprep in this function; not including 
     everything because it does a few things that I don't 
@@ -421,12 +421,13 @@ def get_data(pears_index, field):
     """
  
     # Check that contamination level is not too high
-    if np.nansum(contam) > 0.33 * np.nansum(flam_obs):
-        print pears_index, " in ", field, " has an too high a level of contamination.",
-        print "Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped."
-        return_code = 0
-        fitsfile.close()
-        return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
+    if check_contam:
+        if np.nansum(contam) > 0.33 * np.nansum(flam_obs):
+            print pears_index, " in ", field, " has an too high a level of contamination.",
+            print "Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped."
+            return_code = 0
+            fitsfile.close()
+            return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Check that input wavelength array is not empty
     if not lam_obs.size:
