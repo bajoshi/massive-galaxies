@@ -15,6 +15,8 @@ from matplotlib.patches import Rectangle, Polygon
 home = os.getenv('HOME')
 figs_dir = home + "/Desktop/FIGS/"
 taffy_dir = home + '/Desktop/ipac/taffy/'
+massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
+massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 
 sys.path.append(taffy_dir + 'codes/')
 import vel_channel_map as vcm
@@ -108,27 +110,23 @@ def get_vertices(ra_ctr, dec_ctr, box_size):
 
     return tl, tr, br, bl
 
-if __name__ == '__main__':
-    
-    # read in goods images which will have the pointings overlaid on them
-    goodsn = fits.open(figs_dir + 'goodsn_3dhst_v4.0_f606w/goodsn_3dhst.v4.0.F606w_orig_sci.fits')
-    goodss = fits.open(figs_dir + 'goodss_3dhst_v4.0_f606w/goodss_3dhst.v4.0.F606w_orig_sci.fits')
+def do_goods_layout(goods_fitsfile, fieldname):
 
     # read in WCS
-    wcs_goodsn = WCS(goodsn[0].header)
+    wcs_goods = WCS(goods_fitsfile[0].header)
 
     # plot image
     fig = plt.figure(figsize=(6,6))
-    ax = fig.add_subplot(111, projection=wcs_goodsn)
+    ax = fig.add_subplot(111, projection=wcs_goods)
 
-    norm = ImageNormalize(goodsn[0].data, interval=ZScaleInterval(), stretch=LogStretch())
+    norm = ImageNormalize(goods_fitsfile[0].data, interval=ZScaleInterval(), stretch=LogStretch())
     orig_cmap = mpl.cm.Greys
     shifted_cmap = vcm.shiftedColorMap(orig_cmap, midpoint=0.6, name='shifted')
 
     # NaN out exact zeros before plotting
-    idx = np.where(goodsn[0].data == 0.0)
-    goodsn[0].data[idx] = np.nan
-    im = ax.imshow(goodsn[0].data, origin='lower', cmap=shifted_cmap, vmin=-0.005, vmax=0.15, norm=norm)
+    idx = np.where(goods_fitsfile[0].data == 0.0)
+    goods_fitsfile[0].data[idx] = np.nan
+    im = ax.imshow(goods_fitsfile[0].data, origin='lower', cmap=shifted_cmap, vmin=-0.005, vmax=0.15, norm=norm)
 
     # Set tick labels on/off
     ax.set_autoscale_on(False)
@@ -142,6 +140,9 @@ if __name__ == '__main__':
     lat.set_ticklabel_visible(True)
     lon.set_axislabel('')
     lat.set_axislabel('')
+
+    lon.display_minor_ticks(True)
+    lat.display_minor_ticks(True)
 
     ax.coords.frame.set_color('k')
 
@@ -160,13 +161,19 @@ if __name__ == '__main__':
 
     ax.set_aspect('equal')
 
-    with open(figs_dir + 'massive-galaxies/grismz_pipeline/pears_goodsn_pointings.txt') as f:
+    if fieldname == 'n':
+        grism_pointing_file = figs_dir + 'massive-galaxies/grismz_pipeline/pears_goodsn_pointings.txt'
+    elif fieldname == 's':
+        grism_pointing_file = figs_dir + 'massive-galaxies/grismz_pipeline/pears_goodss_pointings.txt'
+
+    with open(grism_pointing_file) as f:
         lines = f.readlines()
         for line in lines[4:]:
             current_pointing_set = []
-            if 'GOODS-N-PEARS' in line:
+            if ('GOODS-N-PEARS' in line) or ('GOODS-S-PEARS' in line):
                 # then its a line indicating the start of 
-                # a new set of pointings with the same PA in GOODS-N
+                # a new set of pointings with the same PA 
+                # in GOODS-N or GOODS-S
                 continue
             if 'Position Angle' in line:
                 # this indicates the PA
@@ -244,15 +251,38 @@ if __name__ == '__main__':
                     new_fovpoints.append([new_ra, new_dec])
 
                 # Now plot new FoV polygon
-                pnew = Polygon(np.array(new_fovpoints), facecolor='red', closed=True, transform=ax.get_transform('icrs'), alpha=0.03)
+                pnew = Polygon(np.array(new_fovpoints), facecolor='red', closed=True, \
+                    transform=ax.get_transform('icrs'), alpha=0.02, edgecolor='red', linewidth=1.5)
                 ax.add_patch(pnew)
 
     # Add text for field name
+    if fieldname == 'n':
+        ax.text(0.03, 0.08, r'$\mathrm{GOODS-N}$', \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=17, zorder=10)
+    elif fieldname == 's':
+        ax.text(0.03, 0.08, r'$\mathrm{GOODS-S}$', \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=17, zorder=10)
+    
+    # Save figure
+    fig.savefig(massive_figures_dir + 'pears_goods' + fieldname + '_layout.png', dpi=300, bbox_inches='tight')
+    # this has to be a PNG since I'm using an alpha channel for each pointing
 
-    plt.show()
     plt.cla()
     plt.clf()
     plt.close()
+
+    return None
+
+if __name__ == '__main__':
+    
+    # read in goods images which will have the pointings overlaid on them
+    goodsn = fits.open(figs_dir + 'goodsn_3dhst_v4.0_f606w/goodsn_3dhst.v4.0.F606w_orig_sci.fits')
+    goodss = fits.open(figs_dir + 'goodss_3dhst_v4.0_f606w/goodss_3dhst.v4.0.F606w_orig_sci.fits')
+
+    do_goods_layout(goodsn, 'n')
+    do_goods_layout(goodss, 's')
 
     # Close files
     goodsn.close()
