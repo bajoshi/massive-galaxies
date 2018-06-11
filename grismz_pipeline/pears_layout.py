@@ -35,7 +35,7 @@ def get_dec_deg(dec_str):
         dec = deg + (arcmin/60) + (arcsec/3600)
     return dec
 
-def get_vertices(ra_ctr, dec_ctr, box_size):
+def get_vertices(ra_ctr, dec_ctr, box_size, fieldname):
 
     # ---------------------------------------------------------------------------------------------- #
     # ------------------------------------ NEW COORD CALCULATION ----------------------------------- #
@@ -56,8 +56,15 @@ def get_vertices(ra_ctr, dec_ctr, box_size):
     sigma = np.sin(dec_top* np.pi/180) * np.sin(dec_ctr * np.pi/180)
     lam = np.cos(box_size * np.pi / (180*np.sqrt(2))) - sigma
 
-    tr = (360 - np.arccos((mu*lam + np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_top)
-    tl = (360 - np.arccos((mu*lam - np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_top)
+    if fieldname == 'n':
+        tr = (360 - np.arccos((mu*lam + np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_top)
+        tl = (360 - np.arccos((mu*lam - np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_top)
+    elif fieldname == 's':  
+        # in principle these formulae here should also work for north but they don't.
+        # I think because np.arccos() is a multivalued function and it is only giving 
+        # me the first valid answer.
+        tr = (np.arccos((mu*lam + np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_top)
+        tl = (np.arccos((mu*lam - np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_top)
 
     # -------------------------------------------------------------------------------------- #
     dec_bottom = (dec_ctr - box_size/2)
@@ -67,8 +74,15 @@ def get_vertices(ra_ctr, dec_ctr, box_size):
     sigma = np.sin(dec_bottom* np.pi/180) * np.sin(dec_ctr * np.pi/180)
     lam = np.cos(box_size * np.pi / (180*np.sqrt(2))) - sigma
 
-    br = (360 - np.arccos((mu*lam + np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_bottom)
-    bl = (360 - np.arccos((mu*lam - np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_bottom)
+    if fieldname == 'n':
+        br = (360 - np.arccos((mu*lam + np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_bottom)
+        bl = (360 - np.arccos((mu*lam - np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_bottom)
+    elif fieldname == 's':  
+        # in principle these formulae here should also work for north but they don't.
+        # I think because np.arccos() is a multivalued function and it is only giving 
+        # me the first valid answer.
+        br = (np.arccos((mu*lam + np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_bottom)
+        bl = (np.arccos((mu*lam - np.sqrt(mu**2*nu**2 - nu**2*lam**2 + nu**4))/(mu**2 + nu**2)) * 180/np.pi, dec_bottom)
 
     # ----------- Additional helpful debugging info ----------- #
     """
@@ -126,7 +140,7 @@ def do_goods_layout(goods_fitsfile, fieldname):
     # NaN out exact zeros before plotting
     idx = np.where(goods_fitsfile[0].data == 0.0)
     goods_fitsfile[0].data[idx] = np.nan
-    im = ax.imshow(goods_fitsfile[0].data, origin='lower', cmap=shifted_cmap, vmin=-0.005, vmax=0.15, norm=norm)
+    im = ax.imshow(goods_fitsfile[0].data, origin='lower', cmap=shifted_cmap, vmin=-0.005, vmax=0.3, norm=norm)
 
     # Set tick labels on/off
     ax.set_autoscale_on(False)
@@ -138,8 +152,12 @@ def do_goods_layout(goods_fitsfile, fieldname):
     lon.set_ticklabel_visible(True)
     lat.set_ticks_visible(True)
     lat.set_ticklabel_visible(True)
+    
     lon.set_axislabel('')
     lat.set_axislabel('')
+
+    lon.set_ticklabel_position('all')
+    lat.set_ticklabel_position('all')
 
     lon.display_minor_ticks(True)
     lat.display_minor_ticks(True)
@@ -147,8 +165,8 @@ def do_goods_layout(goods_fitsfile, fieldname):
     ax.coords.frame.set_color('k')
 
     # Overlay coord grid
-    overlay = ax.get_coords_overlay('icrs')
-    overlay.grid(color='white')
+    #overlay = ax.get_coords_overlay('icrs')
+    #overlay.grid(color='white')
 
     # Plot the pointings by looping over all positions
     # read in PEARS pointings information
@@ -188,12 +206,11 @@ def do_goods_layout(goods_fitsfile, fieldname):
                 current_ra = get_ra_deg(current_ra_str)
                 current_dec = get_dec_deg(current_dec_str)
 
-                print current_ra_str, current_dec_str, current_ra, current_dec, current_pa
-
-                tl, tr, br, bl = get_vertices(current_ra, current_dec, acs_wfc_fov_side)
+                tl, tr, br, bl = get_vertices(current_ra, current_dec, acs_wfc_fov_side, fieldname)
 
                 fovpoints = [tl, tr, br, bl]
                 new_fovpoints = []
+                print current_ra_str, current_dec_str, current_ra, current_dec, current_pa
 
                 rot_angle = current_pa
 
@@ -266,7 +283,7 @@ def do_goods_layout(goods_fitsfile, fieldname):
         transform=ax.transAxes, color='k', size=17, zorder=10)
     
     # Save figure
-    fig.savefig(massive_figures_dir + 'pears_goods' + fieldname + '_layout.png', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'pears_goods' + fieldname + '_layout.png', dpi=450, bbox_inches='tight')
     # this has to be a PNG since I'm using an alpha channel for each pointing
 
     plt.cla()
