@@ -33,7 +33,7 @@ figs_dir = home + "/Desktop/FIGS/"
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
-import grid_coadd as gd
+#import grid_coadd as gd
 #import fast_chi2_jackknife_massive_galaxies as fcjm
 #import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
@@ -585,7 +585,7 @@ if __name__ == '__main__':
             # D4000 check # accept only if D4000 greater than 1.2
             # get d4000
             # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
-            # This is way I'm letting some lower D4000 values into my sample. Just so I don't anything.
+            # This is way I'm letting some lower D4000 values into my sample. Just so I don't miss too many galaxies.
             # A few of the galaxies with really wrong starting_z will of course be missed.
             lam_em = lam_obs / (1 + starting_z)
             flam_em = flam_obs * (1 + starting_z)
