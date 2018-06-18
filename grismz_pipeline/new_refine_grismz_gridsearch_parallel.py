@@ -33,7 +33,7 @@ figs_dir = home + "/Desktop/FIGS/"
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
-#import grid_coadd as gd
+import grid_coadd as gd
 #import fast_chi2_jackknife_massive_galaxies as fcjm
 #import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
@@ -333,7 +333,8 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     high_zerr = upper_z_lim - grismz
 
     ax1.text(0.75, 0.35, \
-    r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
+    r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + \
+    r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
     ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
@@ -582,6 +583,13 @@ if __name__ == '__main__':
                 print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
                 continue
 
+            # Check that hte lambda array is not too incomplete 
+            # I don't want the D4000 code extrapolating too much.
+            # I'm choosing this limit to be 50A
+            if np.max(lam_obs/(1+starting_z)) < 4200:
+                print "Skipping because lambda array is incomplete by too much ie. the max val in lambda is less than 4200A."
+                continue
+
             # D4000 check # accept only if D4000 greater than 1.2
             # get d4000
             # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
@@ -645,7 +653,8 @@ if __name__ == '__main__':
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
             # ------------- Call actual fitting function ------------- #
-            zg, zerr_low, zerr_up, min_chi2, age, tau, av = do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
+            zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
+            do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift, 0.2)
 
