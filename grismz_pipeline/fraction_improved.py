@@ -87,6 +87,12 @@ if __name__ == '__main__':
             flam_em = flam_obs * (1 + current_zgrism)
             ferr_em = ferr_obs * (1 + current_zgrism)
 
+            # Check lambda array
+            if lam_em[-1] < 4200:
+                continue
+            if lam_em[0] > 3800:
+                continue
+
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
             # check d4000

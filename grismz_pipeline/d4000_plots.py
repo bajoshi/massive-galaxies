@@ -215,7 +215,7 @@ def make_d4000_hist():
     totalbins = np.floor((max(d4000_pears_plot) - min(d4000_pears_plot))/binsize)
 
     ncount, edges, patches = ax.hist(d4000_pears_plot, totalbins, range=[0.0,4.0], color='lightgray', align='mid', zorder=10)
-    ax.grid(True)
+    ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
 
     # shade the selection region
     edges_plot = np.where(edges >= 1.4)[0]
@@ -261,7 +261,7 @@ def make_redshift_hist():
 
     ncount, edges, patches = ax.hist(redshift_pears_plot, totalbins, \
         color='red', histtype='step', align='mid', zorder=10)
-    ax.grid(True)
+    ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
 
     ax.set_xlabel(r'$\mathrm{z_{grism}}$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)

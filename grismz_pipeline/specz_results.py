@@ -79,6 +79,10 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     import matplotlib.gridspec as gridspec
     from scipy.optimize import curve_fit
 
+    print "Len spec arrays:", len(z_spec_1p4), len(z_spec_1p5)
+    print "Len phot arrays:", len(z_phot_1p4), len(z_phot_1p5)
+    print "Len grism arrays:", len(z_grism_1p4), len(z_grism_1p5)
+
     mpl.rcParams['axes.grid'] = True
     mpl.rcParams['grid.color'] = mh.rgb_to_hex(240, 240, 240)
 
@@ -131,7 +135,7 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     ax1.text(0.05, 0.93, r'$\mathrm{D4000\geq 1.4}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=17)
-    ax1.text(0.05, 0.83, r'$\mathrm{N=57}$', \
+    ax1.text(0.05, 0.83, r'$\mathrm{N=}$' + r'$\ $' + str(len(z_grism_1p4)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=17)
     ax1.text(0.05, 0.73, r'$\mathrm{(a)}$', \
@@ -198,7 +202,7 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     ax3.text(0.05, 0.93, r'$\mathrm{D4000\geq 1.4}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax3.transAxes, color='k', size=17)
-    ax3.text(0.05, 0.83, r'$\mathrm{N=57}$', \
+    ax3.text(0.05, 0.83, r'$\mathrm{N=}$' + r'$\ $' + str(len(z_grism_1p4)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax3.transAxes, color='k', size=17)
     ax3.text(0.05, 0.73, r'$\mathrm{(b)}$', \
@@ -253,7 +257,7 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     ax5.text(0.05, 0.93, r'$\mathrm{D4000\geq 1.5}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax5.transAxes, color='k', size=17)
-    ax5.text(0.05, 0.83, r'$\mathrm{N=40}$', \
+    ax5.text(0.05, 0.83, r'$\mathrm{N=}$' + r'$\ $' + str(len(z_grism_1p5)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax5.transAxes, color='k', size=17)
     ax5.text(0.05, 0.73, r'$\mathrm{(c)}$', \
@@ -306,7 +310,7 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
     ax7.text(0.05, 0.93, r'$\mathrm{D4000\geq 1.5}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax7.transAxes, color='k', size=17)
-    ax7.text(0.05, 0.83, r'$\mathrm{N=40}$', \
+    ax7.text(0.05, 0.83, r'$\mathrm{N=}$' + r'$\ $' + str(len(z_grism_1p5)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax7.transAxes, color='k', size=17)
     ax7.text(0.05, 0.73, r'$\mathrm{(d)}$', \
@@ -357,7 +361,7 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh = 1.2
+    d4000_thresh = 1.4
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
@@ -388,6 +392,7 @@ if __name__ == '__main__':
     #print "pass the D4000, NetSig, and overall error constraints."
 
     # ---------- This block below is only for the zspec comparison plot ----------- #
+    # To properly do this the threshold above should be set to 1.4
     """
     zspec_plot_1p4 = zspec_plot
     zgrism_plot_1p4 = zgrism_plot

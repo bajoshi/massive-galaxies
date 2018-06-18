@@ -93,12 +93,22 @@ def makeplot(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalph
     myblue = mh.rgb_to_hex(0, 100, 180)
     myred = mh.rgb_to_hex(214, 39, 40)  # tableau 20 red
 
-    # plot
-    ax1.plot(lam_obs, flam_obs, ls='-', color='k')
-    ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
-    ax1.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
+    # Convert flam to fnu 
+    # since D4000 uses fnu this is a better way to show the spectra
+    speed_of_light = 2.99792458e10  # in cm/s
+    fnu_obs = flam_obs * lam_obs**2 / speed_of_light  # spec is in f_lam units
+    fnuerr_obs = ferr_obs * lam_obs**2 / speed_of_light
 
-    resid_fit = (flam_obs - bestalpha*best_fit_model_in_objlamgrid) / ferr_obs
+    best_fit_model_in_objlamgrid_fnu = best_fit_model_in_objlamgrid * lam_obs**2 / speed_of_light
+    bestalpha = np.sum(fnu_obs * best_fit_model_in_objlamgrid_fnu / (fnuerr_obs**2)) / \
+    np.sum(best_fit_model_in_objlamgrid_fnu**2 / fnuerr_obs**2)
+
+    # plot
+    ax1.plot(lam_obs, fnu_obs, ls='-', color='k')
+    ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid_fnu, ls='-', color='r')
+    ax1.fill_between(lam_obs, fnu_obs + fnuerr_obs, fnu_obs - fnuerr_obs, color='lightgray')
+
+    resid_fit = (fnu_obs - bestalpha*best_fit_model_in_objlamgrid_fnu) / fnuerr_obs
     ax2.plot(lam_obs, resid_fit, ls='-', color='k')
 
     # minor ticks
@@ -408,6 +418,6 @@ if __name__ == '__main__':
     ax2_resid_gal12.set_ylim(-3,3)
 
     #----------------
-    fig_gs.savefig(massive_figures_dir + 'example_spectra_grid.eps', dpi=300, bbox_inches='tight')
+    fig_gs.savefig(massive_figures_dir + 'example_spectra_grid_fnu.eps', dpi=300, bbox_inches='tight')
 
     sys.exit(0)
