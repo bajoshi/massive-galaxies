@@ -104,7 +104,7 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     search_range, d4000_in, d4000_out, d4000_out_err, count):
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=41, dtype=np.float64)
+    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=81, dtype=np.float64)
     z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
@@ -257,7 +257,8 @@ def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bes
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
     ax1.text(0.45, 0.21, \
-    r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
+    r'$\mathrm{z_{grism}\, =\, }$' + \
+    "{:.4}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
@@ -386,9 +387,10 @@ if __name__ == '__main__':
             current_zgrism = test_redshift
 
             # Fit 
-            mock_zgrism, mock_zgrism_lowlim, mock_zgrism_highlim = fit_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf.array, test_redshift, resampling_lam_grid, \
+            mock_zgrism, mock_zgrism_lowlim, mock_zgrism_highlim = \
+            fit_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf.array, test_redshift, resampling_lam_grid, \
             model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
-            0.1, d4000_in, d4000_out, d4000_out_err, i+1)
+            0.2, d4000_in, d4000_out, d4000_out_err, i+1)
 
             # Convert limits to errors
             mock_zgrism_lowerr = mock_zgrism - mock_zgrism_lowlim
