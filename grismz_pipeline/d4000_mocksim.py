@@ -71,7 +71,7 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift):
     flam_obs = resampled_flam
 
     # multiply flam by a constant to get to some realistic flux levels
-    flam_obs *= 1e-14
+    #flam_obs *= 1e-14
 
     # assign a constant 5% error bar
     ferr_obs = np.ones(len(flam_obs))
@@ -313,10 +313,15 @@ if __name__ == '__main__':
     mock_zgrism_list = []
     mock_zgrism_lowerr_list = []
     mock_zgrism_higherr_list = []
+    model_age_list  = []
+    model_metallicity_list = []
+    model_tau_list = []
+    model_av_list = []
+    count_list = []
 
     galaxy_count = 0
 
-    for i in range(total_models):
+    for i in range(15000):
 
         # Measure D4000 before doing modifications
         model_flam = model_comp_spec[i]
@@ -354,7 +359,7 @@ if __name__ == '__main__':
         d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
         # Check D4000 value and only then proceed
-        if d4000_out >= 1.2 and d4000_out <= 1.3:
+        if d4000_out >= 1.2 and d4000_out < 1.4:
             d4000_in_list.append(d4000_in)
             d4000_out_list.append(d4000_out)
             d4000_out_err_list.append(d4000_out_err)
@@ -396,9 +401,35 @@ if __name__ == '__main__':
             mock_zgrism_lowerr_list.append(mock_zgrism_lowerr)
             mock_zgrism_higherr_list.append(mock_zgrism_higherr)
 
+            # Find model params and save them too
+            model_age_list.append(model_age)
+            model_met = float(bc03_all_spec_hdulist[i + 1].header['METAL'])
+
+            # now check if the best fit model is an ssp or csp 
+            # only the csp models have tau and tauV parameters
+            # so if you try to get these keywords for the ssp fits files
+            # it will fail with a KeyError
+            if 'TAU_GYR' in list(bc03_all_spec_hdulist[i + 1].header.keys()):
+                model_tau = float(bc03_all_spec_hdulist[i + 1].header['TAU_GYR'])
+                model_tauv = float(bc03_all_spec_hdulist[i + 1].header['TAUV'])
+            else:
+                # if the best fit model is an SSP then assign -99.0 to tau and tauV
+                model_tau = -99.0
+                model_tauv = -99.0
+
+            # Convert to Av
+            model_av = (model_tauv/1.086)
+            if model_av < 0:
+                model_av = -99.0
+
+            model_metallicity_list.append(model_met)
+            model_tau_list.append(model_tau)
+            model_av_list.append(model_av)
+            count_list.append(i+1)
+
             galaxy_count += 1
 
-            if galaxy_count > 100:
+            if galaxy_count > 500:
                 break
 
     # convert to numpy arrays and save
@@ -411,8 +442,14 @@ if __name__ == '__main__':
     mock_zgrism_lowerr_list = np.asarray(mock_zgrism_lowerr_list)
     mock_zgrism_higherr_list = np.asarray(mock_zgrism_higherr_list)
 
+    model_age_list = np.asarray(model_age_list)
+    model_metallicity_list = np.asarray(model_metallicity_list)
+    model_tau_list = np.asarray(model_tau_list)
+    model_av_list = np.asarray(model_av_list)
+    count_list = np.asarray(count_list)
+
     # save
-    d4000_range = '_1p2to1p3'
+    d4000_range = '_1p2to1p4'
     np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_in_list' + d4000_range + '.npy', d4000_in_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_out_list' + d4000_range + '.npy', d4000_out_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_out_err_list' + d4000_range + '.npy', d4000_out_err_list)
@@ -421,6 +458,12 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_list' + d4000_range + '.npy', mock_zgrism_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_lowerr_list' + d4000_range + '.npy', mock_zgrism_lowerr_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_higherr_list' + d4000_range + '.npy', mock_zgrism_higherr_list)
+
+    np.save(massive_figures_dir + 'model_mockspectra_fits/model_age_list' + d4000_range + '.npy', model_age_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/model_metallicity_list' + d4000_range + '.npy', model_metallicity_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/model_tau_list' + d4000_range + '.npy', model_tau_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/model_av_list' + d4000_range + '.npy', model_av_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/count_list' + d4000_range + '.npy', count_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
