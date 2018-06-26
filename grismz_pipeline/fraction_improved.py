@@ -141,6 +141,9 @@ if __name__ == '__main__':
     print total_threep_within_imag_range, "have grism redshifts accurate to within <=0.03"
     print total_onep_within_imag_range, "have grism redshifts accurate to within <=0.01"
 
+
+    sys.exit(0)
+
     # get total bins and plot histogram
     ax.hist(imag_threep, 24, color='k', range=[18,26], ls='-', histtype='step', align='mid', zorder=10, \
         label=r'$\mathrm{\frac{\left<\sigma_{grism}\right>}{1+z_{grism}} \leq 0.03;}$' + r'$\mathrm{N}$' + '=' + str(total_threep_within_imag_range))

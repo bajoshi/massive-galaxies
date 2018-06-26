@@ -585,17 +585,17 @@ if __name__ == '__main__':
             flam_em = flam_obs * (1 + redshift)
             ferr_em = ferr_obs * (1 + redshift)
 
-            if (lam_em[0] > 3780) or (lam_em[-1] < 4220):
-                # old limits (lam_em[0] > 3780) or (lam_em[-1] < 4220):
-                # based on d4000 instead of dn4000
-                # i've pushed the limits a little inward (> 50 A i.e. approx two spec measuremnt points), to be conservative, 
-                # so that if there isn't an flux measurement at the exact end point wavelengths
-                # but there is one nearby then the galaxy isn't skipped
-                # skipping galaxy because there are too few or no flux measurements at the required wavelengths
-                print "Skipping", current_pears_index, "in", fieldname,\
-                 "due to too few or no flux measurements at the required wavelengths. The end points of the wavelength array are",\
-                 lam_em[0], lam_em[-1]
-                continue
+            #if (lam_em[0] > 3780) or (lam_em[-1] < 4220):
+            #    # old limits (lam_em[0] > 3780) or (lam_em[-1] < 4220):
+            #    # based on d4000 instead of dn4000
+            #    # i've pushed the limits a little inward (> 50 A i.e. approx two spec measuremnt points), to be conservative, 
+            #    # so that if there isn't an flux measurement at the exact end point wavelengths
+            #    # but there is one nearby then the galaxy isn't skipped
+            #    # skipping galaxy because there are too few or no flux measurements at the required wavelengths
+            #    print "Skipping", current_pears_index, "in", fieldname,\
+            #     "due to too few or no flux measurements at the required wavelengths. The end points of the wavelength array are",\
+            #     lam_em[0], lam_em[-1]
+            #    continue
 
             arg3750 = np.argmin(abs(lam_em - 3750))
             arg3950 = np.argmin(abs(lam_em - 3950))
@@ -653,7 +653,8 @@ if __name__ == '__main__':
 
         data = np.array(zip(pears_id_write, pearsfield, photz_write, redshift_source, pears_ra, \
             pears_dec, dn4000_arr, dn4000_err_arr, d4000_arr, d4000_err_arr),\
-            dtype=[('pears_id_write', int), ('pearsfield', '|S7'), ('photz_write', float), ('redshift_source', '|S7'), ('pears_ra', float),\
+            dtype=[('pears_id_write', int), ('pearsfield', '|S7'), \
+            ('photz_write', float), ('redshift_source', '|S7'), ('pears_ra', float),\
             ('pears_dec', float), ('dn4000_arr', float), ('dn4000_err_arr', float), ('d4000_arr', float), ('d4000_err_arr', float)])
         if fieldname == 'GOODS-N':
             np.savetxt(massive_galaxies_dir + 'pears_4000break_catalog_' + fieldname + '.txt', data,\
@@ -668,7 +669,8 @@ if __name__ == '__main__':
                 'the \'zphot_source\' column indicates the source of the photometric redshift.' + '\n' + \
                 'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
 
-        print len(np.isfinite(dn4000_arr)), len(np.isfinite(dn4000_err_arr)), len(np.isfinite(d4000_arr)), len(np.isfinite(d4000_err_arr))
+        print len(np.isfinite(dn4000_arr)), len(np.isfinite(dn4000_err_arr)), len(np.isfinite(d4000_arr)), \
+        len(np.isfinite(d4000_err_arr))
 
         catcount += 1
 
