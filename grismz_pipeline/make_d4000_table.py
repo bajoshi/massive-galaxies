@@ -61,7 +61,7 @@ if __name__ == '__main__':
     allcats = [cat_n, cat_s]
 
     # Now loop and print
-    for i in range(25):  # Change this to something like range(600, len(id_arr)) to get goods-s entries
+    for i in range(500, len(id_arr)):  # Change this to something like range(600, len(id_arr)) to get goods-s entries
 
         current_id = id_arr[i]
         current_field = field_arr[i]
@@ -74,6 +74,7 @@ if __name__ == '__main__':
         current_netsig = netsig_arr[i]
         current_d4000 = d4000_arr[i]
         current_d4000_err = d4000_err_arr[i]
+        current_chi2red = chi2_arr[i]
 
         if current_field == 'GOODS-N':
             cat = cat_n
@@ -82,13 +83,32 @@ if __name__ == '__main__':
 
         id_idx = np.where(cat['pearsid'] == current_id)[0]
 
-        current_ra = cat['ra'][id_idx]
-        current_dec = cat['dec'][id_idx]
+        current_ra = float(cat['pearsra'][id_idx])
+        current_dec = float(cat['pearsdec'][id_idx])
 
-        current_zphot_l68 = cat['zphot_l68'][id_idx]
-        current_zphot_u68 = cat['zphot_u68'][id_idx]
+        current_zphot_l68 = float(cat['zphot_l68'][id_idx])
+        current_zphot_u68 = float(cat['zphot_u68'][id_idx])
 
-        print current_id, '&', current_field, '&'
-        #print  "{:.3}".format(grismz) + r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
+        if current_field == 'GOODS-N':
+            print current_id, '&', current_field, '&',
+            print current_ra, '&', current_dec, '&',
+            print current_zspec, '&',
+            print '$', '{:.3}'.format(current_zphot), '&',
+            print '$', '{:.3}'.format(current_zgrism), \
+            '\substack{+', '{:.3}'.format(current_zgrism_lowerr), '\\\ -', "{:.3}".format(current_zgrism_uperr), '}$', '&',
+            print '{:.2f}'.format(current_netsig), '&',
+            print '$', '{:.2}'.format(current_d4000), '\pm', '{:.2}'.format(current_d4000_err), '$', '&',
+            print '{:.2}'.format(current_chi2red), '\\\ '
+        else:
+            print current_id, '&', current_field, '&',
+            print current_ra, '&', current_dec, '&',
+            print current_zspec, '&',
+            print '$', '{:.3}'.format(current_zphot), \
+            '\substack{+', '{:.3}'.format(current_zphot_l68), '\\\ -', "{:.3}".format(current_zphot_u68), '}$', '&',
+            print '$', '{:.3}'.format(current_zgrism), \
+            '\substack{+', '{:.3}'.format(current_zgrism_lowerr), '\\\ -', "{:.3}".format(current_zgrism_uperr), '}$', '&',
+            print '{:.2f}'.format(current_netsig), '&',
+            print '$', '{:.2}'.format(current_d4000), '\pm', '{:.2}'.format(current_d4000_err), '$', '&',
+            print '{:.2}'.format(current_chi2red), '\\\ '
 
     sys.exit(0)
