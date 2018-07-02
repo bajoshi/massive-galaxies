@@ -33,7 +33,54 @@ import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 import mag_hist as mh
 
-def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift):
+def get_rand_err_arr():
+
+    # GOODS-N
+    id_list_gn = np.load(massive_figures_dir + '/full_run/id_list_gn.npy')
+    field_list_gn = np.load(massive_figures_dir + '/full_run/field_list_gn.npy')
+
+    # GOODS-S
+    id_list_gs = np.load(massive_figures_dir + '/full_run/id_list_gs.npy')
+    field_list_gs = np.load(massive_figures_dir + '/full_run/field_list_gs.npy')
+
+    # Concatenate ID and field arrays
+    id_arr = np.concatenate((id_list_gn, id_list_gs))
+    field_arr = np.concatenate((field_list_gn, field_list_gs))
+
+    # Empty list for storing average errors
+    err_list = []
+
+    # Now get data and check the error
+    for i in range(len(id_arr)):
+
+        # Get data
+        lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(id_arr[i], field_arr[i])
+
+        # Get current err and append
+        current_err = np.nanmean(ferr_obs/flam_obs)
+        err_list.append(current_err)
+
+    err_arr = np.asarray(err_list)
+
+    # Now generate a random array based on this error array
+    new_rand_err_arr = np.random.choice(err_arr, size=1e4)
+
+    # Now plot histograms for the two to compare them
+    """
+    fig = plt.figure()
+
+    ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot(122)
+
+    ax1.hist(err_arr, 50, range=(0, 1), color='k', histtype='step')
+    ax2.hist(new_rand_err_arr, 50, range=(0, 1), color='r', histtype='step')
+
+    plt.show()
+    """
+
+    return err_arr, new_rand_err_arr
+
+def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift, random_err_chosen):
 
     # Do modifications 
     # redshift model
@@ -75,7 +122,7 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift):
 
     # assign a constant 5% error bar
     ferr_obs = np.ones(len(flam_obs))
-    ferr_obs = 0.33 * flam_obs
+    ferr_obs = random_err_chosen * flam_obs
 
     # put in random noise in the model
     for k in range(len(flam_obs)):
@@ -278,6 +325,44 @@ def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bes
 
     return None
 
+def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
+    test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
+    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list):
+
+    # convert to numpy arrays and save
+    d4000_in_list = np.asarray(d4000_in_list) 
+    d4000_out_list = np.asarray(d4000_out_list)
+    d4000_out_err_list = np.asarray(d4000_out_err_list) 
+    mock_model_index_list = np.asarray(mock_model_index_list)
+    test_redshift_list = np.asarray(test_redshift_list)
+    mock_zgrism_list = np.asarray(mock_zgrism_list)
+    mock_zgrism_lowerr_list = np.asarray(mock_zgrism_lowerr_list)
+    mock_zgrism_higherr_list = np.asarray(mock_zgrism_higherr_list)
+    model_age_list = np.asarray(model_age_list)
+    model_metallicity_list = np.asarray(model_metallicity_list)
+    model_tau_list = np.asarray(model_tau_list)
+    model_av_list = np.asarray(model_av_list)
+    count_list = np.asarray(count_list)
+
+    # save
+    d4000_range = '_1p2to1p4'
+    model_mocksim_dir = massive_figures_dir + 'model_mockspectra_fits/'
+    np.save(model_mocksim_dir + 'intermediate_d4000_in_list' + d4000_range + '.npy', d4000_in_list)
+    np.save(model_mocksim_dir + 'intermediate_d4000_out_list' + d4000_range + '.npy', d4000_out_list)
+    np.save(model_mocksim_dir + 'intermediate_d4000_out_err_list' + d4000_range + '.npy', d4000_out_err_list)
+    np.save(model_mocksim_dir + 'intermediate_mock_model_index_list' + d4000_range + '.npy', mock_model_index_list)
+    np.save(model_mocksim_dir + 'intermediate_test_redshift_list' + d4000_range + '.npy', test_redshift_list)
+    np.save(model_mocksim_dir + 'intermediate_mock_zgrism_list' + d4000_range + '.npy', mock_zgrism_list)
+    np.save(model_mocksim_dir + 'intermediate_mock_zgrism_lowerr_list' + d4000_range + '.npy', mock_zgrism_lowerr_list)
+    np.save(model_mocksim_dir + 'intermediate_mock_zgrism_higherr_list' + d4000_range + '.npy', mock_zgrism_higherr_list)
+    np.save(model_mocksim_dir + 'intermediate_model_age_list' + d4000_range + '.npy', model_age_list)
+    np.save(model_mocksim_dir + 'intermediate_model_metallicity_list' + d4000_range + '.npy', model_metallicity_list)
+    np.save(model_mocksim_dir + 'intermediate_model_tau_list' + d4000_range + '.npy', model_tau_list)
+    np.save(model_mocksim_dir + 'intermediate_model_av_list' + d4000_range + '.npy', model_av_list)
+    np.save(model_mocksim_dir + 'intermediate_count_list' + d4000_range + '.npy', count_list)
+
+    return None
+
 if __name__ == '__main__':
     
     # Start time
@@ -303,6 +388,8 @@ if __name__ == '__main__':
     print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
     # ---------------------------------------------- Loop ----------------------------------------------- #
+    # Get errror distribution of real galaxies
+    err_arr, new_rand_err_arr = get_rand_err_arr()
 
     d4000_in_list = []  # D4000 measured on model before doing model modifications
     d4000_out_list = []  # D4000 measured on model after doing model modifications
@@ -350,7 +437,9 @@ if __name__ == '__main__':
             test_redshift = np.asscalar(test_redshift)
 
         # Modify model and create mock spectrum
-        lam_obs, flam_obs, ferr_obs = get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift)
+        # Get random error that follows the error distribution of the real galaxies
+        random_err_chosen = float(np.random.choice(err_arr))
+        lam_obs, flam_obs, ferr_obs = get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift, random_err_chosen)
 
         # Now de-redshift and find D4000
         lam_em = lam_obs / (1 + test_redshift)
@@ -430,6 +519,11 @@ if __name__ == '__main__':
             count_list.append(i+1)
 
             galaxy_count += 1
+
+            if galaxy_count == 100:
+                save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
+                    test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
+                    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list)
 
             if galaxy_count > 500:
                 break
