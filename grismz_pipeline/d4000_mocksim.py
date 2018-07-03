@@ -135,7 +135,7 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift, random_err_
             # getting annoyed with the scale<=0 error causing my 
             # code to fail at unpredictable times.
 
-        flam_obs[k] = np.random.normal(flam_obs[k], ferr_obs[k], 1)
+        flam_obs[k] = np.random.normal(flam_obs[k], scale, 1)
 
     # plot to check it looks right
     # don't delete these lines for plotting
