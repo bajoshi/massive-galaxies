@@ -63,7 +63,7 @@ def get_rand_err_arr():
     err_arr = np.asarray(err_list)
 
     # Now generate a random array based on this error array
-    new_rand_err_arr = np.random.choice(err_arr, size=1e4)
+    new_rand_err_arr = np.random.choice(err_arr, size=10000)
 
     # Now plot histograms for the two to compare them
     """
@@ -529,7 +529,7 @@ if __name__ == '__main__':
 
             galaxy_count += 1
 
-            if galaxy_count == 100:
+            if galaxy_count%100 == 0:
                 save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
                     test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
                     model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list)
