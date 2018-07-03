@@ -126,6 +126,15 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift, random_err_
 
     # put in random noise in the model
     for k in range(len(flam_obs)):
+        scale = ferr_obs[k]  # i.e. std dev for normal dist in next line
+        if scale < 0:
+            scale = abs(scale)
+        if scale == 0.0:
+            scale = 1e-14  
+            # I just randomly chose a small number because I was 
+            # getting annoyed with the scale<=0 error causing my 
+            # code to fail at unpredictable times.
+
         flam_obs[k] = np.random.normal(flam_obs[k], ferr_obs[k], 1)
 
     # plot to check it looks right
@@ -163,7 +172,7 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 7
+    num_cores = 8
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(ngp.get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
