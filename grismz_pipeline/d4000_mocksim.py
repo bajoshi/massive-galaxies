@@ -265,7 +265,7 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     starting_z, z_grism, low_z_lim, upper_z_lim, min_chi2_red, d4000_in, d4000_out, d4000_out_err, count)
 
-    return z_grism, low_z_lim, upper_z_lim
+    return z_grism, low_z_lim, upper_z_lim, min_chi2_red
 
 def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     starting_z, grismz, low_z_lim, upper_z_lim, chi2, d4000_in, d4000_out, d4000_out_err, count):
@@ -336,7 +336,7 @@ def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bes
 
 def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
     test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
-    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list):
+    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list):
 
     # convert to numpy arrays and save
     d4000_in_list = np.asarray(d4000_in_list) 
@@ -352,6 +352,7 @@ def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list,
     model_tau_list = np.asarray(model_tau_list)
     model_av_list = np.asarray(model_av_list)
     count_list = np.asarray(count_list)
+    chi2_list = np.asarray(chi2_list)
 
     # save
     d4000_range = '_1p2to1p4'
@@ -369,6 +370,7 @@ def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list,
     np.save(model_mocksim_dir + 'intermediate_model_tau_list' + d4000_range + '.npy', model_tau_list)
     np.save(model_mocksim_dir + 'intermediate_model_av_list' + d4000_range + '.npy', model_av_list)
     np.save(model_mocksim_dir + 'intermediate_count_list' + d4000_range + '.npy', count_list)
+    np.save(model_mocksim_dir + 'intermediate_chi2_list' + d4000_range + '.npy', chi2_list)
 
     return None
 
@@ -415,10 +417,11 @@ if __name__ == '__main__':
     model_tau_list = []
     model_av_list = []
     count_list = []
+    chi2_list = []
 
     galaxy_count = 0
 
-    for i in range(15000):
+    for i in range(4000, total_models):
 
         # Measure D4000 before doing modifications
         model_flam = model_comp_spec[i]
@@ -485,7 +488,7 @@ if __name__ == '__main__':
             current_zgrism = test_redshift
 
             # Fit 
-            mock_zgrism, mock_zgrism_lowlim, mock_zgrism_highlim = \
+            mock_zgrism, mock_zgrism_lowlim, mock_zgrism_highlim, min_chi2_red = \
             fit_model_and_plot(flam_obs, ferr_obs, lam_obs, broad_lsf.array, test_redshift, resampling_lam_grid, \
             model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
             0.2, d4000_in, d4000_out, d4000_out_err, i+1)
@@ -526,15 +529,16 @@ if __name__ == '__main__':
             model_tau_list.append(model_tau)
             model_av_list.append(model_av)
             count_list.append(i+1)
+            chi2_list.append(min_chi2_red)
 
             galaxy_count += 1
 
             if galaxy_count%100 == 0:
                 save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
                     test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
-                    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list)
+                    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list)
 
-            if galaxy_count > 500:
+            if galaxy_count > 2000:
                 break
 
     # convert to numpy arrays and save
@@ -552,6 +556,7 @@ if __name__ == '__main__':
     model_tau_list = np.asarray(model_tau_list)
     model_av_list = np.asarray(model_av_list)
     count_list = np.asarray(count_list)
+    chi2_list = np.asarray(chi2_list)
 
     # save
     d4000_range = '_1p2to1p4'
@@ -569,6 +574,15 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'model_mockspectra_fits/model_tau_list' + d4000_range + '.npy', model_tau_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/model_av_list' + d4000_range + '.npy', model_av_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/count_list' + d4000_range + '.npy', count_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/chi2_list' + d4000_range + '.npy', chi2_list)
+
+    """ # To merge the intermediate and final lists
+    for fl in sorted(glob.glob('intermediate*.npy')):
+        int_fl = np.load(fl)
+        reg_fl = np.load(fl.replace('intermediate_', ''))
+        merged_list = np.concatenate((reg_fl, int_fl))
+        np.save(fl.replace('intermediate_','merged_'), merged_list)
+    """
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."

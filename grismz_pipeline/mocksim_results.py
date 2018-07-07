@@ -24,26 +24,10 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
     ax_main.plot(test_redshift_arr, mock_zgrism_arr, 'o', markersize=2.0, color='k', markeredgecolor='k', zorder=10)
     ax_main.plot(np.arange(0.2,1.5,0.01), np.arange(0.2,1.5,0.01), '--', color='r', linewidth=2.0)
 
-    ax_main.set_xlim(0.6, 1.24)
-    ax_main.set_ylim(0.6, 1.24)
-
-    ax_main.set_ylabel(r'$\mathrm{z_{mock}}$', fontsize=12)
-
-    ax_main.xaxis.set_ticklabels([])
-
     # ------- residuals ------- #
     ax_resid.plot(test_redshift_arr, (test_redshift_arr - mock_zgrism_arr)/(1+test_redshift_arr), 'o', \
         markersize=2.0, color='k', markeredgecolor='k', zorder=10)
     ax_resid.axhline(y=0, linestyle='--', color='r')
-
-    ax_resid.set_xlim(0.6, 1.24)
-
-    ax_resid.set_xlabel(r'$\mathrm{Test\ redshift}$', fontsize=12)
-    ax_resid.set_ylabel(r'$\mathrm{Residuals}$', fontsize=12, labelpad=-1)
-
-    # Turn on minorticks
-    ax_main.minorticks_on()
-    ax_resid.minorticks_on()
 
     # Fitting
     # do the fit with scipy
@@ -69,15 +53,29 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
     print "Outlier fraction:", out_frac
 
     # plot fit to residuals
-    ax_resid.axhline(y=mu + sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
-    ax_resid.axhline(y=mu - sigma_nmad, ls='-', color='#3690c0', linewidth=1.5)
+    ax_resid.axhline(y=mu + stddev, ls='-', color='#3690c0', linewidth=1.5)
+    ax_resid.axhline(y=mu - stddev, ls='-', color='#3690c0', linewidth=1.5)
     ax_resid.axhline(y=mu, ls='-', color='blue', linewidth=1.5)
 
+    # Turn on minorticks
+    ax_main.minorticks_on()
+    ax_resid.minorticks_on()
+
+    # Limits to axis
+    ax_main.set_xlim(0.6, 1.24)
+    ax_main.set_ylim(0.6, 1.24)
+
+    ax_resid.set_xlim(0.6, 1.24)
+    ax_resid.set_ylim(-0.1, 0.1)
+
+    # Axis labels
+    ax_main.set_ylabel(r'$\mathrm{z_{mock}}$', fontsize=12)
+    ax_resid.set_xlabel(r'$\mathrm{Test\ redshift}$', fontsize=12)
+    ax_resid.set_ylabel(r'$\mathrm{Residuals}$', fontsize=12, labelpad=-1)
+
     # tick labels
-    if d4000_range_lowlim == '1p35':
-        ax_resid.yaxis.set_ticklabels(['-0.1', '0', ''], fontsize='medium')
-    else:
-        ax_resid.yaxis.set_ticklabels(['', '-0.1', '0', ''], fontsize='medium')
+    ax_main.xaxis.set_ticklabels([])
+    ax_resid.yaxis.set_ticklabels(['-0.1', '0', ''], fontsize='medium')
 
     if float(d4000_range_lowlim.replace('p', '.')) < 1.3:
         ax_resid.xaxis.set_ticklabels([])
@@ -101,8 +99,12 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
     avg_uperr = np.nanmean(mock_zgrism_uperr_arr)
     yerrbar = [[avg_lowerr], [avg_uperr]]
 
-    ax_main.errorbar(np.array([1.2]), np.array([0.7]), yerr=yerrbar, fmt='o', \
-        color='k', markeredgecolor='k', capsize=0, markersize=5.0, elinewidth=0.6)
+    if d4000_range_lowlim == '1p2':
+        ax_main.errorbar(np.array([1.2]), np.array([0.82]), yerr=yerrbar, fmt='o', \
+            color='k', markeredgecolor='k', capsize=0, markersize=5.0, elinewidth=0.6)
+    else:
+        ax_main.errorbar(np.array([1.2]), np.array([0.7]), yerr=yerrbar, fmt='o', \
+            color='k', markeredgecolor='k', capsize=0, markersize=5.0, elinewidth=0.6)
 
     return ax_main, ax_resid
 
@@ -196,6 +198,19 @@ if __name__ == '__main__':
         mock_zgrism_lowerr_d4000_gtr_1p3, mock_zgrism_higherr_d4000_gtr_1p3, '1p3')
     ax7, ax8 = plot_panel(ax7, ax8, test_redshift_d4000_gtr_1p35, mock_zgrism_d4000_gtr_1p35, \
         mock_zgrism_lowerr_d4000_gtr_1p35, mock_zgrism_higherr_d4000_gtr_1p35, '1p35')
+
+    # add text only to the first panel
+    ax1.axhline(y=0.75, xmin=0.55, xmax=0.67, ls='-', lw=2.0, color='#41ab5d')
+    ax1.text(0.68, 0.26, 'Best fit line', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=14)
+
+    ax1.axhline(y=0.7, xmin=0.55, xmax=0.67, ls='-', lw=2.0, color='blue')
+    ax1.text(0.68, 0.18, 'Residual Mean', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=14)
+
+    ax1.axhline(y=0.65, xmin=0.55, xmax=0.67, ls='-', lw=2.0, color='#3690c0')
+    ax1.text(0.68, 0.1, r'$\mathrm{\pm 1\ \sigma}$', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=14)
 
     # Save figure 
     fig_gs.savefig(massive_figures_dir + \
