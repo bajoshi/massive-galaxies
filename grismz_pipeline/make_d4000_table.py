@@ -61,7 +61,9 @@ if __name__ == '__main__':
     allcats = [cat_n, cat_s]
 
     # Now loop and print
-    for i in range(500, len(id_arr)):  # Change this to something like range(600, len(id_arr)) to get goods-s entries
+    for i in range(100): 
+        # Change this to something like range(600, len(id_arr)) to get goods-s entries
+        # and range(100) to get goods-s entries
 
         current_id = id_arr[i]
         current_field = field_arr[i]
@@ -89,11 +91,15 @@ if __name__ == '__main__':
         current_zphot_l68 = float(cat['zphot_l68'][id_idx])
         current_zphot_u68 = float(cat['zphot_u68'][id_idx])
 
+        # Convert limits to errors
+        current_zgrism_lowerr = current_zgrism - current_zgrism_lowerr
+        current_zgrism_uperr = current_zgrism_uperr - current_zgrism
+
         if current_field == 'GOODS-N':
             print current_id, '&', current_field, '&',
             print current_ra, '&', current_dec, '&',
             print current_zspec, '&',
-            print '$', '{:.3}'.format(current_zphot), '&',
+            print '{:.3}'.format(current_zphot), '&',
             print '$', '{:.3}'.format(current_zgrism), \
             '\substack{+', '{:.3}'.format(current_zgrism_lowerr), '\\\ -', "{:.3}".format(current_zgrism_uperr), '}$', '&',
             print '{:.2f}'.format(current_netsig), '&',

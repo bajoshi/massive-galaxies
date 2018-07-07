@@ -137,14 +137,14 @@ def convert_to_sci_not(n):
 if __name__ == '__main__':
 
     # Read in results arrays
-    d4000_in = np.load(massive_figures_dir + 'model_mockspectra_fits/d4000_in_list_1p2to1p4.npy')
-    d4000_out = np.load(massive_figures_dir + 'model_mockspectra_fits/d4000_out_list_1p2to1p4.npy')
-    d4000_out_err = np.load(massive_figures_dir + 'model_mockspectra_fits/d4000_out_err_list_1p2to1p4.npy')
-    mock_model_index = np.load(massive_figures_dir + 'model_mockspectra_fits/mock_model_index_list_1p2to1p4.npy')
-    test_redshift = np.load(massive_figures_dir + 'model_mockspectra_fits/test_redshift_list_1p2to1p4.npy')
-    mock_zgrism = np.load(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_list_1p2to1p4.npy')
-    mock_zgrism_lowerr = np.load(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_lowerr_list_1p2to1p4.npy')
-    mock_zgrism_higherr = np.load(massive_figures_dir + 'model_mockspectra_fits/mock_zgrism_higherr_list_1p2to1p4.npy')
+    d4000_in = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_in_list_1p2to1p4.npy')
+    d4000_out = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_out_list_1p2to1p4.npy')
+    d4000_out_err = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_out_err_list_1p2to1p4.npy')
+    mock_model_index = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_model_index_list_1p2to1p4.npy')
+    test_redshift = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_test_redshift_list_1p2to1p4.npy')
+    mock_zgrism = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_list_1p2to1p4.npy')
+    mock_zgrism_lowerr = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_lowerr_list_1p2to1p4.npy')
+    mock_zgrism_higherr = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_higherr_list_1p2to1p4.npy')
 
     # --------- redshift accuracy comparison ---------- # 
     gs = gridspec.GridSpec(20,10)

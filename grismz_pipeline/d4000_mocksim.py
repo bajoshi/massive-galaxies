@@ -461,7 +461,7 @@ if __name__ == '__main__':
         d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
         # Check D4000 value and only then proceed
-        if d4000_out >= 1.2 and d4000_out < 1.4:
+        if d4000_out >= 1.05:
             d4000_in_list.append(d4000_in)
             d4000_out_list.append(d4000_out)
             d4000_out_err_list.append(d4000_out_err)
