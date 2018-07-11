@@ -583,13 +583,6 @@ if __name__ == '__main__':
                 print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
                 continue
 
-            # Check that hte lambda array is not too incomplete 
-            # I don't want the D4000 code extrapolating too much.
-            # I'm choosing this limit to be 50A
-            if np.max(lam_obs/(1+starting_z)) < 4200:
-                print "Skipping because lambda array is incomplete by too much ie. the max val in lambda is less than 4200A."
-                continue
-
             # D4000 check # accept only if D4000 greater than 1.2
             # get d4000
             # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
@@ -598,6 +591,14 @@ if __name__ == '__main__':
             lam_em = lam_obs / (1 + starting_z)
             flam_em = flam_obs * (1 + starting_z)
             ferr_em = ferr_obs * (1 + starting_z)
+
+            # Check that hte lambda array is not too incomplete 
+            # I don't want the D4000 code extrapolating too much.
+            # I'm choosing this limit to be 50A
+            if np.max(lam_em) < 4200:
+                print "Skipping because lambda array is incomplete by too much."
+                print "i.e. the max val in rest-frame lambda is less than 4200A."
+                continue
 
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
             if d4000 < 1.2:
@@ -657,6 +658,13 @@ if __name__ == '__main__':
             do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, redshift, 0.2)
+
+            # Get d4000 at new zgrism
+            lam_em = lam_obs / (1 + zg)
+            flam_em = flam_obs * (1 + zg)
+            ferr_em = ferr_obs * (1 + zg)
+
+            d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
             # ---------------------------------------------- SAVE PARAMETERS ----------------------------------------------- #
             id_list.append(current_id)
