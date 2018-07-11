@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+import scipy
 from scipy.stats import gaussian_kde
 
 import sys
@@ -36,6 +37,73 @@ def d4000_vs_netsig(netsig_arr, d4000_arr, d4000_err_arr):
     plt.close()
 
     return None
+
+def get_err_and_d4000_arr(id_arr, field_arr, zgrism_arr, \
+    pirzkal2013_north_emline_ids, pirzkal2013_south_emline_ids, straughn2009_emline_ids):
+
+    # Empty list for storing average errors
+    err_list = []
+    d4000_list = []
+    d4000_err_list = []
+
+    # Now get data and check the error
+    for i in range(len(id_arr)):
+
+        current_id = id_arr[i]
+        current_field = field_arr[i]
+
+        # check if it is an emission line galaxy. If it is then skip
+        # Be carreful changing this check. I think it is correct as it is.
+        # I don think you can simply do:
+        # if (int(current_id) in pirzkal2013_emline_ids) or (int(current_id) in straughn2009_emline_ids):
+        #     continue
+        # This can mix up north and south IDs because the IDs are not unique in north and south.
+        if current_field == 'GOODS-N':
+            if int(current_id) in pirzkal2013_north_emline_ids:
+                print "At ID:", id_arr[i], "in", field_arr[i], "at redshift:", redshift
+                print "Skipping emission line galaxy"
+                continue
+        elif current_field == 'GOODS-S':
+            if (int(current_id) in pirzkal2013_south_emline_ids) or (int(current_id) in straughn2009_emline_ids):
+                print "At ID:", id_arr[i], "in", field_arr[i], "at redshift:", redshift
+                print "Skipping emission line galaxy"
+                continue
+
+        # Get data
+        lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
+
+        # Get current err and append
+        current_err = np.nanmean(ferr_obs/flam_obs)
+        err_list.append(current_err)
+
+        # append d4000 after computing using zgrism estimate
+        current_zgrism = zgrism_arr[i]
+        redshift = current_zgrism
+
+        # Now de-redshift and find D4000
+        lam_em = lam_obs / (1 + redshift)
+        flam_em = flam_obs * (1 + redshift)
+        ferr_em = ferr_obs * (1 + redshift)
+
+        # Check that hte lambda array is not too incomplete 
+        # I don't want the D4000 code extrapolating too much.
+        # I'm choosing this limit to be 50A
+        if np.max(lam_em) < 4200:
+            print "At ID:", id_arr[i], "in", field_arr[i], "at redshift:", redshift
+            print "Skipping because lambda array is incomplete by too much."
+            print "i.e. the max val in rest-frame lambda is less than 4200A."
+            continue
+
+        d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+        d4000_list.append(d4000_out)
+        d4000_err_list.append(d4000_out_err)
+
+    # convert to numpy array
+    err_arr = np.asarray(err_list)
+    d4000_list_arr = np.asarray(d4000_list)
+    d4000_err_list_arr = np.asarray(d4000_err_list)
+
+    return err_arr, d4000_list_arr, d4000_err_list_arr
 
 if __name__ == '__main__':
 
@@ -155,98 +223,24 @@ if __name__ == '__main__':
     sys.exit(0)
     """
 
-    # Empty list for storing average errors
-    err_list = []
-    d4000_list = []
-    d4000_err_list = []
-    new_rand_err_list = []
+    #err_arr, d4000_list_arr, d4000_err_list_arr = get_err_and_d4000_arr(id_arr, field_arr, zgrism_arr, \
+    #pirzkal2013_north_emline_ids, pirzkal2013_south_emline_ids, straughn2009_emline_ids)
+    #np.save(massive_figures_dir + 'avg_fobs_errors.npy', err_arr)
+    #np.save(massive_figures_dir + 'd4000_list_arr.npy', d4000_list_arr)
+    #np.save(massive_figures_dir + 'd4000_err_list_arr.npy', d4000_err_list_arr)
 
-    # Now get data and check the error
-    for i in range(len(id_arr)):
-
-        current_id = id_arr[i]
-        current_field = field_arr[i]
-
-        # check if it is an emission line galaxy. If it is then skip
-        # Be carreful changing this check. I think it is correct as it is.
-        # I don think you can simply do:
-        # if (int(current_id) in pirzkal2013_emline_ids) or (int(current_id) in straughn2009_emline_ids):
-        #     continue
-        # This can mix up north and south IDs because the IDs are not unique in north and south.
-        if current_field == 'GOODS-N':
-            if int(current_id) in pirzkal2013_north_emline_ids:
-                print "At ID:", id_arr[i], "in", field_arr[i], "at redshift:", redshift
-                print "Skipping emission line galaxy"
-                continue
-        elif current_field == 'GOODS-S':
-            if (int(current_id) in pirzkal2013_south_emline_ids) or (int(current_id) in straughn2009_emline_ids):
-                print "At ID:", id_arr[i], "in", field_arr[i], "at redshift:", redshift
-                print "Skipping emission line galaxy"
-                continue
-
-        # Get data
-        lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
-
-        # Get current err and append
-        current_err = np.nanmean(ferr_obs/flam_obs)
-        err_list.append(current_err)
-
-        # append d4000 after computing using zgrism estimate
-        current_zgrism = zgrism_arr[i]
-        redshift = current_zgrism
-
-        # Now de-redshift and find D4000
-        lam_em = lam_obs / (1 + redshift)
-        flam_em = flam_obs * (1 + redshift)
-        ferr_em = ferr_obs * (1 + redshift)
-
-        # Check that hte lambda array is not too incomplete 
-        # I don't want the D4000 code extrapolating too much.
-        # I'm choosing this limit to be 50A
-        if np.max(lam_em) < 4200:
-            print "At ID:", id_arr[i], "in", field_arr[i], "at redshift:", redshift
-            print "Skipping because lambda array is incomplete by too much."
-            print "i.e. the max val in rest-frame lambda is less than 4200A."
-            continue
-
-        d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-        d4000_list.append(d4000_out)
-        d4000_err_list.append(d4000_out_err)
-
-    # convert to numpy array
-    err_arr = np.asarray(err_list)
-    d4000_list_arr = np.asarray(d4000_list)
-    d4000_err_list_arr = np.asarray(d4000_err_list)
+    err_arr = np.load(massive_figures_dir + 'avg_fobs_errors.npy')
+    d4000_list_arr = np.load(massive_figures_dir + 'd4000_list_arr.npy')
+    d4000_err_list_arr = np.load(massive_figures_dir + 'd4000_err_list_arr.npy')
 
     print "Total galaxies in final array:", len(d4000_list_arr)
 
     # Now generate a random array based on this error array
+    new_rand_err_list = []
     for j in range(len(err_arr)):
         new_rand_err_list.append(np.random.choice(err_arr))
-
     # convert to numpy array
     new_rand_err_arr = np.asarray(new_rand_err_list)
-
-    # ------------------- plots ------------------ #
-    # Check D4000 vs avg err
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-    # only plot the ones with high significance of measured D4000
-    d4000_sig = d4000_list_arr / d4000_err_list_arr
-    val_idx = np.where(d4000_sig > 5)[0]
-
-    ax.scatter(err_arr[val_idx], d4000_list_arr[val_idx], s=3)
-
-    ax.set_xlim(0,0.5) # -- lim for err plot
-    ax.set_ylim(1,2)
-    
-    plt.show()
-    plt.clf()
-    plt.cla()
-    plt.close()
-
-    sys.exit(0)
 
     # Now plot histograms for the two to compare them
     """
@@ -260,5 +254,96 @@ if __name__ == '__main__':
 
     plt.show()
     """
+
+    # ------------------- plots ------------------ #
+    # Check D4000 vs avg err
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.set_xlabel(r'$\mathrm{\left< f^{obs}_{err}\right>}$')
+    ax.set_ylabel('D4000')
+
+    # only plot the ones with high significance of measured D4000
+    d4000_sig = d4000_list_arr / d4000_err_list_arr
+    val_idx = np.where(d4000_sig >= 5)[0]
+    print "Galaxies after applying D4000 significance cut:", len(val_idx)
+
+    # min and max values for plot and for kernel density estimate
+    xmin = 0.0
+    xmax = 0.5
+    ymin = 1.0
+    ymax = 2.0
+
+    # first clip x and y arrays to the specified min and max values
+    x = err_arr[val_idx]
+    y = d4000_list_arr[val_idx]
+    x_idx = np.where((x>=xmin) & (x<=xmax))[0]
+    y_idx = np.where((y>=ymin) & (y<=ymax))[0]
+    xy_idx = reduce(np.intersect1d, (x_idx, y_idx))
+    x = x[xy_idx]
+    y = y[xy_idx]
+    print "New total number of galaxies after rejecting galaxies outside believable ranges:", len(x)
+
+    # plot points
+    ax.scatter(x, y, s=3, color='k', zorder=10)
+
+    # now use scipy gaussian kde
+    xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+    positions = np.vstack([xx.ravel(), yy.ravel()])
+    values = np.vstack([x, y])
+    kernel = gaussian_kde(values)
+    f = np.reshape(kernel(positions).T, xx.shape)
+
+    # contourf plot
+    cfset = ax.contourf(xx, yy, f, cmap='Blues')
+    # Contour plot
+    cset = ax.contour(xx, yy, f, colors='k')
+    # Label plot
+    ax.clabel(cset, inline=1, fontsize=10)
+
+    # Test the pdf on a set of points
+    print kernel.evaluate(np.array([[0.2, 0.5], [1.2, 1.6]]))
+
+    # Also test that the integral over the full range is equal to 1
+    print np.sum(kernel.pdf(positions))
+    print kernel.integrate_box([xmin, ymin], [xmax, ymax])
+
+    # probability of a point
+    eps = 1e-4
+    xcen = 1.6
+    ycen = 0.1
+    print kernel.integrate_box([xcen-eps, ycen-eps], [xcen+eps, ycen+eps])
+
+    # -------------------- plot for random resampling from previous KDE -------------------- #
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111)
+
+    ax1.set_xlabel(r'$\mathrm{Resampled\ \left< f^{obs}_{err}\right>}$')
+    ax1.set_ylabel('Resampled D4000')
+
+    # plot points
+    resample_arr = kernel.resample()
+    x_resamp = resample_arr[0]
+    y_resamp = resample_arr[1]
+    ax1.scatter(x_resamp, y_resamp, s=3, color='k', zorder=10)
+
+    # now use scipy gaussian kde
+    xx_resamp, yy_resamp = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+    positions_resamp = np.vstack([xx_resamp.ravel(), yy_resamp.ravel()])
+    values_resamp = np.vstack([x_resamp, y_resamp])
+    kernel_resamp = gaussian_kde(values_resamp)
+    f_resamp = np.reshape(kernel(positions_resamp).T, xx_resamp.shape)
+
+    # contourf plot
+    cfset = ax1.contourf(xx_resamp, yy_resamp, f_resamp, cmap='Blues')
+    # Contour plot
+    cset = ax1.contour(xx_resamp, yy_resamp, f_resamp, colors='k')
+    # Label plot
+    ax1.clabel(cset, inline=1, fontsize=10)
+    
+    plt.show()
+    plt.clf()
+    plt.cla()
+    plt.close()
 
     sys.exit(0)
