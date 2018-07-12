@@ -105,6 +105,40 @@ def get_err_and_d4000_arr(id_arr, field_arr, zgrism_arr, \
 
     return err_arr, d4000_list_arr, d4000_err_list_arr
 
+def get_resampled_d4000_err(d4000_list_arr, d4000_err_list_arr, err_arr):
+
+    # only plot the ones with high significance of measured D4000
+    d4000_sig = d4000_list_arr / d4000_err_list_arr
+    val_idx = np.where(d4000_sig >= 5)[0]
+
+    # min and max values for plot and for kernel density estimate
+    xmin = 0.0
+    xmax = 0.5
+    ymin = 1.0
+    ymax = 2.0
+
+    # first clip x and y arrays to the specified min and max values
+    x = err_arr[val_idx]
+    y = d4000_list_arr[val_idx]
+    x_idx = np.where((x>=xmin) & (x<=xmax))[0]
+    y_idx = np.where((y>=ymin) & (y<=ymax))[0]
+    xy_idx = reduce(np.intersect1d, (x_idx, y_idx))
+    x = x[xy_idx]
+    y = y[xy_idx]
+
+    # now use scipy gaussian kde
+    xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+    positions = np.vstack([xx.ravel(), yy.ravel()])
+    values = np.vstack([x, y])
+    kernel = gaussian_kde(values, bw_method=0.5)
+
+    # resample points
+    resample_arr = kernel.resample(size=50000)
+    err_resamp = resample_arr[0]
+    d4000_resamp = resample_arr[1]
+
+    return err_resamp, d4000_resamp
+
 if __name__ == '__main__':
 
     # Read in all output arrays

@@ -34,6 +34,7 @@ import refine_redshifts_dn4000 as old_ref
 import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 import mag_hist as mh
+import check_specerror_dist as chk
 
 def get_rand_err_arr():
 
@@ -438,12 +439,8 @@ if __name__ == '__main__':
     # of real galaxies.
     total_models_to_choose = 2000  # total models that I want the simulation to run over
 
-    kernel = stats.gaussian_kde(d4000_pears_plot)
-    d4000_test = np.linspace(d4000min, d4000max, total_models_to_choose)
-
     model_d4000_list = []
     for i in range(total_models):
-
         # Measure D4000 before doing modifications
         model_flam = model_comp_spec[i]
         model_ferr = np.zeros(len(model_flam))
@@ -456,6 +453,7 @@ if __name__ == '__main__':
     model_d4000_list = np.asarray(model_d4000_list)
 
     # Now radomly select models given that their D4000 follows that of the real galaxies
+    kernel = stats.gaussian_kde(d4000_pears_plot)
     kernel_eval_res = kernel(model_d4000_list)
     norm_kde = kernel_eval_res / np.sum(kernel_eval_res)
     chosen_model_d4000 = np.random.choice(model_d4000_list, size=total_models_to_choose, replace=False, p=norm_kde)
@@ -477,12 +475,22 @@ if __name__ == '__main__':
 
     for j in range(total_models_to_choose):
         idx = np.where(model_d4000_list == chosen_model_d4000[j])[0]
-        chosen_models_indices.append(idx)
+        chosen_models_indices.append(idx[0])
 
-    chosen_models_indices = np.asarray(chosen_models_indices)
+    chosen_models_indices = np.asarray(chosen_models_indices, dtype=np.int)
 
     # Free up some space
     del d4000_pears_arr
+
+    # ------ Get resampled distribution for D4000 vs ferr ------ #
+    all_err_arr = np.load(massive_figures_dir + 'avg_fobs_errors.npy')
+    d4000_list_arr = np.load(massive_figures_dir + 'd4000_list_arr.npy')
+    d4000_err_list_arr = np.load(massive_figures_dir + 'd4000_err_list_arr.npy')
+
+    err_resamp, d4000_resamp = chk.get_resampled_d4000_err(d4000_list_arr, d4000_err_list_arr, all_err_arr)
+
+    # Free up some space
+    del all_err_arr, d4000_list_arr, d4000_err_list_arr
 
     # ---------------------------------------------- Loop ----------------------------------------------- #
     d4000_in_list = []  # D4000 measured on model before doing model modifications
@@ -531,12 +539,37 @@ if __name__ == '__main__':
         if type(test_redshift) is np.ndarray:
             test_redshift = np.asscalar(test_redshift)
 
-        # Modify model and create mock spectrum
+        # ---------- Modify model and create mock spectrum ---------- #
         # Get random error that follows the error distribution of the real galaxies
-        random_err_chosen = float(np.random.choice(err_arr))
-        lam_obs, flam_obs, ferr_obs = get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift, random_err_chosen)
+        # The two while loops here make sure that the code doesn't break
+        # in stupid ways, like because of my kinda arbitrary choice of eps_d4000
+        eps_d4000 = 0.001
+        while True:
+            d4000_resamp_idx = np.where((d4000_resamp >= d4000_in - eps_d4000) & (d4000_resamp <= d4000_in + eps_d4000))[0]
 
-        # Now de-redshift and find D4000
+            if len(d4000_resamp_idx) == 0:
+                eps_d4000 = 5*eps_d4000
+                continue
+
+            if len(d4000_resamp_idx) > 0:
+                break
+
+        err_in_choice_range = err_resamp[d4000_resamp_idx]
+
+        while True:
+            # i.e. keep doing it until it chooses a number which is not exactly zero
+            # I know that it is highly unlikely to choose exactly zero ever but I just
+            # wanted to make sure that this part never failed.
+            chosen_err = np.random.choice(err_in_choice_range)
+            if chosen_err != 0:
+                break
+
+        if chosen_err < 0:
+            chosen_err = np.abs(chosen_err)
+
+        lam_obs, flam_obs, ferr_obs = get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift, chosen_err)
+
+        # Now de-redshift and find D4000 on the modified spectrum
         lam_em = lam_obs / (1 + test_redshift)
         flam_em = flam_obs * (1 + test_redshift)
         ferr_em = ferr_obs * (1 + test_redshift)
@@ -550,7 +583,7 @@ if __name__ == '__main__':
             d4000_out_err_list.append(d4000_out_err)
             print "Galaxies done so far:", galaxy_count, "Currently at model #", i+1, "with test redshift", test_redshift
             print "Model has intrinsic D4000:", d4000_in
-            print "Simulated mock spectrum has D4000:", d4000_out
+            print "Simulated mock spectrum has D4000:", d4000_out, "with randomly chosen flux error frac of:", chosen_err
 
             # -------- Broaden the LSF ------- #
             broad_lsf = Gaussian1DKernel(10.0 * 1.118)
@@ -621,7 +654,7 @@ if __name__ == '__main__':
                     test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
                     model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list)
 
-            if galaxy_count > 2000:
+            if galaxy_count > total_models_to_choose:
                 break
 
     # convert to numpy arrays and save

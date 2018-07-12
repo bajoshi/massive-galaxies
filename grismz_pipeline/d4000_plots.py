@@ -21,7 +21,6 @@ import mag_hist as mh
 import new_refine_grismz_gridsearch_parallel as ngp
 import dn4000_catalog as dc
 
-
 def get_all_d4000():
 
     # read in matched files to get id
