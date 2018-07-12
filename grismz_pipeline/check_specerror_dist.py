@@ -291,8 +291,10 @@ if __name__ == '__main__':
     xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
     positions = np.vstack([xx.ravel(), yy.ravel()])
     values = np.vstack([x, y])
-    kernel = gaussian_kde(values)
+    kernel = gaussian_kde(values, bw_method=0.5)
     f = np.reshape(kernel(positions).T, xx.shape)
+
+    print "KDE scotts factor:", kernel.scotts_factor()
 
     # contourf plot
     cfset = ax.contourf(xx, yy, f, cmap='Blues')
@@ -322,10 +324,10 @@ if __name__ == '__main__':
     ax1.set_ylabel('Resampled D4000')
 
     # plot points
-    resample_arr = kernel.resample()
+    resample_arr = kernel.resample(size=50000)
     x_resamp = resample_arr[0]
     y_resamp = resample_arr[1]
-    ax1.scatter(x_resamp, y_resamp, s=3, color='k', zorder=10)
+    ax1.scatter(x_resamp, y_resamp, s=0.003, color='k', zorder=10)
 
     # now use scipy gaussian kde
     xx_resamp, yy_resamp = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
@@ -341,9 +343,58 @@ if __name__ == '__main__':
     # Label plot
     ax1.clabel(cset, inline=1, fontsize=10)
     
-    plt.show()
+    #plt.show()
     plt.clf()
     plt.cla()
     plt.close()
+
+    # ----------------- Choosing err based on D4000 ----------------- #
+    # This part of the code will spit out a choice for the error value 
+    # to insert in the mock spectra given it D4000 value. THe way it 
+    # does this is by first finding the D4000 values in a close range 
+    # to the D4000 of the mock spectrum. Within this small range of D4000
+    # it then picks a point from the resampled (see above) distribution
+    # of D4000 vs ferr and the error value of htat point is now hte 
+    # average error given to the mock spectrum. It also asssumes 
+    # that every point in the resapled distribution within the thin 
+    # strip around the chosen D4000 is equally likely.
+
+    err_resamp = resample_arr[0]
+    d4000_resamp = resample_arr[1]
+
+    mock_d4000 = 1.2
+
+    eps_d4000 = 0.001
+
+    # The two while loops here make sure that the code doesn't break
+    # in stupid ways, like because of my arbitrary choice of eps_d4000
+    while True:
+
+        d4000_resamp_idx = np.where((d4000_resamp >= mock_d4000 - eps_d4000) & (d4000_resamp <= mock_d4000 + eps_d4000))[0]
+
+        if len(d4000_resamp_idx) == 0:
+            print "Did not find any re-samples within given D4000 range. Increasing search width."
+            eps_d4000 = 5*eps_d4000
+            continue
+
+        if len(d4000_resamp_idx) > 0:
+            print "Number of resampled D4000 values within the specified range:", len(d4000_resamp_idx)
+            break
+
+    err_in_choice_range = err_resamp[d4000_resamp_idx]
+
+    while True:
+        # i.e. keep doing it until it chooses a number which is not exactly zero
+        # I know that it is highly unlikely to choose exactly zero ever but I just
+        # wanted to make sure that this part never failed.
+        chosen_err = np.random.choice(err_in_choice_range)
+
+        if chosen_err != 0:
+            break
+
+    if chosen_err < 0:
+        chosen_err = np.abs(chosen_err)
+
+    print "Chosen error for mock spectrum", chosen_err
 
     sys.exit(0)

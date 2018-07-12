@@ -8,6 +8,8 @@ from astropy.cosmology import Planck15 as cosmo
 from astropy.cosmology import z_at_value
 import astropy.units as u
 from joblib import Parallel, delayed
+from scipy import stats
+import random
 
 import os
 import sys
@@ -374,6 +376,23 @@ def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list,
 
     return None
 
+def plot_d4000_hist(chosen_model_d4000):
+
+    # Check if the chosen models have the correct D4000 distribution
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ncount, edges, patches = ax.hist(chosen_model_d4000, 210, range=[0.0,4.0], color='lightgray', align='mid', zorder=10)
+    # I got the number of bins from the hist for the real galaxies
+    ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
+
+    ax.set_xlabel(r'$\mathrm{D}4000$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
+
+    plt.show()
+
+    return None
+
 if __name__ == '__main__':
     
     # Start time
@@ -398,10 +417,74 @@ if __name__ == '__main__':
     # total run time up to now
     print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
-    # ---------------------------------------------- Loop ----------------------------------------------- #
-    # Get errror distribution of real galaxies
-    err_arr, new_rand_err_arr = get_rand_err_arr()
+    # --------------- Bootstrap D4000 dist for models to D4000 dist for real galaxies ------------------- #
+    # read arrays
+    d4000_pears_arr = np.load(massive_figures_dir + 'all_d4000_arr.npy')
 
+    # Only consider finite elements
+    valid_idx = np.where(np.isfinite(d4000_pears_arr))[0]
+    d4000_pears_plot = d4000_pears_arr[valid_idx]
+
+    # Now choose only those within a believable range
+    d4000min = 0.0
+    d4000max = 2.5
+    d4000_pears_plot = d4000_pears_plot[np.where((d4000_pears_plot > d4000min) & (d4000_pears_plot < d4000max))[0]]
+
+    # Loop through all models and choose them such that their D4000 distribution 
+    # follows the D4000 distribution for the real galalxies. This is done by
+    # first creating an array that has the D4000 values of all the models
+    # before any mods. After this from this array we will randomly choose values
+    # of D4000 such that these new chosen values now conform to the distribution 
+    # of real galaxies.
+    total_models_to_choose = 2000  # total models that I want the simulation to run over
+
+    kernel = stats.gaussian_kde(d4000_pears_plot)
+    d4000_test = np.linspace(d4000min, d4000max, total_models_to_choose)
+
+    model_d4000_list = []
+    for i in range(total_models):
+
+        # Measure D4000 before doing modifications
+        model_flam = model_comp_spec[i]
+        model_ferr = np.zeros(len(model_flam))
+
+        d4000_in, d4000_in_err = dc.get_d4000(model_lam_grid, model_flam, model_ferr, interpolate_flag=False)
+
+        model_d4000_list.append(d4000_in)
+
+    # convert to numpy array
+    model_d4000_list = np.asarray(model_d4000_list)
+
+    # Now radomly select models given that their D4000 follows that of the real galaxies
+    kernel_eval_res = kernel(model_d4000_list)
+    norm_kde = kernel_eval_res / np.sum(kernel_eval_res)
+    chosen_model_d4000 = np.random.choice(model_d4000_list, size=total_models_to_choose, replace=False, p=norm_kde)
+
+    # The following 3 lines are useful. Do not delete. Just uncomment.
+    #plot_d4000_hist(chosen_model_d4000)  # to check if you got the right distribution
+    #print "Unique numbers in orig dist:", len(np.unique(model_d4000_list))
+    #print "Unique numbers in new chosen dist:", len(np.unique(chosen_model_d4000))
+
+    """
+    I need to know the indices of the models in the large model array (model_comp_spec)
+    that are chosen to satisfy the D4000 distribution. The reason I have to use the 
+    explicit for loop below is so that I can use np.where() and compare. The reason 
+    I can get away with using np.where() ot find the indices is that the 34542
+    models have unique D4000 values (thankfully) and therefore the random chosen
+    values from this list without replacement are also unique. 
+    """
+    chosen_models_indices = []
+
+    for j in range(total_models_to_choose):
+        idx = np.where(model_d4000_list == chosen_model_d4000[j])[0]
+        chosen_models_indices.append(idx)
+
+    chosen_models_indices = np.asarray(chosen_models_indices)
+
+    # Free up some space
+    del d4000_pears_arr
+
+    # ---------------------------------------------- Loop ----------------------------------------------- #
     d4000_in_list = []  # D4000 measured on model before doing model modifications
     d4000_out_list = []  # D4000 measured on model after doing model modifications
     d4000_out_err_list = []
@@ -421,7 +504,7 @@ if __name__ == '__main__':
 
     galaxy_count = 0
 
-    for i in range(4000, total_models):
+    for i in chosen_models_indices:
 
         # Measure D4000 before doing modifications
         model_flam = model_comp_spec[i]
@@ -461,7 +544,7 @@ if __name__ == '__main__':
         d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
         # Check D4000 value and only then proceed
-        if d4000_out >= 1.05:
+        if d4000_out >= 1.2:
             d4000_in_list.append(d4000_in)
             d4000_out_list.append(d4000_out)
             d4000_out_err_list.append(d4000_out_err)

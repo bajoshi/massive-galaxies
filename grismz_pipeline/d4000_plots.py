@@ -29,6 +29,7 @@ def get_all_d4000():
         dtype=None, names=True, skip_header=1)
     matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
         dtype=None, names=True, skip_header=1)
+    
     # read in all arrays neded
     id_n = np.load(massive_figures_dir + 'full_run/id_list_gn.npy')
     id_s = np.load(massive_figures_dir + 'full_run/id_list_gs.npy')
@@ -273,8 +274,8 @@ def make_redshift_hist():
 
 if __name__ == '__main__':
     
-    make_d4000_vs_redshift_plot()
+    #make_d4000_vs_redshift_plot()
     make_d4000_hist()
-    make_redshift_hist()
+    #make_redshift_hist()
 
     sys.exit(0)
