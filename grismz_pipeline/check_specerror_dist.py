@@ -157,7 +157,7 @@ def get_resampled_d4000_err(d4000_list_arr, d4000_err_list_arr, err_arr):
 
     # only plot the ones with high significance of measured D4000
     d4000_sig = d4000_list_arr / d4000_err_list_arr
-    val_idx = np.where(d4000_sig >= 5)[0]
+    val_idx = np.where(d4000_sig >= 3)[0]
 
     # min and max values for plot and for kernel density estimate
     xmin = 0.0
@@ -347,7 +347,7 @@ if __name__ == '__main__':
 
     # only plot the ones with high significance of measured D4000
     d4000_sig = d4000_list_arr / d4000_err_list_arr
-    val_idx = np.where(d4000_sig >= 5)[0]
+    val_idx = np.where(d4000_sig >= 3)[0]
     print "Galaxies after applying D4000 significance cut:", len(val_idx)
 
     # min and max values for plot and for kernel density estimate
