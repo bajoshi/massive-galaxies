@@ -649,13 +649,13 @@ if __name__ == '__main__':
 
             galaxy_count += 1
 
-            if galaxy_count%100 == 0:
-                save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
-                    test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
-                    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list)
+        if galaxy_count%100 == 0:
+            save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
+                test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
+                model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list)
 
-            if galaxy_count > total_models_to_choose:
-                break
+        if galaxy_count > total_models_to_choose:
+            break
 
     # convert to numpy arrays and save
     d4000_in_list = np.asarray(d4000_in_list) 
