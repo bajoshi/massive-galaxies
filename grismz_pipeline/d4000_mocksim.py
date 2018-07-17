@@ -133,12 +133,17 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift, random_err_
         if scale < 0:
             scale = abs(scale)
         if scale == 0.0:
-            scale = 1e-14  
+            scale = 1e-14
             # I just randomly chose a small number because I was 
             # getting annoyed with the scale<=0 error causing my 
             # code to fail at unpredictable times.
 
-        flam_obs[k] = np.random.normal(flam_obs[k], scale, 1)
+        try:
+            flam_obs[k] = np.random.normal(flam_obs[k], scale, 1)
+        except ValueError as e:
+            print "Scale:", scale
+            print "Flux:", flam_obs[k]
+            raise e
 
     # plot to check it looks right
     # don't delete these lines for plotting
@@ -175,7 +180,7 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 8
+    num_cores = 10
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(ngp.get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -575,6 +580,12 @@ if __name__ == '__main__':
         ferr_em = ferr_obs * (1 + test_redshift)
 
         d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+
+        # D4000 significance check
+        d4000_sig = d4000_out / d4000_out_err
+        if d4000_sig < 3:
+            print "Skipping due to low D4000 measurement significance."
+            continue
 
         # Check D4000 value and only then proceed
         if d4000_out >= 1.0:
