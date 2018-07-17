@@ -88,7 +88,12 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
         ax_resid.set_xlabel('')
 
     # add text
-    ax_main.text(0.05, 0.95, r"$\mathrm{D}4000 \geq$" + d4000_range_lowlim.replace('p', '.'), \
+    if d4000_range_lowlim == '1p5':
+        d4000_range_uplim = float(d4000_range_lowlim.replace('p', '.')) + 0.1
+    else:
+        d4000_range_uplim = float(d4000_range_lowlim.replace('p', '.')) + 0.05
+    d4000_label_str = d4000_range_lowlim.replace('p', '.') + r"$\leq \mathrm{D}4000 \leq$" + str(d4000_range_uplim)
+    ax_main.text(0.05, 0.95, d4000_label_str, \
         verticalalignment='top', horizontalalignment='left', transform=ax_main.transAxes, color='k', size=10)
     ax_main.text(0.05, 0.86, r'$\mathrm{\mu =\,}$' + convert_to_sci_not(mu), \
         verticalalignment='top', horizontalalignment='left', transform=ax_main.transAxes, color='k', size=10)
@@ -268,15 +273,15 @@ def dummy_func_code_for9panelplot():
 if __name__ == '__main__':
 
     # Read in results arrays
-    d4000_in = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_d4000_in_list_1p2to1p4.npy')
-    d4000_out = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_d4000_out_list_1p2to1p4.npy')
-    d4000_out_err = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_d4000_out_err_list_1p2to1p4.npy')
-    mock_model_index = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_mock_model_index_list_1p2to1p4.npy')
-    test_redshift = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_test_redshift_list_1p2to1p4.npy')
-    mock_zgrism = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_mock_zgrism_list_1p2to1p4.npy')
-    mock_zgrism_lowerr = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_mock_zgrism_lowerr_list_1p2to1p4.npy')
-    mock_zgrism_higherr = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_mock_zgrism_higherr_list_1p2to1p4.npy')
-    chi2 = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_chi2_list_1p2to1p4.npy')
+    d4000_in = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_in_list_geq1.npy')
+    d4000_out = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_out_list_geq1.npy')
+    d4000_out_err = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_out_err_list_geq1.npy')
+    mock_model_index = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_model_index_list_geq1.npy')
+    test_redshift = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_test_redshift_list_geq1.npy')
+    mock_zgrism = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_list_geq1.npy')
+    mock_zgrism_lowerr = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_lowerr_list_geq1.npy')
+    mock_zgrism_higherr = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_higherr_list_geq1.npy')
+    chi2 = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_chi2_list_geq1.npy')
 
     # --------- redshift accuracy comparison ---------- # 
     gs = gridspec.GridSpec(28,2)
@@ -324,18 +329,18 @@ if __name__ == '__main__':
     # Create arrays for all four panels
     valid_chi2_idx = np.where(chi2 < 2.0)[0]
     d4000_sig = d4000_out / d4000_out_err
-    valid_d4000_sig_idx = np.where(d4000_sig >= 5)[0]
+    valid_d4000_sig_idx = np.where(d4000_sig >= 3)[0]
 
-    d4000_gtr_1p2_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.2)[0]))
-    d4000_gtr_1p25_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.25)[0]))
+    d4000_gtr_1p2_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.2) & (d4000_out < 1.25))[0]))
+    d4000_gtr_1p25_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.25) & (d4000_out < 1.3))[0]))
 
-    d4000_gtr_1p3_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.3)[0]))
-    d4000_gtr_1p35_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.35)[0]))
+    d4000_gtr_1p3_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.3) & (d4000_out < 1.35))[0]))
+    d4000_gtr_1p35_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.35) & (d4000_out < 1.4))[0]))
 
-    d4000_gtr_1p4_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.4)[0]))
-    d4000_gtr_1p45_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.45)[0]))
+    d4000_gtr_1p4_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.4) & (d4000_out < 1.45))[0]))
+    d4000_gtr_1p45_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.45) & (d4000_out < 1.5))[0]))
 
-    d4000_gtr_1p5_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.5)[0]))
+    d4000_gtr_1p5_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.5) & (d4000_out < 1.6))[0]))
     d4000_gtr_1p6_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.6)[0]))
 
     # ------
@@ -417,7 +422,97 @@ if __name__ == '__main__':
         transform=ax1.transAxes, color='k', size=10)
 
     # Save figure 
+    #fig_gs.savefig(massive_figures_dir + \
+    #    'model_mockspectra_fits/mock_redshift_comparison_d4000.eps', dpi=300, bbox_inches='tight')
+
+    # -------------------------------------------------------------------------------- #
+    # ------------------------------ Lower D4000 values ------------------------------ #
+    # -------------------------------------------------------------------------------- #
+    gs = gridspec.GridSpec(14,2)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.15, hspace=0.0)
+
+    fig_gs = plt.figure()  # figsize=(width, height)
+
+    ### first row
+    # D4000 >= 1.0
+    ax1 = fig_gs.add_subplot(gs[:5,:1])
+    ax2 = fig_gs.add_subplot(gs[5:7,:1])
+    
+    # D4000 >= 1.05
+    ax3 = fig_gs.add_subplot(gs[:5,1:])
+    ax4 = fig_gs.add_subplot(gs[5:7,1:])
+    
+    # second row
+    # D4000 >= 1.1
+    ax5 = fig_gs.add_subplot(gs[7:12,:1])
+    ax6 = fig_gs.add_subplot(gs[12:,:1])
+    
+    # D4000 >= 1.15
+    ax7 = fig_gs.add_subplot(gs[7:12,1:])
+    ax8 = fig_gs.add_subplot(gs[12:,1:])
+
+    # ------------------------------
+    # Create arrays for all four panels
+    valid_chi2_idx = np.where(chi2 < 2.0)[0]
+    d4000_sig = d4000_out / d4000_out_err
+    valid_d4000_sig_idx = np.where(d4000_sig >= 3)[0]
+
+    d4000_gtr_1p0_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.0) & (d4000_out < 1.05))[0]))
+    d4000_gtr_1p05_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.05) & (d4000_out < 1.1))[0]))
+
+    d4000_gtr_1p1_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.1) & (d4000_out < 1.15))[0]))
+    d4000_gtr_1p15_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.15) & (d4000_out < 1.2))[0]))
+
+    # ------
+    test_redshift_d4000_gtr_1p0 = test_redshift[d4000_gtr_1p0_idx]
+    test_redshift_d4000_gtr_1p05 = test_redshift[d4000_gtr_1p05_idx]
+
+    test_redshift_d4000_gtr_1p1 = test_redshift[d4000_gtr_1p1_idx]
+    test_redshift_d4000_gtr_1p15 = test_redshift[d4000_gtr_1p15_idx]
+
+    # ------------------------------
+    mock_zgrism_d4000_gtr_1p0 = mock_zgrism[d4000_gtr_1p0_idx]
+    mock_zgrism_d4000_gtr_1p05 = mock_zgrism[d4000_gtr_1p05_idx]
+
+    mock_zgrism_d4000_gtr_1p1 = mock_zgrism[d4000_gtr_1p1_idx]
+    mock_zgrism_d4000_gtr_1p15 = mock_zgrism[d4000_gtr_1p15_idx]
+
+    # ------------------------------
+    mock_zgrism_lowerr_d4000_gtr_1p0 = mock_zgrism_lowerr[d4000_gtr_1p0_idx]
+    mock_zgrism_lowerr_d4000_gtr_1p05 = mock_zgrism_lowerr[d4000_gtr_1p05_idx]
+
+    mock_zgrism_lowerr_d4000_gtr_1p1 = mock_zgrism_lowerr[d4000_gtr_1p1_idx]
+    mock_zgrism_lowerr_d4000_gtr_1p15 = mock_zgrism_lowerr[d4000_gtr_1p15_idx]
+
+    # ------------------------------
+    mock_zgrism_higherr_d4000_gtr_1p0 = mock_zgrism_higherr[d4000_gtr_1p0_idx]
+    mock_zgrism_higherr_d4000_gtr_1p05 = mock_zgrism_higherr[d4000_gtr_1p05_idx]
+
+    mock_zgrism_higherr_d4000_gtr_1p1 = mock_zgrism_higherr[d4000_gtr_1p1_idx]
+    mock_zgrism_higherr_d4000_gtr_1p15 = mock_zgrism_higherr[d4000_gtr_1p15_idx]
+
+    # ------------------------------
+    ax1, ax2 = plot_panel(ax1, ax2, test_redshift_d4000_gtr_1p0, mock_zgrism_d4000_gtr_1p0, mock_zgrism_lowerr_d4000_gtr_1p0, mock_zgrism_higherr_d4000_gtr_1p0, '1p0')
+    ax3, ax4 = plot_panel(ax3, ax4, test_redshift_d4000_gtr_1p05, mock_zgrism_d4000_gtr_1p05, mock_zgrism_lowerr_d4000_gtr_1p05, mock_zgrism_higherr_d4000_gtr_1p05, '1p05')
+
+    ax5, ax6 = plot_panel(ax5, ax6, test_redshift_d4000_gtr_1p1, mock_zgrism_d4000_gtr_1p1, mock_zgrism_lowerr_d4000_gtr_1p1, mock_zgrism_higherr_d4000_gtr_1p1, '1p1')
+    ax7, ax8 = plot_panel(ax7, ax8, test_redshift_d4000_gtr_1p15, mock_zgrism_d4000_gtr_1p15, mock_zgrism_lowerr_d4000_gtr_1p15, mock_zgrism_higherr_d4000_gtr_1p15, '1p15')
+
+    # add text only to the first panel
+    ax1.axhline(y=0.75, xmin=0.55, xmax=0.65, ls='-', lw=2.0, color='#41ab5d')
+    ax1.text(0.66, 0.28, 'Best fit line', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=10)
+
+    ax1.axhline(y=0.7, xmin=0.55, xmax=0.65, ls='-', lw=2.0, color='blue')
+    ax1.text(0.66, 0.2, 'Residual Mean', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=10)
+
+    ax1.axhline(y=0.65, xmin=0.55, xmax=0.65, ls='-', lw=2.0, color='#3690c0')
+    ax1.text(0.66, 0.12, r'$\mathrm{\pm 1\ \sigma}$', verticalalignment='top', horizontalalignment='left', \
+        transform=ax1.transAxes, color='k', size=10)
+
+    # Save figure 
     fig_gs.savefig(massive_figures_dir + \
-        'model_mockspectra_fits/mock_redshift_comparison_d4000.eps', dpi=300, bbox_inches='tight')
+        'model_mockspectra_fits/mock_redshift_comparison_lowd4000.eps', dpi=300, bbox_inches='tight')
 
     sys.exit(0)

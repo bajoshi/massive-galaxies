@@ -437,7 +437,7 @@ if __name__ == '__main__':
     # before any mods. After this from this array we will randomly choose values
     # of D4000 such that these new chosen values now conform to the distribution 
     # of real galaxies.
-    total_models_to_choose = 2000  # total models that I want the simulation to run over
+    total_models_to_choose = 10000  # total models that I want the simulation to run over
 
     model_d4000_list = []
     for i in range(total_models):
@@ -577,7 +577,7 @@ if __name__ == '__main__':
         d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
         # Check D4000 value and only then proceed
-        if (d4000_out >= 1.0) and (d4000_out < 1.2):
+        if d4000_out >= 1.0:
             d4000_in_list.append(d4000_in)
             d4000_out_list.append(d4000_out)
             d4000_out_err_list.append(d4000_out_err)
