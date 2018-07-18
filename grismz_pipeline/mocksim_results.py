@@ -2,6 +2,7 @@ from __future__ import division
 
 import numpy as np
 from scipy.optimize import curve_fit
+import scipy.stats as stats
 
 import sys
 import os
@@ -46,11 +47,25 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
 
     outliers = np.where(resid > 0.05)[0]
 
-    print "\n", "D4000 >=", d4000_range_lowlim.replace('p', '.')
-    print "Residual mean, sigma_nmad, and stddev:", mu, sigma_nmad, stddev
+    # Print info
+    if d4000_range_lowlim == '1p5':
+        d4000_range_uplim = float(d4000_range_lowlim.replace('p', '.')) + 0.1
+    else:
+        d4000_range_uplim = float(d4000_range_lowlim.replace('p', '.')) + 0.05
+
+    avg_lowerr = np.nanmean(mock_zgrism_lowerr_arr)
+    avg_uperr = np.nanmean(mock_zgrism_uperr_arr)
+    yerrbar = [[avg_lowerr], [avg_uperr]]
+
+    print "\n", d4000_range_lowlim.replace('p', '.'), "<= D4000 < ", d4000_range_uplim
+    print "Number of objects in bin:", len(resid)
+    print "Residual mean, sigma_nmad, and stddev:", '{:.3}'.format(mu), '{:.3}'.format(sigma_nmad), '{:.3}'.format(stddev)
     print "Number of outliers i.e. Residual>5%:", len(outliers)
     out_frac = len(outliers)/len(mock_zgrism_arr)
     print "Outlier fraction:", out_frac
+    print "Skewness of redisduals:", '{:.3}'.format(stats.skew(resid))
+    print "Magnitude of avg lower and upper error on mock grism redshift:", '{:.3}'.format(avg_lowerr), '{:.3}'.format(avg_uperr),
+    print "Avg of the prev two:", '{:.3}'.format(np.mean(yerrbar))
 
     # plot fit to residuals
     ax_resid.axhline(y=mu + stddev, ls='-', color='#3690c0', linewidth=1.5)
@@ -66,7 +81,7 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
     ax_main.set_ylim(0.6, 1.24)
 
     ax_resid.set_xlim(0.6, 1.24)
-    ax_resid.set_ylim(-0.015, 0.015)
+    ax_resid.set_ylim(-0.054, 0.054)
 
     # Axis labels
     if d4000_range_lowlim != '1p2' and d4000_range_lowlim != '1p3' \
@@ -81,17 +96,13 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
 
     # tick labels
     ax_main.xaxis.set_ticklabels([])
-    ax_resid.yaxis.set_ticklabels(['', '-0.01', '0', '0.01'], fontsize='medium')
+    ax_resid.yaxis.set_ticklabels(['', '-0.05', '0', ''], fontsize='medium')
 
     if float(d4000_range_lowlim.replace('p', '.')) < 1.5:
         ax_resid.xaxis.set_ticklabels([])
         ax_resid.set_xlabel('')
 
     # add text
-    if d4000_range_lowlim == '1p5':
-        d4000_range_uplim = float(d4000_range_lowlim.replace('p', '.')) + 0.1
-    else:
-        d4000_range_uplim = float(d4000_range_lowlim.replace('p', '.')) + 0.05
     d4000_label_str = d4000_range_lowlim.replace('p', '.') + r"$\leq \mathrm{D}4000 \leq$" + str(d4000_range_uplim)
     ax_main.text(0.05, 0.95, d4000_label_str, \
         verticalalignment='top', horizontalalignment='left', transform=ax_main.transAxes, color='k', size=10)
@@ -106,11 +117,7 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
     #    verticalalignment='top', horizontalalignment='left', transform=ax_main.transAxes, color='k', size=10)
 
     # Plot avg mock_zgrism error bar on each panel
-    avg_lowerr = np.nanmean(mock_zgrism_lowerr_arr)
-    avg_uperr = np.nanmean(mock_zgrism_uperr_arr)
-    yerrbar = [[avg_lowerr], [avg_uperr]]
-
-    if d4000_range_lowlim == '1p2':
+    if d4000_range_lowlim == '1p2' or d4000_range_lowlim == '1p0':
         ax_main.errorbar(np.array([1.2]), np.array([0.82]), yerr=yerrbar, fmt='o', \
             color='r', markeredgecolor='r', capsize=0, markersize=1.5, elinewidth=0.6)
     else:
@@ -422,8 +429,8 @@ if __name__ == '__main__':
         transform=ax1.transAxes, color='k', size=10)
 
     # Save figure 
-    #fig_gs.savefig(massive_figures_dir + \
-    #    'model_mockspectra_fits/mock_redshift_comparison_d4000.eps', dpi=300, bbox_inches='tight')
+    fig_gs.savefig(massive_figures_dir + \
+        'model_mockspectra_fits/mock_redshift_comparison_d4000.eps', dpi=300, bbox_inches='tight')
 
     # -------------------------------------------------------------------------------- #
     # ------------------------------ Lower D4000 values ------------------------------ #

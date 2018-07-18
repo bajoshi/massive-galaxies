@@ -180,7 +180,7 @@ def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 10
+    num_cores = 8
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(ngp.get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -363,7 +363,7 @@ def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list,
     chi2_list = np.asarray(chi2_list)
 
     # save
-    d4000_range = '_1p2to1p4'
+    d4000_range = '_geq1'
     model_mocksim_dir = massive_figures_dir + 'model_mockspectra_fits/'
     np.save(model_mocksim_dir + 'intermediate_d4000_in_list' + d4000_range + '.npy', d4000_in_list)
     np.save(model_mocksim_dir + 'intermediate_d4000_out_list' + d4000_range + '.npy', d4000_out_list)
@@ -686,7 +686,7 @@ if __name__ == '__main__':
     chi2_list = np.asarray(chi2_list)
 
     # save
-    d4000_range = '_1p2to1p4'
+    d4000_range = '_geq1'
     np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_in_list' + d4000_range + '.npy', d4000_in_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_out_list' + d4000_range + '.npy', d4000_out_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/d4000_out_err_list' + d4000_range + '.npy', d4000_out_err_list)
@@ -704,6 +704,9 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'model_mockspectra_fits/chi2_list' + d4000_range + '.npy', chi2_list)
 
     """ # To merge the intermediate and final lists
+    # Short ipython script
+    import numpy as np
+    import glob
     for fl in sorted(glob.glob('intermediate*.npy')):
         int_fl = np.load(fl)
         reg_fl = np.load(fl.replace('intermediate_', ''))
