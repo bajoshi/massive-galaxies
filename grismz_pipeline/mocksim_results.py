@@ -6,6 +6,7 @@ import scipy.stats as stats
 
 import sys
 import os
+import glob
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -278,6 +279,20 @@ def dummy_func_code_for9panelplot():
     return None
 
 if __name__ == '__main__':
+
+    # Merge if necessary
+    # Comment out this block if not needed
+    # It only needs to be run once. Although 
+    # it wont hurt if you accidentally run it again.
+    """
+    for fl in sorted(glob.glob(massive_figures_dir + 'model_mockspectra_fits/' + '*_jet.npy')):
+        jet_fl = np.load(fl)
+        firstlight_fl = np.load(fl.replace('jet', 'firstlight'))
+        merged_arr = np.concatenate((jet_fl, firstlight_fl))
+        merged_fl_name = fl.replace('intermediate', 'merged')
+        merged_fl_name = merged_fl_name.replace('_jet', '')
+        np.save(merged_fl_name, merged_arr)
+    """
 
     # Read in results arrays
     d4000_in = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_in_list_geq1.npy')
