@@ -127,6 +127,11 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift, random_err_
     ferr_obs = np.ones(len(flam_obs))
     ferr_obs = random_err_chosen * flam_obs
 
+    # If the model has any nan or inf in it, then skip it
+    if (~np.isfinite(flam_obs)).any():
+        return_code = 0
+        return mock_resample_lam_grid, flam_obs, ferr_obs, return_code
+
     # put in random noise in the model
     for k in range(len(flam_obs)):
         scale = ferr_obs[k]  # i.e. std dev for normal dist in next line
@@ -137,13 +142,12 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift, random_err_
             # I just randomly chose a small number because I was 
             # getting annoyed with the scale<=0 error causing my 
             # code to fail at unpredictable times.
+            # I'm leaving this in here (just to be safe) although 
+            # I think the problem has been solved by taking care 
+            # of the nan values. See if condition right above this 
+            # loop.
 
-        try:
             flam_obs[k] = np.random.normal(flam_obs[k], scale, 1)
-        except ValueError as e:
-            print "Scale:", scale
-            print "Flux:", flam_obs[k]
-            raise e
 
     # plot to check it looks right
     # don't delete these lines for plotting
@@ -161,7 +165,8 @@ def get_mock_spectrum(model_lam_grid, model_spectrum, test_redshift, random_err_
     plt.show()
     """
 
-    return mock_resample_lam_grid, flam_obs, ferr_obs
+    return_code = 1
+    return mock_resample_lam_grid, flam_obs, ferr_obs, return_code
 
 def fit_model_and_plot(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
@@ -344,7 +349,7 @@ def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bes
 
 def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
     test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
-    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list):
+    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list, chosen_error_list):
 
     # convert to numpy arrays and save
     d4000_in_list = np.asarray(d4000_in_list) 
@@ -361,6 +366,7 @@ def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list,
     model_av_list = np.asarray(model_av_list)
     count_list = np.asarray(count_list)
     chi2_list = np.asarray(chi2_list)
+    chosen_error_list = np.asarray(chosen_error_list)
 
     # save
     d4000_range = '_geq1'
@@ -379,6 +385,7 @@ def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list,
     np.save(model_mocksim_dir + 'intermediate_model_av_list' + d4000_range + '.npy', model_av_list)
     np.save(model_mocksim_dir + 'intermediate_count_list' + d4000_range + '.npy', count_list)
     np.save(model_mocksim_dir + 'intermediate_chi2_list' + d4000_range + '.npy', chi2_list)
+    np.save(model_mocksim_dir + 'intermediate_chosen_error_list' + d4000_range + '.npy', chosen_error_list)
 
     return None
 
@@ -514,8 +521,12 @@ if __name__ == '__main__':
     model_av_list = []
     count_list = []
     chi2_list = []
+    chosen_error_list = []
 
     galaxy_count = 0
+
+    models_skipped = 0
+    models_skipped_nan = 0
 
     for i in chosen_models_indices:
 
@@ -535,6 +546,7 @@ if __name__ == '__main__':
             print "Skipping this model because model age is older than the oldest age",
             print "we can probe with the ACS grism, i.e. the age corresponding",
             print "to the lowest redshift at which we can measure the 4000A break (z=0.6)."
+            models_skipped += 1
             continue
 
         if upper_z_lim_age > 1.235:
@@ -572,7 +584,14 @@ if __name__ == '__main__':
         if chosen_err < 0:
             chosen_err = np.abs(chosen_err)
 
-        lam_obs, flam_obs, ferr_obs = get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift, chosen_err)
+        lam_obs, flam_obs, ferr_obs, return_code = get_mock_spectrum(model_lam_grid, model_comp_spec[i], test_redshift, chosen_err)
+        if return_code == 0:
+            print "Skipping model because there were nan values in it.",
+            print "This happends randomly from time to time because of", 
+            print "the randomness inserted in the modified models."
+            models_skipped_nan += 1
+            models_skipped += 1
+            continue
 
         # Now de-redshift and find D4000 on the modified spectrum
         lam_em = lam_obs / (1 + test_redshift)
@@ -585,6 +604,7 @@ if __name__ == '__main__':
         d4000_sig = d4000_out / d4000_out_err
         if d4000_sig < 3:
             print "Skipping due to low D4000 measurement significance."
+            models_skipped += 1
             continue
 
         # Check D4000 value and only then proceed
@@ -657,13 +677,14 @@ if __name__ == '__main__':
             model_av_list.append(model_av)
             count_list.append(i+1)
             chi2_list.append(min_chi2_red)
+            chosen_error_list.append(chosen_err)
 
             galaxy_count += 1
 
         if galaxy_count%100 == 0:
             save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
                 test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
-                model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list)
+                model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list, chosen_error_list)
 
         if galaxy_count > total_models_to_choose:
             break
@@ -684,6 +705,11 @@ if __name__ == '__main__':
     model_av_list = np.asarray(model_av_list)
     count_list = np.asarray(count_list)
     chi2_list = np.asarray(chi2_list)
+    chosen_error_list = np.asarray(chosen_error_list)
+
+    # Print skipped galaxies numbers 
+    print "Total galaxies skipped:", models_skipped
+    print "Skipped due to nan in flux array:", models_skipped_nan
 
     # save
     d4000_range = '_geq1'
@@ -702,6 +728,7 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'model_mockspectra_fits/model_av_list' + d4000_range + '.npy', model_av_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/count_list' + d4000_range + '.npy', count_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/chi2_list' + d4000_range + '.npy', chi2_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/chosen_error_list' + d4000_range + '.npy', chosen_error_list)
 
     """ # To merge the intermediate and final lists
     # Short ipython script
