@@ -349,7 +349,8 @@ def plot_mock_fit(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bes
 
 def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
     test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
-    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list, chosen_error_list):
+    model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list, chosen_error_list, \
+    new_d4000_list, new_d4000_err_list):
 
     # convert to numpy arrays and save
     d4000_in_list = np.asarray(d4000_in_list) 
@@ -367,6 +368,8 @@ def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list,
     count_list = np.asarray(count_list)
     chi2_list = np.asarray(chi2_list)
     chosen_error_list = np.asarray(chosen_error_list)
+    new_d4000_list = np.asarray(new_d4000_list)
+    new_d4000_err_list = np.asarray(new_d4000_err_list)
 
     # save
     d4000_range = '_geq1'
@@ -386,6 +389,8 @@ def save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list,
     np.save(model_mocksim_dir + 'intermediate_count_list' + d4000_range + '.npy', count_list)
     np.save(model_mocksim_dir + 'intermediate_chi2_list' + d4000_range + '.npy', chi2_list)
     np.save(model_mocksim_dir + 'intermediate_chosen_error_list' + d4000_range + '.npy', chosen_error_list)
+    np.save(model_mocksim_dir + 'intermediate_new_d4000_list' + d4000_range + '.npy', new_d4000_list)
+    np.save(model_mocksim_dir + 'intermediate_new_d4000_err_list' + d4000_range + '.npy', new_d4000_err_list)
 
     return None
 
@@ -697,7 +702,8 @@ if __name__ == '__main__':
         if galaxy_count%100 == 0:
             save_intermediate_results(d4000_in_list, d4000_out_list, d4000_out_err_list, mock_model_index_list, \
                 test_redshift_list, mock_zgrism_list, mock_zgrism_lowerr_list, mock_zgrism_higherr_list, \
-                model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list, chosen_error_list)
+                model_age_list, model_metallicity_list, model_tau_list, model_av_list, count_list, chi2_list, chosen_error_list, \
+                new_d4000_list, new_d4000_err_list)
 
         if galaxy_count > total_models_to_choose:
             break
