@@ -46,7 +46,7 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
     1.48 * np.median(abs(((test_redshift_arr - mock_zgrism_arr) - np.median(test_redshift_arr - mock_zgrism_arr)) / (1 + test_redshift_arr)))
     stddev = np.std(resid)
 
-    outliers = np.where(resid > 0.05)[0]
+    outliers = np.where(resid > 0.03)[0]
 
     # Print info
     if d4000_range_lowlim == '1p5':
@@ -61,12 +61,18 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
     print "\n", d4000_range_lowlim.replace('p', '.'), "<= D4000 < ", d4000_range_uplim
     print "Number of objects in bin:", len(resid)
     print "Residual mean, sigma_nmad, and stddev:", '{:.3}'.format(mu), '{:.3}'.format(sigma_nmad), '{:.3}'.format(stddev)
-    print "Number of outliers i.e. Residual>5%:", len(outliers)
+    print "Number of outliers i.e. Residual>3%:", len(outliers)
     out_frac = len(outliers)/len(mock_zgrism_arr)
     print "Outlier fraction:", out_frac
     print "Skewness of redisduals:", '{:.3}'.format(stats.skew(resid))
     print "Magnitude of avg lower and upper error on mock grism redshift:", '{:.3}'.format(avg_lowerr), '{:.3}'.format(avg_uperr),
     print "Avg of the prev two:", '{:.3}'.format(np.mean(yerrbar))
+
+    # Printing for latex table
+    print len(resid), "&",
+    print "{:.3}".format(np.mean(yerrbar)), "&",
+    print "{:.3}".format(mu), "&",
+    print "{:.3}".format(stddev)
 
     # plot fit to residuals
     ax_resid.axhline(y=mu + stddev, ls='-', color='#3690c0', linewidth=1.5)
@@ -104,7 +110,7 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
         ax_resid.set_xlabel('')
 
     # add text
-    d4000_label_str = d4000_range_lowlim.replace('p', '.') + r"$\leq \mathrm{D}4000 \leq$" + str(d4000_range_uplim)
+    d4000_label_str = d4000_range_lowlim.replace('p', '.') + r"$\,\leq \mathrm{D}4000 <\,$" + str(d4000_range_uplim)
     ax_main.text(0.05, 0.95, d4000_label_str, \
         verticalalignment='top', horizontalalignment='left', transform=ax_main.transAxes, color='k', size=10)
     ax_main.text(0.05, 0.86, r'$\mathrm{\mu =\,}$' + convert_to_sci_not(mu), \
@@ -305,6 +311,9 @@ if __name__ == '__main__':
     mock_zgrism_higherr = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_higherr_list_geq1.npy')
     chi2 = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_chi2_list_geq1.npy')
 
+    # Get D4000 from new mock zgrism values
+
+
     # --------- redshift accuracy comparison ---------- # 
     gs = gridspec.GridSpec(28,2)
     gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.15, hspace=0.0)
@@ -446,6 +455,10 @@ if __name__ == '__main__':
     # Save figure 
     fig_gs.savefig(massive_figures_dir + \
         'model_mockspectra_fits/mock_redshift_comparison_d4000.eps', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
 
     # -------------------------------------------------------------------------------- #
     # ------------------------------ Lower D4000 values ------------------------------ #

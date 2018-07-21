@@ -361,12 +361,14 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh = 1.2
+    d4000_thresh = 1.5
+    d4000_sig = d4000_arr / d4000_err_arr
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
     valid_idx4 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
-    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4))
+    valid_idx5 = np.where(d4000_sig >= 3)[0]
+    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4, valid_idx5))
     invalid_idx2 = np.where(chi2_arr >= chi2_thresh)[0]
     only_chi2_rejected = reduce(np.intersect1d, (valid_idx1, invalid_idx2, valid_idx3, valid_idx4))
     print "Only rejected by chi2", len(only_chi2_rejected)
@@ -404,7 +406,8 @@ if __name__ == '__main__':
     valid_idx2_1p5 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3_1p5 = np.where(d4000_arr >= d4000_thresh)[0]
     valid_idx4_1p5 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
-    valid_idx_new = reduce(np.intersect1d, (valid_idx1_1p5, valid_idx2_1p5, valid_idx3_1p5, valid_idx4_1p5))
+    valid_idx5_1p5 = np.where(d4000_sig >= 3)[0]
+    valid_idx_new = reduce(np.intersect1d, (valid_idx1_1p5, valid_idx2_1p5, valid_idx3_1p5, valid_idx4_1p5, valid_idx5_1p5))
 
     zspec_plot_1p5 = zspec_arr[valid_idx_new]
     zgrism_plot_1p5 = zgrism_arr[valid_idx_new]

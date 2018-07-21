@@ -505,11 +505,11 @@ if __name__ == '__main__':
     del all_err_arr, d4000_list_arr, d4000_err_list_arr
 
     # ---------------------------------------------- Loop ----------------------------------------------- #
+    # Create lists for saving later
     d4000_in_list = []  # D4000 measured on model before doing model modifications
     d4000_out_list = []  # D4000 measured on model after doing model modifications
     d4000_out_err_list = []
 
-    # Create lists for saving later
     mock_model_index_list = []
     test_redshift_list = []
     mock_zgrism_list = []
@@ -522,6 +522,8 @@ if __name__ == '__main__':
     count_list = []
     chi2_list = []
     chosen_error_list = []
+    new_d4000_list = []
+    new_d4000_err_list = []
 
     galaxy_count = 0
 
@@ -672,12 +674,23 @@ if __name__ == '__main__':
             if model_av < 0:
                 model_av = -99.0
 
+            # Get D4000 from new zgrism
+            new_lam_em = lam_obs / (1 + mock_zgrism)
+            new_flam_em = flam_obs * (1 + mock_zgrism)
+            new_ferr_em = ferr_obs * (1 + mock_zgrism)
+
+            new_d4000_out, new_d4000_out_err = dc.get_d4000(new_lam_em, new_flam_em, new_ferr_em)
+
+            # append 
             model_metallicity_list.append(model_met)
             model_tau_list.append(model_tau)
             model_av_list.append(model_av)
             count_list.append(i+1)
             chi2_list.append(min_chi2_red)
             chosen_error_list.append(chosen_err)
+
+            new_d4000_list.append(new_d4000_out)
+            new_d4000_err_list.append(new_d4000_out_err)
 
             galaxy_count += 1
 
@@ -706,6 +719,8 @@ if __name__ == '__main__':
     count_list = np.asarray(count_list)
     chi2_list = np.asarray(chi2_list)
     chosen_error_list = np.asarray(chosen_error_list)
+    new_d4000_list = np.asarray(new_d4000_list)
+    new_d4000_err_list = np.asarray(new_d4000_err_list)
 
     # Print skipped galaxies numbers 
     print "Total galaxies skipped:", models_skipped
@@ -729,6 +744,9 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'model_mockspectra_fits/count_list' + d4000_range + '.npy', count_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/chi2_list' + d4000_range + '.npy', chi2_list)
     np.save(massive_figures_dir + 'model_mockspectra_fits/chosen_error_list' + d4000_range + '.npy', chosen_error_list)
+
+    np.save(massive_figures_dir + 'model_mockspectra_fits/new_d4000_list' + d4000_range + '.npy', new_d4000_list)
+    np.save(massive_figures_dir + 'model_mockspectra_fits/new_d4000_err_list' + d4000_range + '.npy', new_d4000_err_list)
 
     """ # To merge the intermediate and final lists
     # Short ipython script
