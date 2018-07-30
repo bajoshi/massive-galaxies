@@ -361,17 +361,19 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh = 1.5
+    d4000_thresh_low = 1.2
+    d4000_thresh_high = 1.3
     d4000_sig = d4000_arr / d4000_err_arr
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
-    valid_idx3 = np.where(d4000_arr >= d4000_thresh)[0]
+    valid_idx3 = np.where((d4000_arr >= d4000_thresh_low) & (d4000_arr < d4000_thresh_high))[0]
     valid_idx4 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
     valid_idx5 = np.where(d4000_sig >= 3)[0]
-    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4, valid_idx5))
-    invalid_idx2 = np.where(chi2_arr >= chi2_thresh)[0]
-    only_chi2_rejected = reduce(np.intersect1d, (valid_idx1, invalid_idx2, valid_idx3, valid_idx4))
-    print "Only rejected by chi2", len(only_chi2_rejected)
+
+    # Testing this cut
+    # Redshift cut on spec-z
+    expt_valid_idx6 = np.where((zspec_arr > 1.0) & (zspec_arr <= 1.235))[0]
+    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4, valid_idx5, expt_valid_idx6))
     #sys.exit(0)
     # I'm not making a cut on netsig here
 
@@ -449,8 +451,9 @@ if __name__ == '__main__':
     fail_idx_photo = np.where(abs(photz_resid_hist_arr) >= 0.1)[0]
     print "Number of outliers for photo-z (i.e. error>=0.1):", len(fail_idx_photo)
 
-    large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.04)[0]
+    large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.03)[0]
     np.set_printoptions(precision=2, suppress=True)
+    print "\n", "Large differences stats (resid>0.03):"
     print len(large_diff_idx)
     print id_plot[large_diff_idx]
     print field_plot[large_diff_idx]
@@ -511,7 +514,7 @@ if __name__ == '__main__':
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color=myred, size=14)
 
-    ax.text(0.72, 0.78, r'$\mathrm{D4000\geq\,}$' + str(d4000_thresh), \
+    ax.text(0.72, 0.78, str(d4000_thresh_low) + r'$\mathrm{\,\leq D4000 < \,}$' + str(d4000_thresh_high), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='black', size=12)
     ax.text(0.72, 0.73, r'$\mathrm{N=\,}$' + str(N_gal), \
@@ -534,7 +537,7 @@ if __name__ == '__main__':
 
     if fullrange:
         fig.savefig(massive_figures_dir + \
-            'residual_histogram_netsig_10_fullrange_d4000_' + str(d4000_thresh).replace('.', 'p') + '.eps', \
+            'residual_histogram_netsig_10_fullrange_d4000_' + str(d4000_thresh_low).replace('.', 'p') + '.eps', \
             dpi=300, bbox_inches='tight')
     else:
         fig.savefig(massive_figures_dir + 'residual_histogram_netsig_10.png', dpi=300, bbox_inches='tight')

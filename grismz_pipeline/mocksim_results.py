@@ -3,6 +3,7 @@ from __future__ import division
 import numpy as np
 from scipy.optimize import curve_fit
 import scipy.stats as stats
+from scipy.stats import gaussian_kde
 
 import sys
 import os
@@ -284,6 +285,57 @@ def dummy_func_code_for9panelplot():
 
     return None
 
+def model_d4000_vs_fluxerr(new_d4000, new_d4000_err, chosen_err):
+
+    # Check D4000 vs avg err
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.set_xlabel(r'$\mathrm{\left< f^{obs}_{err}\right>}$')
+    ax.set_ylabel('D4000')
+
+    # only plot the ones with high significance of measured D4000
+    d4000_sig = new_d4000 / new_d4000_err
+    val_idx = np.where(d4000_sig >= 3)[0]
+    print "Galaxies after applying D4000 significance cut:", len(val_idx)
+
+    # min and max values for plot and for kernel density estimate
+    xmin = 0.0
+    xmax = 0.5
+    ymin = 1.0
+    ymax = 2.0
+
+    # first clip x and y arrays to the specified min and max values
+    x = chosen_err[val_idx]
+    y = new_d4000[val_idx]
+    x_idx = np.where((x>=xmin) & (x<=xmax))[0]
+    y_idx = np.where((y>=ymin) & (y<=ymax))[0]
+    xy_idx = reduce(np.intersect1d, (x_idx, y_idx))
+    x = x[xy_idx]
+    y = y[xy_idx]
+    print "New total number of galaxies after rejecting galaxies outside believable ranges:", len(x)
+
+    # plot points
+    ax.scatter(x, y, s=3, color='k', zorder=10)
+
+    # now use scipy gaussian kde
+    xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+    positions = np.vstack([xx.ravel(), yy.ravel()])
+    values = np.vstack([x, y])
+    kernel = gaussian_kde(values, bw_method=0.5)
+    f = np.reshape(kernel(positions).T, xx.shape)
+
+    # contourf plot
+    cfset = ax.contourf(xx, yy, f, cmap='Blues')
+    # Contour plot
+    cset = ax.contour(xx, yy, f, colors='k')
+    # Label plot
+    ax.clabel(cset, inline=1, fontsize=10)
+
+    plt.show()
+
+    return None
+
 if __name__ == '__main__':
 
     # Merge if necessary
@@ -301,18 +353,27 @@ if __name__ == '__main__':
     """
 
     # Read in results arrays
-    d4000_in = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_in_list_geq1.npy')
-    d4000_out = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_out_list_geq1.npy')
-    d4000_out_err = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_d4000_out_err_list_geq1.npy')
-    mock_model_index = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_model_index_list_geq1.npy')
-    test_redshift = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_test_redshift_list_geq1.npy')
-    mock_zgrism = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_list_geq1.npy')
-    mock_zgrism_lowerr = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_lowerr_list_geq1.npy')
-    mock_zgrism_higherr = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_mock_zgrism_higherr_list_geq1.npy')
-    chi2 = np.load(massive_figures_dir + 'model_mockspectra_fits/merged_chi2_list_geq1.npy')
+    d4000_in = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_d4000_in_list_geq1.npy')
+    #d4000_out = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_d4000_out_list_geq1.npy')
+    #d4000_out_err = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_d4000_out_err_list_geq1.npy')
+    mock_model_index = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_mock_model_index_list_geq1.npy')
+    test_redshift = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_test_redshift_list_geq1.npy')
+    mock_zgrism = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_mock_zgrism_list_geq1.npy')
+    mock_zgrism_lowerr = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_mock_zgrism_lowerr_list_geq1.npy')
+    mock_zgrism_higherr = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_mock_zgrism_higherr_list_geq1.npy')
+    chi2 = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_chi2_list_geq1.npy')
+    chosen_err = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_chosen_error_list_geq1.npy')
+    new_d4000 = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_new_d4000_list_geq1.npy')
+    new_d4000_err = np.load(massive_figures_dir + 'model_mockspectra_fits/intermediate_new_d4000_err_list_geq1.npy')
 
-    # Get D4000 from new mock zgrism values
+    # ONe problem that I noticed is that most of the recovered
+    # mock zgrisms are still the same as the test redshift. This
+    # is likely due to the still relatively large step in the 
+    # redshift grid (0.005) when it searches for the best redshift.
 
+    # Check that both 1D distributions of both D4000 and 
+    # the model chosen error are the same as for real galaxies
+    #model_d4000_vs_fluxerr(new_d4000, new_d4000_err, chosen_err)
 
     # --------- redshift accuracy comparison ---------- # 
     gs = gridspec.GridSpec(28,2)
@@ -358,21 +419,21 @@ if __name__ == '__main__':
 
     # ------------------------------
     # Create arrays for all four panels
-    valid_chi2_idx = np.where(chi2 < 2.0)[0]
-    d4000_sig = d4000_out / d4000_out_err
+    valid_chi2_idx = np.where(chi2 < 1.5)[0]
+    d4000_sig = new_d4000 / new_d4000_err
     valid_d4000_sig_idx = np.where(d4000_sig >= 3)[0]
 
-    d4000_gtr_1p2_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.2) & (d4000_out < 1.25))[0]))
-    d4000_gtr_1p25_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.25) & (d4000_out < 1.3))[0]))
+    d4000_gtr_1p2_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.2) & (new_d4000 < 1.25))[0]))
+    d4000_gtr_1p25_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.25) & (new_d4000 < 1.3))[0]))
 
-    d4000_gtr_1p3_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.3) & (d4000_out < 1.35))[0]))
-    d4000_gtr_1p35_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.35) & (d4000_out < 1.4))[0]))
+    d4000_gtr_1p3_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.3) & (new_d4000 < 1.35))[0]))
+    d4000_gtr_1p35_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.35) & (new_d4000 < 1.4))[0]))
 
-    d4000_gtr_1p4_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.4) & (d4000_out < 1.45))[0]))
-    d4000_gtr_1p45_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.45) & (d4000_out < 1.5))[0]))
+    d4000_gtr_1p4_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.4) & (new_d4000 < 1.45))[0]))
+    d4000_gtr_1p45_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.45) & (new_d4000 < 1.5))[0]))
 
-    d4000_gtr_1p5_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.5) & (d4000_out < 1.6))[0]))
-    d4000_gtr_1p6_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(d4000_out >= 1.6)[0]))
+    d4000_gtr_1p5_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.5) & (new_d4000 < 1.6))[0]))
+    d4000_gtr_1p6_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where(new_d4000 >= 1.6)[0]))
 
     # ------
     test_redshift_d4000_gtr_1p2 = test_redshift[d4000_gtr_1p2_idx]
@@ -489,14 +550,14 @@ if __name__ == '__main__':
     # ------------------------------
     # Create arrays for all four panels
     valid_chi2_idx = np.where(chi2 < 2.0)[0]
-    d4000_sig = d4000_out / d4000_out_err
+    d4000_sig = new_d4000 / new_d4000_err
     valid_d4000_sig_idx = np.where(d4000_sig >= 3)[0]
 
-    d4000_gtr_1p0_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.0) & (d4000_out < 1.05))[0]))
-    d4000_gtr_1p05_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.05) & (d4000_out < 1.1))[0]))
+    d4000_gtr_1p0_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.0) & (new_d4000 < 1.05))[0]))
+    d4000_gtr_1p05_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.05) & (new_d4000 < 1.1))[0]))
 
-    d4000_gtr_1p1_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.1) & (d4000_out < 1.15))[0]))
-    d4000_gtr_1p15_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((d4000_out >= 1.15) & (d4000_out < 1.2))[0]))
+    d4000_gtr_1p1_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.1) & (new_d4000 < 1.15))[0]))
+    d4000_gtr_1p15_idx = reduce(np.intersect1d, (valid_d4000_sig_idx, valid_chi2_idx, np.where((new_d4000 >= 1.15) & (new_d4000 < 1.2))[0]))
 
     # ------
     test_redshift_d4000_gtr_1p0 = test_redshift[d4000_gtr_1p0_idx]
