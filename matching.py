@@ -46,7 +46,8 @@ def angular_difference(ra_one, dec_one, ra_two, dec_two):
     delta = 0.00
     delta = np.arccos(np.cos(dec_one*np.pi/180) * np.cos(dec_two*np.pi/180) * np.cos(ra_one*np.pi/180 - ra_two*np.pi/180) +\
                       np.sin(dec_one*np.pi/180) * np.sin(dec_two*np.pi/180))
-    # check this formula again # numpy functions accept arguments in radians...
+    # numpy functions accept arguments in radians
+    # check this formula again
 
     return delta*180/np.pi  # return result in degrees
 

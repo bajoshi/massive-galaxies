@@ -213,7 +213,7 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
 
     ax.set_xlabel(r'$\mathrm{RA}$', fontsize=15)
-    ax.set_ylabel(r'$\mathrm{DEC}$', fontsize=15)   
+    ax.set_ylabel(r'$\mathrm{DEC}$', fontsize=15)
 
     ax.plot(ra_plotlist, dec_plotlist, 'o', markersize=2, color='k')
     ax.scatter(final_obj_ra, final_obj_dec, s=50, edgecolors='r', facecolor='None')

@@ -257,53 +257,8 @@ if __name__ == '__main__':
     zphot_arr = np.concatenate((zphot_list_gn, zphot_list_gs))
 
     # plot high d4000 and low netsig
-    highd4000_lownetsig = np.where((d4000_arr > 1.6) & (netsig_arr < 100))[0]
-    lowd4000_highnetsig = np.where((d4000_arr < 1.25) & (netsig_arr > 100))[0]
-
-    """
-    for i in range(len(highd4000_lownetsig)):
-
-        current_idx = lowd4000_highnetsig[i]
-
-        current_id = id_arr[current_idx]
-        current_field = field_arr[current_idx]
-
-        # Get data
-        lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
-
-        current_zspec = zspec_arr[current_idx]
-        current_zgrism = zgrism_arr[current_idx]
-
-        if current_zspec != -99.0:
-            redshift = current_zspec
-        elif current_zspec == -99.0:
-            redshift = current_zgrism
-
-        # Now de-redshift and find D4000
-        lam_em = lam_obs / (1 + redshift)
-        flam_em = flam_obs * (1 + redshift)
-        ferr_em = ferr_obs * (1 + redshift)
-
-        d4000_out, d4000_out_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-
-        print "\n", "Current ID:", current_id, "in", current_field, "with NetSig:", netsig_chosen
-        print "D4000:", d4000_arr[current_idx], "meas. D4000:", dc.get_d4000(lam_em, flam_em, ferr_em)
-        print "At grism redshift:", current_zgrism, "with spec-z:", current_zspec
-        print "Chosen redshift:", redshift, "putting 4000 break at:", (1+redshift)*4000
-
-        # plot
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-
-        ax.plot(lam_obs, flam_obs)
-        ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
-
-        plt.show()
-
-    d4000_vs_netsig(netsig_arr, d4000_arr, d4000_err_arr)
-
-    sys.exit(0)
-    """
+    #highd4000_lownetsig = np.where((d4000_arr > 1.6) & (netsig_arr < 100))[0]
+    #lowd4000_highnetsig = np.where((d4000_arr < 1.25) & (netsig_arr > 100))[0]
 
     #err_arr, d4000_list_arr, d4000_err_list_arr = get_err_and_d4000_arr(id_arr, field_arr, zgrism_arr, \
     #pirzkal2013_north_emline_ids, pirzkal2013_south_emline_ids, straughn2009_emline_ids)

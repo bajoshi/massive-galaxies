@@ -22,53 +22,51 @@ import mag_hist as mh
 import new_refine_grismz_gridsearch_parallel as ngp
 import dn4000_catalog as dc
 
-def get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss):
+def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, matched_cat_n, matched_cat_s):
 
-    d4000_list = []
-    d4000_err_list = []
     specz_qual_list = []
     specz_source_list = []
+    zphot_list = []
 
     # loop over all objects
     for i in range(len(id_arr)):
-
-        # get obs data, deredshift and get d4000
-        lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(id_arr[i], field_arr[i])
-        #print "At ID", id_arr[i], "in", field_arr[i], "Return Code was:", return_code
-
-        lam_em = lam_obs / (1 + zspec_arr[i])
-        flam_em = flam_obs * (1 + zspec_arr[i])
-        ferr_em = ferr_obs * (1 + zspec_arr[i])
-
-        d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
         # now get specz quality
         if field_arr[i] == 'GOODS-N':
             idx = np.where(specz_goodsn['pearsid'] == id_arr[i])[0]
             specz_qual = specz_goodsn['specz_qual'][idx]
             specz_source = specz_goodsn['specz_source'][idx]
+
+            cat_idx = np.where(matched_cat_n['pearsid'] == id_arr[i])[0]
+            if cat_idx.size:
+                zphot = float(matched_cat_n['zphot'][cat_idx])
+            else:
+                zphot = -99.0
+
         elif field_arr[i] == 'GOODS-S':
             idx = np.where(specz_goodss['pearsid'] == id_arr[i])[0]
             specz_qual = specz_goodss['specz_qual'][idx]
             specz_source = specz_goodss['specz_source'][idx]
 
+            cat_idx = np.where(matched_cat_s['pearsid'] == id_arr[i])[0]
+            if cat_idx.size:
+                zphot = float(matched_cat_s['zphot'][cat_idx])
+            else:
+                zphot = -99.0
+
+        print id_arr[i], field_arr[i], specz_qual[0], specz_source[0], zphot
+
         # append
-        d4000_list.append(d4000)
-        d4000_err_list.append(d4000_err)
-        specz_qual_list.append(specz_qual)
-        specz_source_list.append(specz_source)
+        specz_qual_list.append(specz_qual[0])
+        specz_source_list.append(specz_source[0])
+        zphot_list.append(zphot)
 
     # convert to numpy arrays
-    d4000_list = np.asarray(d4000_list)
-    d4000_err_list = np.asarray(d4000_err_list)
     specz_qual_list = np.asarray(specz_qual_list)
     specz_source_list = np.asarray(specz_source_list)
+    zphot_list = np.asarray(zphot_list)
 
-    specz_qual_list = specz_qual_list.ravel()
-    specz_source_list = specz_source_list.ravel()
-    # added these lines to ravel after checking htat the returned shape was (N, 1) instead of just (N)
-
-    return d4000_list, d4000_err_list, specz_qual_list, specz_source_list
+    return specz_qual_list, specz_source_list, zphot_list
 
 def line_func(x, slope, intercept):
     return slope*x + intercept
@@ -339,6 +337,39 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
 
     return None
 
+def info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, specz_source_plot):
+
+    # Loop over and print info 
+    for i in range(len(id_plot)):
+
+        current_id = id_plot[i]
+        current_field = field_plot[i]
+        current_specz_source = specz_source_plot[i]
+        current_specz = zspec_plot[i]
+
+        lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
+
+        if return_code == 0:
+            print "Skipping due to an error with the obs data. See the error message just above this one.",
+            print "Moving to the next galaxy."
+            continue
+
+        print current_id, current_field, netsig_chosen, current_specz, current_specz_source
+
+        # Plot to check
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        ax.plot(lam_obs, flam_obs, ls='-', color='k')
+        ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
+
+        plt.show()
+        plt.clf()
+        plt.cla()
+        plt.close()
+
+    return None
+
 if __name__ == '__main__':
     
     # Read in arrays
@@ -346,9 +377,10 @@ if __name__ == '__main__':
     field_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/field_list.npy')
     zgrism_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zgrism_list.npy')
     zspec_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zspec_list.npy')
-    zphot_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zphot_list.npy')
     chi2_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/chi2_list.npy')
     netsig_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/netsig_list.npy')
+    d4000_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/d4000_list.npy')
+    d4000_err_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/d4000_err_list.npy')
     print "Code ran for", len(zgrism_arr), "galaxies."
 
     # get d4000 and also specz quality for all galaxies
@@ -356,26 +388,33 @@ if __name__ == '__main__':
     specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
     specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
-    d4000_arr, d4000_err_arr, specz_qual_arr, specz_source_arr = \
-    get_all_d4000_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss)
+    # read in matched files to get photo-z
+    matched_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', \
+        dtype=None, names=True, skip_header=1)
+    matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
+        dtype=None, names=True, skip_header=1)
+
+    specz_qual_arr, specz_source_arr, zphot_arr = \
+    get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, matched_cat_n, matched_cat_s)
 
     # Place some cuts
     chi2_thresh = 2.0
     d4000_thresh_low = 1.2
-    d4000_thresh_high = 1.3
+    d4000_thresh_high = 1.4
     d4000_sig = d4000_arr / d4000_err_arr
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
     valid_idx3 = np.where((d4000_arr >= d4000_thresh_low) & (d4000_arr < d4000_thresh_high))[0]
-    valid_idx4 = np.where((specz_qual_arr != '4') & (specz_qual_arr != 'D'))[0]
+    valid_idx4 = np.where((specz_qual_arr != 'D') & (specz_qual_arr != '2'))[0]# & (specz_qual_arr != 'Z'))[0]
     valid_idx5 = np.where(d4000_sig >= 3)[0]
+    valid_idx6 = np.where(zphot_arr != -99.0)[0]
+    #valid_idx7 = np.where(netsig_arr > 50)[0]
 
     # Testing this cut
     # Redshift cut on spec-z
-    expt_valid_idx6 = np.where((zspec_arr > 1.0) & (zspec_arr <= 1.235))[0]
-    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4, valid_idx5, expt_valid_idx6))
+    #expt_valid_idx6 = np.where((zspec_arr > 1.0) & (zspec_arr <= 1.235))[0]
+    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, valid_idx4, valid_idx5, valid_idx6))
     #sys.exit(0)
-    # I'm not making a cut on netsig here
 
     id_plot = id_arr[valid_idx]
     field_plot = field_arr[valid_idx]
@@ -385,10 +424,13 @@ if __name__ == '__main__':
     chi2_plot = chi2_arr[valid_idx]
     netsig_plot = netsig_arr[valid_idx]
 
-    #d4000_plot = d4000_arr[valid_idx]
-    #d4000_err_plot = d4000_err_arr[valid_idx]
-    #specz_qual_plot = specz_qual_arr[valid_idx]
-    #specz_source_plot = specz_source_arr[valid_idx]
+    d4000_plot = d4000_arr[valid_idx]
+    d4000_err_plot = d4000_err_arr[valid_idx]
+    specz_qual_plot = specz_qual_arr[valid_idx]
+    specz_source_plot = specz_source_arr[valid_idx]
+
+    #info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, specz_source_plot)
+    #sys.exit(0)
 
     N_gal = len(zgrism_plot)
     print N_gal, "galaxies in plot."
@@ -455,17 +497,18 @@ if __name__ == '__main__':
     np.set_printoptions(precision=2, suppress=True)
     print "\n", "Large differences stats (resid>0.03):"
     print len(large_diff_idx)
-    print id_plot[large_diff_idx]
-    print field_plot[large_diff_idx]
-    #print zgrism_plot[large_diff_idx]
-    #print zspec_plot[large_diff_idx]
-    #print zphot_plot[large_diff_idx]
-    #print netsig_plot[large_diff_idx]
-    print chi2_plot[large_diff_idx]
-    print specz_qual_arr[large_diff_idx]
-    print d4000_arr[large_diff_idx]
-    print specz_source_arr[large_diff_idx]
-    #print len(np.where(specz_qual_arr == 'Z')[0])
+    print "IDs:", id_plot[large_diff_idx]
+    print "Fields:", field_plot[large_diff_idx]
+    print "Grismz:", zgrism_plot[large_diff_idx]
+    print "Specz:", zspec_plot[large_diff_idx]
+    print "Photoz", zphot_plot[large_diff_idx]
+    print "NetSig:", netsig_plot[large_diff_idx]
+    print "Chi2:", chi2_plot[large_diff_idx]
+    print "Specz quality:", specz_qual_plot[large_diff_idx]
+    print "Specz source:", specz_source_plot[large_diff_idx]
+    print "D4000:", d4000_plot[large_diff_idx]
+    print "Number of redshfits in bin with unknown quality:", len(np.where(specz_qual_plot == 'Z')[0])
+    sys.exit(0)
 
     fullrange = True  
     # this fullrange parameter simply tells the program whether or not 
