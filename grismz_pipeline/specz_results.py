@@ -27,6 +27,8 @@ def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, 
     specz_qual_list = []
     specz_source_list = []
     zphot_list = []
+    ra_list = []
+    dec_list = []
 
     # loop over all objects
     for i in range(len(id_arr)):
@@ -40,8 +42,12 @@ def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, 
             cat_idx = np.where(matched_cat_n['pearsid'] == id_arr[i])[0]
             if cat_idx.size:
                 zphot = float(matched_cat_n['zphot'][cat_idx])
+                ra = float(matched_cat_n['pearsra'][cat_idx])
+                dec = float(matched_cat_n['pearsdec'][cat_idx])
             else:
                 zphot = -99.0
+                ra = -99.0
+                dec = -99.0
 
         elif field_arr[i] == 'GOODS-S':
             idx = np.where(specz_goodss['pearsid'] == id_arr[i])[0]
@@ -51,22 +57,30 @@ def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, 
             cat_idx = np.where(matched_cat_s['pearsid'] == id_arr[i])[0]
             if cat_idx.size:
                 zphot = float(matched_cat_s['zphot'][cat_idx])
+                ra = float(matched_cat_s['pearsra'][cat_idx])
+                dec = float(matched_cat_s['pearsdec'][cat_idx])
             else:
                 zphot = -99.0
+                ra = -99.0
+                dec = -99.0
 
-        print id_arr[i], field_arr[i], specz_qual[0], specz_source[0], zphot
+        print id_arr[i], field_arr[i], ra, dec, specz_qual[0], specz_source[0], zphot
 
         # append
         specz_qual_list.append(specz_qual[0])
         specz_source_list.append(specz_source[0])
         zphot_list.append(zphot)
+        ra_list.append(ra)
+        dec_list.append(dec)
 
     # convert to numpy arrays
     specz_qual_list = np.asarray(specz_qual_list)
     specz_source_list = np.asarray(specz_source_list)
     zphot_list = np.asarray(zphot_list)
+    ra_list = np.asarray(ra_list)
+    dec_list = np.asarray(dec_list)
 
-    return specz_qual_list, specz_source_list, zphot_list
+    return specz_qual_list, specz_source_list, zphot_list, ra_list, dec_list
 
 def line_func(x, slope, intercept):
     return slope*x + intercept
@@ -337,7 +351,7 @@ def make_zspec_comparison_plot(z_spec_1p4, z_grism_1p4, z_phot_1p4, z_spec_1p5, 
 
     return None
 
-def info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, specz_source_plot):
+def info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, ra_plot, dec_plot, specz_source_plot):
 
     # Loop over and print info 
     for i in range(len(id_plot)):
@@ -346,6 +360,8 @@ def info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, specz
         current_field = field_plot[i]
         current_specz_source = specz_source_plot[i]
         current_specz = zspec_plot[i]
+        ra = ra_plot[i]
+        dec = dec_plot[i]
 
         lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
@@ -354,19 +370,7 @@ def info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, specz
             print "Moving to the next galaxy."
             continue
 
-        print current_id, current_field, netsig_chosen, current_specz, current_specz_source
-
-        # Plot to check
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-
-        ax.plot(lam_obs, flam_obs, ls='-', color='k')
-        ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
-
-        plt.show()
-        plt.clf()
-        plt.cla()
-        plt.close()
+        print current_id, current_field, ra, dec, netsig_chosen, current_specz, current_specz_source
 
     return None
 
@@ -394,13 +398,13 @@ if __name__ == '__main__':
     matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
         dtype=None, names=True, skip_header=1)
 
-    specz_qual_arr, specz_source_arr, zphot_arr = \
+    specz_qual_arr, specz_source_arr, zphot_arr, ra_arr, dec_arr = \
     get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, matched_cat_n, matched_cat_s)
 
     # Place some cuts
     chi2_thresh = 2.0
     d4000_thresh_low = 1.2
-    d4000_thresh_high = 1.4
+    d4000_thresh_high = 1.6
     d4000_sig = d4000_arr / d4000_err_arr
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
     valid_idx2 = np.where(chi2_arr < chi2_thresh)[0]
@@ -429,7 +433,10 @@ if __name__ == '__main__':
     specz_qual_plot = specz_qual_arr[valid_idx]
     specz_source_plot = specz_source_arr[valid_idx]
 
-    #info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, specz_source_plot)
+    ra_plot = ra_arr[valid_idx]
+    dec_plot = dec_arr[valid_idx]
+
+    #info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, ra_plot, dec_plot, specz_source_plot)
     #sys.exit(0)
 
     N_gal = len(zgrism_plot)
@@ -494,11 +501,37 @@ if __name__ == '__main__':
     print "Number of outliers for photo-z (i.e. error>=0.1):", len(fail_idx_photo)
 
     large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.03)[0]
-    np.set_printoptions(precision=2, suppress=True)
     print "\n", "Large differences stats (resid>0.03):"
     print len(large_diff_idx)
+
+    for j in range(len(id_plot[large_diff_idx])):
+
+        # print data 
+        print id_plot[large_diff_idx][j],
+        print field_plot[large_diff_idx][j],
+
+        np.set_printoptions(precision=6, suppress=True)
+        print ra_plot[large_diff_idx][j],
+        print dec_plot[large_diff_idx][j],
+
+        np.set_printoptions(precision=2, suppress=True)  
+        # this has to be here i.e. after RA,DEC are already printed. You can't print RA,DEC with precision=2
+        print zgrism_plot[large_diff_idx][j],
+        print zspec_plot[large_diff_idx][j],
+        print zphot_plot[large_diff_idx][j],
+        print netsig_plot[large_diff_idx][j],
+        print chi2_plot[large_diff_idx][j],
+        print specz_qual_plot[large_diff_idx][j],
+        print specz_source_plot[large_diff_idx][j],
+        print d4000_plot[large_diff_idx][j]
+
+    """
+    # To print all togethre
+    np.set_printoptions(precision=6, suppress=True)
     print "IDs:", id_plot[large_diff_idx]
     print "Fields:", field_plot[large_diff_idx]
+    print "RAs:", ra_plot[large_diff_idx]
+    print "DECs:", dec_plot[large_diff_idx]
     print "Grismz:", zgrism_plot[large_diff_idx]
     print "Specz:", zspec_plot[large_diff_idx]
     print "Photoz", zphot_plot[large_diff_idx]
@@ -507,6 +540,8 @@ if __name__ == '__main__':
     print "Specz quality:", specz_qual_plot[large_diff_idx]
     print "Specz source:", specz_source_plot[large_diff_idx]
     print "D4000:", d4000_plot[large_diff_idx]
+    """
+
     print "Number of redshfits in bin with unknown quality:", len(np.where(specz_qual_plot == 'Z')[0])
     sys.exit(0)
 

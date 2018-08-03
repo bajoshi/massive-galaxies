@@ -143,7 +143,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 4
+    num_cores = 8
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -362,7 +362,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    fig.savefig(figs_dir + 'massive-galaxies-figures/full_run/' + obj_field + '_' + str(obj_id) + '_broadlsf_linemask.png', \
+    fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_broadlsf_linemask.png', \
         dpi=300, bbox_inches='tight')
 
     return None
@@ -491,8 +491,11 @@ if __name__ == '__main__':
     specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
     specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
+    # large differences between specz and grismz
+    large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
+
     all_speccats = [specz_goodsn]  #[specz_goodsn, specz_goodss]
-    all_match_cats = [matched_cat_n]  #[matched_cat_n, matched_cat_s]
+    all_match_cats = [large_diff_cat]  #[matched_cat_n, matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
@@ -699,20 +702,20 @@ if __name__ == '__main__':
     d4000_list = np.asarray(d4000_list)
     d4000_err_list = np.asarray(d4000_err_list)
 
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/id_list.npy', id_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/field_list.npy', field_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/zgrism_list.npy', zgrism_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/zgrism_lowerr_list.npy', zgrism_lowerr_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/zgrism_uperr_list.npy', zgrism_uperr_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/zspec_list.npy', zspec_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/zphot_list.npy', zphot_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/chi2_list.npy', chi2_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/netsig_list.npy', netsig_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/age_list.npy', age_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/tau_list.npy', tau_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/av_list.npy', av_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/d4000_list.npy', d4000_list)
-    np.save(figs_dir + 'massive-galaxies-figures/full_run/d4000_err_list.npy', d4000_err_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/id_list.npy', id_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/field_list.npy', field_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/zgrism_list.npy', zgrism_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/zgrism_lowerr_list.npy', zgrism_lowerr_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/zgrism_uperr_list.npy', zgrism_uperr_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/zspec_list.npy', zspec_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/zphot_list.npy', zphot_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/chi2_list.npy', chi2_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/netsig_list.npy', netsig_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/age_list.npy', age_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/tau_list.npy', tau_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/av_list.npy', av_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/d4000_list.npy', d4000_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/d4000_err_list.npy', d4000_err_list)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
