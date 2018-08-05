@@ -1,4 +1,4 @@
-# pearsid field zgrism zspec zphot zsource zqual
+# pearsid field zgrism zspec zphot zsource zqual xmin xmax
 79351 GOODS-N 1.136 1.221 1.1564 Barger_UV Z
 70156 GOODS-N 0.866 0.966 0.959 Barger_ACS Z
 42430 GOODS-N 0.89 1.005 0.9756 Barger_ACS Z

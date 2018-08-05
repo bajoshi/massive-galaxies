@@ -604,9 +604,8 @@ if __name__ == '__main__':
                 continue
 
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-            if d4000 >= 1.2:
-                print "Already done. Skipping"
-                #print "Skipping", current_id, "in", current_field, "due to low D4000:", d4000
+            if d4000 < 1.1:
+                print "Skipping", current_id, "in", current_field, "due to low D4000:", d4000
                 continue
 
             # Overall error check. Suppressed for now.
