@@ -62,9 +62,9 @@ def get_line_mask(lam_grid, z):
     oiii_5007_idx = np.argmin(abs(lam_grid - oiii_5007*(1 + z)))
     oiii_4959_idx = np.argmin(abs(lam_grid - oiii_4959*(1 + z)))
 
-    line_mask[oii_3727_idx-1 : oii_3727_idx+2] = 1
-    line_mask[oiii_5007_idx-1 : oiii_5007_idx+2] = 1
-    line_mask[oiii_4959_idx-1 : oiii_4959_idx+2] = 1
+    line_mask[oii_3727_idx-2 : oii_3727_idx+3] = 1
+    line_mask[oiii_5007_idx-2 : oiii_5007_idx+3] = 1
+    line_mask[oiii_4959_idx-2 : oiii_4959_idx+3] = 1
 
     return line_mask
 
