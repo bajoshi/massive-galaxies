@@ -43,7 +43,8 @@ import dn4000_catalog as dc
 def get_line_mask(lam_grid, z):
 
     # ---------------- Mask potential emission lines ----------------- #
-    # Will mask one point on each side of line center i.e. approx 80 A masked
+    # Will mask 2 points on each side of line center i.e. approx 160 A masked
+    # In case of [OII]3727 maksing 4 points on blue side and 2 points on red side i.e. 240 A
     # These are all vacuum wavelengths
     oiii_5007 = 5008.24
     oiii_4959 = 4960.30
