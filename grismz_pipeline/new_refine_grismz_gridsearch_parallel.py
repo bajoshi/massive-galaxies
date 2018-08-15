@@ -39,6 +39,7 @@ import grid_coadd as gd
 import refine_redshifts_dn4000 as old_ref
 import model_mods_cython_copytoedit as model_mods_cython
 import dn4000_catalog as dc
+import mocksim_results as mr
 
 def get_line_mask(lam_grid, z):
 
@@ -63,7 +64,7 @@ def get_line_mask(lam_grid, z):
     oiii_5007_idx = np.argmin(abs(lam_grid - oiii_5007*(1 + z)))
     oiii_4959_idx = np.argmin(abs(lam_grid - oiii_4959*(1 + z)))
 
-    line_mask[oii_3727_idx-11 : oii_3727_idx+6] = 1
+    line_mask[oii_3727_idx-6 : oii_3727_idx+6] = 1
     line_mask[oiii_5007_idx-3 : oiii_5007_idx+4] = 1
     line_mask[oiii_4959_idx-3 : oiii_4959_idx+4] = 1
 
@@ -210,8 +211,6 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
     print "Current best fit Tau_V:", tauv
 
-    # Simply the minimum chi2 might not be right
-    # Should check if the minimum is global or local
     ############# -------------------------- Errors on z and other derived params ----------------------------- #############
     min_chi2 = chi2[min_idx_2d]
     # See Andrae+ 2010;arXiv:1012.3754. The number of d.o.f. for non-linear models 
@@ -239,6 +238,10 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     upper_z_lim = np.max(z_grism_range)
     print "Min z_grism within 1-sigma error:", low_z_lim
     print "Max z_grism within 1-sigma error:", upper_z_lim
+
+    # Simply the minimum chi2 might not be right
+    # Should check if the minimum is global or local
+    plot_chi2(chi2, dof)
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
@@ -285,20 +288,39 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
         obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000)
 
+    return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
+
+def plot_chi2(chi2_map, dof):
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
     # Run imshow() and check what it looks like.
-    #fig = plt.figure(figsize=(6,6))
-    #ax = fig.add_subplot(111)
+    fig = plt.figure(figsize=(6,6))
+    ax = fig.add_subplot(111)
 
-    #chi2[low_chi2_idx] = 0.0
-    #ax.imshow(chi2)
+    ax.imshow(chi2_map/dof, vmin=0.0, vmax=2.0)
 
-    #ax.set_xscale('log')
-    #ax.set_xlim(1,total_models)
-    #plt.show()
+    ax.set_xscale('log')
+    ax.set_xlim(1,total_models)
+    plt.show()
 
-    return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
+    """
+    # create fig
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # Actual plotting
+    ax.plot()
+
+    # ---------- Save figure ---------- #
+    fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.png', \
+        dpi=300, bbox_inches='tight')
+    """
+    
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return None
 
 def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000):
@@ -334,9 +356,9 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
 
     # make sure that this is the same number of points as in the line masking function above
     oii_idx = np.argmin(abs(lam_obs - redshifted_oii))
-    oii_left_edge = lam_obs[oii_idx - 11]
+    oii_left_edge = lam_obs[oii_idx - 6]
     oii_right_edge = lam_obs[oii_idx + 5]
-    ax1.axvspan(oii_left_edge, oii_right_edge, alpha=0.5, color='gray')
+    ax1.axvspan(oii_left_edge, oii_right_edge, alpha=0.25, color='midnightblue')
 
     # line position at the correct redshift
     redshifted_oii_correct = oii_3727 * (1 + specz)
@@ -371,7 +393,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + "{:.3}".format(netsig), \
+    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
     ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{phot})\, =\, }$' + "{:.3}".format(d4000), \
@@ -396,6 +418,10 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     # ---------- Save figure ---------- #
     fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_broadlsf_linemask.png', \
         dpi=300, bbox_inches='tight')
+    
+    plt.clf()
+    plt.cla()
+    plt.close()
 
     return None
 
