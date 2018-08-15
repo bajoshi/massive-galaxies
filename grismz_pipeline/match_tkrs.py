@@ -125,16 +125,22 @@ if __name__ == '__main__':
         # If a match is found 
         # Read in TKRS spectrum file and plot
         if idx.size:
-        	if len(idx) == 1:  # make sure that there is only one match
+            if len(idx) == 1:  # make sure that there is only one match
 
                 if cat[1].data['mask'][idx] != -2147483647:
 
                     # Get filename
+                    # maskname is always 2 charaters
+                    # slitname is always 3 charaters
+                    # ID is always 4 charaters
                     maskname = '0' + str(cat[1].data['mask'][idx][0])
                     if len(maskname) > 2:
                         maskname = maskname.lstrip('0')
 
                     slitname = '0' + str(cat[1].data['slit'][idx][0])
+                    if len(slitname) > 3:
+                        slitname = slitname.lstrip('0')
+
                     idname = str(cat[1].data['ID'][idx][0])
 
                     maskdir = tkrs_dir + 'KTRS' + maskname + '/'
@@ -150,9 +156,11 @@ if __name__ == '__main__':
                     tkrs_zqual = int(cat[1].data['zq'][idx])
                     alt_z = float(cat[1].data['z_alt'][idx])
 
-                    print current_id, current_field, zgrism, zspec, zphot, zspec_source, zspec_qual, "    TKRS stats:", tkrs_z, tkrs_zqual, alt_z
+                    print current_id, current_field, zgrism, zspec, zphot, zspec_source, zspec_qual#, "    TKRS stats:", tkrs_z, tkrs_zqual, alt_z
                     # Comment out the "TKRS stats" part if you want to generate teh large_diff_specz_short file
+                    # and put a continue after the counter is updated
                     tkrs_compare_count += 1
+                    continue
 
                     # PLot TKRS spectrum
                     fig = plt.figure()
@@ -249,6 +257,13 @@ if __name__ == '__main__':
                     plt.close()
 
                     spec_hdu.close()
+
+            elif len(idx) == 0:  # i.e. No matches found in case of GOODS-S since TKRS was only GOODS-N
+                # In principle, this part shouldn't be trigerred since it checks for size above. I'm leaving this here though.
+                print "No match found for PEARS ID:", current_id, "in", current_field
+                print "RA, DEC:", ra, dec
+                print "Going to next object now."
+                continue
 
             else:  # i.e. if there is more than 1 match found
                 print "Exiting. More than 1 match found for PEARS ID:", current_id, idx

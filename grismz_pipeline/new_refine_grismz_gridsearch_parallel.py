@@ -63,7 +63,7 @@ def get_line_mask(lam_grid, z):
     oiii_5007_idx = np.argmin(abs(lam_grid - oiii_5007*(1 + z)))
     oiii_4959_idx = np.argmin(abs(lam_grid - oiii_4959*(1 + z)))
 
-    line_mask[oii_3727_idx-5 : oii_3727_idx+4] = 1
+    line_mask[oii_3727_idx-6 : oii_3727_idx+5] = 1
     line_mask[oiii_5007_idx-3 : oiii_5007_idx+4] = 1
     line_mask[oiii_4959_idx-3 : oiii_4959_idx+4] = 1
 
@@ -120,7 +120,7 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
 
 def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, search_range):
+    obj_id, obj_field, specz, photoz, netsig, d4000, search_range):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,
@@ -144,7 +144,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 8
+    num_cores = 10
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -283,7 +283,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
         sys.exit(0)
     # plot
     plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-        obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086))
+        obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000)
 
     #### -------- Plot chi2 surface as 2D image --------- ####
     # This chi2 map can also be visualized as an image. 
@@ -301,7 +301,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
 def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
-    obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av):
+    obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000):
 
     fig = plt.figure()
     gs = gridspec.GridSpec(10,10)
@@ -348,6 +348,14 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.12, r'$\mathrm{\NetSig\, =\, }$' + "{:.3}".format(netsig), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.07, r'$\mathrm{\D4000(from\ z_{phot})\, =\, }$' + "{:.3}".format(d4000), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
 
     ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
     verticalalignment='top', horizontalalignment='left', \
@@ -661,7 +669,7 @@ if __name__ == '__main__':
             zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
                 model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start,\
-                current_id, current_field, current_specz, redshift, 0.2)
+                current_id, current_field, current_specz, redshift, netsig_chosen, d4000, 0.2)
 
             # Get d4000 at new zgrism
             lam_em = lam_obs / (1 + zg)
