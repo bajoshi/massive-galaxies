@@ -51,7 +51,7 @@ if __name__ == '__main__':
     tkrs_dec = cat[1].data['dec']
 
     # Read in catalog for large differences
-    specz_sample_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz.txt', dtype=None, names=True)
+    specz_sample_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz.txt', skip_header=1, dtype=None, names=True)
     # large_diff_specz_short.txt -- is the file containgin info for all galaxies that actually had a large diff between grism and spec z.
     # This file contains even those galaxies that don't have a match within TKRS.
     # The info in this file is copy-pasted from the result printed to the terminal by the code specz_results.py
@@ -125,128 +125,135 @@ if __name__ == '__main__':
         # If a match is found 
         # Read in TKRS spectrum file and plot
         if idx.size:
-            if cat[1].data['mask'][idx] != -2147483647:
+        	if len(idx) == 1:  # make sure that there is only one match
 
-                # Get filename
-                maskname = '0' + str(cat[1].data['mask'][idx][0])
-                if len(maskname) > 2:
-                    maskname = maskname.lstrip('0')
+                if cat[1].data['mask'][idx] != -2147483647:
 
-                slitname = '0' + str(cat[1].data['slit'][idx][0])
-                idname = str(cat[1].data['ID'][idx][0])
+                    # Get filename
+                    maskname = '0' + str(cat[1].data['mask'][idx][0])
+                    if len(maskname) > 2:
+                        maskname = maskname.lstrip('0')
 
-                maskdir = tkrs_dir + 'KTRS' + maskname + '/'
-                filebasename = 'spec1d.KTRS' + maskname + '.' + slitname + '.' + idname + '.fits'
-                filename = maskdir + filebasename
+                    slitname = '0' + str(cat[1].data['slit'][idx][0])
+                    idname = str(cat[1].data['ID'][idx][0])
 
-                # Get data
-                spec_hdu = fits.open(filename)
-                lam = np.concatenate((spec_hdu[1].data['LAMBDA'].ravel(), spec_hdu[2].data['LAMBDA'].ravel()))
-                spec = np.concatenate((spec_hdu[1].data['SPEC'].ravel(), spec_hdu[2].data['SPEC'].ravel()))
+                    maskdir = tkrs_dir + 'KTRS' + maskname + '/'
+                    filebasename = 'spec1d.KTRS' + maskname + '.' + slitname + '.' + idname + '.fits'
+                    filename = maskdir + filebasename
 
-                tkrs_z = float(cat[1].data['z'][idx])
-                tkrs_zqual = int(cat[1].data['zq'][idx])
-                alt_z = float(cat[1].data['z_alt'][idx])
+                    # Get data
+                    spec_hdu = fits.open(filename)
+                    lam = np.concatenate((spec_hdu[1].data['LAMBDA'].ravel(), spec_hdu[2].data['LAMBDA'].ravel()))
+                    spec = np.concatenate((spec_hdu[1].data['SPEC'].ravel(), spec_hdu[2].data['SPEC'].ravel()))
 
-                print current_id, current_field, zgrism, zspec, zphot, zspec_source, zspec_qual, "    TKRS stats:", tkrs_z, tkrs_zqual, alt_z
-                # Comment out the "TKRS stats" part if you want to generate teh large_diff_specz_short file
-                tkrs_compare_count += 1
+                    tkrs_z = float(cat[1].data['z'][idx])
+                    tkrs_zqual = int(cat[1].data['zq'][idx])
+                    alt_z = float(cat[1].data['z_alt'][idx])
 
-                # PLot TKRS spectrum
-                fig = plt.figure()
-                ax = fig.add_subplot(111)
+                    print current_id, current_field, zgrism, zspec, zphot, zspec_source, zspec_qual, "    TKRS stats:", tkrs_z, tkrs_zqual, alt_z
+                    # Comment out the "TKRS stats" part if you want to generate teh large_diff_specz_short file
+                    tkrs_compare_count += 1
 
-                # labels
-                ax.set_xlabel(r'$\mathrm{Wavelength\ [\AA]}$')
-                ax.set_ylabel(r'$\mathrm{Counts/sec}$')
+                    # PLot TKRS spectrum
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
 
-                # smooth and plot
-                gauss = Gaussian1DKernel(stddev=8)
-                spec = convolve(spec, gauss)
+                    # labels
+                    ax.set_xlabel(r'$\mathrm{Wavelength\ [\AA]}$')
+                    ax.set_ylabel(r'$\mathrm{Counts/sec}$')
 
-                # put in rest frame using tkrs_z
-                if np.isfinite(tkrs_z):
-                    redshift = tkrs_z
-                else:
-                    redshift = zspec
-                    
-                lam_rest = lam / (1 + redshift)    
-                spec_rest = spec * (1 + redshift)
+                    # smooth and plot
+                    gauss = Gaussian1DKernel(stddev=8)
+                    spec = convolve(spec, gauss)
 
-                ax.plot(lam, spec, '-', color='k')
-
-                # plot emission line wavelengths
-                ybottom, ytop = ax.get_ylim()
-
-                em_lines_to_display = np.array([mgii, ni_1, oii, h_delta, h_gamma, h_beta, oiii_1, oiii_2])
-                em_lines_to_display = em_lines_to_display * (1+redshift)
-                em_line_labels = [r'$\mathrm{MgII]}$', r'$\mathrm{[NI]}$', \
-                r'$\mathrm{[OII]}$', r'$\mathrm{H\delta}$', r'$\mathrm{H\gamma}$', r'$\mathrm{H\beta}$', \
-                r'$\mathrm{[OIII]}$', r'$\mathrm{[OIII]}$']
-
-                abs_lines_to_display = np.array([ca_h, ca_k, gband, mgb])
-                abs_lines_to_display = abs_lines_to_display * (1+redshift)
-                abs_line_labels = [r'$\mathrm{H}$', r'$\mathrm{K}$', r'$\mathrm{Gband}$', r'$\mathrm{MgB}$']
-
-                # EMISSION LINES
-                for j in range(len(em_lines_to_display)):
-
-                    # only plot lines possible with redshift
-                    if em_lines_to_display[j] > np.max(lam):
-                        continue
-
-                    if em_lines_to_display[j] < np.min(lam):
-                        continue
-
-                    # plot line location
-                    ax.axvline(x=em_lines_to_display[j], ymin=0.55, ymax=0.85, lw='1.5', ls='--', color='r')
-
-                    # Emission line labels
-                    if em_lines_to_display[j] == h_beta*(1+redshift):
-                        ax.text(x=em_lines_to_display[j]+7, y=ytop*0.85, s=em_line_labels[j], fontsize=10)
-                    elif em_lines_to_display[j] == oiii_2*(1+redshift):
-                        ax.text(x=em_lines_to_display[j]+7, y=ytop*0.75, s=em_line_labels[j], fontsize=10)
+                    # put in rest frame using tkrs_z
+                    if np.isfinite(tkrs_z):
+                        redshift = tkrs_z
                     else:
-                        ax.text(x=em_lines_to_display[j]+7, y=ytop*0.8, s=em_line_labels[j], fontsize=10)
+                        redshift = zspec
+                        
+                    lam_rest = lam / (1 + redshift)    
+                    spec_rest = spec * (1 + redshift)
 
-                # ABSORPTION LINES
-                for k in range(len(abs_lines_to_display)):
+                    ax.plot(lam, spec, '-', color='k')
 
-                    # only plot lines possible with redshift
-                    if abs_lines_to_display[k] > np.max(lam):
-                        continue
+                    # plot emission line wavelengths
+                    ybottom, ytop = ax.get_ylim()
 
-                    if abs_lines_to_display[k] < np.min(lam):
-                        continue
+                    em_lines_to_display = np.array([mgii, ni_1, oii, h_delta, h_gamma, h_beta, oiii_1, oiii_2])
+                    em_lines_to_display = em_lines_to_display * (1+redshift)
+                    em_line_labels = [r'$\mathrm{MgII]}$', r'$\mathrm{[NI]}$', \
+                    r'$\mathrm{[OII]}$', r'$\mathrm{H\delta}$', r'$\mathrm{H\gamma}$', r'$\mathrm{H\beta}$', \
+                    r'$\mathrm{[OIII]}$', r'$\mathrm{[OIII]}$']
 
-                    # plot line location
-                    ax.axvline(x=abs_lines_to_display[k], ymin=0.1, ymax=0.25, lw='1.5', ls='--', color='r')
-                    # line label
-                    if abs_lines_to_display[k] == ca_k*(1+redshift):
-                        ax.text(x=abs_lines_to_display[k]-100, y=ytop*-0.04, s=abs_line_labels[k], fontsize=10)
-                    elif abs_lines_to_display[k] == ca_h*(1+redshift):
-                        ax.text(x=abs_lines_to_display[k]+20, y=ytop*-0.04, s=abs_line_labels[k], fontsize=10)
-                    else:
-                        ax.text(x=abs_lines_to_display[k], y=ytop*-0.04, s=abs_line_labels[k], fontsize=10)
+                    abs_lines_to_display = np.array([ca_h, ca_k, gband, mgb])
+                    abs_lines_to_display = abs_lines_to_display * (1+redshift)
+                    abs_line_labels = [r'$\mathrm{H}$', r'$\mathrm{K}$', r'$\mathrm{Gband}$', r'$\mathrm{MgB}$']
 
-                # other plot commands
-                ax.minorticks_on()
-                ax.text(0.05, 0.97, 'TKRS zspec quality flag: ' + str(tkrs_zqual), verticalalignment='top', horizontalalignment='left', 
-                    transform=ax.transAxes, color='k', size=12)
+                    # EMISSION LINES
+                    for j in range(len(em_lines_to_display)):
 
-                # reset lims
-                ax.set_ylim(-50, ytop)
+                        # only plot lines possible with redshift
+                        if em_lines_to_display[j] > np.max(lam):
+                            continue
 
-                # Save fig
-                fig.savefig(massive_figures_dir + 'large_diff_specz_sample/' + \
-                    current_field + '_' + str(current_id) + '_TKRS.png', dpi=300, bbox_inches='tight')
-                #plt.show()
+                        if em_lines_to_display[j] < np.min(lam):
+                            continue
 
-                plt.clf()
-                plt.cla()
-                plt.close()
+                        # plot line location
+                        ax.axvline(x=em_lines_to_display[j], ymin=0.55, ymax=0.85, lw='1.5', ls='--', color='r')
 
-                spec_hdu.close()
+                        # Emission line labels
+                        if em_lines_to_display[j] == h_beta*(1+redshift):
+                            ax.text(x=em_lines_to_display[j]+7, y=ytop*0.85, s=em_line_labels[j], fontsize=10)
+                        elif em_lines_to_display[j] == oiii_2*(1+redshift):
+                            ax.text(x=em_lines_to_display[j]+7, y=ytop*0.75, s=em_line_labels[j], fontsize=10)
+                        else:
+                            ax.text(x=em_lines_to_display[j]+7, y=ytop*0.8, s=em_line_labels[j], fontsize=10)
+
+                    # ABSORPTION LINES
+                    for k in range(len(abs_lines_to_display)):
+
+                        # only plot lines possible with redshift
+                        if abs_lines_to_display[k] > np.max(lam):
+                            continue
+
+                        if abs_lines_to_display[k] < np.min(lam):
+                            continue
+
+                        # plot line location
+                        ax.axvline(x=abs_lines_to_display[k], ymin=0.1, ymax=0.25, lw='1.5', ls='--', color='r')
+                        # line label
+                        if abs_lines_to_display[k] == ca_k*(1+redshift):
+                            ax.text(x=abs_lines_to_display[k]-100, y=ytop*-0.04, s=abs_line_labels[k], fontsize=10)
+                        elif abs_lines_to_display[k] == ca_h*(1+redshift):
+                            ax.text(x=abs_lines_to_display[k]+20, y=ytop*-0.04, s=abs_line_labels[k], fontsize=10)
+                        else:
+                            ax.text(x=abs_lines_to_display[k], y=ytop*-0.04, s=abs_line_labels[k], fontsize=10)
+
+                    # other plot commands
+                    ax.minorticks_on()
+                    ax.text(0.05, 0.97, 'TKRS zspec quality flag: ' + str(tkrs_zqual), verticalalignment='top', horizontalalignment='left', 
+                        transform=ax.transAxes, color='k', size=12)
+
+                    # reset lims
+                    ax.set_ylim(-50, ytop)
+
+                    # Save fig
+                    fig.savefig(massive_figures_dir + 'large_diff_specz_sample/' + \
+                        current_field + '_' + str(current_id) + '_TKRS.png', dpi=300, bbox_inches='tight')
+                    #plt.show()
+
+                    plt.clf()
+                    plt.cla()
+                    plt.close()
+
+                    spec_hdu.close()
+
+            else:  # i.e. if there is more than 1 match found
+                print "Exiting. More than 1 match found for PEARS ID:", current_id, idx
+                print "RA, DEC:", ra, dec
+                sys.exit(0)
 
     print "Total to compare:", tkrs_compare_count
 

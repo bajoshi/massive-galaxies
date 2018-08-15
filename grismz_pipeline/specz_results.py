@@ -64,7 +64,7 @@ def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, 
                 ra = -99.0
                 dec = -99.0
 
-        print id_arr[i], field_arr[i], ra, dec, specz_qual[0], specz_source[0], zphot
+        #print id_arr[i], field_arr[i], ra, dec, specz_qual[0], specz_source[0], zphot
 
         # append
         specz_qual_list.append(specz_qual[0])
@@ -385,7 +385,6 @@ if __name__ == '__main__':
     netsig_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/netsig_list.npy')
     d4000_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/d4000_list.npy')
     d4000_err_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/d4000_err_list.npy')
-    print "Code ran for", len(zgrism_arr), "galaxies."
 
     # get d4000 and also specz quality for all galaxies
     # Read in Specz comparison catalogs
@@ -403,7 +402,7 @@ if __name__ == '__main__':
 
     # Place some cuts
     chi2_thresh = 2.0
-    d4000_thresh_low = 1.2
+    d4000_thresh_low = 1.0
     d4000_thresh_high = 1.6
     d4000_sig = d4000_arr / d4000_err_arr
     valid_idx1 = np.where((zgrism_arr >= 0.6) & (zgrism_arr <= 1.235))[0]
@@ -500,30 +499,34 @@ if __name__ == '__main__':
     fail_idx_photo = np.where(abs(photz_resid_hist_arr) >= 0.1)[0]
     print "Number of outliers for photo-z (i.e. error>=0.1):", len(fail_idx_photo)
 
-    large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.03)[0]
-    print "\n", "Large differences stats (resid>0.03):"
+    large_diff_idx = np.where(abs(grism_resid_hist_arr) > 0.01)[0]
+    print "\n", "Large differences stats [abs(resid)>0.01]:"
     print len(large_diff_idx)
 
-    for j in range(len(id_plot[large_diff_idx])):
-
-        # print data 
-        print id_plot[large_diff_idx][j],
-        print field_plot[large_diff_idx][j],
+    print_info_to_matchtkrs = True
+    if print_info_to_matchtkrs:
 
         np.set_printoptions(precision=6, suppress=True)
-        print ra_plot[large_diff_idx][j],
-        print dec_plot[large_diff_idx][j],
+        
+        for j in range(len(id_plot[large_diff_idx])):
 
-        np.set_printoptions(precision=2, suppress=True)  
-        # this has to be here i.e. after RA,DEC are already printed. You can't print RA,DEC with precision=2
-        print zgrism_plot[large_diff_idx][j],
-        print zspec_plot[large_diff_idx][j],
-        print zphot_plot[large_diff_idx][j],
-        print netsig_plot[large_diff_idx][j],
-        print chi2_plot[large_diff_idx][j],
-        print specz_qual_plot[large_diff_idx][j],
-        print specz_source_plot[large_diff_idx][j],
-        print d4000_plot[large_diff_idx][j]
+            # print data 
+            print id_plot[large_diff_idx][j],
+            print field_plot[large_diff_idx][j],
+
+            print ra_plot[large_diff_idx][j],
+            print dec_plot[large_diff_idx][j],
+
+            print zgrism_plot[large_diff_idx][j],
+            print zspec_plot[large_diff_idx][j],
+            print zphot_plot[large_diff_idx][j],
+            print netsig_plot[large_diff_idx][j],
+            print chi2_plot[large_diff_idx][j],
+            print specz_qual_plot[large_diff_idx][j],
+            print specz_source_plot[large_diff_idx][j],
+            print d4000_plot[large_diff_idx][j]
+
+        sys.exit(0)  # i.e. if it is printing then I'm assuming hte plotting isn't needed
 
     """
     # To print all togethre
@@ -543,7 +546,6 @@ if __name__ == '__main__':
     """
 
     print "Number of redshfits in bin with unknown quality:", len(np.where(specz_qual_plot == 'Z')[0])
-    sys.exit(0)
 
     fullrange = True  
     # this fullrange parameter simply tells the program whether or not 
@@ -615,7 +617,8 @@ if __name__ == '__main__':
 
     if fullrange:
         fig.savefig(massive_figures_dir + \
-            'residual_histogram_netsig_10_fullrange_d4000_' + str(d4000_thresh_low).replace('.', 'p') + '.eps', \
+            'residual_histogram_netsig_10_fullrange_d4000_' + \
+            str(d4000_thresh_low).replace('.', 'p') + 'to' + str(d4000_thresh_high).replace('.', 'p') + '.eps', \
             dpi=300, bbox_inches='tight')
     else:
         fig.savefig(massive_figures_dir + 'residual_histogram_netsig_10.png', dpi=300, bbox_inches='tight')
