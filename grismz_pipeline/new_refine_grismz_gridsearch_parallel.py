@@ -63,7 +63,7 @@ def get_line_mask(lam_grid, z):
     oiii_5007_idx = np.argmin(abs(lam_grid - oiii_5007*(1 + z)))
     oiii_4959_idx = np.argmin(abs(lam_grid - oiii_4959*(1 + z)))
 
-    line_mask[oii_3727_idx-6 : oii_3727_idx+5] = 1
+    line_mask[oii_3727_idx-11 : oii_3727_idx+6] = 1
     line_mask[oiii_5007_idx-3 : oiii_5007_idx+4] = 1
     line_mask[oiii_4959_idx-3 : oiii_4959_idx+4] = 1
 
@@ -144,7 +144,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
-    num_cores = 10
+    num_cores = 8
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time) \
     for z in z_arr_to_check)
@@ -303,6 +303,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
     obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000):
 
+    # ---------- Create figure ---------- #
     fig = plt.figure()
     gs = gridspec.GridSpec(10,10)
     gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
@@ -310,22 +311,43 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     ax1 = fig.add_subplot(gs[:8,:])
     ax2 = fig.add_subplot(gs[8:,:])
 
+    # ---------- labels ---------- #
     ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA]}$')
     ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
     ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
 
-    ax1.plot(lam_obs, flam_obs, ls='-', color='k')
+    # ---------- plot data, model, and residual ---------- #
+    ax1.plot(lam_obs, flam_obs, 'o-', color='k', markersize=2)
     ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
     ax1.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
 
     resid_fit = (flam_obs - bestalpha*best_fit_model_in_objlamgrid) / ferr_obs
     ax2.plot(lam_obs, resid_fit, ls='-', color='k')
 
-    # minor ticks
+    # ---------- plot shaded area masking [OII] line ---------- #
+    # also plot line position
+    oii_3727 = 3728.5
+    redshifted_oii = oii_3727 * (1 + grismz)
+    ybottom, ytop = ax1.get_ylim()
+    ax1.axvline(x=redshifted_oii, ymin=0.55, ymax=0.85, lw='1.5', ls='--', color='midnightblue')
+    ax1.text(x=redshifted_oii+7, y=ytop*0.85, s=r'$\mathrm{[OII]}$', fontsize=10)
+
+    # make sure that this is the same number of points as in the line masking function above
+    oii_idx = np.argmin(abs(lam_obs - redshifted_oii))
+    oii_left_edge = lam_obs[oii_idx - 11]
+    oii_right_edge = lam_obs[oii_idx + 5]
+    ax1.axvspan(oii_left_edge, oii_right_edge, alpha=0.5, color='gray')
+
+    # line position at the correct redshift
+    redshifted_oii_correct = oii_3727 * (1 + specz)
+    ax1.axvline(x=redshifted_oii_correct, ymin=0.55, ymax=0.85, lw='1.5', ls='--', color='darkcyan')
+    ax1.text(x=redshifted_oii_correct+7, y=ytop*0.92, s=r'$\mathrm{[OII]_{zspec}}$', fontsize=10)
+
+    # ---------- minor ticks ---------- #
     ax1.minorticks_on()
     ax2.minorticks_on()
 
-    # text for info
+    # ---------- text for info ---------- #
     ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
@@ -349,12 +371,12 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.75, 0.12, r'$\mathrm{\NetSig\, =\, }$' + "{:.3}".format(netsig), \
+    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + "{:.3}".format(netsig), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.07, r'$\mathrm{\D4000(from\ z_{phot})\, =\, }$' + "{:.3}".format(d4000), \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{phot})\, =\, }$' + "{:.3}".format(d4000), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=8)
 
 
     ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
@@ -371,6 +393,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
+    # ---------- Save figure ---------- #
     fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_broadlsf_linemask.png', \
         dpi=300, bbox_inches='tight')
 
