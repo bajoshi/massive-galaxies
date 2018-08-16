@@ -316,8 +316,8 @@ def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz, obj_id, obj_field):
         elif redshift_idx > len(redshift_arr):
             redshift_ticklabels.append('')
 
-    print "Original Y tick labels:", y_ticks
-    print "New Y tick labels corresponding to redshift:", redshift_ticklabels
+    #print "Original Y tick labels:", y_ticks
+    #print "New Y tick labels corresponding to redshift:", redshift_ticklabels
     ax.set_yticklabels(redshift_ticklabels, size=8)
 
     ax.set_xscale('log')
@@ -338,7 +338,7 @@ def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz, obj_id, obj_field):
     cbar.set_label(r'$\chi^2$', size=15)
 
     # Show/Save fig
-    plt.show()
+    #plt.show()
     fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.png', \
         dpi=300, bbox_inches='tight')
     
