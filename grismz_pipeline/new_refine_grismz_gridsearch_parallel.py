@@ -64,7 +64,7 @@ def get_line_mask(lam_grid, z):
     oiii_5007_idx = np.argmin(abs(lam_grid - oiii_5007*(1 + z)))
     oiii_4959_idx = np.argmin(abs(lam_grid - oiii_4959*(1 + z)))
 
-    line_mask[oii_3727_idx-6 : oii_3727_idx+6] = 1
+    line_mask[oii_3727_idx-8 : oii_3727_idx+6] = 1
     line_mask[oiii_5007_idx-3 : oiii_5007_idx+4] = 1
     line_mask[oiii_4959_idx-3 : oiii_4959_idx+4] = 1
 
@@ -241,7 +241,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
-    plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz)
+    plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field)
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
@@ -290,7 +290,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
-def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz):
+def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz, obj_id, obj_field):
     #### -------- Plot chi2 surface as 2D image --------- ####.
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
@@ -301,7 +301,25 @@ def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz):
     cax = ax.imshow(chi2_map/dof, vmin=0.0, vmax=2.0)
 
     # set labels/ticks
-    ax.set_xticklabels(redshift_arr, size=8)
+    ax.set_xlabel(r'$\mathrm{Model\ index}$', fontsize=12)
+    ax.set_ylabel(r'$\mathrm{z}$', fontsize=12)
+
+    y_ticks = ax.get_yticks().tolist()
+    redshift_ticklabels = []
+    for idx in y_ticks:
+
+        redshift_idx = int(idx)
+        if redshift_idx < 0:
+            redshift_ticklabels.append('')
+        elif (redshift_idx >= 0) and (redshift_idx < len(redshift_arr)):
+            redshift_ticklabels.append(redshift_arr[redshift_idx])
+        elif redshift_idx > len(redshift_arr):
+            redshift_ticklabels.append('')
+
+    print "Original Y tick labels:", y_ticks
+    print "New Y tick labels corresponding to redshift:", redshift_ticklabels
+    ax.set_yticklabels(redshift_ticklabels, size=8)
+
     ax.set_xscale('log')
     ax.set_xlim(1, total_models)
 
@@ -316,7 +334,8 @@ def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz):
         transform=ax.transAxes, color='k', size=9)
 
     # Show colorbar
-    fig.colorbar(cax)
+    cbar = fig.colorbar(cax)
+    cbar.set_label(r'$\chi^2$', size=15)
 
     # Show/Save fig
     plt.show()
@@ -363,7 +382,7 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
 
     # make sure that this is the same number of points as in the line masking function above
     oii_idx = np.argmin(abs(lam_obs - redshifted_oii))
-    oii_left_edge = lam_obs[oii_idx - 6]
+    oii_left_edge = lam_obs[oii_idx - 8]
     oii_right_edge = lam_obs[oii_idx + 5]
     ax1.axvspan(oii_left_edge, oii_right_edge, alpha=0.25, color='midnightblue')
 
