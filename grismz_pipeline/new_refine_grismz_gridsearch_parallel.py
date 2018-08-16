@@ -241,7 +241,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
-    plot_chi2(chi2, dof)
+    plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz)
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
@@ -290,31 +290,38 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
-def plot_chi2(chi2_map, dof):
-    #### -------- Plot chi2 surface as 2D image --------- ####
-    # This chi2 map can also be visualized as an image. 
-    # Run imshow() and check what it looks like.
+def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz):
+    #### -------- Plot chi2 surface as 2D image --------- ####.
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
 
-    ax.imshow(chi2_map/dof, vmin=0.0, vmax=2.0)
+    # plot image of chi2 surface
+    # Here the x axis is the model index
+    # The y axis the redshift array that was supplied to the fitting code
+    cax = ax.imshow(chi2_map/dof, vmin=0.0, vmax=2.0)
 
+    # set labels/ticks
+    ax.set_xticklabels(redshift_arr, size=8)
     ax.set_xscale('log')
-    ax.set_xlim(1,total_models)
+    ax.set_xlim(1, total_models)
+
+    # Draw horizontal lines at the grism-z and spec-z
+    ax.axhline(y=grismz, lw=1, ls='--', color='midnightblue')
+    ax.axhline(y=specz, lw=1, ls='--', color='darkcyan')
+
+    # Add text showing redshifts
+    ax.text(0.03, 0.95, r'$\mathrm{z_{spec}}\, = \,$' + str(specz), verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=9)
+    ax.text(0.03, 0.9, r'$\mathrm{z_{grism}}\, = \,$' + str(grismz), verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=9)
+
+    # Show colorbar
+    fig.colorbar(cax)
+
+    # Show/Save fig
     plt.show()
-
-    """
-    # create fig
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-    # Actual plotting
-    ax.plot()
-
-    # ---------- Save figure ---------- #
     fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.png', \
         dpi=300, bbox_inches='tight')
-    """
     
     plt.clf()
     plt.cla()
