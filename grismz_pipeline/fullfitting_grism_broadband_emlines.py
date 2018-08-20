@@ -43,6 +43,38 @@ def check_spec_plot(grism_spec, grism_lam_obs, grism_ferr_obs):
 
     return None
 
+def get_filt_zp(filtname):
+
+    filtname_arr = np.array(['F125W', 'F140W', 'F160W'])  # 'F435W', 'F606W', 'F775W', 'F850LP', 
+
+    # Corresponding lists containing AB and ST zeropoints
+    # The first 4 filters i.e. 'F435W', 'F606W', 'F775W', 'F850LP'
+    # are ACS/WFC filters and the ZP calculation is yet to be done for these.
+    # ACS zeropoints are time-dependent and therefore the zeropoint calculator has to be used.
+    # Check: http://www.stsci.edu/hst/acs/analysis/zeropoints
+    # For WFC3/IR: http://www.stsci.edu/hst/wfc3/analysis/ir_phot_zpt
+    filt_zp_st_list = [28.0203, 28.479, 28.1875]
+    filt_zp_ab_list = [26.2303, 26.4524, 25.9463]
+
+    filt_idx = np.where(filtname_arr == filtname)[0]
+
+    filt_zp_st = filt_zp_st_list[filt_idx]
+    filt_zp_ab = filt_zp_ab_list[filt_idx]
+
+    return filt_zp_st, filt_zp_ab
+
+def get_flam(filtname, cat_flux):
+    """ Convert everything to f_lambda units """
+
+    filt_zp_st, filt_zp_ab = get_filt_zp(filtname)
+
+    abmag = 25.0 - 2.5*np.log10(cat_flux)
+    stmag = filt_zp_st - filt_zp_ab + abmag
+
+    flam = 10**(-1 * (stmag + 21.1) / 2.5)
+
+    return stmag
+
 if __name__ == '__main__':
     
     # Start time
@@ -54,9 +86,10 @@ if __name__ == '__main__':
     # GOODS-N from 3DHST
     # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
     # The combined grism+photometry fits, redshfits, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
-    photometry_names = ['id', 'ra', 'dec', 'f_F160W', 'e_F160W']
+    photometry_names = ['id', 'ra', 'dec', 'f_F160W', 'e_F160W', 'f_F435W', 'e_F435W', 'f_F606W', 'e_F606W', \
+    'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W']
     goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4,9,10), skip_header=3)
+        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
 
     threed_ra = goodsn_phot_cat_3dhst['ra']
     threed_dec = goodsn_phot_cat_3dhst['dec']
@@ -85,8 +118,9 @@ if __name__ == '__main__':
     threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
         (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
 
-    print current_ra, current_dec
-    print goodsn_phot_cat_3dhst[threed_phot_idx]
+    print get_flam('F125W', goodsn_phot_cat_3dhst['f_F125W'][threed_phot_idx])
+    print get_flam('F140W', goodsn_phot_cat_3dhst['f_F140W'][threed_phot_idx])
+    print get_flam('F160W', goodsn_phot_cat_3dhst['f_F160W'][threed_phot_idx])
 
     # Plot to check
     #check_spec_plot(spec, lam_obs, ferr_obs, )
