@@ -115,6 +115,10 @@ if __name__ == '__main__':
         current_id = specz_sample_cat['pearsid'][i]
         current_field = specz_sample_cat['field'][i]
 
+        # only for a single object
+        if (current_id != 106613) or (current_field != 'GOODS-N'):
+            continue
+
         # match
         ra_tol = 1/3600  # in arcseconds
         dec_tol = 1/3600
@@ -160,7 +164,6 @@ if __name__ == '__main__':
                     # Comment out the "TKRS stats" part if you want to generate teh large_diff_specz_short file
                     # and put a continue after the counter is updated
                     tkrs_compare_count += 1
-                    continue
 
                     # PLot TKRS spectrum
                     fig = plt.figure()
@@ -171,19 +174,49 @@ if __name__ == '__main__':
                     ax.set_ylabel(r'$\mathrm{Counts/sec}$')
 
                     # smooth and plot
-                    gauss = Gaussian1DKernel(stddev=8)
-                    spec = convolve(spec, gauss)
+                    smooth = False
+                    if smooth:
+                        gauss = Gaussian1DKernel(stddev=8)
+                        spec = convolve(spec, gauss)
 
-                    # put in rest frame using tkrs_z
+                    # find best redshift to use
                     if np.isfinite(tkrs_z):
                         redshift = tkrs_z
                     else:
                         redshift = zspec
-                        
-                    lam_rest = lam / (1 + redshift)    
-                    spec_rest = spec * (1 + redshift)
 
-                    ax.plot(lam, spec, '-', color='k')
+                    # Resample to grism resolution.
+                    # This is to check what the ground based spectrum will 
+                    # look like if it is resampled to the grism resolution.
+                    # Generally if you set this resample flag to false then 
+                    # you will have to smooth the spectrum (see flag above)
+                    # to be able to see anything at all. Typically I do
+                    # gauss = Gaussian1DKernel(stddev=8)
+                    resample = True
+                    if resample:
+                        
+                        mock_resample_lam_grid = np.linspace(6000, 9500, 88)
+                        resampled_flam = np.zeros((len(mock_resample_lam_grid)))
+                        for k in range(len(mock_resample_lam_grid)):
+
+                            if k == 0:
+                                lam_step_high = mock_resample_lam_grid[k+1] - mock_resample_lam_grid[k]
+                                lam_step_low = lam_step_high
+                            elif k == len(mock_resample_lam_grid) - 1:
+                                lam_step_low = mock_resample_lam_grid[k] - mock_resample_lam_grid[k-1]
+                                lam_step_high = lam_step_low
+                            else:
+                                lam_step_high = mock_resample_lam_grid[k+1] - mock_resample_lam_grid[k]
+                                lam_step_low = mock_resample_lam_grid[k] - mock_resample_lam_grid[k-1]
+
+                            new_ind = np.where((lam >= mock_resample_lam_grid[k] - lam_step_low) & \
+                                (lam < mock_resample_lam_grid[k] + lam_step_high))[0]
+                            resampled_flam[k] = np.mean(spec[new_ind])
+
+                        ax.plot(mock_resample_lam_grid, resampled_flam, '-', color='k')
+
+                    else:
+                        ax.plot(lam, spec, '-', color='k')
 
                     # plot emission line wavelengths
                     ybottom, ytop = ax.get_ylim()
