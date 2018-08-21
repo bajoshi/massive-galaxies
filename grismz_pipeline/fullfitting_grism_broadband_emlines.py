@@ -159,7 +159,7 @@ if __name__ == '__main__':
     phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
     # pivot wavelengths
-    phot_lam = np.array([4350, 6060, 7750, 8500, 12500, 14000, 16000])  # angstroms
+    phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
     # Plot to check
     check_spec_plot(lam_obs, flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
