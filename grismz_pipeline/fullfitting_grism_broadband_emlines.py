@@ -71,6 +71,11 @@ def get_filt_zp(filtname):
     # While these are outdated, I have no way of knowing the dates of every single GOODS observation 
     # (actually I could figure out the dates from the archive) and then using the zeropoint associated 
     # with that date and somehow combining all the photometric data to get some average zeropoint?
+
+    # ------ After talking to Seth about this: Since we only really care about the difference
+    # between the STmag and ABmag zeropoints it won't matter very much that we are using the 
+    # older zeropoints. The STmag and the ABmag zeropoints should chagne by the same amount. 
+    # This should therefore be okay.
     filt_zp_st_list = [25.16823, 26.67444, 26.41699, 25.95456, 28.0203, 28.479, 28.1875]
     filt_zp_ab_list = [25.68392, 26.50512, 25.67849, 24.86663, 26.2303, 26.4524, 25.9463]
 
@@ -101,7 +106,7 @@ if __name__ == '__main__':
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
-    # Read in photometry and grism+photometry catalogs
+    # ------------------------------- Read in photometry and grism+photometry catalogs ------------------------------- #
     # GOODS-N from 3DHST
     # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
     # The combined grism+photometry fits, redshfits, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
@@ -114,11 +119,11 @@ if __name__ == '__main__':
     threed_dec = goodsn_phot_cat_3dhst['dec']
 
     # Read in grism data
-    current_id = 106613
+    current_id = 122560
     current_field = 'GOODS-N'
     lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
-    # match and get photometry data
+    # ------------------------------- Match and get photometry data ------------------------------- #
     # read in matched files for grism spectra info
     matched_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', \
         dtype=None, names=True, skip_header=1)
@@ -138,7 +143,7 @@ if __name__ == '__main__':
     threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
         (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
 
-    # Get photometric fluxes and their errors
+    # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
     flam_f435w = get_flam('F435W', goodsn_phot_cat_3dhst['f_F435W'][threed_phot_idx])
     flam_f606w = get_flam('F606W', goodsn_phot_cat_3dhst['f_F606W'][threed_phot_idx])
     flam_f775w = get_flam('F775W', goodsn_phot_cat_3dhst['f_F775W'][threed_phot_idx])
@@ -155,13 +160,27 @@ if __name__ == '__main__':
     ferr_f140w = get_flam('F140W', goodsn_phot_cat_3dhst['e_F140W'][threed_phot_idx])
     ferr_f160w = get_flam('F160W', goodsn_phot_cat_3dhst['e_F160W'][threed_phot_idx])
 
+    # ------------------------------- Apply aperture correction ------------------------------- #
+    # We need to do this because the grism spectrum and the broadband photometry don't line up properly.
+    # This is due to different apertures being used when extrating the grism spectrum and when measuring
+    # the broadband flux in any given filter.
+    # This will multiply hte grism spectrum by a multiplicative factor that scales it to the measured 
+    # i-band (F775W) flux. Basically, the grism spectrum is "convolved" with the F775W filter curve,
+    # since this is the filter whose coverage completely overlaps that of the grism, to get an i-band
+    # magnitude (or f_lambda) using the grism data. The broadband i-band mag is then divided by this 
+    # grism i-band mag to get the factor that multiplies the grism spectrum.
+    f775w_filt_curve = 
+
+    # ------------------------------- Plot to check ------------------------------- #
     phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
     phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
-    # pivot wavelengths
+    # Pivot wavelengths
+    # From here --
+    # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
+    # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
-    # Plot to check
     check_spec_plot(lam_obs, flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
 
     sys.exit(0)
