@@ -39,7 +39,19 @@ import model_mods_cython_copytoedit as model_mods_cython
 import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 
-def check_spec_plot(grism_spec, grism_lam_obs, grism_ferr_obs):
+def check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+    ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+
+    ax.errorbar(phot_lam, phot_fluxes_arr, yerr=phot_errors_arr, \
+        fmt='.', color='firebrick', markeredgecolor='firebrick', \
+        capsize=2, markersize=10.0, elinewidth=2.0)
+
+    plt.show()
 
     return None
 
@@ -143,18 +155,13 @@ if __name__ == '__main__':
     ferr_f140w = get_flam('F140W', goodsn_phot_cat_3dhst['e_F140W'][threed_phot_idx])
     ferr_f160w = get_flam('F160W', goodsn_phot_cat_3dhst['e_F160W'][threed_phot_idx])
 
-    print flam_f435w, ferr_f435w
-    print flam_f606w, ferr_f606w
-    print flam_f775w, ferr_f775w
-    print flam_f850lp, ferr_f850lp
-    print flam_f125w, ferr_f125w
-    print flam_f140w, ferr_f140w
-    print flam_f160w, ferr_f160w
-
     phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
     phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
+    # pivot wavelengths
+    phot_lam = np.array([4350, 6060, 7750, 8500, 12500, 14000, 16000])  # angstroms
+
     # Plot to check
-    check_spec_plot(spec, lam_obs, ferr_obs, phot_fluxes_arr, phot_errors_arr)
+    check_spec_plot(lam_obs, flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
 
     sys.exit(0)
