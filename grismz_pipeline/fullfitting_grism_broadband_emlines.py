@@ -100,6 +100,19 @@ def get_flam(filtname, cat_flux):
 
     return flam
 
+def emission_lines(metallicity, bc03_spec_lam, bc03_spec):
+
+    # First get the total number of Lyman continuum photons being produced
+	nlyc = get_lyman_cont_photons(bc03_spec)
+
+	# Now use the relations specified in Anders & Alvensleben 2003
+	hbeta_flux = 4.757e-13 * nlyc  # equation on second page of the paper
+
+	# Metallicity dependent line ratios relative to H-beta flux
+
+
+	return pure_emission_line_spec, bc03_spec_with_lines
+
 if __name__ == '__main__':
     
     # Start time
@@ -195,6 +208,7 @@ if __name__ == '__main__':
 
     avg_f775w_flam_grism = num / den
     aper_corr_factor = flam_f775w / avg_f775w_flam_grism
+    print "Aperture correction factor:", "{:.3}".format(aper_corr_factor)
 
     # ------------------------------- Plot to check ------------------------------- #
     phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
