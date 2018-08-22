@@ -167,9 +167,16 @@ if __name__ == '__main__':
     # This will multiply hte grism spectrum by a multiplicative factor that scales it to the measured 
     # i-band (F775W) flux. Basically, the grism spectrum is "convolved" with the F775W filter curve,
     # since this is the filter whose coverage completely overlaps that of the grism, to get an i-band
-    # magnitude (or f_lambda) using the grism data. The broadband i-band mag is then divided by this 
-    # grism i-band mag to get the factor that multiplies the grism spectrum.
-    f775w_filt_curve = 
+    # magnitude (or actually f_lambda) using the grism data. The broadband i-band mag is then divided 
+    # by this grism i-band mag to get the factor that multiplies the grism spectrum.
+
+    # read in filter curve
+    f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/wfc_F775W.dat', dtype=None, names=['wav', 'trans'])
+
+    # multiply grism spectrum to filter curve
+    num = 0
+    den = 0
+    for i in range(len(flam_obs)):
 
     # ------------------------------- Plot to check ------------------------------- #
     phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
