@@ -8,6 +8,7 @@ from astropy.modeling import models, fitting
 from astropy.convolution import Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
 from joblib import Parallel, delayed
+from scipy.interpolate import griddata
 
 import os
 import sys
@@ -119,7 +120,7 @@ if __name__ == '__main__':
     threed_dec = goodsn_phot_cat_3dhst['dec']
 
     # Read in grism data
-    current_id = 122560
+    current_id = 121302
     current_field = 'GOODS-N'
     lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
@@ -173,10 +174,27 @@ if __name__ == '__main__':
     # read in filter curve
     f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/wfc_F775W.dat', dtype=None, names=['wav', 'trans'])
 
+    # First interpolate the given filter curve on to the wavelength frid of the grism data
+    f775w_trans_interp = griddata(points=f775w_filt_curve['wav'], values=f775w_filt_curve['trans'], xi=lam_obs, method='linear')
+
+    # check that the interpolated curve looks like hte original one
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(f775w_filt_curve['wav'], f775w_filt_curve['trans'])
+    ax.plot(lam_obs, f775w_trans_interp)
+    plt.show()
+    """
+
     # multiply grism spectrum to filter curve
     num = 0
     den = 0
     for i in range(len(flam_obs)):
+    	num += flam_obs[i] * f775w_trans_interp[i]
+    	den += f775w_trans_interp[i]
+
+    avg_f775w_flam_grism = num / den
+    aper_corr_factor = flam_f775w / avg_f775w_flam_grism
 
     # ------------------------------- Plot to check ------------------------------- #
     phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
@@ -188,6 +206,6 @@ if __name__ == '__main__':
     # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
-    check_spec_plot(lam_obs, flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+    check_spec_plot(lam_obs, aper_corr_factor*flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
 
     sys.exit(0)
