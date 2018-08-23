@@ -103,7 +103,7 @@ def get_flam(filtname, cat_flux):
 def emission_lines(metallicity, bc03_spec_lam, bc03_spec, bc03_specname):
 
     # First get the total number of Lyman continuum photons being produced
-    nlyc = 1e9 #get_lyman_cont_photons(bc03_specname)
+    nlyc = 5e8 #get_lyman_cont_photons(bc03_specname)
 
     # Metallicity dependent line ratios relative to H-beta flux
     # Now use the relations specified in Anders & Alvensleben 2003 A&A
@@ -156,7 +156,7 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, bc03_specname):
     all_line_wav = np.array([MgII, OII_1, OIII_1, OIII_2, NII_1, NII_2, SII_1, SII_2, h_alpha, h_beta, h_gamma, h_delta])
     all_line_names = np.array(['MgII', 'OII_1', 'OIII_1', 'OIII_2', 'NII_1', 'NII_2', 'SII_1', 'SII_2', 'h_alpha', 'h_beta', 'h_gamma', 'h_delta'])
     all_hlines = np.array(['h_alpha', 'h_gamma', 'h_delta'])
-    all_hline_ratios = np.array([2.86, 4.68e-1, 2.59e-1])
+    all_hline_ratios = np.array([halpha_ratio, hgamma_ratio, hdelta_ratio])
 
     bc03_spec_lam_withlines = bc03_spec_lam
     bc03_spec_withlines = bc03_spec
@@ -167,11 +167,13 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, bc03_specname):
 
         line_idx_exact = np.where(bc03_spec_lam_withlines == line_wav)[0]
 
-        if not line_idx_exact.size:  # i.e. if there isn't an exact measurement at the line wavelength which is almost certainly the case
+        if not line_idx_exact.size:
+            # This if check is for redundancy
+            # i.e. if there isn't an exact measurement at the line wavelength which is almost certainly the case
 
-            insert_idx = np.where(bc03_spec_lam_withlines > line_wav)[0][0]
+            insert_idx = np.where(bc03_spec_lam_withlines > line_wav)[0][0]  # The additional [0] makes sure that only the first wavelength greater than line_wav gets chosen
 
-            # Now interpolate the flux
+            # Now interpolate the flux and insert both continuum flux and wavelength
             f = interp1d(bc03_spec_lam_withlines, bc03_spec_withlines)  # This gives the interpolating function
             flam_insert_val = f(line_wav)  # Evaluate the interpolating function at the exact wavelength needed
             bc03_spec_withlines = np.insert(bc03_spec_withlines, insert_idx, flam_insert_val)
@@ -186,7 +188,7 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, bc03_specname):
                     line_flux = hbeta_flux
                 else:
                     hline_idx = np.where(all_hlines == line_name)[0]
-                    line_ratio = float(all_hline_ratios[hline_idx])
+                    line_ratio = float(all_hline_ratios[hline_idx])  # This forced type conversion here makes sure that I only have a single idx from the np.where search
                     line_flux = hbeta_flux * line_ratio
 
             else:
@@ -214,7 +216,7 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, bc03_specname):
     plt.show()
 
     sys.exit(0)
-    return pure_emission_line_spec, bc03_spec_withlines
+    return bc03_spec_lam_withlines, bc03_spec_withlines
 
 if __name__ == '__main__':
     
@@ -343,5 +345,8 @@ if __name__ == '__main__':
     #print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
     emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[1000].data, 'test_string')
+
+    # Close HDUs
+    bc03_all_spec_hdulist.close()
 
     sys.exit(0)
