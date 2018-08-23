@@ -113,21 +113,36 @@ def get_model_set():
     hdulist = fits.HDUList(hdu)
     
     for filename in glob.glob(home + '/Documents/GALAXEV_BC03/bc03/models/Padova1994/salpeter/' + '*.fits'):
+        # WHile the low resolution spectra are also in this directory 
+        # I did not create fits files for them so they won't be included here.
         
         h = fits.open(filename, memmap=False)
         modellam = h[1].data
+
+        # Open corresponding *.3color file
+        threecolor = np.genfromtxt(filename.replace('.fits','.3color'), dtype=None, names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
     
-        # define and initialize numpy array so that you can resample all the spectra at once.
-        # It also does the convolution in the for loop below because 
-        # I wasn't sure if I gave a 2D array to convolve_fft if it would convolve each row separately.
-        # I thought that it might think of the 2D ndarray as an image and convolve it that way which I don't want.
+        # define and initialize numpy array
         current_model_set_ssp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
         for i in range(total_ages):
+
+            # spectrum to save
             current_model_set_ssp[i] = h[age_ind[i]+3].data
 
+            # Other info to put in header 
+            # ---- Age
             hdr = fits.Header()
-            hdr['LOG_AGE'] = str(np.log10(ages[age_ind[i]]))
+            current_log_age = np.log10(ages[age_ind[i]])
+            hdr['LOG_AGE'] = str(current_log_age)
 
+            # ---- Rate of Lyman continuum photons [# per second]
+            threecolor_idx = np.argmin(abs(threecolor['log_age'] - current_log_age))
+            nlyc = 10**(threecolor['log_nlyc'][threecolor_idx])
+            #print "Current Log(age):", current_log_age
+            #print "Rate of Lyman continuum photons:", nlyc, "s^-1"
+            hdr['NLyc'] = str(nlyc)
+
+            # ---- Metallicity
             if 'm22' in filename:
                 metal_val = 0.0001
             elif 'm32' in filename:
@@ -142,6 +157,8 @@ def get_model_set():
                 metal_val = 0.05
 
             hdr['METAL'] = str(metal_val)
+
+            # Append
             hdulist.append(fits.ImageHDU(data=current_model_set_ssp[i], header=hdr))
 
     # currently restricted to solar metallicity
@@ -154,8 +171,7 @@ def get_model_set():
             print "Model files not found. Exiting..."
             sys.exit(0)
 
-    # ONly using SSP for now
-    # get valid ages i.e. between 100 Myr and 8 Gyr
+    # Get valid ages i.e. between 100 Myr and 8 Gyr
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
     example_filename='bc2003_hr_m62_tauV0_csp_tau100_salp_ages.npy'
     ages = np.load(model_dir + example_filename)
@@ -168,46 +184,54 @@ def get_model_set():
     # I've restricted tauV, tau, lambda, and ages in distinguishing spectra
     tauVarr = np.arange(0.0, 3.0, 0.1)
     logtauarr = np.arange(-2, 2, 0.2)
+    # This logtauarr is a bit more (2x) coarsely sampled than the 
+    # generated models to be less computationally expensive. 
+    # I'm choosing every second tau value as compared to the original grid.
     tauarr = np.empty(len(logtauarr)).astype(np.str)
     
     for i in range(len(logtauarr)):
         tauarr[i] = str(int(float(str(10**logtauarr[i])[0:6])*10000))
 
-    # Read in each individual spectrum and convolve it first and then chop and resample it
-    # The convolution has to be done first otherwise the ends of the spectra look weird
-    # because of the way convolution is done by astropy.convolution.convolve_fft
-    # So i'll convolve first to get the correct result from convolution at the ends of hte spectra (that I want)
+    # Read in each individual spectrum and append it to the FITS HDU List
     for tauVarrval in tauVarr:
         for tauval in tauarr:
             filename = model_dir + 'bc2003_hr_m62_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp_allspectra.npy'
 
-            # define and initialize numpy array so that you can resample all the spectra at once.
-            # It also does the convolution in the for loop below because 
-            # I wasn't sure if I gave a 2D array to convolve_fft if it would convolve each row separately.
-            # I thought that it might think of the 2D ndarray as an image and convolve it that way which I don't want.
+            # Open corresponding *.3color file
+            threecolor = np.genfromtxt(filename.replace('_allspectra.npy','.3color'), dtype=None, names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
+
+            # define and initialize numpy array
             current_model_set_csp_array = np.load(filename)
             modellam = np.load(filename.replace('_allspectra.npy','_lamgrid.npy'))
 
             current_model_set_csp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
             for i in range(total_ages):
+                # Spectrum to save
                 current_model_set_csp[i] = current_model_set_csp_array[age_ind[i]]
-                #current_model_set_csp[i] = convolve_fft(current_model_spec, interplsf, boundary='extend')
-                #plot_interp_and_nointerp_lsf_comparison(modellam, current_model_set_csp, lsf, interplsf)
-                # if you want to use the above line to compare then you will 
-                # have to pass the interplsf as an additional argument.
 
-                #current_model_set_csp = ct.resample(modellam, current_model_set_csp, lam_grid, total_ages)
-                # modellam is the wavelength grid of the models at their native sampling i.e. very high resolution
-                # lam_grid is the wavelength grid that I want to downgrade the models to.
-
+                # Add info to header
                 hdr = fits.Header()
-                hdr['LOG_AGE'] = str(np.log10(ages[age_ind[i]]))
 
+                # ---- Age 
+                current_log_age = np.log10(ages[age_ind[i]])
+                hdr['LOG_AGE'] = str(current_log_age)
+
+                # ---- Metallicity
                 metal_val = 0.02
-
                 hdr['METAL'] = str(metal_val)
+
+                # ---- Tau and TauV
                 hdr['TAU_GYR'] = str(float(tauval)/1e4)
                 hdr['TAUV'] = str(tauVarrval)
+
+                # ---- Rate of Lyman continuum photons [# per second]
+                threecolor_idx = np.argmin(abs(threecolor['log_age'] - current_log_age))
+                nlyc = 10**(threecolor['log_nlyc'][threecolor_idx])
+                #print "Current Log(age):", current_log_age
+                #print "Rate of Lyman continuum photons:", nlyc, "s^-1"
+                hdr['NLyc'] = str(nlyc)
+
+                # Append
                 hdulist.append(fits.ImageHDU(data=current_model_set_csp[i], header=hdr))
 
     final_fitsname = 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits'
@@ -754,6 +778,9 @@ if __name__ == '__main__':
     start = time.time()
     dt = datetime.datetime
     print "Starting at --", dt.now()
+
+    get_model_set()
+    sys.exit(0)
 
     # -------------------------------------- TESTING WITH A MOCK SPECTRUM ----------------------------------------- #
     # UNCOMMENT IF YOU'RE DONE TESTING
