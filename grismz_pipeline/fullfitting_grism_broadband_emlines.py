@@ -344,7 +344,7 @@ if __name__ == '__main__':
     # ------------------------------ Emission lines ------------------------------ #
     # Get the number of Lyman continuum photons being produced
     model_idx = 1000
-    nlyc = bc03_all_spec_hdulist[model_idx].header['NLyc']
+    nlyc = float(bc03_all_spec_hdulist[model_idx].header['NLyc'])
 
     emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[model_idx].data, nlyc)
 
