@@ -100,15 +100,12 @@ def get_flam(filtname, cat_flux):
 
     return flam
 
-def emission_lines(metallicity, bc03_spec_lam, bc03_spec, bc03_specname):
-
-    # First get the total number of Lyman continuum photons being produced
-    nlyc = 5e8 #get_lyman_cont_photons(bc03_specname)
+def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc):
 
     # Metallicity dependent line ratios relative to H-beta flux
     # Now use the relations specified in Anders & Alvensleben 2003 A&A
     hbeta_flux = 4.757e-13 * nlyc  # equation on second page of the paper
-    print "H-beta flux:", hbeta_flux, "not sure of the units??????"
+    print "H-beta flux:", hbeta_flux, "erg s-1"
 
     # ------------------ Metal lines ------------------ #
     # Read in line list for non-Hydrogen metal emission lines
@@ -344,7 +341,12 @@ if __name__ == '__main__':
     # total run time up to now
     #print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
-    emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[1000].data, 'test_string')
+    # ------------------------------ Emission lines ------------------------------ #
+    # Get the number of Lyman continuum photons being produced
+    model_idx = 1000
+    nlyc = bc03_all_spec_hdulist[model_idx].header['NLyc']
+
+    emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[model_idx].data, nlyc)
 
     # Close HDUs
     bc03_all_spec_hdulist.close()
