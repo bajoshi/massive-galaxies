@@ -51,7 +51,8 @@ def get_line_mask(lam_grid, z):
     oiii_4959 = 4960.30
     hbeta = 4862.69
     hgamma = 4341.69
-    oii_3727 = 3728.5
+    hdelta = 4102.89
+    oii_3727 = 3727.0
     # these two lines (3727 and 3729) are so close to each other 
     # that the line will always blend in grism spectra. 
     # avg wav of the two written here

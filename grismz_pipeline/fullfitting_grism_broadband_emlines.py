@@ -8,7 +8,7 @@ from astropy.modeling import models, fitting
 from astropy.convolution import Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
 from joblib import Parallel, delayed
-from scipy.interpolate import griddata
+from scipy.interpolate import griddata, interp1d
 
 import os
 import sys
@@ -100,18 +100,121 @@ def get_flam(filtname, cat_flux):
 
     return flam
 
-def emission_lines(metallicity, bc03_spec_lam, bc03_spec):
+def emission_lines(metallicity, bc03_spec_lam, bc03_spec, bc03_specname):
 
     # First get the total number of Lyman continuum photons being produced
-	nlyc = get_lyman_cont_photons(bc03_spec)
+    nlyc = 1e9 #get_lyman_cont_photons(bc03_specname)
 
-	# Now use the relations specified in Anders & Alvensleben 2003
-	hbeta_flux = 4.757e-13 * nlyc  # equation on second page of the paper
+    # Metallicity dependent line ratios relative to H-beta flux
+    # Now use the relations specified in Anders & Alvensleben 2003 A&A
+    hbeta_flux = 4.757e-13 * nlyc  # equation on second page of the paper
+    print "H-beta flux:", hbeta_flux, "not sure of the units??????"
 
-	# Metallicity dependent line ratios relative to H-beta flux
+    # ------------------ Metal lines ------------------ #
+    # Read in line list for non-Hydrogen metal emission lines
+    non_H_linelist = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/linelist_anders_2003.txt', dtype=None, names=True)
 
+    # ------------------ Hydrogen Lines ------------------ #
+    # Line intensity relative to H-beta as calculated by Hummer & Storey 1987 MNRAS
+    # Case B recombination assumed along with Te = 1e4 K and Ne = 1e2 cm-3
+    # Check page 59 of the pdf copy of hte paper
+    halpha_ratio = 2.86
+    hgamma_ratio = 4.68e-1
+    hdelta_ratio = 2.59e-1
 
-	return pure_emission_line_spec, bc03_spec_with_lines
+    # ------------------ Line Wavelengths in Vacuum ------------------ #
+    # Hydrogen
+    h_alpha = 6564.61
+    h_beta = 4862.68
+    h_gamma = 4341.68
+    h_delta = 4102.89
+
+    # Metals
+    # I'm defining only the important ones that I want to include here
+    # Not using the wavelengths given in the Anders & Alvensleben 2003 A&A paper
+    # since those are air wavelengths.
+    MgII = 2799.117
+    OII_1 = 3727.092
+    OIII_1 = 4960.295
+    OIII_2 = 5008.240
+    NII_1 = 6549.86
+    NII_2 = 6585.27
+    SII_1 = 6718.29
+    SII_2 = 6732.67
+
+    # ------------------ Put lines in ------------------ #
+    # Set the metallicity to the column name in the linelist file
+    if (metallicity == 0.02) or (metallicity == 0.05):
+        metallicity = 'z3_z5'
+
+    # I'm going to put the liens in at the exact wavelengths.
+    # So, I'll interpolate the model flam array to get a measuremnet
+    # at the exact line wavelength and then just add the line flux to hte continuum.
+
+    # I know that I haven't set up these arrays to find line ratios efficiently
+    # Will improve later.
+    all_line_wav = np.array([MgII, OII_1, OIII_1, OIII_2, NII_1, NII_2, SII_1, SII_2, h_alpha, h_beta, h_gamma, h_delta])
+    all_line_names = np.array(['MgII', 'OII_1', 'OIII_1', 'OIII_2', 'NII_1', 'NII_2', 'SII_1', 'SII_2', 'h_alpha', 'h_beta', 'h_gamma', 'h_delta'])
+    all_hlines = np.array(['h_alpha', 'h_gamma', 'h_delta'])
+    all_hline_ratios = np.array([2.86, 4.68e-1, 2.59e-1])
+
+    bc03_spec_lam_withlines = bc03_spec_lam
+    bc03_spec_withlines = bc03_spec
+
+    for i in range(len(all_line_wav)):
+
+        line_wav = all_line_wav[i]
+
+        line_idx_exact = np.where(bc03_spec_lam_withlines == line_wav)[0]
+
+        if not line_idx_exact.size:  # i.e. if there isn't an exact measurement at the line wavelength which is almost certainly the case
+
+            insert_idx = np.where(bc03_spec_lam_withlines > line_wav)[0][0]
+
+            # Now interpolate the flux
+            f = interp1d(bc03_spec_lam_withlines, bc03_spec_withlines)  # This gives the interpolating function
+            flam_insert_val = f(line_wav)  # Evaluate the interpolating function at the exact wavelength needed
+            bc03_spec_withlines = np.insert(bc03_spec_withlines, insert_idx, flam_insert_val)
+            bc03_spec_lam_withlines = np.insert(bc03_spec_lam_withlines, insert_idx, line_wav)  # This inserts the line wavelength into the wavelength array
+
+            # Now add the line
+            # Get line flux first
+            line_name = all_line_names[i]
+            if 'h' in line_name:
+                if line_name == 'h_beta':
+                    line_ratio = 1.0
+                    line_flux = hbeta_flux
+                else:
+                    hline_idx = np.where(all_hlines == line_name)[0]
+                    line_ratio = float(all_hline_ratios[hline_idx])
+                    line_flux = hbeta_flux * line_ratio
+
+            else:
+                line_name = '[' + line_name + ']'
+                metal_line_idx = np.where(non_H_linelist['line'] == line_name)[0]
+                line_ratio = float(non_H_linelist[metallicity][metal_line_idx])
+                line_flux = hbeta_flux * line_ratio
+
+            print "\n", "Adding line", line_name, "at wavelength", line_wav
+            print "This line has a intensity relative to H-beta:", line_ratio
+
+            # Add line to continuum
+            idx = np.where(bc03_spec_lam_withlines == line_wav)[0]
+            bc03_spec_withlines[idx] += line_flux
+
+    # Plot to check
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(bc03_spec_lam_withlines, bc03_spec_withlines)
+    ax.plot(bc03_spec_lam, bc03_spec)
+
+    ax.set_xlim(1e3, 1e4)
+
+    plt.show()
+
+    sys.exit(0)
+    return pure_emission_line_spec, bc03_spec_withlines
 
 if __name__ == '__main__':
     
@@ -203,8 +306,8 @@ if __name__ == '__main__':
     num = 0
     den = 0
     for i in range(len(flam_obs)):
-    	num += flam_obs[i] * f775w_trans_interp[i]
-    	den += f775w_trans_interp[i]
+        num += flam_obs[i] * f775w_trans_interp[i]
+        den += f775w_trans_interp[i]
 
     avg_f775w_flam_grism = num / den
     aper_corr_factor = flam_f775w / avg_f775w_flam_grism
@@ -220,6 +323,25 @@ if __name__ == '__main__':
     # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
-    check_spec_plot(lam_obs, aper_corr_factor*flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+    #check_spec_plot(lam_obs, aper_corr_factor*flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+
+    # ------------------------------- Models ------------------------------- #
+    # read in entire model set
+    bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    total_models = 34542
+
+    # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
+    example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
+    bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
+    model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
+    model_lam_grid = model_lam_grid.astype(np.float64)
+    #model_comp_spec = np.zeros((total_models, len(model_lam_grid)), dtype=np.float64)
+    #for j in range(total_models):
+    #    model_comp_spec[j] = bc03_all_spec_hdulist[j+1].data
+
+    # total run time up to now
+    #print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
+
+    emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[1000].data, 'test_string')
 
     sys.exit(0)
