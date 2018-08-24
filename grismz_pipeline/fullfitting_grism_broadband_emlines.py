@@ -140,18 +140,20 @@ def show_example_for_adding_emission_lines():
     print "Model SFH constant (tau [Gyr]):", float(bc03_all_spec_hdulist[model_idx].header['TAU_GYR'])
     print "Model A_V:", "{:.3}".format(float(bc03_all_spec_hdulist[model_idx].header['TAUV']) / 1.086)
 
-    bc03_spec_lam_withlines, bc03_spec_withlines = emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[model_idx].data, nlyc)
+    bc03_spec_lam_withlines, bc03_spec_withlines = emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[model_idx].data, nlyc, silent=False)
 
     sys.exit(0)
 
     return None
 
-def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc):
+def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc, silent=True):
 
     # Metallicity dependent line ratios relative to H-beta flux
     # Now use the relations specified in Anders & Alvensleben 2003 A&A
     hbeta_flux = 4.757e-13 * nlyc  # equation on second page of the paper
-    print "H-beta flux:", hbeta_flux, "erg s^-1"
+
+    if not silent:
+        print "H-beta flux:", hbeta_flux, "erg s^-1"
 
     # Make sure the units of hte H-beta flux and the BC03 spectrum are the same 
     # BC03 spectra are in units of L_sol A^-1 i.e. 3.826e33 erg s^-1 A^-1
@@ -246,16 +248,16 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc):
                 line_ratio = float(non_H_linelist[metallicity][metal_line_idx])
                 line_flux = hbeta_flux * line_ratio
 
-            print "\n", "Adding line", line_name, "at wavelength", line_wav
-            print "This line has a intensity relative to H-beta:", line_ratio
+            if not silent:
+                print "\n", "Adding line", line_name, "at wavelength", line_wav
+                print "This line has a intensity relative to H-beta:", line_ratio
 
             # Add line to continuum
             idx = np.where(bc03_spec_lam_withlines == line_wav)[0]
             bc03_spec_withlines[idx] += line_flux
 
     # Plot to check
-    plotfig = False
-    if plotfig:
+    if not silent:
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
@@ -365,7 +367,9 @@ if __name__ == '__main__':
     aper_corr_factor = flam_f775w / avg_f775w_flam_grism
     print "Aperture correction factor:", "{:.3}".format(aper_corr_factor)
 
-    # ------------------------------- Plot to check ------------------------------- #
+    flam_obs *= aper_corr_factor  # applying factor
+
+    # ------------------------------- Make a unified grism+photometry spectrum array ------------------------------- #
     phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
     phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
@@ -375,7 +379,36 @@ if __name__ == '__main__':
     # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
-    #check_spec_plot(lam_obs, aper_corr_factor*flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+    # Combine grism+photometry into one spectrum
+    count = 0
+    for phot_wav in phot_lam:
+        
+        if phot_wav < lam_obs[0]:
+            lam_obs_idx_to_insert = 0
+
+        elif phot_wav > lam_obs[-1]:
+            lam_obs_idx_to_insert = len(lam_obs)
+
+        else: 
+            lam_obs_idx_to_insert = np.where(lam_obs > phot_wav)[0][0] 
+
+        lam_obs = np.insert(lam_obs, lam_obs_idx_to_insert, phot_wav)
+        flam_obs = np.insert(flam_obs, lam_obs_idx_to_insert, phot_fluxes_arr[count])
+        ferr_obs = np.insert(ferr_obs, lam_obs_idx_to_insert, phot_errors_arr[count])
+
+        count += 1
+
+    # ------------------------------- Plot to check ------------------------------- #
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(lam_obs, flam_obs, 'o-', color='k', markersize=2)
+    ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
+    plt.show(block=False)
+
+    check_spec_plot(lam_obs, flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+    sys.exit(0)
+    """
 
     # ------------------------------- Models ------------------------------- #
     # read in entire model set
@@ -394,7 +427,8 @@ if __name__ == '__main__':
     # total run time up to now
     print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
-    # ------------------------------ Emission lines ------------------------------ #
+    # ------------------------------ Add emission lines ------------------------------ #
+
 
 
     # Close HDUs
