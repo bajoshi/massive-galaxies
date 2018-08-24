@@ -194,9 +194,17 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc, silent=True):
     SII_2 = 6732.67
 
     # ------------------ Put lines in ------------------ #
+    # The Anders paper only has 5 metallicity values but the BC03 models have 6.
+    # I"m simply using the same line ratios from the Anders paper for the lowest 
+    # two metallicities. I'm not sure how to do it differently for now.
+
     # Set the metallicity to the column name in the linelist file
-    if (metallicity == 0.02) or (metallicity == 0.05):
+    if (metallicity == 0.008) or (metallicity == 0.02) or (metallicity == 0.05):
         metallicity = 'z3_z5'
+    elif (metallicity == 0.004):
+        metallicity = 'z2'
+    elif (metallicity == 0.0004) or (metallicity == 0.0001):
+        metallicity = 'z1'
 
     # I'm going to put the liens in at the exact wavelengths.
     # So, I'll interpolate the model flam array to get a measuremnet
@@ -293,6 +301,7 @@ if __name__ == '__main__':
     current_id = 121302
     current_field = 'GOODS-N'
     lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
+    lam_obs_grism = lam_obs   # Need this later to get avg_dlam
 
     # ------------------------------- Match and get photometry data ------------------------------- #
     # read in matched files for grism spectra info
@@ -410,7 +419,7 @@ if __name__ == '__main__':
     sys.exit(0)
     """
 
-    # ------------------------------- Models ------------------------------- #
+    # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
     total_models = 34542
@@ -420,16 +429,107 @@ if __name__ == '__main__':
     bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
     model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
     model_lam_grid = model_lam_grid.astype(np.float64)
-    model_comp_spec = np.zeros((total_models, len(model_lam_grid)), dtype=np.float64)
+
+    total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
+    model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
     for j in range(total_models):
-        model_comp_spec[j] = bc03_all_spec_hdulist[j+1].data
+        nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
+        metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
+        model_lam_grid_withlines, model_comp_spec_withlines[j] = emission_lines(metallicity, model_lam_grid, bc03_all_spec_hdulist[j+1].data, nlyc)
+    # Also checked that in every case model_lam_grid_withlines is the exact same
+    # SO i'm simply using hte output from the last model.
 
     # total run time up to now
-    print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
+    print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
-    # ------------------------------ Add emission lines ------------------------------ #
+    # ------------------------------ Now start fitting ------------------------------ #
+    # --------- Get starting redshift
+    # Get specz if it exists as initial guess, otherwise get photoz
+    current_photz = 0.7781
+    current_specz = 0.778
+    starting_z = current_specz # spec-z
 
+    # Force dtype for cython code
+    # Apparently this (i.e. for flam_obs and ferr_obs) has  
+    # to be done to avoid an obscure error from parallel in joblib --
+    # AttributeError: 'numpy.ndarray' object has no attribute 'offset'
+    lam_obs = lam_obs.astype(np.float64)
+    flam_obs = flam_obs.astype(np.float64)
+    ferr_obs = ferr_obs.astype(np.float64)
 
+    # --------------------------------------------- Quality checks ------------------------------------------- #
+    # Netsig check
+    if netsig_chosen < 10:
+        print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
+        #continue
+
+    # D4000 check # accept only if D4000 greater than 1.2
+    # get d4000
+    # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
+    # This is way I'm letting some lower D4000 values into my sample. Just so I don't miss too many galaxies.
+    # A few of the galaxies with really wrong starting_z will of course be missed.
+    lam_em = lam_obs / (1 + starting_z)
+    flam_em = flam_obs * (1 + starting_z)
+    ferr_em = ferr_obs * (1 + starting_z)
+
+    # Check that hte lambda array is not too incomplete 
+    # I don't want the D4000 code extrapolating too much.
+    # I'm choosing this limit to be 50A
+    if np.max(lam_em) < 4200:
+        print "Skipping because lambda array is incomplete by too much."
+        print "i.e. the max val in rest-frame lambda is less than 4200A."
+        #continue
+
+    d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+    if d4000 < 1.1:
+        print "Skipping", current_id, "in", current_field, "due to low D4000:", d4000
+        #continue
+
+    # Read in LSF
+    if current_field == 'GOODS-N':
+        lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+    elif current_field == 'GOODS-S':
+        lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+
+    # read in LSF file
+    try:
+        lsf = np.genfromtxt(lsf_filename)
+        lsf = lsf.astype(np.float64)  # Force dtype for cython code
+    except IOError:
+        print "LSF not found. Moving to next galaxy."
+        #continue
+
+    # -------- Broaden the LSF ------- #
+    # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
+    # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
+    # fit
+    lsf_length = len(lsf)
+    gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
+    fit_gauss = fitting.LevMarLSQFitter()
+    x_arr = np.arange(lsf_length)
+    g = fit_gauss(gauss_init, x_arr, lsf)
+    # get fit std.dev. and create a gaussian kernel with which to broaden
+    kernel_std = 1.118 * g.parameters[2]
+    broaden_kernel = Gaussian1DKernel(kernel_std)
+    # broaden LSF
+    broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
+    broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
+
+    # ------- Make new resampling grid ------- # 
+    # extend lam_grid to be able to move the lam_grid later 
+    avg_dlam = old_ref.get_avg_dlam(lam_obs_grism)
+
+    lam_low_to_insert = np.arange(4000, lam_obs[0], avg_dlam, dtype=np.float64)
+    lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 16000, avg_dlam, dtype=np.float64)
+
+    resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
+    resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+
+    # ------------- Call actual fitting function ------------- #
+    zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
+    ngp.do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
+        model_lam_grid, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
+        current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)
 
     # Close HDUs
     bc03_all_spec_hdulist.close()

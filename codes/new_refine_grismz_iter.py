@@ -140,7 +140,7 @@ def get_model_set():
             nlyc = 10**(threecolor['log_nlyc'][threecolor_idx])
             #print "Current Log(age):", current_log_age
             #print "Rate of Lyman continuum photons:", nlyc, "s^-1"
-            hdr['NLyc'] = str(nlyc)
+            hdr['NLYC'] = str(nlyc)
 
             # ---- Metallicity
             if 'm22' in filename:
@@ -229,7 +229,7 @@ def get_model_set():
                 nlyc = 10**(threecolor['log_nlyc'][threecolor_idx])
                 #print "Current Log(age):", current_log_age
                 #print "Rate of Lyman continuum photons:", nlyc, "s^-1"
-                hdr['NLyc'] = str(nlyc)
+                hdr['NLYC'] = str(nlyc)
 
                 # Append
                 hdulist.append(fits.ImageHDU(data=current_model_set_csp[i], header=hdr))
