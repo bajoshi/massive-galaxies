@@ -246,7 +246,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
-    plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field)
+    plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
@@ -295,7 +295,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
 
     return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
-def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz, obj_id, obj_field):
+def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz, obj_id, obj_field, total_models):
     #### -------- Plot chi2 surface as 2D image --------- ####.
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
