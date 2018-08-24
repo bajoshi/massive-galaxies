@@ -100,12 +100,64 @@ def get_flam(filtname, cat_flux):
 
     return flam
 
+def show_example_for_adding_emission_lines():
+    """
+    Call this function from within __main__ if you want to show
+    the final result of adding emission lines to the models. 
+    """
+
+    # read in entire model set
+    bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    total_models = 34542
+
+    # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
+    example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
+    bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
+    model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
+    model_lam_grid = model_lam_grid.astype(np.float64)
+
+    # Get the number of Lyman continuum photons being produced
+    model_idx = 1620
+    """
+    # Models 1600 to 1650ish are older than ~1Gyr # Models 1500 to 1600 are younger.
+    # You can use these indices to show how the lines change RELATIVE to the continuum.
+    # i.e. The lines are quite strong relative to the continuum at young ages as expected.
+    # What I hadn't expected was that the lines aren't too strong relative to the continuum
+    # for Balmer break spectra. However, the lines again start to become stronger relative 
+    # to the continuum as the Balmer break turns into a 4000A break.
+
+    # Try making a plot of [OII]3727 EW vs Model Age to illustrate this point.
+    # EW [A] = Total_line_flux / Continuum_flux_density_around_line
+    # Identify which ages show a Balmer break and which ages show a 4000A break
+    # in this plot.
+    """
+
+    nlyc = float(bc03_all_spec_hdulist[model_idx].header['NLyc'])
+
+    # print model info
+    model_logage = float(bc03_all_spec_hdulist[model_idx].header['LOG_AGE'])
+    print "Model age[yr]:", "{:.3}".format(10**model_logage)
+    print "Model SFH constant (tau [Gyr]):", float(bc03_all_spec_hdulist[model_idx].header['TAU_GYR'])
+    print "Model A_V:", "{:.3}".format(float(bc03_all_spec_hdulist[model_idx].header['TAUV']) / 1.086)
+
+    bc03_spec_lam_withlines, bc03_spec_withlines = emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[model_idx].data, nlyc)
+
+    sys.exit(0)
+
+    return None
+
 def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc):
 
     # Metallicity dependent line ratios relative to H-beta flux
     # Now use the relations specified in Anders & Alvensleben 2003 A&A
     hbeta_flux = 4.757e-13 * nlyc  # equation on second page of the paper
-    print "H-beta flux:", hbeta_flux, "erg s-1"
+    print "H-beta flux:", hbeta_flux, "erg s^-1"
+
+    # Make sure the units of hte H-beta flux and the BC03 spectrum are the same 
+    # BC03 spectra are in units of L_sol A^-1 i.e. 3.826e33 erg s^-1 A^-1
+    # The H-beta flux as written above is in erg s^-1
+    # 
+    hbeta_flux /= 3.826e33 
 
     # ------------------ Metal lines ------------------ #
     # Read in line list for non-Hydrogen metal emission lines
@@ -202,17 +254,18 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc):
             bc03_spec_withlines[idx] += line_flux
 
     # Plot to check
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    plotfig = False
+    if plotfig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
-    ax.plot(bc03_spec_lam_withlines, bc03_spec_withlines)
-    ax.plot(bc03_spec_lam, bc03_spec)
+        ax.plot(bc03_spec_lam_withlines, bc03_spec_withlines)
+        ax.plot(bc03_spec_lam, bc03_spec)
 
-    ax.set_xlim(1e3, 1e4)
+        ax.set_xlim(1e3, 1e4)
 
-    plt.show()
+        plt.show()
 
-    sys.exit(0)
     return bc03_spec_lam_withlines, bc03_spec_withlines
 
 if __name__ == '__main__':
@@ -334,19 +387,15 @@ if __name__ == '__main__':
     bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
     model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
     model_lam_grid = model_lam_grid.astype(np.float64)
-    #model_comp_spec = np.zeros((total_models, len(model_lam_grid)), dtype=np.float64)
-    #for j in range(total_models):
-    #    model_comp_spec[j] = bc03_all_spec_hdulist[j+1].data
+    model_comp_spec = np.zeros((total_models, len(model_lam_grid)), dtype=np.float64)
+    for j in range(total_models):
+        model_comp_spec[j] = bc03_all_spec_hdulist[j+1].data
 
     # total run time up to now
-    #print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
+    print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
 
     # ------------------------------ Emission lines ------------------------------ #
-    # Get the number of Lyman continuum photons being produced
-    model_idx = 1000
-    nlyc = float(bc03_all_spec_hdulist[model_idx].header['NLyc'])
 
-    emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[model_idx].data, nlyc)
 
     # Close HDUs
     bc03_all_spec_hdulist.close()
