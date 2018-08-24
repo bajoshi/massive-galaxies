@@ -117,9 +117,13 @@ def show_example_for_adding_emission_lines():
     model_lam_grid = model_lam_grid.astype(np.float64)
 
     # Get the number of Lyman continuum photons being produced
-    model_idx = 1620
+    model_idx = 1650
     """
     # Models 1600 to 1650ish are older than ~1Gyr # Models 1500 to 1600 are younger.
+    # for e.g. 
+    try 1600: age 143 Myr  # really strong lines
+    1615: age 806 Myr # relatively weaker lines
+    1630: age 2.4 Gyr # relatively stronger lines
     # You can use these indices to show how the lines change RELATIVE to the continuum.
     # i.e. The lines are quite strong relative to the continuum at young ages as expected.
     # What I hadn't expected was that the lines aren't too strong relative to the continuum
@@ -140,7 +144,55 @@ def show_example_for_adding_emission_lines():
     print "Model SFH constant (tau [Gyr]):", float(bc03_all_spec_hdulist[model_idx].header['TAU_GYR'])
     print "Model A_V:", "{:.3}".format(float(bc03_all_spec_hdulist[model_idx].header['TAUV']) / 1.086)
 
-    bc03_spec_lam_withlines, bc03_spec_withlines = emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[model_idx].data, nlyc, silent=False)
+    bc03_spec_lam_withlines, bc03_spec_withlines  = \
+    emission_lines(0.02, model_lam_grid, bc03_all_spec_hdulist[model_idx].data, nlyc, silent=False)
+
+    sys.exit(0)
+
+    return None
+
+def make_oii_ew_vs_age_plot():
+
+    # read in entire model set
+    bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    total_models = 34542
+
+    # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
+    example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
+    bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
+    model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
+    model_lam_grid = model_lam_grid.astype(np.float64)
+
+    total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
+    model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
+
+    oii_ew_list = []
+    model_logage_list = []
+
+    for j in range(total_models):
+        nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
+        metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
+        model_logage_list.append(float(bc03_all_spec_hdulist[j+1].header['LOG_AGE']))
+
+        model_lam_grid_withlines, model_comp_spec_withlines[j], oii_ew = \
+        emission_lines(metallicity, model_lam_grid, bc03_all_spec_hdulist[j+1].data, nlyc)
+
+        oii_ew_list.append(oii_ew)
+
+    oii_ew_arr = np.asarray(oii_ew_list)
+    model_logage_arr = np.asarray(model_logage_list)
+    model_age_arr = 10**model_logage_arr
+
+    # Plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(model_age_arr, oii_ew_arr, 'o', markersize=2)
+
+    ax.set_xlim(100e6, 6e9)
+    ax.set_xscale('log')
+
+    plt.show()
 
     sys.exit(0)
 
@@ -230,13 +282,15 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc, silent=True):
             # This if check is for redundancy
             # i.e. if there isn't an exact measurement at the line wavelength which is almost certainly the case
 
-            insert_idx = np.where(bc03_spec_lam_withlines > line_wav)[0][0]  # The additional [0] makes sure that only the first wavelength greater than line_wav gets chosen
+            insert_idx = np.where(bc03_spec_lam_withlines > line_wav)[0][0]
+            # The additional [0] makes sure that only the first wavelength greater than line_wav gets chosen
 
             # Now interpolate the flux and insert both continuum flux and wavelength
             f = interp1d(bc03_spec_lam_withlines, bc03_spec_withlines)  # This gives the interpolating function
             flam_insert_val = f(line_wav)  # Evaluate the interpolating function at the exact wavelength needed
             bc03_spec_withlines = np.insert(bc03_spec_withlines, insert_idx, flam_insert_val)
-            bc03_spec_lam_withlines = np.insert(bc03_spec_lam_withlines, insert_idx, line_wav)  # This inserts the line wavelength into the wavelength array
+            bc03_spec_lam_withlines = np.insert(bc03_spec_lam_withlines, insert_idx, line_wav)
+            # This inserts the line wavelength into the wavelength array
 
             # Now add the line
             # Get line flux first
@@ -247,7 +301,8 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc, silent=True):
                     line_flux = hbeta_flux
                 else:
                     hline_idx = np.where(all_hlines == line_name)[0]
-                    line_ratio = float(all_hline_ratios[hline_idx])  # This forced type conversion here makes sure that I only have a single idx from the np.where search
+                    line_ratio = float(all_hline_ratios[hline_idx])
+                    # This forced type conversion here makes sure that I only have a single idx from the np.where search
                     line_flux = hbeta_flux * line_ratio
 
             else:
@@ -255,6 +310,17 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc, silent=True):
                 metal_line_idx = np.where(non_H_linelist['line'] == line_name)[0]
                 line_ratio = float(non_H_linelist[metallicity][metal_line_idx])
                 line_flux = hbeta_flux * line_ratio
+                """
+                if line_name == '[OII_1]':
+                    oii_flux = line_flux
+
+                    # find pseudo continuum level
+                    pseudo_cont_arr_left = bc03_spec[insert_idx-20:insert_idx-10]
+                    pseudo_cont_arr_right = bc03_spec[insert_idx+10:insert_idx+20]
+                    cont_level = np.nanmean(np.concatenate((pseudo_cont_arr_left, pseudo_cont_arr_right)))
+
+                    oii_ew = oii_flux / cont_level
+                """
 
             if not silent:
                 print "\n", "Adding line", line_name, "at wavelength", line_wav
@@ -284,6 +350,10 @@ if __name__ == '__main__':
     start = time.time()
     dt = datetime.datetime
     print "Starting at --", dt.now()
+
+    #make_oii_ew_vs_age_plot()
+    #show_example_for_adding_emission_lines()
+    #sys.exit(0)
 
     # ------------------------------- Read in photometry and grism+photometry catalogs ------------------------------- #
     # GOODS-N from 3DHST
@@ -435,7 +505,8 @@ if __name__ == '__main__':
     for j in range(total_models):
         nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
         metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
-        model_lam_grid_withlines, model_comp_spec_withlines[j] = emission_lines(metallicity, model_lam_grid, bc03_all_spec_hdulist[j+1].data, nlyc)
+        model_lam_grid_withlines, model_comp_spec_withlines[j] = \
+        emission_lines(metallicity, model_lam_grid, bc03_all_spec_hdulist[j+1].data, nlyc)
     # Also checked that in every case model_lam_grid_withlines is the exact same
     # SO i'm simply using hte output from the last model.
 
@@ -524,6 +595,8 @@ if __name__ == '__main__':
 
     resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
     resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+
+    print "Resampling wavelength grid:", resampling_lam_grid
 
     # ------------- Call actual fitting function ------------- #
     zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
