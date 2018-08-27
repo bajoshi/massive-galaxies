@@ -9,6 +9,7 @@ from astropy.convolution import Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
 from joblib import Parallel, delayed
 from scipy.interpolate import griddata, interp1d
+from scipy.signal import fftconvolve
 
 import os
 import sys
@@ -365,6 +366,189 @@ def check_broad_lsf(lsf, broad_lsf):
 
     return None
 
+def lsf_convolve(model_comp_spec, lsf, total_models):
+
+    model_comp_spec_lsfconv = np.zeros(model_comp_spec.shape, dtype=np.float64)
+
+    for i in range(total_models):
+
+        model_spec = model_comp_spec[i]
+        model_comp_spec_lsfconv[i] = fftconvolve(model_spec, lsf, mode = 'same')
+
+    return model_comp_spec_lsfconv
+
+def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length):
+
+    # --------------- Redshift model --------------- #
+    redshift_factor = 1.0 + z
+    model_lam_grid_z = model_lam_grid * redshift_factor
+    model_comp_spec_redshifted = model_comp_spec_lsfconv / redshift_factor
+
+    # --------------- Do resampling --------------- #
+    # Define array to save modified models
+    model_comp_spec_modified = np.zeros((total_models, resampling_lam_grid_length), dtype=np.float64)
+
+    # --------------- Get indices for resampling --------------- #
+    # These indices are going to be different each time depending on the redshfit.
+    # i.e. Since it uses the redshifted model_lam_grid_z to get indices.
+    ### Zeroth element
+    lam_step = resampling_lam_grid[1] - resampling_lam_grid[0]
+    indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_z < resampling_lam_grid[0] + lam_step))[0])
+
+    ### all elements in between
+    for i in range(1, resampling_lam_grid_length - 1):
+        indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[i-1]) & (model_lam_grid_z < resampling_lam_grid[i+1]))[0])
+
+    ### Last element
+    lam_step = resampling_lam_grid[-1] - resampling_lam_grid[-2]
+    indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[-1] - lam_step) & (model_lam_grid_z < resampling_lam_grid[-1] + lam_step))[0])
+
+    # ---------- Run for loop to resample ---------- #
+    for k in range(total_models):
+        for q in range(resampling_lam_grid_length):
+            model_comp_spec_modified[k] = np.mean(model_comp_spec_redshifted[indices[q]])
+
+    return model_comp_spec_modified
+
+def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_lam_grid):
+
+    # chop the model to be consistent with the objects lam grid
+    model_lam_grid_indx_low = np.argmin(abs(model_resampling_lam_grid - object_lam_grid[0]))
+    model_lam_grid_indx_high = np.argmin(abs(model_resampling_lam_grid - object_lam_grid[-1]))
+    model_spec_in_objlamgrid = model_comp_spec_mod[:, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+
+    # make sure that the arrays are the same length
+    if int(model_spec_in_objlamgrid.shape[1]) != len(object_lam_grid):
+        print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
+        print "Model spectrum array shape:", model_spec_in_objlamgrid.shape
+        print "Object spectrum length:", len(object_lam_grid)
+        sys.exit(0)
+
+    alpha_ = np.sum(flam * model_spec_in_objlamgrid / (ferr**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / ferr**2, axis=1)
+    chi2_ = np.sum(((flam - (alpha_ * model_spec_in_objlamgrid.T).T) / ferr)**2, axis=1)
+
+    return chi2_, alpha_
+
+def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, \
+    resampling_lam_grid, total_models, lsf, start_time):
+
+    print "\n", "Currently at redshift:", z
+
+    # make sure the types are correct before passing to cython code
+    #lam_obs = lam_obs.astype(np.float64)
+    #model_lam_grid = model_lam_grid.astype(np.float64)
+    #model_comp_spec = model_comp_spec.astype(np.float64)
+    #resampling_lam_grid = resampling_lam_grid.astype(np.float64)
+    #total_models = int(total_models)
+    #lsf = lsf.astype(np.float64)
+
+    # first modify the models at the current redshift to be able to compare with data
+    model_comp_spec_modified = redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
+    print "Model mods done at current z:", z
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
+
+    # Now do the chi2 computation
+    chi2_temp, alpha_temp = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
+
+    return chi2_temp, alpha_temp
+
+def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, resampling_lam_grid_length, \
+    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
+    obj_id, obj_field, specz, photoz, netsig, d4000, search_range):
+
+    """
+    All models are redshifted to each of the redshifts in the list defined below,
+    z_arr_to_check. Then the model modifications are done at that redshift.
+
+    For each iteration through the redshift list it computes a chi2 for each model.
+    """
+
+    # Set up redshift grid to check
+    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=81, dtype=np.float64)
+    z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
+    z_arr_to_check = z_arr_to_check[z_idx]
+    print "Will check the following redshifts:", z_arr_to_check
+    if not z_arr_to_check.size:
+        return -99.0, -99.0, -99.0, -99.0, -99.0
+
+    ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
+    # Loop over all redshifts to check
+    # set up chi2 and alpha arrays
+    chi2 = np.empty((len(z_arr_to_check), total_models))
+    alpha = np.empty((len(z_arr_to_check), total_models))
+
+    # First do the convolution with the LSF
+    model_comp_spec_lsfconv = lsf_convolve(model_comp_spec, lsf, total_models)
+
+    # looping
+    num_cores = 8
+    chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
+    flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec_lsfconv, resampling_lam_grid, resampling_lam_grid_length, total_models, lsf, start_time) \
+    for z in z_arr_to_check)
+
+    # the parallel code seems to like returning only a list
+    # so I have to unpack the list
+    for i in range(len(z_arr_to_check)):
+        chi2[i], alpha[i] = chi2_alpha_list[i]
+
+    # regular for loop 
+    # use this if you dont want to use the parallel for loop above
+    # comment it out if you don't 
+    #count = 0
+    #for z in z_arr_to_check:
+    #    chi2[count], alpha[count] = get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, \
+    #        model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time)
+    #    count += 1
+
+    ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
+    # Sort through the chi2 and make sure that the age is physically meaningful
+    sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
+
+    for k in range(len(chi2.ravel())):
+
+        # Find the minimum chi2
+        min_idx = sortargs[k]
+        min_idx_2d = np.unravel_index(min_idx, chi2.shape)
+        
+        # Get the best fit model parameters
+        # first get the index for the best fit
+        model_idx = int(min_idx_2d[1])
+
+        age = float(bc03_all_spec_hdulist[model_idx + 1].header['LOG_AGE'])
+        current_z = z_arr_to_check[min_idx_2d[0]]
+        age_at_z = cosmo.age(current_z).value * 1e9  # in yr
+
+        # now check if the best fit model is an ssp or csp 
+        # only the csp models have tau and tauV parameters
+        # so if you try to get these keywords for the ssp fits files
+        # it will fail with a KeyError
+        if 'TAU_GYR' in list(bc03_all_spec_hdulist[model_idx + 1].header.keys()):
+            tau = float(bc03_all_spec_hdulist[model_idx + 1].header['TAU_GYR'])
+            tauv = float(bc03_all_spec_hdulist[model_idx + 1].header['TAUV'])
+        else:
+            # if the best fit model is an SSP then assign -99.0 to tau and tauV
+            tau = -99.0
+            tauv = -99.0
+
+        # now check if the age is meaningful
+        if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.1)):
+            # If the age is meaningful then you don't need to do anything
+            # more. Just break out of the loop. the best fit parameters have
+            # already been assigned to variables. This assignment is done before 
+            # the if statement to make sure that there are best fit parameters 
+            # even if the loop is broken out of in the first iteration.
+            break
+
+    print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
+    z_grism = z_arr_to_check[min_idx_2d[0]]
+    print "New redshift:", z_grism
+
+    print "Current best fit log(age [yr]):", "{:.4}".format(age)
+    print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
+    print "Current best fit Tau_V:", tauv
+
+    return None
+
 if __name__ == '__main__':
     
     # Start time
@@ -391,7 +575,7 @@ if __name__ == '__main__':
     # Read in grism data
     current_id = 121302
     current_field = 'GOODS-N'
-    lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
+    am_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
     lam_obs_grism = lam_obs   # Need this later to get avg_dlam
 
     # ------------------------------- Match and get photometry data ------------------------------- #
@@ -604,7 +788,7 @@ if __name__ == '__main__':
         # get fit std.dev. and create a gaussian kernel with which to broaden
         kernel_std = 1.118 * g.parameters[2]
         broaden_kernel = Gaussian1DKernel(kernel_std)
-        
+
         # broaden LSF
         broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
         broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
@@ -632,7 +816,7 @@ if __name__ == '__main__':
 
     # ------------- Call actual fitting function ------------- #
     zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
-    ngp.do_fitting(flam_obs, ferr_obs, lam_obs, lsf_to_use, starting_z, resampling_lam_grid, \
+    do_fitting(flam_obs, ferr_obs, lam_obs, lsf_to_use, starting_z, resampling_lam_grid, \
         model_lam_grid, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)
 
