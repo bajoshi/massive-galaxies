@@ -344,6 +344,27 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc, silent=True):
 
     return bc03_spec_lam_withlines, bc03_spec_withlines
 
+def check_broad_lsf(lsf, broad_lsf):
+
+    print "Original LSF:", lsf
+    print "Original LSF:", broad_lsf
+
+    from scipy.integrate import simps
+
+    print "Area under original LSF:", simps(lsf)
+    print "Area under broader LSF:", simps(broad_lsf)
+
+    # Plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(np.arange(len(lsf)), lsf)
+    ax.plot(np.arange(len(broad_lsf)), broad_lsf)
+
+    plt.show()
+
+    return None
+
 if __name__ == '__main__':
     
     # Start time
@@ -573,18 +594,27 @@ if __name__ == '__main__':
     # -------- Broaden the LSF ------- #
     # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
     # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
-    # fit
-    lsf_length = len(lsf)
-    gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
-    fit_gauss = fitting.LevMarLSQFitter()
-    x_arr = np.arange(lsf_length)
-    g = fit_gauss(gauss_init, x_arr, lsf)
-    # get fit std.dev. and create a gaussian kernel with which to broaden
-    kernel_std = 1.118 * g.parameters[2]
-    broaden_kernel = Gaussian1DKernel(kernel_std)
-    # broaden LSF
-    broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
-    broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
+    broaden_lsf = False
+    if broaden_lsf:
+        lsf_length = len(lsf)
+        gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
+        fit_gauss = fitting.LevMarLSQFitter()
+        x_arr = np.arange(lsf_length)
+        g = fit_gauss(gauss_init, x_arr, lsf)
+        # get fit std.dev. and create a gaussian kernel with which to broaden
+        kernel_std = 1.118 * g.parameters[2]
+        broaden_kernel = Gaussian1DKernel(kernel_std)
+        
+        # broaden LSF
+        broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
+        broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
+
+        check_broad_lsf(lsf, broad_lsf)  # Comment out if you dont want to check the LSF broadenign result
+
+        lsf_to_use = broad_lsf
+
+    else:
+        lsf_to_use = lsf
 
     # ------- Make new resampling grid ------- # 
     # extend lam_grid to be able to move the lam_grid later 
@@ -598,9 +628,11 @@ if __name__ == '__main__':
 
     print "Resampling wavelength grid:", resampling_lam_grid
 
+    sys.exit(0)
+
     # ------------- Call actual fitting function ------------- #
     zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
-    ngp.do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
+    ngp.do_fitting(flam_obs, ferr_obs, lam_obs, lsf_to_use, starting_z, resampling_lam_grid, \
         model_lam_grid, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)
 
