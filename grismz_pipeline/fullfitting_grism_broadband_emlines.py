@@ -640,8 +640,20 @@ if __name__ == '__main__':
     f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
     f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
 
+    """
+    Example to plot filter curves for ACS:
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(f435w_filt_curve.binset, f435w_filt_curve(f435w_filt_curve.binset), color='midnightblue')
+    ax.plot(f850lp_filt_curve.binset, f850lp_filt_curve(f850lp_filt_curve.binset), color='seagreen')
+    ax.plot(f606w_filt_curve.binset, f606w_filt_curve(f606w_filt_curve.binset), color='orange')
+    ax.plot(f775w_filt_curve.binset, f775w_filt_curve(f775w_filt_curve.binset), color='rebeccapurple')
+    plt.show()
+    """
+
     # First interpolate the given filter curve on to the wavelength frid of the grism data
-    # You only need the F775W filter here since you're 
+    # You only need the F775W filter here since you're only using this filter to get the 
+    # aperture correction factor.
     f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=lam_obs, method='linear')
 
     # check that the interpolated curve looks like hte original one
