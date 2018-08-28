@@ -445,6 +445,7 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
 
     # ------------ Get photomtery for model by convolving with filters ------------- #
     all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
+    filt_count = 0
     for filt in all_filters:
 
         # first interpolate the grism transmission curve to the model lam grid
@@ -463,7 +464,9 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
 
             filt_flam_model = num / den
 
-            all_filt_flam_model[i] = filt_flam_model
+            all_filt_flam_model[filt_count,i] = filt_flam_model
+
+        filt_count += 1
 
     # transverse array to make shape consistent with others
     # I did it this way so that in the above for loop each filter is looped over only once
@@ -611,7 +614,9 @@ if __name__ == '__main__':
     current_id = 121302
     current_field = 'GOODS-N'
     lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
-    lam_obs_grism = lam_obs   # Need this later to get avg_dlam
+    grism_lam_obs = lam_obs   # Need this later to get avg_dlam
+    grism_flam_obs = flam_obs
+    grism_ferr_obs = ferr_obs
 
     # ------------------------------- Match and get photometry data ------------------------------- #
     # read in matched files for grism spectra info
@@ -864,21 +869,22 @@ if __name__ == '__main__':
 
     # ------- Make new resampling grid ------- # 
     # extend lam_grid to be able to move the lam_grid later 
-    avg_dlam = old_ref.get_avg_dlam(lam_obs_grism)
+    avg_dlam = old_ref.get_avg_dlam(grism_lam_obs)
 
-    lam_low_to_insert = np.arange(4000, lam_obs_grism[0], avg_dlam, dtype=np.float64)
-    lam_high_to_append = np.arange(lam_obs_grism[-1] + avg_dlam, 11000, avg_dlam, dtype=np.float64)
+    lam_low_to_insert = np.arange(4000, grism_lam_obs[0], avg_dlam, dtype=np.float64)
+    lam_high_to_append = np.arange(grism_lam_obs[-1] + avg_dlam, 11000, avg_dlam, dtype=np.float64)
 
-    resampling_lam_grid = np.insert(lam_obs_grism, obj=0, values=lam_low_to_insert)
+    resampling_lam_grid = np.insert(grism_lam_obs, obj=0, values=lam_low_to_insert)
     resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
     print "Resampling wavelength grid:", resampling_lam_grid
 
     # ------------- Call actual fitting function ------------- #
     zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
-    do_fitting(flam_obs, ferr_obs, lam_obs, lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
+    do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
+        lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
         model_lam_grid, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)
+        current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2, all_filters)
 
     # Close HDUs
     bc03_all_spec_hdulist.close()
