@@ -10,6 +10,7 @@ from astropy.cosmology import Planck15 as cosmo
 from joblib import Parallel, delayed
 from scipy.interpolate import griddata, interp1d
 from scipy.signal import fftconvolve
+import pysynphot
 
 import os
 import sys
@@ -429,8 +430,8 @@ def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_
 
     return chi2_, alpha_
 
-def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, \
-    resampling_lam_grid, total_models, lsf, start_time):
+def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec_lsfconv, \
+    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time):
 
     print "\n", "Currently at redshift:", z
 
@@ -455,7 +456,6 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
 def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, resampling_lam_grid_length, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
     obj_id, obj_field, specz, photoz, netsig, d4000, search_range):
-
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -483,7 +483,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # looping
     num_cores = 8
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
-    flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec_lsfconv, resampling_lam_grid, resampling_lam_grid_length, total_models, lsf, start_time) \
+    flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec_lsfconv, resampling_lam_grid, resampling_lam_grid_length, total_models, start_time) \
     for z in z_arr_to_check)
 
     # the parallel code seems to like returning only a list
@@ -575,7 +575,7 @@ if __name__ == '__main__':
     # Read in grism data
     current_id = 121302
     current_field = 'GOODS-N'
-    am_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
+    lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
     lam_obs_grism = lam_obs   # Need this later to get avg_dlam
 
     # ------------------------------- Match and get photometry data ------------------------------- #
@@ -624,12 +624,25 @@ if __name__ == '__main__':
     # since this is the filter whose coverage completely overlaps that of the grism, to get an i-band
     # magnitude (or actually f_lambda) using the grism data. The broadband i-band mag is then divided 
     # by this grism i-band mag to get the factor that multiplies the grism spectrum.
+    # Filter curves from:
+    # ACS: http://www.stsci.edu/hst/acs/analysis/throughputs
+    # WFC3: Has to be done through PySynphot. See: https://pysynphot.readthedocs.io/en/latest/index.html
+    # Also take a look at this page: http://www.stsci.edu/hst/observatory/crds/throughput.html
+    # Pysynphot has been set up correctly. Its pretty useful for many other things too. See Pysynphot docs.
 
-    # read in filter curve
-    f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/wfc_F775W.dat', dtype=None, names=['wav', 'trans'])
+    # read in filter curves
+    f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
+    f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
+    f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
+    f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
+
+    f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
+    f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
+    f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
 
     # First interpolate the given filter curve on to the wavelength frid of the grism data
-    f775w_trans_interp = griddata(points=f775w_filt_curve['wav'], values=f775w_filt_curve['trans'], xi=lam_obs, method='linear')
+    # You only need the F775W filter here since you're 
+    f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=lam_obs, method='linear')
 
     # check that the interpolated curve looks like hte original one
     """
@@ -804,19 +817,17 @@ if __name__ == '__main__':
     # extend lam_grid to be able to move the lam_grid later 
     avg_dlam = old_ref.get_avg_dlam(lam_obs_grism)
 
-    lam_low_to_insert = np.arange(4000, lam_obs[0], avg_dlam, dtype=np.float64)
-    lam_high_to_append = np.arange(lam_obs[-1] + avg_dlam, 16000, avg_dlam, dtype=np.float64)
+    lam_low_to_insert = np.arange(4000, lam_obs_grism[0], avg_dlam, dtype=np.float64)
+    lam_high_to_append = np.arange(lam_obs_grism[-1] + avg_dlam, 11000, avg_dlam, dtype=np.float64)
 
-    resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
+    resampling_lam_grid = np.insert(lam_obs_grism, obj=0, values=lam_low_to_insert)
     resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
     print "Resampling wavelength grid:", resampling_lam_grid
 
-    sys.exit(0)
-
     # ------------- Call actual fitting function ------------- #
     zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
-    do_fitting(flam_obs, ferr_obs, lam_obs, lsf_to_use, starting_z, resampling_lam_grid, \
+    do_fitting(flam_obs, ferr_obs, lam_obs, lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
         model_lam_grid, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)
 
@@ -824,3 +835,4 @@ if __name__ == '__main__':
     bc03_all_spec_hdulist.close()
 
     sys.exit(0)
+
