@@ -60,7 +60,7 @@ def check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, pho
 
 def get_filt_zp(filtname):
 
-    filtname_arr = np.array(['F435W', 'F606W', 'F775W', 'F850LP', 'F125W', 'F140W', 'F160W']) 
+    filtname_arr = np.array(['F435W', 'F606W', 'F775W', 'F850LP', 'F125W', 'F140W', 'F160W'])
 
     # Corresponding lists containing AB and ST zeropoints
     # The first 4 filters i.e. 'F435W', 'F606W', 'F775W', 'F850LP'
@@ -213,7 +213,7 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc, silent=True):
     # BC03 spectra are in units of L_sol A^-1 i.e. 3.826e33 erg s^-1 A^-1
     # The H-beta flux as written above is in erg s^-1
     # 
-    hbeta_flux /= 3.826e33 
+    hbeta_flux /= 3.826e33
 
     # ------------------ Metal lines ------------------ #
     # Read in line list for non-Hydrogen metal emission lines
@@ -452,32 +452,24 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
         # first interpolate the grism transmission curve to the model lam grid
         filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid, method='linear')
 
-        interp_filt_length = len(filt_interp)
-
         # multiply model spectrum to filter curve
-        num = 0
-        den = 0
         for i in range(total_models):
 
-            for j in range(interp_filt_length):
-                num += model_comp_spec[j] * filt_interp[j]
-                den += filt_interp[j]
+            num = np.nansum(model_comp_spec[i] * filt_interp)
+            den = np.nansum(filt_interp)
 
             filt_flam_model = num / den
-
             all_filt_flam_model[filt_count,i] = filt_flam_model
 
         filt_count += 1
 
     # transverse array to make shape consistent with others
     # I did it this way so that in the above for loop each filter is looped over only once
+    # i.e. minimizing the number of times each filter is gridded on to the model grid
     all_filt_flam_model = all_filt_flam_model.T
 
-    print all_filt_flam_model
-    print all_filt_flam_model.shape
-    print model_comp_spec.shape
-
-    sys.exit(0)
+    print "Filter f_lam for models computed."
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # ------------- Now do the modifications for the grism data and get a chi2 using both grism and photometry ------------- #
     # first modify the models at the current redshift to be able to compare with data
@@ -521,6 +513,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
+    """
     num_cores = 8
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
@@ -532,15 +525,17 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+    """
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't 
-    #count = 0
-    #for z in z_arr_to_check:
-    #    chi2[count], alpha[count] = get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, \
-    #        model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, start_time)
-    #    count += 1
+    count = 0
+    for z in z_arr_to_check:
+        chi2[count], alpha[count] = get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+            model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
+            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, all_filters)
+        count += 1
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
@@ -551,7 +546,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         # Find the minimum chi2
         min_idx = sortargs[k]
         min_idx_2d = np.unravel_index(min_idx, chi2.shape)
-        
+
         # Get the best fit model parameters
         # first get the index for the best fit
         model_idx = int(min_idx_2d[1])
@@ -592,20 +587,20 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     return None
 
 if __name__ == '__main__':
-    
+
     # Start time
     start = time.time()
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
-    #make_oii_ew_vs_age_plot()
-    #show_example_for_adding_emission_lines()
-    #sys.exit(0)
+    # make_oii_ew_vs_age_plot()
+    # show_example_for_adding_emission_lines()
+    # sys.exit(0)
 
     # ------------------------------- Read in photometry and grism+photometry catalogs ------------------------------- #
     # GOODS-N from 3DHST
     # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
-    # The combined grism+photometry fits, redshfits, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
+    # The combined grism+photometry fits, redshifts, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
     photometry_names = ['id', 'ra', 'dec', 'f_F160W', 'e_F160W', 'f_F435W', 'e_F435W', 'f_F606W', 'e_F606W', \
     'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W']
     goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
@@ -737,15 +732,15 @@ if __name__ == '__main__':
     # Combine grism+photometry into one spectrum
     count = 0
     for phot_wav in phot_lam:
-        
+
         if phot_wav < lam_obs[0]:
             lam_obs_idx_to_insert = 0
 
         elif phot_wav > lam_obs[-1]:
             lam_obs_idx_to_insert = len(lam_obs)
 
-        else: 
-            lam_obs_idx_to_insert = np.where(lam_obs > phot_wav)[0][0] 
+        else:
+            lam_obs_idx_to_insert = np.where(lam_obs > phot_wav)[0][0]
 
         lam_obs = np.insert(lam_obs, lam_obs_idx_to_insert, phot_wav)
         flam_obs = np.insert(flam_obs, lam_obs_idx_to_insert, phot_fluxes_arr[count])
@@ -796,13 +791,17 @@ if __name__ == '__main__':
     current_specz = 0.778
     starting_z = current_specz # spec-z
 
-    # Force dtype for cython code
+    # --------- Force dtype for cython code --------- #
     # Apparently this (i.e. for flam_obs and ferr_obs) has  
     # to be done to avoid an obscure error from parallel in joblib --
     # AttributeError: 'numpy.ndarray' object has no attribute 'offset'
     lam_obs = lam_obs.astype(np.float64)
     flam_obs = flam_obs.astype(np.float64)
     ferr_obs = ferr_obs.astype(np.float64)
+
+    grism_lam_obs = grism_lam_obs.astype(np.float64)
+    grism_flam_obs = grism_flam_obs.astype(np.float64)
+    grism_ferr_obs = grism_ferr_obs.astype(np.float64)
 
     # --------------------------------------------- Quality checks ------------------------------------------- #
     # Netsig check
@@ -885,7 +884,7 @@ if __name__ == '__main__':
     zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
     do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
-        model_lam_grid, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2, all_filters)
 
     # Close HDUs
