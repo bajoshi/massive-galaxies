@@ -430,8 +430,8 @@ def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_
 
     return chi2_, alpha_
 
-def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec_lsfconv, \
-    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time):
+def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
+    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, all_filters):
 
     print "\n", "Currently at redshift:", z
 
@@ -443,19 +443,53 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
     #total_models = int(total_models)
     #lsf = lsf.astype(np.float64)
 
+    # ------------ Get photomtery for model by convolving with filters ------------- #
+    all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
+    for filt in all_filters:
+
+        # first interpolate the grism transmission curve to the model lam grid
+        filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid, method='linear')
+
+        interp_filt_length = len(filt_interp)
+
+        # multiply model spectrum to filter curve
+        num = 0
+        den = 0
+        for i in range(total_models):
+
+            for j in range(interp_filt_length):
+                num += model_comp_spec[j] * filt_interp[j]
+                den += filt_interp[j]
+
+            filt_flam_model = num / den
+
+            all_filt_flam_model[i] = filt_flam_model
+
+    # transverse array to make shape consistent with others
+    # I did it this way so that in the above for loop each filter is looped over only once
+    all_filt_flam_model = all_filt_flam_model.T
+
+    print all_filt_flam_model
+    print all_filt_flam_model.shape
+    print model_comp_spec.shape
+
+    sys.exit(0)
+
+    # ------------- Now do the modifications for the grism data and get a chi2 using both grism and photometry ------------- #
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
-    # Now do the chi2 computation
+    # ------------- Now do the chi2 computation ------------- #
     chi2_temp, alpha_temp = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
 
     return chi2_temp, alpha_temp
 
-def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid, resampling_lam_grid_length, \
+def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+    lsf, starting_z, resampling_lam_grid, resampling_lam_grid_length, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, netsig, d4000, search_range):
+    obj_id, obj_field, specz, photoz, netsig, d4000, search_range, all_filters):
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -481,9 +515,10 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     model_comp_spec_lsfconv = lsf_convolve(model_comp_spec, lsf, total_models)
 
     # looping
-    num_cores = 8
+    num_cores = 2
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
-    flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec_lsfconv, resampling_lam_grid, resampling_lam_grid_length, total_models, start_time) \
+    flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
+    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, all_filters) \
     for z in z_arr_to_check)
 
     # the parallel code seems to like returning only a list
@@ -639,6 +674,8 @@ if __name__ == '__main__':
     f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
     f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
     f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
+
+    all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
 
     """
     Example to plot filter curves for ACS:
