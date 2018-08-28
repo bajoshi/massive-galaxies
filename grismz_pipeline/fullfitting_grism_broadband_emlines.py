@@ -517,6 +517,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # First do the convolution with the LSF
     model_comp_spec_lsfconv = lsf_convolve(model_comp_spec, lsf, total_models)
+    print "Convolution done.",
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
     num_cores = 8
@@ -878,8 +880,6 @@ if __name__ == '__main__':
 
     resampling_lam_grid = np.insert(grism_lam_obs, obj=0, values=lam_low_to_insert)
     resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
-
-    print "Resampling wavelength grid:", resampling_lam_grid
 
     # ------------- Call actual fitting function ------------- #
     zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
