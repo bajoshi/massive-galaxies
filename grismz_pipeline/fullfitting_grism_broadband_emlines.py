@@ -392,6 +392,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     # --------------- Get indices for resampling --------------- #
     # These indices are going to be different each time depending on the redshfit.
     # i.e. Since it uses the redshifted model_lam_grid_z to get indices.
+    indices = []
     ### Zeroth element
     lam_step = resampling_lam_grid[1] - resampling_lam_grid[0]
     indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_z < resampling_lam_grid[0] + lam_step))[0])
