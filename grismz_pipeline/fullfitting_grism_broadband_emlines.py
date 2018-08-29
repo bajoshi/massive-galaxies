@@ -407,6 +407,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
     # ---------- Run for loop to resample ---------- #
     for k in range(total_models):
+        print "Resampling model:", i+1
         for q in range(resampling_lam_grid_length):
             model_comp_spec_modified[k] = np.mean(model_comp_spec_redshifted[indices[q]])
 
