@@ -433,11 +433,12 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     # because todo the insertion correctly the model and grism wavelength
     # grids have to match.
 
-    # 
+    # Convert the model array to a python list of lists
+    # This has to be done to 
     model_spec_in_objlamgrid_list = []
     for j in range(total_models):
         model_spec_in_objlamgrid_list.append(model_spec_in_objlamgrid[j].tolist())
-    
+
     count = 0
     for phot_wav in phot_lam_obs:
 
@@ -462,6 +463,8 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         count += 1
 
     # Convert back to numpy array
+    del model_spec_in_objlamgrid  # Trying to free up the memory allocated to the object pointed by the older model_spec_in_objlamgrid
+    # Not sure if the del works because I'm using the same name again. Also just not sure of how del exactly works.
     model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
     # compute alpha and chi2
@@ -554,7 +557,6 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    """
     num_cores = 8
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
@@ -566,17 +568,18 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
-    """
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
-    # comment it out if you don't 
+    # comment it out if you don't
+    """ 
     count = 0
     for z in z_arr_to_check:
         chi2[count], alpha[count] = get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
             model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
             resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, all_filters)
         count += 1
+    """
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
