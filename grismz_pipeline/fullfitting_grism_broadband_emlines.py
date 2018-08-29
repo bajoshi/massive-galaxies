@@ -432,6 +432,12 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     # The chopping above has to be done before combining the grism+photometry
     # because todo the insertion correctly the model and grism wavelength
     # grids have to match.
+
+    # 
+    model_spec_in_objlamgrid_list = []
+    for j in range(total_models):
+        model_spec_in_objlamgrid_list.append(model_spec_in_objlamgrid[j].tolist())
+    
     count = 0
     for phot_wav in phot_lam_obs:
 
@@ -451,9 +457,12 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
         # For model
         for i in range(total_models):
-            model_spec_in_objlamgrid[i] = np.insert(model_spec_in_objlamgrid[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
+            model_spec_in_objlamgrid_list[i] = np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
 
         count += 1
+
+    # Convert back to numpy array
+    model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
     # compute alpha and chi2
     alpha_ = np.sum(grism_flam_obs * model_spec_in_objlamgrid / (grism_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / grism_ferr_obs**2, axis=1)
