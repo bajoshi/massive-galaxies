@@ -411,20 +411,49 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
     return model_comp_spec_modified
 
-def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_lam_grid):
+def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+        all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models):
 
     # chop the model to be consistent with the objects lam grid
-    model_lam_grid_indx_low = np.argmin(abs(model_resampling_lam_grid - object_lam_grid[0]))
-    model_lam_grid_indx_high = np.argmin(abs(model_resampling_lam_grid - object_lam_grid[-1]))
+    model_lam_grid_indx_low = np.argmin(abs(model_resampling_lam_grid - grism_lam_obs[0]))
+    model_lam_grid_indx_high = np.argmin(abs(model_resampling_lam_grid - grism_lam_obs[-1]))
     model_spec_in_objlamgrid = model_comp_spec_mod[:, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
     # make sure that the arrays are the same length
-    if int(model_spec_in_objlamgrid.shape[1]) != len(object_lam_grid):
+    if int(model_spec_in_objlamgrid.shape[1]) != len(grism_lam_obs):
         print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
         print "Model spectrum array shape:", model_spec_in_objlamgrid.shape
-        print "Object spectrum length:", len(object_lam_grid)
+        print "Object spectrum length:", len(grism_lam_obs)
         sys.exit(0)
 
+    # For both data and model, combine grism+photometry into one spectrum.
+    # The chopping above has to be done before combining the grism+photometry
+    # because todo the insertion correctly the model and grism wavelength
+    # grids have to match.
+    count = 0
+    for phot_wav in phot_lam_obs:
+
+        if phot_wav < grism_lam_obs[0]:
+            lam_obs_idx_to_insert = 0
+
+        elif phot_wav > grism_lam_obs[-1]:
+            lam_obs_idx_to_insert = len(grism_lam_obs)
+
+        else:
+            lam_obs_idx_to_insert = np.where(grism_lam_obs > phot_wav)[0][0]
+
+        # For grism
+        grism_lam_obs = np.insert(grism_lam_obs, lam_obs_idx_to_insert, phot_wav)
+        grism_flam_obs = np.insert(grism_flam_obs, lam_obs_idx_to_insert, phot_flam_obs[count])
+        grism_ferr_obs = np.insert(grism_ferr_obs, lam_obs_idx_to_insert, phot_ferr_obs[count])
+
+        # For model
+        for i in range(total_models):
+            #model_spec_in_objlamgrid[i] = np.insert(model_spec_in_objlamgrid[i], lam_obs_idx_to_insert, all_filt_flam_model[i])
+
+        count += 1
+
+    # compute alpha and chi2
     alpha_ = np.sum(flam * model_spec_in_objlamgrid / (ferr**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / ferr**2, axis=1)
     chi2_ = np.sum(((flam - (alpha_ * model_spec_in_objlamgrid.T).T) / ferr)**2, axis=1)
 
@@ -475,10 +504,11 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done at current z:", z
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print "Total time taken up to now --", time.time() - start_time, "seconds."    
 
     # ------------- Now do the chi2 computation ------------- #
-    chi2_temp, alpha_temp = get_chi2(flam_obs, ferr_obs, lam_obs, model_comp_spec_modified, resampling_lam_grid)
+    chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+        all_filt_flam_model, model_comp_spec_modified, resampling_lam_grid, total_models)
 
     return chi2_temp, alpha_temp
 
@@ -719,7 +749,7 @@ if __name__ == '__main__':
 
     flam_obs *= aper_corr_factor  # applying factor
 
-    # ------------------------------- Make a unified grism+photometry spectrum array ------------------------------- #
+    # ------------------------------- Make unified photometry arrays ------------------------------- #
     phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
     phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
@@ -728,25 +758,6 @@ if __name__ == '__main__':
     # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
     # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
-
-    # Combine grism+photometry into one spectrum
-    count = 0
-    for phot_wav in phot_lam:
-
-        if phot_wav < lam_obs[0]:
-            lam_obs_idx_to_insert = 0
-
-        elif phot_wav > lam_obs[-1]:
-            lam_obs_idx_to_insert = len(lam_obs)
-
-        else:
-            lam_obs_idx_to_insert = np.where(lam_obs > phot_wav)[0][0]
-
-        lam_obs = np.insert(lam_obs, lam_obs_idx_to_insert, phot_wav)
-        flam_obs = np.insert(flam_obs, lam_obs_idx_to_insert, phot_fluxes_arr[count])
-        ferr_obs = np.insert(ferr_obs, lam_obs_idx_to_insert, phot_errors_arr[count])
-
-        count += 1
 
     # ------------------------------- Plot to check ------------------------------- #
     """
@@ -814,9 +825,9 @@ if __name__ == '__main__':
     # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
     # This is way I'm letting some lower D4000 values into my sample. Just so I don't miss too many galaxies.
     # A few of the galaxies with really wrong starting_z will of course be missed.
-    lam_em = lam_obs / (1 + starting_z)
-    flam_em = flam_obs * (1 + starting_z)
-    ferr_em = ferr_obs * (1 + starting_z)
+    lam_em = grism_lam_obs / (1 + starting_z)
+    flam_em = grism_flam_obs * (1 + starting_z)
+    ferr_em = grism_ferr_obs * (1 + starting_z)
 
     # Check that hte lambda array is not too incomplete 
     # I don't want the D4000 code extrapolating too much.
