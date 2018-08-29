@@ -38,7 +38,7 @@ sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import grid_coadd as gd
 import refine_redshifts_dn4000 as old_ref
-import model_mods_cython_copytoedit as model_mods_cython
+import model_mods as mm
 import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 
@@ -407,7 +407,6 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
     # ---------- Run for loop to resample ---------- #
     for k in range(total_models):
-        print "Resampling model:", k+1
         for q in range(resampling_lam_grid_length):
             model_comp_spec_modified[k] = np.mean(model_comp_spec_redshifted[indices[q]])
 
@@ -434,7 +433,12 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     # grids have to match.
 
     # Convert the model array to a python list of lists
-    # This has to be done to 
+    # This has to be done because np.insert() returns a new changed array
+    # with the new value inserted but I cannot assign it back to the old
+    # array because that changes the shape. This works for the grism arrays
+    # since I'm simply using variable names to point to them but since the
+    # model array is 2D I'm using indexing and that causes the np.insert()
+    # statement to throw an error.
     model_spec_in_objlamgrid_list = []
     for j in range(total_models):
         model_spec_in_objlamgrid_list.append(model_spec_in_objlamgrid[j].tolist())
@@ -475,7 +479,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
 def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
-    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, all_filters):
+    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time):
 
     print "\n", "Currently at redshift:", z
 
@@ -516,7 +520,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 
     # ------------- Now do the modifications for the grism data and get a chi2 using both grism and photometry ------------- #
     # first modify the models at the current redshift to be able to compare with data
-    model_comp_spec_modified = redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
+    model_comp_spec_modified = mm.redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."    
 
@@ -529,7 +533,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     lsf, starting_z, resampling_lam_grid, resampling_lam_grid_length, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, netsig, d4000, search_range, all_filters):
+    obj_id, obj_field, specz, photoz, netsig, d4000, search_range):
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -561,7 +565,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
-    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, all_filters) \
+    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time) \
     for z in z_arr_to_check)
 
     # the parallel code seems to like returning only a list
@@ -820,13 +824,13 @@ if __name__ == '__main__':
     # Apparently this (i.e. for flam_obs and ferr_obs) has  
     # to be done to avoid an obscure error from parallel in joblib --
     # AttributeError: 'numpy.ndarray' object has no attribute 'offset'
-    lam_obs = lam_obs.astype(np.float64)
-    flam_obs = flam_obs.astype(np.float64)
-    ferr_obs = ferr_obs.astype(np.float64)
-
     grism_lam_obs = grism_lam_obs.astype(np.float64)
     grism_flam_obs = grism_flam_obs.astype(np.float64)
     grism_ferr_obs = grism_ferr_obs.astype(np.float64)
+
+    phot_lam = phot_lam.astype(np.float64)
+    phot_fluxes_arr = phot_fluxes_arr.astype(np.float64)
+    phot_errors_arr = phot_errors_arr.astype(np.float64)
 
     # --------------------------------------------- Quality checks ------------------------------------------- #
     # Netsig check
@@ -910,7 +914,7 @@ if __name__ == '__main__':
     do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2, all_filters)
+        current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)# all_filters)
 
     # Close HDUs
     bc03_all_spec_hdulist.close()

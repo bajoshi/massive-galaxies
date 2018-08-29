@@ -1,5 +1,7 @@
 from __future__ import division
+
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Define all arrays
 # grism and obs photometry arrays
@@ -51,6 +53,25 @@ print model_spec.shape
 print grism_lam_obs.shape
 print grism_flam_obs.shape
 print grism_ferr_obs.shape
+
+# Plot to check
+for i in range(1):  # all the models and the data are the exact same # you only need to check one plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # plot grism + obs photometry
+    ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+    ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+    ax.scatter(phot_lam, phot_flam_obs, s=10, color='r', zorder=10)
+
+    # plot model + model photometry
+    ax.plot(grism_lam_obs, 25*model_spec[i], 'o-', color='b', markersize=2)  # using an alpha=25 # when I printed stuff I saw that alpha~26
+    ax.scatter(phot_lam, 25*all_filt_flam_model[i], s=10, color='r', zorder=10)
+
+    plt.show()
+    plt.clf()
+    plt.cla()
+    plt.close()
 
 # Chi2 computation
 alpha_ = np.sum(grism_flam_obs * model_spec / (grism_ferr_obs**2), axis=1) / np.sum(model_spec**2 / grism_ferr_obs**2, axis=1)
