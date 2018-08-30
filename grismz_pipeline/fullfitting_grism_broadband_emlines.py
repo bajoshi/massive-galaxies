@@ -456,9 +456,9 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
             lam_obs_idx_to_insert = np.where(grism_lam_obs > phot_wav)[0][0]
 
         # For grism
-        grism_lam_obs = np.insert(grism_lam_obs, lam_obs_idx_to_insert, phot_wav)
-        grism_flam_obs = np.insert(grism_flam_obs, lam_obs_idx_to_insert, phot_flam_obs[count])
-        grism_ferr_obs = np.insert(grism_ferr_obs, lam_obs_idx_to_insert, phot_ferr_obs[count])
+        combined_lam_obs = np.insert(grism_lam_obs, lam_obs_idx_to_insert, phot_wav)
+        combined_flam_obs = np.insert(grism_flam_obs, lam_obs_idx_to_insert, phot_flam_obs[count])
+        combined_ferr_obs = np.insert(grism_ferr_obs, lam_obs_idx_to_insert, phot_ferr_obs[count])
 
         # For model
         for i in range(total_models):
@@ -472,8 +472,61 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
     # compute alpha and chi2
-    alpha_ = np.sum(grism_flam_obs * model_spec_in_objlamgrid / (grism_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / grism_ferr_obs**2, axis=1)
-    chi2_ = np.sum(((grism_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / grism_ferr_obs)**2, axis=1)
+    alpha_ = np.sum(combined_flam_obs * model_spec_in_objlamgrid / (combined_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / combined_ferr_obs**2, axis=1)
+    chi2_ = np.sum(((combined_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / combined_ferr_obs)**2, axis=1)
+
+    # Check arrays and shapes
+    print alpha_
+    print chi2_
+    print alpha_.shape
+    print chi2_.shape
+
+    print combined_lam_obs
+    print combined_flam_obs
+    print combined_ferr_obs
+
+    # Do the computation explicitly with nested for loops and check that the arrays are the same
+    alpha_explicit = np.zeros((total_models), dtype=np.float64)
+    chi2_explicit = np.zeros((total_models), dtype=np.float64)
+    len_data = len(combined_lam_obs)
+    print "Length of combined data:", len_data
+    print "Length of each model with its combined data (should be same as above for obs data):", model_spec_in_objlamgrid.shape[1]
+    for i in range(total_models):
+
+        alpha_num = 0
+        alpha_den = 0
+            
+        chi2_num = 0
+        chi2_den = 0
+
+        for j in range(len_data):
+            alpha_num += combined_flam_obs[j] * model_spec_in_objlamgrid[i, j] / combined_ferr_obs[j]**2
+            alpha_den += model_spec_in_objlamgrid[i, j]**2 / combined_ferr_obs[j]**2
+            
+        alpha_explicit[i] = alpha_num / alpha_den
+
+        chi2_terms_sum = 0
+        for j in range(len_data):
+
+            chi2_num = (combined_flam_obs[j] - alpha_explicit[i] * model_spec_in_objlamgrid[i, j])**2
+            chi2_den = combined_ferr_obs[j]**2
+
+            chi2_terms_sum += chi2_num / chi2_den
+
+        chi2_explicit[i] = chi2_terms_sum
+
+    print alpha_explicit
+    print chi2_explicit
+    print alpha_explicit.shape
+    print chi2_explicit.shape
+
+    print "Test for equality for alpha computation done implicitly (vectorized) and explicitly (for loops):", np.array_equal(alpha_, alpha_explicit)
+    print "Test for closeness for alpha computation done implicitly (vectorized) and explicitly (for loops):", np.allclose(alpha_, alpha_explicit)
+
+    print "Test for equality for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.array_equal(chi2_, chi2_explicit)
+    print "Test for closeness for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.allclose(chi2_, chi2_explicit)
+
+    sys.exit(0)
 
     return chi2_, alpha_
 
