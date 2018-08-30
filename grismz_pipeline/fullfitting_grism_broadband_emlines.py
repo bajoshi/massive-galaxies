@@ -626,11 +626,159 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
     z_grism = z_arr_to_check[min_idx_2d[0]]
-    print "New redshift:", z_grism
+    print "Grism redshift:", z_grism
+    print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
+    print "Photometric redshift:", photoz
 
     print "Current best fit log(age [yr]):", "{:.4}".format(age)
     print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
     print "Current best fit Tau_V:", tauv
+
+    # Simply the minimum chi2 might not be right
+    # Should check if the minimum is global or local
+    ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
+
+    # These low chi2 indices are useful as a first attempt to figure
+    # out the spread in chi2 but otherwise not too enlightening.
+    # I'm keeping these lines in here for now.
+    #low_chi2_idx = np.where((chi2 < min_chi2 + 0.5*min_chi2) & (chi2 > min_chi2 - 0.5*min_chi2))[0]
+    #print len(low_chi2_idx.ravel())
+    #print low_chi2_idx
+
+    ####### ------------------------------------------ Plotting ------------------------------------------ #######
+    #### -------- Plot spectrum: Data, best fit model, and the residual --------- ####
+    # get things needed to plot and plot
+    bestalpha = alpha[min_idx_2d]
+    print "Vertical scaling factor for best fit model:", bestalpha
+    # chop model again to get the part within objects lam obs grid
+    model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - grism_lam_obs[0]))
+    model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - grism_lam_obs[-1]))
+
+    return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
+
+    # make sure the types are correct before passing to cython code
+    #lam_obs = lam_obs.astype(np.float64)
+    #model_lam_grid = model_lam_grid.astype(np.float64)
+    #model_comp_spec = model_comp_spec.astype(np.float64)
+    #resampling_lam_grid = resampling_lam_grid.astype(np.float64)
+    total_models = int(total_models)
+    #lsf = lsf.astype(np.float64)
+
+    # Will have to redo the model modifications at the new found z_grism
+    # You have to do this to plot the correct best fit model with its 
+    # modifications which was used for the fitting. 
+    # Either it has to be done this way or you will have to keep the 
+    # modified models in an array and then plot the best one here later.
+    model_comp_spec_modified = (model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z_grism)
+    print "Model mods done (only for plotting purposes) at the new grism z:", z_grism
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
+
+    best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+
+    # again make sure that the arrays are the same length
+    if int(best_fit_model_in_objlamgrid.shape[0]) != len(lam_obs):
+        print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
+        sys.exit(0)
+    # plot
+    plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
+        all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha,
+        obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000)
+
+    return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
+
+def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
+    all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha,
+    obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000):
+
+    # ---------- Create figure ---------- #
+    fig = plt.figure()
+    gs = gridspec.GridSpec(10,10)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
+
+    ax1 = fig.add_subplot(gs[:8,:])
+    ax2 = fig.add_subplot(gs[8:,:])
+
+    # ---------- labels ---------- #
+    ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA]}$')
+    ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
+    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
+
+    # ---------- plot data, model, and residual ---------- #
+    ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+    ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+    ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
+
+    ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, \
+        fmt='.', color='firebrick', markeredgecolor='firebrick', \
+        capsize=2, markersize=10.0, elinewidth=2.0)
+
+    # Residuals
+    # For the grism points
+    resid_fit_grism = (grism_flam_obs - bestalpha*best_fit_model_in_objlamgrid) / grism_ferr_obs
+    # For the photometry
+    resid_fit_phot = (phot_flam_obs - bestalpha*all_filt_flam_bestmodel) / phot_ferr_obs
+
+    # Now plot
+    ax2.scatter(grism_lam_obs, resid_fit_grism, s=4, color='k')
+    ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
+
+    # ---------- minor ticks ---------- #
+    ax1.minorticks_on()
+    ax2.minorticks_on()
+
+    # ---------- text for info ---------- #
+    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    low_zerr = grismz - low_z_lim
+    high_zerr = upper_z_lim - grismz
+
+    ax1.text(0.75, 0.35, \
+    r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + \
+    r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.22, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{phot})\, =\, }$' + "{:.3}".format(d4000), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+
+
+    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    if av < 0:
+        av = -99.0
+
+    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    # ---------- Save figure ---------- #
+    fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '.png', \
+        dpi=300, bbox_inches='tight')
+    
+    plt.clf()
+    plt.cla()
+    plt.close()
 
     return None
 
