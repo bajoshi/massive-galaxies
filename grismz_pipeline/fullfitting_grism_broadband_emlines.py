@@ -582,7 +582,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     for z in z_arr_to_check:
         chi2[count], alpha[count] = get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
             model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
-            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, all_filters)
+            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time)
         count += 1
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
