@@ -535,7 +535,6 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     print "Test for equality for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.array_equal(chi2_, chi2_explicit)
     print "Test for closeness for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.allclose(chi2_, chi2_explicit)
-    """
 
     # plot to check
     for i in range(5005, 5015):
@@ -550,8 +549,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         ax.set_xlim(1e3, 2e4)
 
         plt.show()
-
-    sys.exit(0)
+    """
 
     return chi2_, alpha_
 
@@ -578,7 +576,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
     # Redshift the base models and also the lsf convolved model flux
-    model_comp_spec /= 1+z
+    model_comp_spec_z = model_comp_spec / (1+z)
     model_lam_grid_z = model_lam_grid * (1+z)
 
     model_comp_spec_lsfconv_z = model_comp_spec_lsfconv / (1+z)
@@ -592,7 +590,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
         # multiply model spectrum to filter curve
         for i in range(total_models):
 
-            num = np.nansum(model_comp_spec[i] * filt_interp)
+            num = np.nansum(model_comp_spec_z[i] * filt_interp)
             den = np.nansum(filt_interp)
 
             filt_flam_model = num / den
@@ -615,12 +613,14 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # Check all model modifications and that the model photometry line up
-    for i in range(5005, 5010):
+    # Do not delete. Useful for debugging.
+    """
+    for i in range(10):
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-        ax.plot(model_lam_grid_z, model_comp_spec[i], color='k')
+        ax.plot(model_lam_grid_z, model_comp_spec_z[i], color='k')
         ax.plot(model_lam_grid_z, model_comp_spec_lsfconv_z[i], color='lawngreen', zorder=3)
         ax.plot(resampling_lam_grid, model_comp_spec_modified[i], color='fuchsia', zorder=5)
         ax.scatter(phot_lam_obs, all_filt_flam_model[i], s=40, color='red', zorder=10)
@@ -636,6 +636,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
         plt.clf()
         plt.cla()
         plt.close()
+    """
 
     # ------------- Now do the chi2 computation ------------- #
     chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
@@ -673,9 +674,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Convolution done.",
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
-    """
     # looping
-    num_cores = 4
+    num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
@@ -686,23 +686,22 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
-    """
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't
+    """
     count = 0
     for z in z_arr_to_check:
         chi2[count], alpha[count] = get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
             model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
             resampling_lam_grid, resampling_lam_grid_length, total_models, start_time)
         count += 1
+    """
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
-    print np.min(chi2)
-    print np.nanmin(chi2)
 
     for k in range(len(chi2.ravel())):
 
@@ -810,12 +809,44 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # modifications which was used for the fitting. 
     # Either it has to be done this way or you will have to keep the 
     # modified models in an array and then plot the best one here later.
-    model_comp_spec_modified = (model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z_grism)
+    model_comp_spec_modified = mm.redshift_and_resample(model_comp_spec_lsfconv, z_grism, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done (only for plotting purposes) at the new grism z:", z_grism
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+    # ------------ Get photomtery for model by convolving with filters ------------- #
+    # This has to be done again at the correct z_grism
+    all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
+    # Redshift the base models
+    model_comp_spec_z = model_comp_spec / (1+z)
+    model_lam_grid_z = model_lam_grid * (1+z)
+    filt_count = 0
+    for filt in all_filters:
+
+        # first interpolate the grism transmission curve to the model lam grid
+        filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
+
+        # multiply model spectrum to filter curve
+        for i in range(total_models):
+
+            num = np.nansum(model_comp_spec_z[i] * filt_interp)
+            den = np.nansum(filt_interp)
+
+            filt_flam_model = num / den
+            all_filt_flam_model[filt_count,i] = filt_flam_model
+
+        filt_count += 1
+
+    # transverse array to make shape consistent with others
+    # I did it this way so that in the above for loop each filter is looped over only once
+    # i.e. minimizing the number of times each filter is gridded on to the model grid
+    all_filt_flam_model = all_filt_flam_model.T
+
+    # Get the flam for the best model
+    all_filt_flam_bestmodel = all_filt_flam_model[model_idx]
+
+    # ---------------------------------------------------------
     # again make sure that the arrays are the same length
     if int(best_fit_model_in_objlamgrid.shape[0]) != len(lam_obs):
         print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
@@ -847,11 +878,13 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     # ---------- plot data, model, and residual ---------- #
     ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
     ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
-    ax1.plot(lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
 
     ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, \
         fmt='.', color='firebrick', markeredgecolor='firebrick', \
         capsize=2, markersize=10.0, elinewidth=2.0)
+
+    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
+    ax1.scatter(phot_lam_obs, all_filt_flam_bestmodel, s=20, color='r', zorder=10)
 
     # Residuals
     # For the grism points
