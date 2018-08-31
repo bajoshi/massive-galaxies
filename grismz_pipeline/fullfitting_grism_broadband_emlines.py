@@ -458,8 +458,6 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         else:
             lam_obs_idx_to_insert = np.where(combined_lam_obs > phot_wav)[0][0]
 
-        print count, phot_wav, lam_obs_idx_to_insert
-
         # For grism
         combined_lam_obs = np.insert(combined_lam_obs, lam_obs_idx_to_insert, phot_wav)
         combined_flam_obs = np.insert(combined_flam_obs, lam_obs_idx_to_insert, phot_flam_obs[count])
@@ -470,8 +468,6 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
             model_spec_in_objlamgrid_list[i] = np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
 
         count += 1
-
-    print combined_lam_obs
 
     # Convert back to numpy array
     del model_spec_in_objlamgrid  # Trying to free up the memory allocated to the object pointed by the older model_spec_in_objlamgrid
@@ -556,8 +552,6 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
         plt.show()
     """
-
-    sys.exit(0)
 
     return chi2_, alpha_
 
