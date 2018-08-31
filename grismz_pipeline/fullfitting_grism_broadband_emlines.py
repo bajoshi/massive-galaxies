@@ -449,14 +449,14 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     combined_ferr_obs = grism_ferr_obs
     for phot_wav in phot_lam_obs:
 
-        if phot_wav < grism_lam_obs[0]:
+        if phot_wav < combined_lam_obs[0]:
             lam_obs_idx_to_insert = 0
 
-        elif phot_wav > grism_lam_obs[-1]:
-            lam_obs_idx_to_insert = len(grism_lam_obs)
+        elif phot_wav > combined_lam_obs[-1]:
+            lam_obs_idx_to_insert = len(combined_lam_obs)
 
         else:
-            lam_obs_idx_to_insert = np.where(grism_lam_obs > phot_wav)[0][0]
+            lam_obs_idx_to_insert = np.where(combined_lam_obs > phot_wav)[0][0]
 
         print count, phot_wav, lam_obs_idx_to_insert
 
@@ -483,8 +483,6 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     chi2_ = np.sum(((combined_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / combined_ferr_obs)**2, axis=1)
 
     print "Min chi2 for redshift:", min(chi2_)
-
-    sys.exit(0)
 
     # This following block is useful for debugging.
     # Do not delete. Simply uncomment it if you don't need it.
@@ -542,8 +540,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     print "Test for equality for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.array_equal(chi2_, chi2_explicit)
     print "Test for closeness for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.allclose(chi2_, chi2_explicit)
     """
-    
-    """
+
     # plot to check
     for i in range(10):
 
@@ -559,7 +556,6 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         plt.show()
 
     sys.exit(0)
-    """
 
     return chi2_, alpha_
 
