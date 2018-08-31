@@ -408,7 +408,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     # ---------- Run for loop to resample ---------- #
     for k in range(total_models):
         for q in range(resampling_lam_grid_length):
-            model_comp_spec_modified[k] = np.mean(model_comp_spec_redshifted[k][indices[q]])
+            model_comp_spec_modified[k, q] = np.mean(model_comp_spec_redshifted[k][indices[q]])
 
     return model_comp_spec_modified
 
@@ -483,6 +483,8 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     chi2_ = np.sum(((combined_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / combined_ferr_obs)**2, axis=1)
 
     print "Min chi2 for redshift:", min(chi2_)
+
+    sys.exit(0)
 
     # This following block is useful for debugging.
     # Do not delete. Simply uncomment it if you don't need it.
