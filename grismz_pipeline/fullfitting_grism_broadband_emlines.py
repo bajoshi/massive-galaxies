@@ -541,6 +541,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     print "Test for closeness for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.allclose(chi2_, chi2_explicit)
     """
 
+    """
     # plot to check
     for i in range(10):
 
@@ -554,6 +555,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         ax.set_xlim(1e3, 2e4)
 
         plt.show()
+    """
 
     sys.exit(0)
 
