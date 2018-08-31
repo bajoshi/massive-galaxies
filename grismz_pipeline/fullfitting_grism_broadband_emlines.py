@@ -537,9 +537,8 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     print "Test for closeness for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.allclose(chi2_, chi2_explicit)
     """
 
-    """
     # plot to check
-    for i in range(10):
+    for i in range(5005, 5015):
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -551,7 +550,8 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         ax.set_xlim(1e3, 2e4)
 
         plt.show()
-    """
+
+    sys.exit(0)
 
     return chi2_, alpha_
 
@@ -570,12 +570,24 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     #lsf = lsf.astype(np.float64)
 
     # ------------ Get photomtery for model by convolving with filters ------------- #
+    """
+    The photometry is computed using the higest resolution model spectrum 
+    available.... since this is how mother nature kinda does it anyway.
+    The only effect you need to take into account is redshift.
+    """
     all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
+
+    # Redshift the base models and also the lsf convolved model flux
+    model_comp_spec /= 1+z
+    model_lam_grid_z = model_lam_grid * (1+z)
+
+    model_comp_spec_lsfconv_z = model_comp_spec_lsfconv / (1+z)
+
     filt_count = 0
     for filt in all_filters:
 
         # first interpolate the grism transmission curve to the model lam grid
-        filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid, method='linear')
+        filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
 
         # multiply model spectrum to filter curve
         for i in range(total_models):
@@ -601,6 +613,29 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     model_comp_spec_modified = mm.redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
+
+    # Check all model modifications and that the model photometry line up
+    for i in range(5005, 5010):
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        ax.plot(model_lam_grid_z, model_comp_spec[i], color='k')
+        ax.plot(model_lam_grid_z, model_comp_spec_lsfconv_z[i], color='lawngreen', zorder=3)
+        ax.plot(resampling_lam_grid, model_comp_spec_modified[i], color='fuchsia', zorder=5)
+        ax.scatter(phot_lam_obs, all_filt_flam_model[i], s=40, color='red', zorder=10)
+
+        axt = ax.twinx()
+        for filt in all_filters:
+            axt.plot(filt.binset, filt(filt.binset))
+            axt.fill_between(filt.binset, filt(filt.binset), np.zeros(len(filt.binset)), alpha=0.25)
+
+        ax.set_xlim(1e3, 2e4)
+
+        plt.show()
+        plt.clf()
+        plt.cla()
+        plt.close()
 
     # ------------- Now do the chi2 computation ------------- #
     chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
@@ -638,6 +673,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Convolution done.",
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
+    """
     # looping
     num_cores = 4
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
@@ -650,18 +686,17 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+    """
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't
-    """
     count = 0
     for z in z_arr_to_check:
         chi2[count], alpha[count] = get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
             model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
             resampling_lam_grid, resampling_lam_grid_length, total_models, start_time)
         count += 1
-    """
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
@@ -914,10 +949,7 @@ if __name__ == '__main__':
     # Read in grism data
     current_id = 121302
     current_field = 'GOODS-N'
-    lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
-    grism_lam_obs = lam_obs   # Need this later to get avg_dlam
-    grism_flam_obs = flam_obs
-    grism_ferr_obs = ferr_obs
+    grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
     # ------------------------------- Match and get photometry data ------------------------------- #
     # read in matched files for grism spectra info
@@ -997,7 +1029,7 @@ if __name__ == '__main__':
     # First interpolate the given filter curve on to the wavelength frid of the grism data
     # You only need the F775W filter here since you're only using this filter to get the 
     # aperture correction factor.
-    f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=lam_obs, method='linear')
+    f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=grism_lam_obs, method='linear')
 
     # check that the interpolated curve looks like hte original one
     """
@@ -1011,15 +1043,15 @@ if __name__ == '__main__':
     # multiply grism spectrum to filter curve
     num = 0
     den = 0
-    for i in range(len(flam_obs)):
-        num += flam_obs[i] * f775w_trans_interp[i]
+    for i in range(len(grism_flam_obs)):
+        num += grism_flam_obs[i] * f775w_trans_interp[i]
         den += f775w_trans_interp[i]
 
     avg_f775w_flam_grism = num / den
     aper_corr_factor = flam_f775w / avg_f775w_flam_grism
     print "Aperture correction factor:", "{:.3}".format(aper_corr_factor)
 
-    flam_obs *= aper_corr_factor  # applying factor
+    grism_flam_obs *= aper_corr_factor  # applying factor
 
     # ------------------------------- Make unified photometry arrays ------------------------------- #
     phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
@@ -1035,11 +1067,11 @@ if __name__ == '__main__':
     """
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(lam_obs, flam_obs, 'o-', color='k', markersize=2)
-    ax.fill_between(lam_obs, flam_obs + ferr_obs, flam_obs - ferr_obs, color='lightgray')
+    ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+    ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
     plt.show(block=False)
 
-    check_spec_plot(lam_obs, flam_obs, ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+    check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
     sys.exit(0)
     """
 
