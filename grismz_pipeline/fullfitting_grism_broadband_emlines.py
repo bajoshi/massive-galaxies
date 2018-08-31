@@ -444,6 +444,9 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         model_spec_in_objlamgrid_list.append(model_spec_in_objlamgrid[j].tolist())
 
     count = 0
+    combined_lam_obs = grism_lam_obs
+    combined_flam_obs = grism_flam_obs
+    combined_ferr_obs = grism_ferr_obs
     for phot_wav in phot_lam_obs:
 
         if phot_wav < grism_lam_obs[0]:
@@ -455,16 +458,20 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         else:
             lam_obs_idx_to_insert = np.where(grism_lam_obs > phot_wav)[0][0]
 
+        print count, phot_wav, lam_obs_idx_to_insert
+
         # For grism
-        combined_lam_obs = np.insert(grism_lam_obs, lam_obs_idx_to_insert, phot_wav)
-        combined_flam_obs = np.insert(grism_flam_obs, lam_obs_idx_to_insert, phot_flam_obs[count])
-        combined_ferr_obs = np.insert(grism_ferr_obs, lam_obs_idx_to_insert, phot_ferr_obs[count])
+        combined_lam_obs = np.insert(combined_lam_obs, lam_obs_idx_to_insert, phot_wav)
+        combined_flam_obs = np.insert(combined_flam_obs, lam_obs_idx_to_insert, phot_flam_obs[count])
+        combined_ferr_obs = np.insert(combined_ferr_obs, lam_obs_idx_to_insert, phot_ferr_obs[count])
 
         # For model
         for i in range(total_models):
             model_spec_in_objlamgrid_list[i] = np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
 
         count += 1
+
+    print combined_lam_obs
 
     # Convert back to numpy array
     del model_spec_in_objlamgrid  # Trying to free up the memory allocated to the object pointed by the older model_spec_in_objlamgrid
@@ -475,21 +482,28 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     alpha_ = np.sum(combined_flam_obs * model_spec_in_objlamgrid / (combined_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / combined_ferr_obs**2, axis=1)
     chi2_ = np.sum(((combined_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / combined_ferr_obs)**2, axis=1)
 
+    print "Min chi2 for redshift:", min(chi2_)
+
+    # This following block is useful for debugging.
+    # Do not delete. Simply uncomment it if you don't need it.
+    """
     # Check arrays and shapes
     print alpha_
     print chi2_
     print alpha_.shape
     print chi2_.shape
 
-    print combined_lam_obs
-    print combined_flam_obs
-    print combined_ferr_obs
+    print combined_lam_obs.shape
+    print combined_flam_obs.shape
+    print combined_ferr_obs.shape
+
+    print model_spec_in_objlamgrid.shape
 
     # Do the computation explicitly with nested for loops and check that the arrays are the same
     alpha_explicit = np.zeros((total_models), dtype=np.float64)
     chi2_explicit = np.zeros((total_models), dtype=np.float64)
     len_data = len(combined_lam_obs)
-    print "Length of combined data:", len_data
+    print "Length of combined obs data:", len_data
     print "Length of each model with its combined data (should be same as above for obs data):", model_spec_in_objlamgrid.shape[1]
     for i in range(total_models):
 
@@ -525,6 +539,21 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     print "Test for equality for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.array_equal(chi2_, chi2_explicit)
     print "Test for closeness for chi2 computation done implicitly (vectorized) and explicitly (for loops):", np.allclose(chi2_, chi2_explicit)
+    """
+
+    # plot to check
+    for i in range(10):
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        ax.plot(combined_lam_obs, combined_flam_obs, 'o-', color='k', markersize=2)
+        ax.fill_between(combined_lam_obs, combined_flam_obs + combined_ferr_obs, combined_flam_obs - combined_ferr_obs, color='lightgray')
+        ax.plot(combined_lam_obs, alpha_[i]*model_spec_in_objlamgrid[i], ls='-', color='r')
+
+        ax.set_xlim(1e3, 2e4)
+
+        plt.show()
 
     sys.exit(0)
 
@@ -575,7 +604,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = mm.redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done at current z:", z
-    print "Total time taken up to now --", time.time() - start_time, "seconds."    
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # ------------- Now do the chi2 computation ------------- #
     chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
@@ -595,7 +624,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=81, dtype=np.float64)
+    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=21, dtype=np.float64)
     z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
@@ -614,7 +643,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    num_cores = 8
+    """
+    num_cores = 4
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
@@ -625,22 +655,23 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+    """
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't
-    """
     count = 0
     for z in z_arr_to_check:
         chi2[count], alpha[count] = get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
             model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
             resampling_lam_grid, resampling_lam_grid_length, total_models, start_time)
         count += 1
-    """
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
+    print np.min(chi2)
+    print np.nanmin(chi2)
 
     for k in range(len(chi2.ravel())):
 
@@ -687,6 +718,34 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
     print "Current best fit Tau_V:", tauv
 
+    ############# -------------------------- Errors on z and other derived params ----------------------------- #############
+    min_chi2 = chi2[min_idx_2d]
+    # See Andrae+ 2010;arXiv:1012.3754. The number of d.o.f. for non-linear models 
+    # is not well defined and reduced chi2 should really not be used.
+    # Seth's comment: My model is actually linear. Its just a factor 
+    # times a set of fixed points. And this is linear, because each
+    # model is simply a function of lambda, which is fixed for a given 
+    # model. So every model only has one single free parameter which is
+    # alpha i.e. the vertical scaling factor; that's true since alpha is 
+    # the only one I'm actually solving for to get a min chi2. I'm not 
+    # varying the other parameters - age, tau, av, metallicity, or 
+    # z_grism - within a given model. Therefore, I can safely use the 
+    # methods described in Andrae+ 2010 for linear models.
+    dof = len(grism_lam_obs) + len(phot_lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+    chi2_red = chi2 / dof
+    chi2_red_error = np.sqrt(2/dof)
+    min_chi2_red = min_chi2 / dof
+    print "Error in reduced chi-square:", chi2_red_error
+    chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
+    print "Indices within 1-sigma of reduced chi-square:", chi2_red_2didx
+    # use first dimension indices to get error on grism-z
+    z_grism_range = z_arr_to_check[chi2_red_2didx[0]]
+    print "z_grism range", z_grism_range
+    low_z_lim = np.min(z_grism_range)
+    upper_z_lim = np.max(z_grism_range)
+    print "Min z_grism within 1-sigma error:", low_z_lim
+    print "Max z_grism within 1-sigma error:", upper_z_lim
+
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
     ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
@@ -706,8 +765,6 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # chop model again to get the part within objects lam obs grid
     model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - grism_lam_obs[0]))
     model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - grism_lam_obs[-1]))
-
-    return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
     # make sure the types are correct before passing to cython code
     #lam_obs = lam_obs.astype(np.float64)
