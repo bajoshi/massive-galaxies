@@ -890,7 +890,8 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
     ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='r', zorder=10)
 
-    ax1.plot(model_lam_grid, bestalpha*best_fit_model_fullres, color='fuchsia', alpha=0.5)
+    # plot full res model but you'll have to redshift it
+    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='fuchsia', alpha=0.4)
 
     # Residuals
     # For the grism points
@@ -903,8 +904,8 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
 
     # limits
-    ax1.set_xlim(1e3, 2e4)
-    ax2.set_xlim(1e3, 2e4)
+    ax1.set_xlim(3000, 17000)
+    ax2.set_xlim(3000, 17000)
 
     # ---------- minor ticks ---------- #
     ax1.minorticks_on()
