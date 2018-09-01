@@ -890,7 +890,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
     ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='r', zorder=10)
 
-    ax1.plot(model_lam_grid, best_fit_model_fullres, color='fuchsia', alpha=0.5)
+    ax1.plot(model_lam_grid, bestalpha*best_fit_model_fullres, color='fuchsia', alpha=0.5)
 
     # Residuals
     # For the grism points
@@ -990,7 +990,7 @@ if __name__ == '__main__':
     threed_dec = goodsn_phot_cat_3dhst['dec']
 
     # Read in grism data
-    current_id = 121302
+    current_id = 127420
     current_field = 'GOODS-N'
     grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
