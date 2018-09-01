@@ -887,11 +887,11 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         fmt='.', color='firebrick', markeredgecolor='midnightblue', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
-    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
-    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='r', zorder=10)
+    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='indianred')
+    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=10)
 
     # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='fuchsia', alpha=0.4)
+    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='forestgreen', alpha=0.4)
 
     # Residuals
     # For the grism points
@@ -991,7 +991,7 @@ if __name__ == '__main__':
     threed_dec = goodsn_phot_cat_3dhst['dec']
 
     # Read in grism data
-    current_id = 127420
+    current_id = 121302
     current_field = 'GOODS-N'
     grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
@@ -1146,8 +1146,8 @@ if __name__ == '__main__':
     # ------------------------------ Now start fitting ------------------------------ #
     # --------- Get starting redshift
     # Get specz if it exists as initial guess, otherwise get photoz
-    current_photz = 1.055
-    current_specz = 1.083
+    current_photz = 0.7781
+    current_specz = 0.778
     starting_z = current_specz # spec-z
 
     # --------- Force dtype for cython code --------- #
