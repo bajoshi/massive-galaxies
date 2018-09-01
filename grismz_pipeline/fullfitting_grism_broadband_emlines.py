@@ -819,8 +819,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
     # Redshift the base models
-    model_comp_spec_z = model_comp_spec / (1+z)
-    model_lam_grid_z = model_lam_grid * (1+z)
+    model_comp_spec_z = model_comp_spec / (1+z_grism)
+    model_lam_grid_z = model_lam_grid * (1+z_grism)
     filt_count = 0
     for filt in all_filters:
 
