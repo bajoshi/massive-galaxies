@@ -1145,8 +1145,8 @@ if __name__ == '__main__':
     # ------------------------------ Now start fitting ------------------------------ #
     # --------- Get starting redshift
     # Get specz if it exists as initial guess, otherwise get photoz
-    current_photz = 0.7781
-    current_specz = 0.778
+    current_photz = 1.055
+    current_specz = 1.083
     starting_z = current_specz # spec-z
 
     # --------- Force dtype for cython code --------- #
