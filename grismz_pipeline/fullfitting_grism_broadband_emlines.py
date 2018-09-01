@@ -41,6 +41,7 @@ import refine_redshifts_dn4000 as old_ref
 import model_mods as mm
 import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
+import mocksim_results as mr
 
 def check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr):
 
