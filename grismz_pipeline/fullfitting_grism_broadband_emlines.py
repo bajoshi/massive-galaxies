@@ -885,7 +885,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         capsize=2, markersize=10.0, elinewidth=2.0)
 
     ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
-    ax1.scatter(phot_lam_obs, all_filt_flam_bestmodel, s=20, color='r', zorder=10)
+    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='r', zorder=10)
 
     # Residuals
     # For the grism points
