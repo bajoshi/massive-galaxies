@@ -848,9 +848,9 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # ---------------------------------------------------------
     # again make sure that the arrays are the same length
-    if int(best_fit_model_in_objlamgrid.shape[0]) != len(lam_obs):
-        print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
-        sys.exit(0)
+    #if int(best_fit_model_in_objlamgrid.shape[0]) != len(lam_obs):
+    #    print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
+    #    sys.exit(0)
     # plot
     plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
         all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha,
