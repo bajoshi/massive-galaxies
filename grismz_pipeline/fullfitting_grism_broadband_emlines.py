@@ -847,6 +847,9 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Get the flam for the best model
     all_filt_flam_bestmodel = all_filt_flam_model[model_idx]
 
+    # Get best fit model at full resolution
+    best_fit_model_fullres = model_comp_spec[model_idx]
+
     # ---------------------------------------------------------
     # again make sure that the arrays are the same length
     #if int(best_fit_model_in_objlamgrid.shape[0]) != len(lam_obs):
@@ -854,13 +857,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     #    sys.exit(0)
     # plot
     plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
-        all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha,
+        all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha, model_lam_grid, best_fit_model_fullres,
         obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000)
 
     return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
 def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
-    all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha,
+    all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha, model_lam_grid, best_fit_model_fullres,
     obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000):
 
     # ---------- Create figure ---------- #
@@ -881,11 +884,13 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
 
     ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, \
-        fmt='.', color='firebrick', markeredgecolor='firebrick', \
+        fmt='.', color='firebrick', markeredgecolor='midnightblue', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
     ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='r')
     ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='r', zorder=10)
+
+    ax1.plot(model_lam_grid, best_fit_model_fullres, color='fuchsia', alpha=0.5)
 
     # Residuals
     # For the grism points
@@ -896,6 +901,10 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     # Now plot
     ax2.scatter(grism_lam_obs, resid_fit_grism, s=4, color='k')
     ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
+
+    # limits
+    ax1.set_xlim(1e3, 2e4)
+    ax2.set_xlim(1e3, 2e4)
 
     # ---------- minor ticks ---------- #
     ax1.minorticks_on()
@@ -1098,7 +1107,6 @@ if __name__ == '__main__':
     phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
     # ------------------------------- Plot to check ------------------------------- #
-    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
@@ -1107,7 +1115,6 @@ if __name__ == '__main__':
 
     check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
     sys.exit(0)
-    """
 
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
