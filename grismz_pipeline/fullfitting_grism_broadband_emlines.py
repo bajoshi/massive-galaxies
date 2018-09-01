@@ -1107,6 +1107,7 @@ if __name__ == '__main__':
     phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
     # ------------------------------- Plot to check ------------------------------- #
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
@@ -1115,6 +1116,7 @@ if __name__ == '__main__':
 
     check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
     sys.exit(0)
+    """
 
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
