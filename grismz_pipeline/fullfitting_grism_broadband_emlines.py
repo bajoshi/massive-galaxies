@@ -1078,7 +1078,7 @@ if __name__ == '__main__':
 
             # For now running this code only on the specz sample
             if len(specz_idx) != 1:
-                print "Match not found in specz catalog. Skipping."
+                print "Match not found in specz catalog for ID", current_id, "in", current_field, "... Skipping."
                 continue
 
             if len(specz_idx) == 1:
