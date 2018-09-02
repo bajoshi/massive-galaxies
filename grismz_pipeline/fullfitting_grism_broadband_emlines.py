@@ -657,7 +657,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=21, dtype=np.float64)
+    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=41, dtype=np.float64)
     z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
     z_arr_to_check = z_arr_to_check[z_idx]
     print "Will check the following redshifts:", z_arr_to_check
@@ -676,7 +676,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    num_cores = 3
+    num_cores = 4
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
@@ -904,6 +904,14 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
 
     # limits
+    max_y_obs = np.max(np.concatenate((grism_flam_obs, phot_flam_obs)))
+    min_y_obs = np.min(np.concatenate((grism_flam_obs, phot_flam_obs)))
+
+    max_ylim = 1.25 * max_y_obs
+    min_ylim = 0.75 * min_y_obs
+
+    ax1.set_ylim(min_ylim, max_ylim)
+
     ax1.set_xlim(3000, 17000)
     ax2.set_xlim(3000, 17000)
 
@@ -1345,7 +1353,7 @@ if __name__ == '__main__':
             zgrism_lowerr_list.append(zerr_low)
             zgrism_uperr_list.append(zerr_up)
             zspec_list.append(current_specz)
-            zphot_list.append(redshift)
+            zphot_list.append(current_photz)
             chi2_list.append(min_chi2)
             netsig_list.append(netsig_chosen)
             age_list.append(age)
