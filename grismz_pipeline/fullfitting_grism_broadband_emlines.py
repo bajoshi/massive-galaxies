@@ -1111,7 +1111,7 @@ if __name__ == '__main__':
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
 
-            grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
+            grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
             if return_code == 0:
                 print "Skipping due to an error with the obs data. See the error message just above this one.",
