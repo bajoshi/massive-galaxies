@@ -978,147 +978,6 @@ if __name__ == '__main__':
     # show_example_for_adding_emission_lines()
     # sys.exit(0)
 
-    # ------------------------------- Read in photometry and grism+photometry catalogs ------------------------------- #
-    # GOODS-N from 3DHST
-    # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
-    # The combined grism+photometry fits, redshifts, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
-    photometry_names = ['id', 'ra', 'dec', 'f_F160W', 'e_F160W', 'f_F435W', 'e_F435W', 'f_F606W', 'e_F606W', \
-    'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W']
-    goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
-
-    threed_ra = goodsn_phot_cat_3dhst['ra']
-    threed_dec = goodsn_phot_cat_3dhst['dec']
-
-    # Read in grism data
-    current_id = 121302
-    current_field = 'GOODS-N'
-    grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
-
-    # ------------------------------- Match and get photometry data ------------------------------- #
-    # read in matched files for grism spectra info
-    matched_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', \
-        dtype=None, names=True, skip_header=1)
-    matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
-        dtype=None, names=True, skip_header=1)
-
-    # find grism obj ra,dec
-    cat_idx = np.where(matched_cat_n['pearsid'] == current_id)[0]
-    if cat_idx.size:
-        zphot = float(matched_cat_n['zphot'][cat_idx])
-        current_ra = float(matched_cat_n['pearsra'][cat_idx])
-        current_dec = float(matched_cat_n['pearsdec'][cat_idx])
-
-    # Now match
-    ra_lim = 0.5/3600  # arcseconds in degrees
-    dec_lim = 0.5/3600
-    threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
-        (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
-
-    # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
-    flam_f435w = get_flam('F435W', goodsn_phot_cat_3dhst['f_F435W'][threed_phot_idx])
-    flam_f606w = get_flam('F606W', goodsn_phot_cat_3dhst['f_F606W'][threed_phot_idx])
-    flam_f775w = get_flam('F775W', goodsn_phot_cat_3dhst['f_F775W'][threed_phot_idx])
-    flam_f850lp = get_flam('F850LP', goodsn_phot_cat_3dhst['f_F850LP'][threed_phot_idx])
-    flam_f125w = get_flam('F125W', goodsn_phot_cat_3dhst['f_F125W'][threed_phot_idx])
-    flam_f140w = get_flam('F140W', goodsn_phot_cat_3dhst['f_F140W'][threed_phot_idx])
-    flam_f160w = get_flam('F160W', goodsn_phot_cat_3dhst['f_F160W'][threed_phot_idx])
-
-    ferr_f435w = get_flam('F435W', goodsn_phot_cat_3dhst['e_F435W'][threed_phot_idx])
-    ferr_f606w = get_flam('F606W', goodsn_phot_cat_3dhst['e_F606W'][threed_phot_idx])
-    ferr_f775w = get_flam('F775W', goodsn_phot_cat_3dhst['e_F775W'][threed_phot_idx])
-    ferr_f850lp = get_flam('F850LP', goodsn_phot_cat_3dhst['e_F850LP'][threed_phot_idx])
-    ferr_f125w = get_flam('F125W', goodsn_phot_cat_3dhst['e_F125W'][threed_phot_idx])
-    ferr_f140w = get_flam('F140W', goodsn_phot_cat_3dhst['e_F140W'][threed_phot_idx])
-    ferr_f160w = get_flam('F160W', goodsn_phot_cat_3dhst['e_F160W'][threed_phot_idx])
-
-    # ------------------------------- Apply aperture correction ------------------------------- #
-    # We need to do this because the grism spectrum and the broadband photometry don't line up properly.
-    # This is due to different apertures being used when extrating the grism spectrum and when measuring
-    # the broadband flux in any given filter.
-    # This will multiply hte grism spectrum by a multiplicative factor that scales it to the measured 
-    # i-band (F775W) flux. Basically, the grism spectrum is "convolved" with the F775W filter curve,
-    # since this is the filter whose coverage completely overlaps that of the grism, to get an i-band
-    # magnitude (or actually f_lambda) using the grism data. The broadband i-band mag is then divided 
-    # by this grism i-band mag to get the factor that multiplies the grism spectrum.
-    # Filter curves from:
-    # ACS: http://www.stsci.edu/hst/acs/analysis/throughputs
-    # WFC3: Has to be done through PySynphot. See: https://pysynphot.readthedocs.io/en/latest/index.html
-    # Also take a look at this page: http://www.stsci.edu/hst/observatory/crds/throughput.html
-    # Pysynphot has been set up correctly. Its pretty useful for many other things too. See Pysynphot docs.
-
-    # read in filter curves
-    f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
-    f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
-    f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
-    f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
-
-    f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
-    f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
-    f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
-
-    all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
-
-    """
-    Example to plot filter curves for ACS:
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(f435w_filt_curve.binset, f435w_filt_curve(f435w_filt_curve.binset), color='midnightblue')
-    ax.plot(f850lp_filt_curve.binset, f850lp_filt_curve(f850lp_filt_curve.binset), color='seagreen')
-    ax.plot(f606w_filt_curve.binset, f606w_filt_curve(f606w_filt_curve.binset), color='orange')
-    ax.plot(f775w_filt_curve.binset, f775w_filt_curve(f775w_filt_curve.binset), color='rebeccapurple')
-    plt.show()
-    """
-
-    # First interpolate the given filter curve on to the wavelength frid of the grism data
-    # You only need the F775W filter here since you're only using this filter to get the 
-    # aperture correction factor.
-    f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=grism_lam_obs, method='linear')
-
-    # check that the interpolated curve looks like hte original one
-    """
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(f775w_filt_curve['wav'], f775w_filt_curve['trans'])
-    ax.plot(lam_obs, f775w_trans_interp)
-    plt.show()
-    """
-
-    # multiply grism spectrum to filter curve
-    num = 0
-    den = 0
-    for i in range(len(grism_flam_obs)):
-        num += grism_flam_obs[i] * f775w_trans_interp[i]
-        den += f775w_trans_interp[i]
-
-    avg_f775w_flam_grism = num / den
-    aper_corr_factor = flam_f775w / avg_f775w_flam_grism
-    print "Aperture correction factor:", "{:.3}".format(aper_corr_factor)
-
-    grism_flam_obs *= aper_corr_factor  # applying factor
-
-    # ------------------------------- Make unified photometry arrays ------------------------------- #
-    phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
-    phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
-
-    # Pivot wavelengths
-    # From here --
-    # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
-    # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
-    phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
-
-    # ------------------------------- Plot to check ------------------------------- #
-    """
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
-    ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
-    plt.show(block=False)
-
-    check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
-    sys.exit(0)
-    """
-
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
@@ -1137,117 +996,402 @@ if __name__ == '__main__':
         metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
         model_lam_grid_withlines, model_comp_spec_withlines[j] = \
         emission_lines(metallicity, model_lam_grid, bc03_all_spec_hdulist[j+1].data, nlyc)
-    # Also checked that in every case model_lam_grid_withlines is the exact same
-    # SO i'm simply using hte output from the last model.
+        # Also checked that in every case model_lam_grid_withlines is the exact same
+        # SO i'm simply using hte output from the last model.
+        """
+        To include the models without the lines as well you will have to make sure that 
+        the two types of models (ie. with and without lines) are on the same lambda grid.
+        I guess you could simply interpolate the model without lines on to the grid of
+        the models wiht lines.
+        """
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
-    # ------------------------------ Now start fitting ------------------------------ #
-    # --------- Get starting redshift
-    # Get specz if it exists as initial guess, otherwise get photoz
-    current_photz = 0.7781
-    current_specz = 0.778
-    starting_z = current_specz # spec-z
+    # ----------------------------------------- READ IN CATALOGS ----------------------------------------- #
+    # read in matched files to get photo-z
+    matched_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', \
+        dtype=None, names=True, skip_header=1)
+    matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
+        dtype=None, names=True, skip_header=1)
 
-    # --------- Force dtype for cython code --------- #
-    # Apparently this (i.e. for flam_obs and ferr_obs) has  
-    # to be done to avoid an obscure error from parallel in joblib --
-    # AttributeError: 'numpy.ndarray' object has no attribute 'offset'
-    grism_lam_obs = grism_lam_obs.astype(np.float64)
-    grism_flam_obs = grism_flam_obs.astype(np.float64)
-    grism_ferr_obs = grism_ferr_obs.astype(np.float64)
+    # Read in Specz comparison catalogs
+    specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
+    specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
 
-    phot_lam = phot_lam.astype(np.float64)
-    phot_fluxes_arr = phot_fluxes_arr.astype(np.float64)
-    phot_errors_arr = phot_errors_arr.astype(np.float64)
+    # ------------------------------- Read in photometry and grism+photometry catalogs ------------------------------- #
+    # GOODS-N from 3DHST
+    # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
+    # The combined grism+photometry fits, redshifts, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
+    photometry_names = ['id', 'ra', 'dec', 'f_F160W', 'e_F160W', 'f_F435W', 'e_F435W', 'f_F606W', 'e_F606W', \
+    'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W']
+    goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
+        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
+    #goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
+    #    dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
 
-    # --------------------------------------------- Quality checks ------------------------------------------- #
-    # Netsig check
-    if netsig_chosen < 10:
-        print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
-        #continue
+    # large differences between specz and grismz
+    large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
 
-    # D4000 check # accept only if D4000 greater than 1.2
-    # get d4000
-    # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
-    # This is way I'm letting some lower D4000 values into my sample. Just so I don't miss too many galaxies.
-    # A few of the galaxies with really wrong starting_z will of course be missed.
-    lam_em = grism_lam_obs / (1 + starting_z)
-    flam_em = grism_flam_obs * (1 + starting_z)
-    ferr_em = grism_ferr_obs * (1 + starting_z)
+    all_speccats = [specz_goodsn]  #[specz_goodsn, specz_goodss]
+    all_match_cats = [matched_cat_n]  #[matched_cat_n, matched_cat_s]
 
-    # Check that hte lambda array is not too incomplete 
-    # I don't want the D4000 code extrapolating too much.
-    # I'm choosing this limit to be 50A
-    if np.max(lam_em) < 4200:
-        print "Skipping because lambda array is incomplete by too much."
-        print "i.e. the max val in rest-frame lambda is less than 4200A."
-        #continue
+    # save lists for comparing after code is done
+    id_list = []
+    field_list = []
+    zgrism_list = []
+    zgrism_lowerr_list = []
+    zgrism_uperr_list = []
+    zspec_list = []
+    zphot_list = []
+    chi2_list = []
+    netsig_list = []
+    age_list = []
+    tau_list = []
+    av_list = []
+    d4000_list = []
+    d4000_err_list = []
 
-    d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-    if d4000 < 1.1:
-        print "Skipping", current_id, "in", current_field, "due to low D4000:", d4000
-        #continue
+    # start looping
+    catcount = 0
+    for cat in all_match_cats:
 
-    # Read in LSF
-    if current_field == 'GOODS-N':
-        lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
-    elif current_field == 'GOODS-S':
-        lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+        for i in range(len(cat)):
 
-    # read in LSF file
-    try:
-        lsf = np.genfromtxt(lsf_filename)
-        lsf = lsf.astype(np.float64)  # Force dtype for cython code
-    except IOError:
-        print "LSF not found. Moving to next galaxy."
-        #continue
+            # --------------------------------------------- GET OBS DATA ------------------------------------------- #
+            current_id = cat['pearsid'][i]
 
-    # -------- Broaden the LSF ------- #
-    # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
-    # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
-    broaden_lsf = False
-    if broaden_lsf:
-        lsf_length = len(lsf)
-        gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
-        fit_gauss = fitting.LevMarLSQFitter()
-        x_arr = np.arange(lsf_length)
-        g = fit_gauss(gauss_init, x_arr, lsf)
-        # get fit std.dev. and create a gaussian kernel with which to broaden
-        kernel_std = 1.118 * g.parameters[2]
-        broaden_kernel = Gaussian1DKernel(kernel_std)
+            if catcount == 0:
+                current_field = 'GOODS-N'
+                spec_cat = specz_goodsn
+                phot_cat_3dhst = goodsn_phot_cat_3dhst
+            elif catcount == 1: 
+                current_field = 'GOODS-S'
+                spec_cat = specz_goodss
+                phot_cat_3dhst = goodss_phot_cat_3dhst
+    
+            threed_ra = phot_cat_3dhst['ra']
+            threed_dec = phot_cat_3dhst['dec']
 
-        # broaden LSF
-        broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
-        broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
+            # Get specz if it exists as initial guess, otherwise get photoz
+            specz_idx = np.where(spec_cat['pearsid'] == current_id)[0]
 
-        check_broad_lsf(lsf, broad_lsf)  # Comment out if you dont want to check the LSF broadenign result
+            # For now running this code only on the specz sample
+            if len(specz_idx) != 1:
+                print "Match not found in specz catalog. Skipping."
+                continue
 
-        lsf_to_use = broad_lsf
+            if len(specz_idx) == 1:
+                current_specz = float(spec_cat['specz'][specz_idx])
+                current_photz = float(cat['zphot'][i])
+                starting_z = current_specz
+            elif len(specz_idx) == 0:
+                current_specz = -99.0
+                current_photz = float(cat['zphot'][i])
+                starting_z = current_photz
+            else:
+                print "Got other than 1 or 0 matches for the specz for ID", current_id, "in", current_field
+                print "This much be fixed. Check why it happens. Exiting now."
+                sys.exit(0)
 
-    else:
-        lsf_to_use = lsf
+            # Check that the starting redshfit is within the required range
+            if (starting_z < 0.6) or (starting_z > 1.235):
+                print "Current galaxy", current_id, current_field, "at starting_z", starting_z, "not within redshift range.",
+                print "Moving to the next galaxy."
+                continue
 
-    # ------- Make new resampling grid ------- # 
-    # extend lam_grid to be able to move the lam_grid later 
-    avg_dlam = old_ref.get_avg_dlam(grism_lam_obs)
+            # If you want to run it for a single galaxy then 
+            # give the info here and put a sys.exit(0) after 
+            # do_fitting()
+            #current_id = 36105
+            #current_field = 'GOODS-N'
+            #current_photz = 0.9072
+            #current_specz = 0.931
+            #starting_z = current_specz
 
-    lam_low_to_insert = np.arange(4000, grism_lam_obs[0], avg_dlam, dtype=np.float64)
-    lam_high_to_append = np.arange(grism_lam_obs[-1] + avg_dlam, 11000, avg_dlam, dtype=np.float64)
+            print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
 
-    resampling_lam_grid = np.insert(grism_lam_obs, obj=0, values=lam_low_to_insert)
-    resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+            grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
-    # ------------- Call actual fitting function ------------- #
-    zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
-    do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
-        lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)# all_filters)
+            if return_code == 0:
+                print "Skipping due to an error with the obs data. See the error message just above this one.",
+                print "Moving to the next galaxy."
+                continue
+
+            # ------------------------------- Match and get photometry data ------------------------------- #
+            # find grism obj ra,dec
+            cat_idx = np.where(cat['pearsid'] == current_id)[0]
+            if cat_idx.size:
+                current_ra = float(cat['pearsra'][cat_idx])
+                current_dec = float(cat['pearsdec'][cat_idx])
+
+            # Now match
+            ra_lim = 0.5/3600  # arcseconds in degrees
+            dec_lim = 0.5/3600
+            threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
+                (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
+
+            # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
+            flam_f435w = get_flam('F435W', phot_cat_3dhst['f_F435W'][threed_phot_idx])
+            flam_f606w = get_flam('F606W', phot_cat_3dhst['f_F606W'][threed_phot_idx])
+            flam_f775w = get_flam('F775W', phot_cat_3dhst['f_F775W'][threed_phot_idx])
+            flam_f850lp = get_flam('F850LP', phot_cat_3dhst['f_F850LP'][threed_phot_idx])
+            flam_f125w = get_flam('F125W', phot_cat_3dhst['f_F125W'][threed_phot_idx])
+            flam_f140w = get_flam('F140W', phot_cat_3dhst['f_F140W'][threed_phot_idx])
+            flam_f160w = get_flam('F160W', phot_cat_3dhst['f_F160W'][threed_phot_idx])
+
+            ferr_f435w = get_flam('F435W', phot_cat_3dhst['e_F435W'][threed_phot_idx])
+            ferr_f606w = get_flam('F606W', phot_cat_3dhst['e_F606W'][threed_phot_idx])
+            ferr_f775w = get_flam('F775W', phot_cat_3dhst['e_F775W'][threed_phot_idx])
+            ferr_f850lp = get_flam('F850LP', phot_cat_3dhst['e_F850LP'][threed_phot_idx])
+            ferr_f125w = get_flam('F125W', phot_cat_3dhst['e_F125W'][threed_phot_idx])
+            ferr_f140w = get_flam('F140W', phot_cat_3dhst['e_F140W'][threed_phot_idx])
+            ferr_f160w = get_flam('F160W', phot_cat_3dhst['e_F160W'][threed_phot_idx])
+
+            # ------------------------------- Apply aperture correction ------------------------------- #
+            # We need to do this because the grism spectrum and the broadband photometry don't line up properly.
+            # This is due to different apertures being used when extrating the grism spectrum and when measuring
+            # the broadband flux in any given filter.
+            # This will multiply hte grism spectrum by a multiplicative factor that scales it to the measured 
+            # i-band (F775W) flux. Basically, the grism spectrum is "convolved" with the F775W filter curve,
+            # since this is the filter whose coverage completely overlaps that of the grism, to get an i-band
+            # magnitude (or actually f_lambda) using the grism data. The broadband i-band mag is then divided 
+            # by this grism i-band mag to get the factor that multiplies the grism spectrum.
+            # Filter curves from:
+            # ACS: http://www.stsci.edu/hst/acs/analysis/throughputs
+            # WFC3: Has to be done through PySynphot. See: https://pysynphot.readthedocs.io/en/latest/index.html
+            # Also take a look at this page: http://www.stsci.edu/hst/observatory/crds/throughput.html
+            # Pysynphot has been set up correctly. Its pretty useful for many other things too. See Pysynphot docs.
+
+            # read in filter curves
+            f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
+            f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
+            f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
+            f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
+
+            f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
+            f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
+            f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
+
+            all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
+
+            """
+            Example to plot filter curves for ACS:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.plot(f435w_filt_curve.binset, f435w_filt_curve(f435w_filt_curve.binset), color='midnightblue')
+            ax.plot(f850lp_filt_curve.binset, f850lp_filt_curve(f850lp_filt_curve.binset), color='seagreen')
+            ax.plot(f606w_filt_curve.binset, f606w_filt_curve(f606w_filt_curve.binset), color='orange')
+            ax.plot(f775w_filt_curve.binset, f775w_filt_curve(f775w_filt_curve.binset), color='rebeccapurple')
+            plt.show()
+            """
+
+            # First interpolate the given filter curve on to the wavelength frid of the grism data
+            # You only need the F775W filter here since you're only using this filter to get the 
+            # aperture correction factor.
+            f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=grism_lam_obs, method='linear')
+
+            # check that the interpolated curve looks like hte original one
+            """
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.plot(f775w_filt_curve['wav'], f775w_filt_curve['trans'])
+            ax.plot(lam_obs, f775w_trans_interp)
+            plt.show()
+            """
+
+            # multiply grism spectrum to filter curve
+            num = 0
+            den = 0
+            for w in range(len(grism_flam_obs)):
+                num += grism_flam_obs[w] * f775w_trans_interp[w]
+                den += f775w_trans_interp[w]
+
+            avg_f775w_flam_grism = num / den
+            aper_corr_factor = flam_f775w / avg_f775w_flam_grism
+            print "Aperture correction factor:", "{:.3}".format(aper_corr_factor)
+
+            grism_flam_obs *= aper_corr_factor  # applying factor
+
+            # ------------------------------- Make unified photometry arrays ------------------------------- #
+            phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
+            phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
+
+            # Pivot wavelengths
+            # From here --
+            # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
+            # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
+            phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
+
+            # ------------------------------- Plot to check ------------------------------- #
+            """
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+            ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+            plt.show(block=False)
+
+            check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+            sys.exit(0)
+            """
+
+            # ------------------------------ Now start fitting ------------------------------ #
+            # --------- Force dtype for cython code --------- #
+            # Apparently this (i.e. for flam_obs and ferr_obs) has  
+            # to be done to avoid an obscure error from parallel in joblib --
+            # AttributeError: 'numpy.ndarray' object has no attribute 'offset'
+            grism_lam_obs = grism_lam_obs.astype(np.float64)
+            grism_flam_obs = grism_flam_obs.astype(np.float64)
+            grism_ferr_obs = grism_ferr_obs.astype(np.float64)
+
+            phot_lam = phot_lam.astype(np.float64)
+            phot_fluxes_arr = phot_fluxes_arr.astype(np.float64)
+            phot_errors_arr = phot_errors_arr.astype(np.float64)
+
+            # --------------------------------------------- Quality checks ------------------------------------------- #
+            # Netsig check
+            if netsig_chosen < 10:
+                print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
+                continue
+
+            # D4000 check 
+            # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
+            # This is way I'm letting some lower D4000 values into my sample. Just so I don't miss too many galaxies.
+            # A few of the galaxies with really wrong starting_z will of course be missed.
+            lam_em = grism_lam_obs / (1 + starting_z)
+            flam_em = grism_flam_obs * (1 + starting_z)
+            ferr_em = grism_ferr_obs * (1 + starting_z)
+
+            # Check that hte lambda array is not too incomplete 
+            # I don't want the D4000 code extrapolating too much.
+            # I'm choosing this limit to be 50A
+            if np.max(lam_em) < 4200:
+                print "Skipping because lambda array is incomplete by too much."
+                print "i.e. the max val in rest-frame lambda is less than 4200A."
+                continue
+
+            d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+            if (d4000 < 1.1) or (d4000 > 1.6):
+                print "Skipping", current_id, "in", current_field, "due to D4000:", d4000
+                continue
+
+            # Read in LSF
+            if current_field == 'GOODS-N':
+                lsf_filename = lsfdir + "north_lsfs/" + "n" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+            elif current_field == 'GOODS-S':
+                lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
+
+            # read in LSF file
+            try:
+                lsf = np.genfromtxt(lsf_filename)
+                lsf = lsf.astype(np.float64)  # Force dtype for cython code
+            except IOError:
+                print "LSF not found. Moving to next galaxy."
+                continue
+
+            # -------- Broaden the LSF ------- #
+            # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
+            # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
+            broaden_lsf = False
+            if broaden_lsf:
+                lsf_length = len(lsf)
+                gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
+                fit_gauss = fitting.LevMarLSQFitter()
+                x_arr = np.arange(lsf_length)
+                g = fit_gauss(gauss_init, x_arr, lsf)
+                # get fit std.dev. and create a gaussian kernel with which to broaden
+                kernel_std = 1.118 * g.parameters[2]
+                broaden_kernel = Gaussian1DKernel(kernel_std)
+
+                # broaden LSF
+                broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
+                broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
+
+                check_broad_lsf(lsf, broad_lsf)  # Comment out if you dont want to check the LSF broadenign result
+
+                lsf_to_use = broad_lsf
+
+            else:
+                lsf_to_use = lsf
+
+            # ------- Make new resampling grid ------- # 
+            # extend lam_grid to be able to move the lam_grid later 
+            avg_dlam = old_ref.get_avg_dlam(grism_lam_obs)
+
+            lam_low_to_insert = np.arange(4000, grism_lam_obs[0], avg_dlam, dtype=np.float64)
+            lam_high_to_append = np.arange(grism_lam_obs[-1] + avg_dlam, 11000, avg_dlam, dtype=np.float64)
+
+            resampling_lam_grid = np.insert(grism_lam_obs, obj=0, values=lam_low_to_insert)
+            resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+
+            # ------------- Call actual fitting function ------------- #
+            zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
+            do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
+                lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
+                model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
+                current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)# all_filters)
+
+            # Get d4000 at new zgrism
+            lam_em = grism_lam_obs / (1 + zg)
+            flam_em = grism_flam_obs * (1 + zg)
+            ferr_em = grism_ferr_obs * (1 + zg)
+
+            d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+
+            # ---------------------------------------------- SAVE PARAMETERS ----------------------------------------------- #
+            id_list.append(current_id)
+            field_list.append(current_field)
+            zgrism_list.append(zg)
+            zgrism_lowerr_list.append(zerr_low)
+            zgrism_uperr_list.append(zerr_up)
+            zspec_list.append(current_specz)
+            zphot_list.append(redshift)
+            chi2_list.append(min_chi2)
+            netsig_list.append(netsig_chosen)
+            age_list.append(age)
+            tau_list.append(tau)
+            av_list.append(av)
+            d4000_list.append(d4000)
+            d4000_err_list.append(d4000_err)
+
+        catcount += 1
+
+    # Convert to numpy arrays
+    id_list = np.asarray(id_list)
+    field_list = np.asarray(field_list)
+    zgrism_list = np.asarray(zgrism_list)
+    zgrism_lowerr_list = np.asarray(zgrism_lowerr_list)
+    zgrism_uperr_list = np.asarray(zgrism_uperr_list)
+    zspec_list = np.asarray(zspec_list)
+    zphot_list = np.asarray(zphot_list)
+    chi2_list = np.asarray(chi2_list)
+    netsig_list = np.asarray(netsig_list)
+    age_list = np.asarray(age_list)
+    tau_list = np.asarray(tau_list)
+    av_list = np.asarray(av_list)
+    d4000_list = np.asarray(d4000_list)
+    d4000_err_list = np.asarray(d4000_err_list)
+
+    # Save files
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_id_list.npy', id_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_field_list.npy', field_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zgrism_list.npy', zgrism_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zgrism_lowerr_list.npy', zgrism_lowerr_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zgrism_uperr_list.npy', zgrism_uperr_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zspec_list.npy', zspec_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zphot_list.npy', zphot_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_chi2_list.npy', chi2_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_netsig_list.npy', netsig_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_age_list.npy', age_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_tau_list.npy', tau_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_av_list.npy', av_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_d4000_list.npy', d4000_list)
+    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_d4000_err_list.npy', d4000_err_list)
 
     # Close HDUs
     bc03_all_spec_hdulist.close()
 
+    # Total time taken
+    print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
     sys.exit(0)
 
