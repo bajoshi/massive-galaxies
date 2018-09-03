@@ -884,14 +884,14 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
 
     ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, \
-        fmt='.', color='firebrick', markeredgecolor='midnightblue', \
+        fmt='.', color='darkcyan', markeredgecolor='darkcyan', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
     ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='indianred')
     ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=10)
 
     # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='forestgreen', alpha=0.4)
+    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='forestgreen', alpha=0.6)
 
     # Residuals
     # For the grism points
