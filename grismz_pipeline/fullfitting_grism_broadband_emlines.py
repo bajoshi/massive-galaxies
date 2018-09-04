@@ -1111,11 +1111,11 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
-            #current_id = 36105
-            #current_field = 'GOODS-N'
-            #current_photz = 0.9072
-            #current_specz = 0.931
-            #starting_z = current_specz
+            current_id = 88858
+            current_field = 'GOODS-N'
+            current_photz = 0.822
+            current_specz = 0.854
+            starting_z = current_specz
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
 
@@ -1338,6 +1338,8 @@ if __name__ == '__main__':
                 lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)# all_filters)
+
+            sys.exit(0)
 
             # Get d4000 at new zgrism
             lam_em = grism_lam_obs / (1 + zg)
