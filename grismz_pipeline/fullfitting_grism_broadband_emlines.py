@@ -676,7 +676,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    num_cores = 4
+    num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
@@ -880,18 +880,20 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
 
     # ---------- plot data, model, and residual ---------- #
+    # plot full res model but you'll have to redshift it
+    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='b', alpha=0.3)
+
+    # plot data
     ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
     ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
 
     ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, \
-        fmt='.', color='darkcyan', markeredgecolor='darkcyan', \
+        fmt='.', color='midnightblue', markeredgecolor='midnightblue', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
+    # plot best fit model
     ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='indianred')
     ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=10)
-
-    # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='purple', alpha=0.3)
 
     # Residuals
     # For the grism points
@@ -903,7 +905,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax2.scatter(grism_lam_obs, resid_fit_grism, s=4, color='k')
     ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
 
-    # limits
+    # ---------- limits ---------- #
     max_y_obs = np.max(np.concatenate((grism_flam_obs, phot_flam_obs)))
     min_y_obs = np.min(np.concatenate((grism_flam_obs, phot_flam_obs)))
 
