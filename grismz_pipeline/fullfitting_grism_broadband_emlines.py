@@ -428,58 +428,63 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         print "Object spectrum length:", len(grism_lam_obs)
         sys.exit(0)
 
-    # For both data and model, combine grism+photometry into one spectrum.
-    # The chopping above has to be done before combining the grism+photometry
-    # because todo the insertion correctly the model and grism wavelength
-    # grids have to match.
 
-    # Convert the model array to a python list of lists
-    # This has to be done because np.insert() returns a new changed array
-    # with the new value inserted but I cannot assign it back to the old
-    # array because that changes the shape. This works for the grism arrays
-    # since I'm simply using variable names to point to them but since the
-    # model array is 2D I'm using indexing and that causes the np.insert()
-    # statement to throw an error.
-    model_spec_in_objlamgrid_list = []
-    for j in range(total_models):
-        model_spec_in_objlamgrid_list.append(model_spec_in_objlamgrid[j].tolist())
+    if use_broadband:
+        # For both data and model, combine grism+photometry into one spectrum.
+        # The chopping above has to be done before combining the grism+photometry
+        # because todo the insertion correctly the model and grism wavelength
+        # grids have to match.
 
-    count = 0
-    combined_lam_obs = grism_lam_obs
-    combined_flam_obs = grism_flam_obs
-    combined_ferr_obs = grism_ferr_obs
-    for phot_wav in phot_lam_obs:
+        # Convert the model array to a python list of lists
+        # This has to be done because np.insert() returns a new changed array
+        # with the new value inserted but I cannot assign it back to the old
+        # array because that changes the shape. This works for the grism arrays
+        # since I'm simply using variable names to point to them but since the
+        # model array is 2D I'm using indexing and that causes the np.insert()
+        # statement to throw an error.
+        model_spec_in_objlamgrid_list = []
+        for j in range(total_models):
+            model_spec_in_objlamgrid_list.append(model_spec_in_objlamgrid[j].tolist())
 
-        if phot_wav < combined_lam_obs[0]:
-            lam_obs_idx_to_insert = 0
+        count = 0
+        combined_lam_obs = grism_lam_obs
+        combined_flam_obs = grism_flam_obs
+        combined_ferr_obs = grism_ferr_obs
+        for phot_wav in phot_lam_obs:
 
-        elif phot_wav > combined_lam_obs[-1]:
-            lam_obs_idx_to_insert = len(combined_lam_obs)
+            if phot_wav < combined_lam_obs[0]:
+                lam_obs_idx_to_insert = 0
 
-        else:
-            lam_obs_idx_to_insert = np.where(combined_lam_obs > phot_wav)[0][0]
+            elif phot_wav > combined_lam_obs[-1]:
+                lam_obs_idx_to_insert = len(combined_lam_obs)
 
-        # For grism
-        combined_lam_obs = np.insert(combined_lam_obs, lam_obs_idx_to_insert, phot_wav)
-        combined_flam_obs = np.insert(combined_flam_obs, lam_obs_idx_to_insert, phot_flam_obs[count])
-        combined_ferr_obs = np.insert(combined_ferr_obs, lam_obs_idx_to_insert, phot_ferr_obs[count])
+            else:
+                lam_obs_idx_to_insert = np.where(combined_lam_obs > phot_wav)[0][0]
 
-        # For model
-        for i in range(total_models):
-            model_spec_in_objlamgrid_list[i] = np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
+            # For grism
+            combined_lam_obs = np.insert(combined_lam_obs, lam_obs_idx_to_insert, phot_wav)
+            combined_flam_obs = np.insert(combined_flam_obs, lam_obs_idx_to_insert, phot_flam_obs[count])
+            combined_ferr_obs = np.insert(combined_ferr_obs, lam_obs_idx_to_insert, phot_ferr_obs[count])
 
-        count += 1
+            # For model
+            for i in range(total_models):
+                model_spec_in_objlamgrid_list[i] = np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
 
-    # Convert back to numpy array
-    del model_spec_in_objlamgrid  # Trying to free up the memory allocated to the object pointed by the older model_spec_in_objlamgrid
-    # Not sure if the del works because I'm using the same name again. Also just not sure of how del exactly works.
-    model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
+            count += 1
 
-    # compute alpha and chi2
-    alpha_ = np.sum(combined_flam_obs * model_spec_in_objlamgrid / (combined_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / combined_ferr_obs**2, axis=1)
-    chi2_ = np.sum(((combined_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / combined_ferr_obs)**2, axis=1)
+        # Convert back to numpy array
+        del model_spec_in_objlamgrid  # Trying to free up the memory allocated to the object pointed by the older model_spec_in_objlamgrid
+        # Not sure if the del works because I'm using the same name again. Also just not sure of how del exactly works.
+        model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
-    print "Min chi2 for redshift:", min(chi2_)
+        # compute alpha and chi2
+        alpha_ = np.sum(combined_flam_obs * model_spec_in_objlamgrid / (combined_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / combined_ferr_obs**2, axis=1)
+        chi2_ = np.sum(((combined_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / combined_ferr_obs)**2, axis=1)
+
+        print "Min chi2 for redshift:", min(chi2_)
+
+    else:
+        
 
     # This following block is useful for debugging.
     # Do not delete. Simply uncomment it if you don't need it.
@@ -988,6 +993,11 @@ if __name__ == '__main__':
     # show_example_for_adding_emission_lines()
     # sys.exit(0)
 
+    # Flags to turn on-off broadband and emission lines in the fit
+    use_broadband = False
+    use_emlines = True
+    num_filters = 7
+
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
@@ -1128,122 +1138,127 @@ if __name__ == '__main__':
                 print "Moving to the next galaxy."
                 continue
 
-            # ------------------------------- Match and get photometry data ------------------------------- #
-            # find grism obj ra,dec
-            cat_idx = np.where(cat['pearsid'] == current_id)[0]
-            if cat_idx.size:
-                current_ra = float(cat['pearsra'][cat_idx])
-                current_dec = float(cat['pearsdec'][cat_idx])
+            if use_broadband:
+                # ------------------------------- Match and get photometry data ------------------------------- #
+                # find grism obj ra,dec
+                cat_idx = np.where(cat['pearsid'] == current_id)[0]
+                if cat_idx.size:
+                    current_ra = float(cat['pearsra'][cat_idx])
+                    current_dec = float(cat['pearsdec'][cat_idx])
 
-            # Now match
-            ra_lim = 0.5/3600  # arcseconds in degrees
-            dec_lim = 0.5/3600
-            threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
-                (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
+                # Now match
+                ra_lim = 0.5/3600  # arcseconds in degrees
+                dec_lim = 0.5/3600
+                threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
+                    (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
 
-            # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
-            flam_f435w = get_flam('F435W', phot_cat_3dhst['f_F435W'][threed_phot_idx])
-            flam_f606w = get_flam('F606W', phot_cat_3dhst['f_F606W'][threed_phot_idx])
-            flam_f775w = get_flam('F775W', phot_cat_3dhst['f_F775W'][threed_phot_idx])
-            flam_f850lp = get_flam('F850LP', phot_cat_3dhst['f_F850LP'][threed_phot_idx])
-            flam_f125w = get_flam('F125W', phot_cat_3dhst['f_F125W'][threed_phot_idx])
-            flam_f140w = get_flam('F140W', phot_cat_3dhst['f_F140W'][threed_phot_idx])
-            flam_f160w = get_flam('F160W', phot_cat_3dhst['f_F160W'][threed_phot_idx])
+                # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
+                flam_f435w = get_flam('F435W', phot_cat_3dhst['f_F435W'][threed_phot_idx])
+                flam_f606w = get_flam('F606W', phot_cat_3dhst['f_F606W'][threed_phot_idx])
+                flam_f775w = get_flam('F775W', phot_cat_3dhst['f_F775W'][threed_phot_idx])
+                flam_f850lp = get_flam('F850LP', phot_cat_3dhst['f_F850LP'][threed_phot_idx])
+                flam_f125w = get_flam('F125W', phot_cat_3dhst['f_F125W'][threed_phot_idx])
+                flam_f140w = get_flam('F140W', phot_cat_3dhst['f_F140W'][threed_phot_idx])
+                flam_f160w = get_flam('F160W', phot_cat_3dhst['f_F160W'][threed_phot_idx])
 
-            ferr_f435w = get_flam('F435W', phot_cat_3dhst['e_F435W'][threed_phot_idx])
-            ferr_f606w = get_flam('F606W', phot_cat_3dhst['e_F606W'][threed_phot_idx])
-            ferr_f775w = get_flam('F775W', phot_cat_3dhst['e_F775W'][threed_phot_idx])
-            ferr_f850lp = get_flam('F850LP', phot_cat_3dhst['e_F850LP'][threed_phot_idx])
-            ferr_f125w = get_flam('F125W', phot_cat_3dhst['e_F125W'][threed_phot_idx])
-            ferr_f140w = get_flam('F140W', phot_cat_3dhst['e_F140W'][threed_phot_idx])
-            ferr_f160w = get_flam('F160W', phot_cat_3dhst['e_F160W'][threed_phot_idx])
+                ferr_f435w = get_flam('F435W', phot_cat_3dhst['e_F435W'][threed_phot_idx])
+                ferr_f606w = get_flam('F606W', phot_cat_3dhst['e_F606W'][threed_phot_idx])
+                ferr_f775w = get_flam('F775W', phot_cat_3dhst['e_F775W'][threed_phot_idx])
+                ferr_f850lp = get_flam('F850LP', phot_cat_3dhst['e_F850LP'][threed_phot_idx])
+                ferr_f125w = get_flam('F125W', phot_cat_3dhst['e_F125W'][threed_phot_idx])
+                ferr_f140w = get_flam('F140W', phot_cat_3dhst['e_F140W'][threed_phot_idx])
+                ferr_f160w = get_flam('F160W', phot_cat_3dhst['e_F160W'][threed_phot_idx])
 
-            # ------------------------------- Apply aperture correction ------------------------------- #
-            # We need to do this because the grism spectrum and the broadband photometry don't line up properly.
-            # This is due to different apertures being used when extrating the grism spectrum and when measuring
-            # the broadband flux in any given filter.
-            # This will multiply hte grism spectrum by a multiplicative factor that scales it to the measured 
-            # i-band (F775W) flux. Basically, the grism spectrum is "convolved" with the F775W filter curve,
-            # since this is the filter whose coverage completely overlaps that of the grism, to get an i-band
-            # magnitude (or actually f_lambda) using the grism data. The broadband i-band mag is then divided 
-            # by this grism i-band mag to get the factor that multiplies the grism spectrum.
-            # Filter curves from:
-            # ACS: http://www.stsci.edu/hst/acs/analysis/throughputs
-            # WFC3: Has to be done through PySynphot. See: https://pysynphot.readthedocs.io/en/latest/index.html
-            # Also take a look at this page: http://www.stsci.edu/hst/observatory/crds/throughput.html
-            # Pysynphot has been set up correctly. Its pretty useful for many other things too. See Pysynphot docs.
+                # ------------------------------- Apply aperture correction ------------------------------- #
+                # We need to do this because the grism spectrum and the broadband photometry don't line up properly.
+                # This is due to different apertures being used when extrating the grism spectrum and when measuring
+                # the broadband flux in any given filter.
+                # This will multiply hte grism spectrum by a multiplicative factor that scales it to the measured 
+                # i-band (F775W) flux. Basically, the grism spectrum is "convolved" with the F775W filter curve,
+                # since this is the filter whose coverage completely overlaps that of the grism, to get an i-band
+                # magnitude (or actually f_lambda) using the grism data. The broadband i-band mag is then divided 
+                # by this grism i-band mag to get the factor that multiplies the grism spectrum.
+                # Filter curves from:
+                # ACS: http://www.stsci.edu/hst/acs/analysis/throughputs
+                # WFC3: Has to be done through PySynphot. See: https://pysynphot.readthedocs.io/en/latest/index.html
+                # Also take a look at this page: http://www.stsci.edu/hst/observatory/crds/throughput.html
+                # Pysynphot has been set up correctly. Its pretty useful for many other things too. See Pysynphot docs.
 
-            # read in filter curves
-            f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
-            f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
-            f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
-            f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
+                # read in filter curves
+                f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
+                f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
+                f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
+                f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
 
-            f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
-            f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
-            f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
+                f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
+                f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
+                f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
 
-            all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
+                all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
 
-            """
-            Example to plot filter curves for ACS:
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.plot(f435w_filt_curve.binset, f435w_filt_curve(f435w_filt_curve.binset), color='midnightblue')
-            ax.plot(f850lp_filt_curve.binset, f850lp_filt_curve(f850lp_filt_curve.binset), color='seagreen')
-            ax.plot(f606w_filt_curve.binset, f606w_filt_curve(f606w_filt_curve.binset), color='orange')
-            ax.plot(f775w_filt_curve.binset, f775w_filt_curve(f775w_filt_curve.binset), color='rebeccapurple')
-            plt.show()
-            """
+                """
+                Example to plot filter curves for ACS:
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                ax.plot(f435w_filt_curve.binset, f435w_filt_curve(f435w_filt_curve.binset), color='midnightblue')
+                ax.plot(f850lp_filt_curve.binset, f850lp_filt_curve(f850lp_filt_curve.binset), color='seagreen')
+                ax.plot(f606w_filt_curve.binset, f606w_filt_curve(f606w_filt_curve.binset), color='orange')
+                ax.plot(f775w_filt_curve.binset, f775w_filt_curve(f775w_filt_curve.binset), color='rebeccapurple')
+                plt.show()
+                """
 
-            # First interpolate the given filter curve on to the wavelength frid of the grism data
-            # You only need the F775W filter here since you're only using this filter to get the 
-            # aperture correction factor.
-            f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=grism_lam_obs, method='linear')
+                # First interpolate the given filter curve on to the wavelength frid of the grism data
+                # You only need the F775W filter here since you're only using this filter to get the 
+                # aperture correction factor.
+                f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=grism_lam_obs, method='linear')
 
-            # check that the interpolated curve looks like hte original one
-            """
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.plot(f775w_filt_curve['wav'], f775w_filt_curve['trans'])
-            ax.plot(lam_obs, f775w_trans_interp)
-            plt.show()
-            """
+                # check that the interpolated curve looks like hte original one
+                """
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                ax.plot(f775w_filt_curve['wav'], f775w_filt_curve['trans'])
+                ax.plot(lam_obs, f775w_trans_interp)
+                plt.show()
+                """
 
-            # multiply grism spectrum to filter curve
-            num = 0
-            den = 0
-            for w in range(len(grism_flam_obs)):
-                num += grism_flam_obs[w] * f775w_trans_interp[w]
-                den += f775w_trans_interp[w]
+                # multiply grism spectrum to filter curve
+                num = 0
+                den = 0
+                for w in range(len(grism_flam_obs)):
+                    num += grism_flam_obs[w] * f775w_trans_interp[w]
+                    den += f775w_trans_interp[w]
 
-            avg_f775w_flam_grism = num / den
-            aper_corr_factor = flam_f775w / avg_f775w_flam_grism
-            print "Aperture correction factor:", "{:.3}".format(aper_corr_factor)
+                avg_f775w_flam_grism = num / den
+                aper_corr_factor = flam_f775w / avg_f775w_flam_grism
+                print "Aperture correction factor:", "{:.3}".format(aper_corr_factor)
 
-            grism_flam_obs *= aper_corr_factor  # applying factor
+                grism_flam_obs *= aper_corr_factor  # applying factor
 
-            # ------------------------------- Make unified photometry arrays ------------------------------- #
-            phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
-            phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
+                # ------------------------------- Make unified photometry arrays ------------------------------- #
+                phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
+                phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
-            # Pivot wavelengths
-            # From here --
-            # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
-            # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
-            phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
+                # Pivot wavelengths
+                # From here --
+                # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
+                # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
+                phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
-            # ------------------------------- Plot to check ------------------------------- #
-            """
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
-            ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
-            plt.show(block=False)
+                # ------------------------------- Plot to check ------------------------------- #
+                """
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+                ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+                plt.show(block=False)
 
-            check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
-            sys.exit(0)
-            """
+                check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+                sys.exit(0)
+                """
+            else:
+                phot_fluxes_arr = np.zeros(num_filters)
+                phot_errors_arr = np.zeros(num_filters)
+                phot_lam = np.zeros(num_filters)
 
             # ------------------------------ Now start fitting ------------------------------ #
             # --------- Force dtype for cython code --------- #
