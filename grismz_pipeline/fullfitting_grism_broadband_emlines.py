@@ -428,7 +428,6 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         print "Object spectrum length:", len(grism_lam_obs)
         sys.exit(0)
 
-
     if use_broadband:
         # For both data and model, combine grism+photometry into one spectrum.
         # The chopping above has to be done before combining the grism+photometry
@@ -484,7 +483,17 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         print "Min chi2 for redshift:", min(chi2_)
 
     else:
-        
+        # Check and make sure that all the photometry arrays are zeros
+        assert not np.any(phot_flam_obs), "Not using broadband data in fit but photometry flux array contains non-zero elements."
+        assert not np.any(phot_ferr_obs), "Not using broadband data in fit but photometry flux error array contains non-zero elements."
+        assert not np.any(phot_lam_obs), "Not using broadband data in fit but photometry wavelength array contains non-zero elements."
+        assert not np.any(all_filt_flam_model), "Not using broadband data in fit but model photometry flux array contains non-zero elements."
+
+        # compute alpha and chi2
+        alpha_ = np.sum(grism_flam_obs * model_spec_in_objlamgrid / (grism_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / grism_ferr_obs**2, axis=1)
+        chi2_ = np.sum(((grism_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / grism_ferr_obs)**2, axis=1)
+
+        print "Min chi2 for redshift:", min(chi2_)
 
     # This following block is useful for debugging.
     # Do not delete. Simply uncomment it if you don't need it.
@@ -579,38 +588,43 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     available.... since this is how mother nature kinda does it anyway.
     The only effect you need to take into account is redshift.
     """
-    all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
+    if use_broadband:
 
-    # Redshift the base models and also the lsf convolved model flux
-    model_comp_spec_z = model_comp_spec / (1+z)
-    model_lam_grid_z = model_lam_grid * (1+z)
+        all_filt_flam_model = np.zeros((num_filters, total_models), dtype=np.float64)
 
-    model_comp_spec_lsfconv_z = model_comp_spec_lsfconv / (1+z)
+        # Redshift the base models and also the lsf convolved model flux
+        model_comp_spec_z = model_comp_spec / (1+z)
+        model_lam_grid_z = model_lam_grid * (1+z)
 
-    filt_count = 0
-    for filt in all_filters:
+        model_comp_spec_lsfconv_z = model_comp_spec_lsfconv / (1+z)
 
-        # first interpolate the grism transmission curve to the model lam grid
-        filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
+        filt_count = 0
+        for filt in all_filters:
 
-        # multiply model spectrum to filter curve
-        for i in range(total_models):
+            # first interpolate the grism transmission curve to the model lam grid
+            filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
 
-            num = np.nansum(model_comp_spec_z[i] * filt_interp)
-            den = np.nansum(filt_interp)
+            # multiply model spectrum to filter curve
+            for i in range(total_models):
 
-            filt_flam_model = num / den
-            all_filt_flam_model[filt_count,i] = filt_flam_model
+                num = np.nansum(model_comp_spec_z[i] * filt_interp)
+                den = np.nansum(filt_interp)
 
-        filt_count += 1
+                filt_flam_model = num / den
+                all_filt_flam_model[filt_count,i] = filt_flam_model
 
-    # transverse array to make shape consistent with others
-    # I did it this way so that in the above for loop each filter is looped over only once
-    # i.e. minimizing the number of times each filter is gridded on to the model grid
-    all_filt_flam_model = all_filt_flam_model.T
+            filt_count += 1
 
-    print "Filter f_lam for models computed."
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+        # transverse array to make shape consistent with others
+        # I did it this way so that in the above for loop each filter is looped over only once
+        # i.e. minimizing the number of times each filter is gridded on to the model grid
+        all_filt_flam_model = all_filt_flam_model.T
+
+        print "Filter f_lam for models computed."
+        print "Total time taken up to now --", time.time() - start_time, "seconds."
+
+    else:
+        all_filt_flam_model = np.zeros((num_filters, total_models), dtype=np.float64)
 
     # ------------- Now do the modifications for the grism data and get a chi2 using both grism and photometry ------------- #
     # first modify the models at the current redshift to be able to compare with data
@@ -695,7 +709,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
-    # comment it out if you don't
+    # comment it out if you don't need it
     """
     count = 0
     for z in z_arr_to_check:
@@ -767,16 +781,22 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # varying the other parameters - age, tau, av, metallicity, or 
     # z_grism - within a given model. Therefore, I can safely use the 
     # methods described in Andrae+ 2010 for linear models.
-    dof = len(grism_lam_obs) + len(phot_lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+    if use_broadband:
+        dof = len(grism_lam_obs) + len(phot_lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+    else:
+        dof = len(grism_lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+
     chi2_red = chi2 / dof
     chi2_red_error = np.sqrt(2/dof)
     min_chi2_red = min_chi2 / dof
     print "Error in reduced chi-square:", chi2_red_error
     chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
     print "Indices within 1-sigma of reduced chi-square:", chi2_red_2didx
+
     # use first dimension indices to get error on grism-z
     z_grism_range = z_arr_to_check[chi2_red_2didx[0]]
     print "z_grism range", z_grism_range
+
     low_z_lim = np.min(z_grism_range)
     upper_z_lim = np.max(z_grism_range)
     print "Min z_grism within 1-sigma error:", low_z_lim
@@ -820,37 +840,43 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
-    # ------------ Get photomtery for model by convolving with filters ------------- #
-    # This has to be done again at the correct z_grism
-    all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
-    # Redshift the base models
-    model_comp_spec_z = model_comp_spec / (1+z_grism)
-    model_lam_grid_z = model_lam_grid * (1+z_grism)
-    filt_count = 0
-    for filt in all_filters:
+    if use_broadband:
 
-        # first interpolate the grism transmission curve to the model lam grid
-        filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
+        # ------------ Get photomtery for model by convolving with filters ------------- #
+        # This has to be done again at the correct z_grism
+        all_filt_flam_model = np.zeros((num_filters, total_models), dtype=np.float64)
 
-        # multiply model spectrum to filter curve
-        for i in range(total_models):
+        # Redshift the base models
+        model_comp_spec_z = model_comp_spec / (1+z_grism)
+        model_lam_grid_z = model_lam_grid * (1+z_grism)
+        filt_count = 0
+        for filt in all_filters:
 
-            num = np.nansum(model_comp_spec_z[i] * filt_interp)
-            den = np.nansum(filt_interp)
+            # first interpolate the grism transmission curve to the model lam grid
+            filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
 
-            filt_flam_model = num / den
-            all_filt_flam_model[filt_count,i] = filt_flam_model
+            # multiply model spectrum to filter curve
+            for i in range(total_models):
 
-        filt_count += 1
+                num = np.nansum(model_comp_spec_z[i] * filt_interp)
+                den = np.nansum(filt_interp)
 
-    # transverse array to make shape consistent with others
-    # I did it this way so that in the above for loop each filter is looped over only once
-    # i.e. minimizing the number of times each filter is gridded on to the model grid
-    all_filt_flam_model = all_filt_flam_model.T
+                filt_flam_model = num / den
+                all_filt_flam_model[filt_count,i] = filt_flam_model
 
-    # Get the flam for the best model
-    all_filt_flam_bestmodel = all_filt_flam_model[model_idx]
+            filt_count += 1
+
+        # transverse array to make shape consistent with others
+        # I did it this way so that in the above for loop each filter is looped over only once
+        # i.e. minimizing the number of times each filter is gridded on to the model grid
+        all_filt_flam_model = all_filt_flam_model.T
+
+        # Get the flam for the best model
+        all_filt_flam_bestmodel = all_filt_flam_model[model_idx]
+
+    else:
+        all_filt_flam_bestmodel = np.zeros(num_filters)
 
     # Get best fit model at full resolution
     best_fit_model_fullres = model_comp_spec[model_idx]
@@ -886,29 +912,34 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     # ---------- plot data, model, and residual ---------- #
     # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='b', alpha=0.3)
+    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='darkslategray', alpha=0.4)
 
     # plot data
     ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
     ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
 
-    ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, \
-        fmt='.', color='midnightblue', markeredgecolor='midnightblue', \
-        capsize=2, markersize=10.0, elinewidth=2.0)
+    if use_broadband:
+        ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, \
+            fmt='.', color='midnightblue', markeredgecolor='midnightblue', \
+            capsize=2, markersize=10.0, elinewidth=2.0)
 
     # plot best fit model
     ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='indianred')
-    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=10)
+
+    if use_broadband:
+        ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=10)
 
     # Residuals
     # For the grism points
     resid_fit_grism = (grism_flam_obs - bestalpha*best_fit_model_in_objlamgrid) / grism_ferr_obs
-    # For the photometry
-    resid_fit_phot = (phot_flam_obs - bestalpha*all_filt_flam_bestmodel) / phot_ferr_obs
 
     # Now plot
     ax2.scatter(grism_lam_obs, resid_fit_grism, s=4, color='k')
-    ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
+
+    if use_broadband:
+        # For the photometry
+        resid_fit_phot = (phot_flam_obs - bestalpha*all_filt_flam_bestmodel) / phot_ferr_obs
+        ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
 
     # ---------- limits ---------- #
     max_y_obs = np.max(np.concatenate((grism_flam_obs, phot_flam_obs)))
@@ -919,8 +950,13 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     ax1.set_ylim(min_ylim, max_ylim)
 
-    ax1.set_xlim(3000, 17000)
-    ax2.set_xlim(3000, 17000)
+    if use_broadband:
+        ax1.set_xlim(3000, 17000)
+        ax2.set_xlim(3000, 17000)
+
+    else:
+        ax1.set_xlim(6000, 9500)
+        ax2.set_xlim(6000, 9500)
 
     # ---------- minor ticks ---------- #
     ax1.minorticks_on()
@@ -936,7 +972,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     ax1.text(0.75, 0.35, \
     r'$\mathrm{z_{grism}\, =\, }$' + "{:.4}".format(grismz) + \
-    r'$\substack{+$' + "{:.3}".format(low_zerr) + r'$\\ -$' + "{:.3}".format(high_zerr) + r'$}$', \
+    r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
     ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
@@ -973,8 +1009,12 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     transform=ax1.transAxes, color='k', size=10)
 
     # ---------- Save figure ---------- #
-    fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '.png', \
-        dpi=300, bbox_inches='tight')
+    if use_broadband:
+        fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '.png', \
+            dpi=300, bbox_inches='tight')
+    else:
+        fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_NoPhotometry.png', \
+            dpi=300, bbox_inches='tight')
     
     plt.clf()
     plt.cla()
@@ -996,6 +1036,7 @@ if __name__ == '__main__':
     # Flags to turn on-off broadband and emission lines in the fit
     use_broadband = False
     use_emlines = True
+    broaden_lsf = True
     num_filters = 7
 
     # ------------------------------ Add emission lines to models ------------------------------ #
@@ -1123,10 +1164,10 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
-            current_id = 88858
+            current_id = 87433
             current_field = 'GOODS-N'
-            current_photz = 0.822
-            current_specz = 0.854
+            current_photz = 0.7734
+            current_specz = 0.747
             starting_z = current_specz
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
@@ -1256,6 +1297,7 @@ if __name__ == '__main__':
                 sys.exit(0)
                 """
             else:
+                print "Not using broadband data in fit. Setting photometry related arrays to zero arrays."
                 phot_fluxes_arr = np.zeros(num_filters)
                 phot_errors_arr = np.zeros(num_filters)
                 phot_lam = np.zeros(num_filters)
@@ -1317,7 +1359,6 @@ if __name__ == '__main__':
             # -------- Broaden the LSF ------- #
             # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
             # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
-            broaden_lsf = False
             if broaden_lsf:
                 lsf_length = len(lsf)
                 gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
