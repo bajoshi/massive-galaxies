@@ -695,7 +695,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    num_cores = 3
+    num_cores = 4
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
@@ -912,7 +912,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     # ---------- plot data, model, and residual ---------- #
     # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='darkslategray', alpha=0.4)
+    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='salmon', alpha=0.5)
 
     # plot data
     ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
@@ -948,13 +948,21 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     max_ylim = 1.25 * max_y_obs
     min_ylim = 0.75 * min_y_obs
 
-    ax1.set_ylim(min_ylim, max_ylim)
-
     if use_broadband:
+        max_ylim = 1.25 * max_y_obs
+        min_ylim = 0.75 * min_y_obs
+
+        ax1.set_ylim(min_ylim, max_ylim)
+
         ax1.set_xlim(3000, 17000)
         ax2.set_xlim(3000, 17000)
 
     else:
+        max_ylim = 1.1 * max_y_obs
+        min_ylim = 0.9 * min_y_obs
+
+        ax1.set_ylim(min_ylim, max_ylim)
+
         ax1.set_xlim(6000, 9500)
         ax2.set_xlim(6000, 9500)
 
@@ -1034,7 +1042,7 @@ if __name__ == '__main__':
     # sys.exit(0)
 
     # Flags to turn on-off broadband and emission lines in the fit
-    use_broadband = False
+    use_broadband = True
     use_emlines = True
     broaden_lsf = True
     num_filters = 7
@@ -1279,6 +1287,8 @@ if __name__ == '__main__':
                 phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
                 phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
+                phot_errors_arr *= 2.0
+
                 # Pivot wavelengths
                 # From here --
                 # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
@@ -1373,7 +1383,7 @@ if __name__ == '__main__':
                 broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
                 broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
 
-                check_broad_lsf(lsf, broad_lsf)  # Comment out if you dont want to check the LSF broadenign result
+                #check_broad_lsf(lsf, broad_lsf)  # Comment out if you dont want to check the LSF broadenign result
 
                 lsf_to_use = broad_lsf
 
@@ -1384,8 +1394,8 @@ if __name__ == '__main__':
             # extend lam_grid to be able to move the lam_grid later 
             avg_dlam = old_ref.get_avg_dlam(grism_lam_obs)
 
-            lam_low_to_insert = np.arange(4000, grism_lam_obs[0], avg_dlam, dtype=np.float64)
-            lam_high_to_append = np.arange(grism_lam_obs[-1] + avg_dlam, 11000, avg_dlam, dtype=np.float64)
+            lam_low_to_insert = np.arange(6000, grism_lam_obs[0], avg_dlam, dtype=np.float64)
+            lam_high_to_append = np.arange(grism_lam_obs[-1] + avg_dlam, 10000, avg_dlam, dtype=np.float64)
 
             resampling_lam_grid = np.insert(grism_lam_obs, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
