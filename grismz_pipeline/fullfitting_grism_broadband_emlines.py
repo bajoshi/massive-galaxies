@@ -812,7 +812,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
     np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
 
-    pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim)
+    pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field)
 
     # Save p(z)
     np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
@@ -1041,7 +1041,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     return None
 
-def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, upper_z_lim):
+def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, upper_z_lim, obj_id, obj_field):
 
     # Convert chi2 to likelihood
     likelihood = np.exp(-1 * chi2_map / 2)
@@ -1107,7 +1107,7 @@ if __name__ == '__main__':
     # Flags to turn on-off broadband and emission lines in the fit
     use_broadband = True
     use_emlines = True
-    modify_lsf = True
+    modify_lsf = False
     num_filters = 7
 
     # ------------------------------ Add emission lines to models ------------------------------ #
@@ -1235,10 +1235,10 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
-            current_id = 87433
+            current_id = 85920
             current_field = 'GOODS-N'
-            current_photz = 0.7734
-            current_specz = 0.747
+            current_specz = 1.014
+            current_photz = 0.9718
             starting_z = current_specz
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
