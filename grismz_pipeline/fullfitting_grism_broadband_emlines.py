@@ -1060,7 +1060,7 @@ if __name__ == '__main__':
     model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
     model_lam_grid = model_lam_grid.astype(np.float64)
 
-    
+
     total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
     for j in range(total_models):
@@ -1399,7 +1399,7 @@ if __name__ == '__main__':
                 stretched_lsf_arr = np.linspace(0, lsf_length, num_interppoints, endpoint=False)
                 stretched_lsf = griddata(points=x_arr, values=lsf, xi=stretched_lsf_arr, method='linear')
 
-                # Makse sure that the new LSF does not have NaN values in ti
+                # Make sure that the new LSF does not have NaN values in ti
                 stretched_lsf = stretched_lsf[np.isfinite(stretched_lsf)]
 
                 # Area under stretched LSF should be 1.0
