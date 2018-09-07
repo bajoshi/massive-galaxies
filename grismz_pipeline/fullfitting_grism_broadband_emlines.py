@@ -11,6 +11,7 @@ from joblib import Parallel, delayed
 from scipy.interpolate import griddata, interp1d
 from scipy.signal import fftconvolve
 import pysynphot
+from scipy.integrate import simps
 
 import os
 import sys
@@ -347,22 +348,23 @@ def emission_lines(metallicity, bc03_spec_lam, bc03_spec, nlyc, silent=True):
 
     return bc03_spec_lam_withlines, bc03_spec_withlines
 
-def check_broad_lsf(lsf, broad_lsf):
+def check_modified_lsf(lsf, modified_lsf):
 
     print "Original LSF:", lsf
-    print "Original LSF:", broad_lsf
+    print "Modified LSF:", modified_lsf
 
-    from scipy.integrate import simps
+    print "Original LSF length:", len(lsf)
+    print "Modified LSF length:", len(modified_lsf)
 
     print "Area under original LSF:", simps(lsf)
-    print "Area under broader LSF:", simps(broad_lsf)
+    print "Area under modified LSF:", simps(modified_lsf)
 
     # Plot
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.plot(np.arange(len(lsf)), lsf)
-    ax.plot(np.arange(len(broad_lsf)), broad_lsf)
+    ax.plot(np.arange(len(lsf)), lsf, color='midnightblue')
+    ax.plot(np.arange(len(modified_lsf)), modified_lsf, color='indianred')
 
     plt.show()
 
@@ -906,17 +908,17 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     ax2 = fig.add_subplot(gs[8:,:])
 
     # ---------- labels ---------- #
-    ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA]}$')
+    ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA^{-1}]}$')
     ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
     ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
 
     # ---------- plot data, model, and residual ---------- #
     # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='salmon', alpha=0.5)
+    ax1.plot(model_lam_grid * (1+grismz), bestalpha*best_fit_model_fullres / (1+grismz), color='mediumblue', alpha=0.3)
 
     # plot data
-    ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
-    ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+    ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2, zorder=10)
+    ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray', zorder=10)
 
     if use_broadband:
         ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, \
@@ -924,10 +926,10 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
             capsize=2, markersize=10.0, elinewidth=2.0)
 
     # plot best fit model
-    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='indianred')
+    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='indianred', zorder=20)
 
     if use_broadband:
-        ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=10)
+        ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=20)
 
     # Residuals
     # For the grism points
@@ -1044,7 +1046,7 @@ if __name__ == '__main__':
     # Flags to turn on-off broadband and emission lines in the fit
     use_broadband = True
     use_emlines = True
-    broaden_lsf = True
+    modify_lsf = True
     num_filters = 7
 
     # ------------------------------ Add emission lines to models ------------------------------ #
@@ -1058,6 +1060,7 @@ if __name__ == '__main__':
     model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
     model_lam_grid = model_lam_grid.astype(np.float64)
 
+    
     total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
     for j in range(total_models):
@@ -1067,12 +1070,11 @@ if __name__ == '__main__':
         emission_lines(metallicity, model_lam_grid, bc03_all_spec_hdulist[j+1].data, nlyc)
         # Also checked that in every case model_lam_grid_withlines is the exact same
         # SO i'm simply using hte output from the last model.
-        """
-        To include the models without the lines as well you will have to make sure that 
-        the two types of models (ie. with and without lines) are on the same lambda grid.
-        I guess you could simply interpolate the model without lines on to the grid of
-        the models wiht lines.
-        """
+
+        # To include the models without the lines as well you will have to make sure that 
+        # the two types of models (ie. with and without lines) are on the same lambda grid.
+        # I guess you could simply interpolate the model without lines on to the grid of
+        # the models wiht lines.
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
@@ -1287,7 +1289,7 @@ if __name__ == '__main__':
                 phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
                 phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
-                phot_errors_arr *= 2.0
+                #phot_errors_arr *= 2.0
 
                 # Pivot wavelengths
                 # From here --
@@ -1368,8 +1370,10 @@ if __name__ == '__main__':
 
             # -------- Broaden the LSF ------- #
             # SEE THE FILE -- /Users/baj/Desktop/test-codes/cython_test/cython_profiling/profile.py
-            # FOR DETAILS ON BROADENING LSF METHOD USED BELOW.
-            if broaden_lsf:
+            # FOR DETAILS ON BROADENING LSF METHOD.
+            # In here I'm stretching the LSF instead of broadening it.
+            if modify_lsf:
+                """
                 lsf_length = len(lsf)
                 gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
                 fit_gauss = fitting.LevMarLSQFitter()
@@ -1383,9 +1387,28 @@ if __name__ == '__main__':
                 broad_lsf = fftconvolve(lsf, broaden_kernel, mode='same')
                 broad_lsf = broad_lsf.astype(np.float64)  # Force dtype for cython code
 
-                #check_broad_lsf(lsf, broad_lsf)  # Comment out if you dont want to check the LSF broadenign result
+                #check_modified_lsf(lsf, broad_lsf)  # Comment out if you dont want to check the LSF modification result
 
                 lsf_to_use = broad_lsf
+                """
+
+                # Stretch LSF instead of broadening
+                lsf_length = len(lsf)
+                x_arr = np.arange(lsf_length)
+                num_interppoints = int(1.118 * lsf_length)
+                stretched_lsf_arr = np.linspace(0, lsf_length, num_interppoints, endpoint=False)
+                stretched_lsf = griddata(points=x_arr, values=lsf, xi=stretched_lsf_arr, method='linear')
+
+                # Makse sure that the new LSF does not have NaN values in ti
+                stretched_lsf = stretched_lsf[np.isfinite(stretched_lsf)]
+
+                # Area under stretched LSF should be 1.0
+                current_area = simps(stretched_lsf)
+                stretched_lsf *= (1/current_area)
+
+                #check_modified_lsf(lsf, stretched_lsf)  # Comment out if you dont want to check the LSF modification result
+
+                lsf_to_use = stretched_lsf
 
             else:
                 lsf_to_use = lsf
