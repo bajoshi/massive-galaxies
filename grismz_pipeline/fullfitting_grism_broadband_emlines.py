@@ -809,8 +809,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Should check if the minimum is global or local
     ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
     # Save chi2 map
-    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2)
+    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
     np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
+
+    pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim)
+
+    # Save p(z)
+    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
@@ -1036,14 +1041,57 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     return None
 
-def get_likelihood(chi2_map, z_arr_to_check):
+def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, upper_z_lim):
 
     # Convert chi2 to likelihood
-    likelihood = np.exp(-1*chi2_map/2)
+    likelihood = np.exp(-1 * chi2_map / 2)
 
     # Normalize likelihood function
+    norm_likelihood = likelihood / np.sum(likelihood)
 
-    return None
+    # Get p(z)
+    pz = np.zeros(len(z_arr_to_check))
+
+    for i in range(len(z_arr_to_check)):
+        pz[i] = np.sum(norm_likelihood[i])
+
+    # Find peak in p(z) and a measure of uncertainty in grism_z
+
+    # PLot and save plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(z_arr_to_check, pz)
+
+    ax.minorticks_on()
+
+    # ---------- text for info ---------- #
+    ax.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+
+    low_zerr = grismz - low_z_lim
+    high_zerr = upper_z_lim - grismz
+
+    ax.text(0.75, 0.35, \
+    r'$\mathrm{z_{grism}\, [from\ min\ \chi^2]\, =\, }$' + "{:.4}".format(grismz) + \
+    r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+    ax.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+    ax.text(0.75, 0.22, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+
+    fig.savefig(massive_figures_dir + 'large_diff_specz_sample/' +  obj_field + '_' + str(obj_id) + '_pz.png', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return pz
 
 if __name__ == '__main__':
 
@@ -1302,7 +1350,7 @@ if __name__ == '__main__':
                 phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
                 phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
-                phot_errors_arr *= 2.0
+                #phot_errors_arr *= 2.0
 
                 # Pivot wavelengths
                 # From here --
