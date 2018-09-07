@@ -303,7 +303,7 @@ def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz, obj_id, obj_field, tot
     # plot image of chi2 surface
     # Here the x axis is the model index
     # The y axis the redshift array that was supplied to the fitting code
-    cax = ax.imshow(chi2_map/dof, vmin=0.0, vmax=2.0)
+    cax = ax.imshow(chi2_map/dof, vmin=0.0, vmax=4.0)
 
     # set labels/ticks
     ax.set_xlabel(r'$\mathrm{Model\ index}$', fontsize=12)
@@ -527,8 +527,8 @@ def get_data(pears_index, field, check_contam=True):
         return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Now chop off the ends and only look at the observed spectrum from 6000A to 9500A
-    arg6500 = np.argmin(abs(lam_obs - 6500))
-    arg9000 = np.argmin(abs(lam_obs - 9000))
+    arg6500 = np.argmin(abs(lam_obs - 6000))
+    arg9000 = np.argmin(abs(lam_obs - 9500))
         
     lam_obs = lam_obs[arg6500:arg9000]
     flam_obs = flam_obs[arg6500:arg9000]
