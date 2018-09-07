@@ -33,6 +33,7 @@ savefits_dir = home + "/Desktop/FIGS/new_codes/bc03_fits_files_for_refining_reds
 lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 threedhst_datadir = home + "/Desktop/3dhst_data/"
+massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
@@ -807,6 +808,9 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
     ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
+    # Save chi2 map
+    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2)
+    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
@@ -1020,10 +1024,10 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     # ---------- Save figure ---------- #
     if use_broadband:
-        fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '.png', \
+        fig.savefig(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '.png', \
             dpi=300, bbox_inches='tight')
     else:
-        fig.savefig(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_NoPhotometry.png', \
+        fig.savefig(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_NoPhotometry.png', \
             dpi=300, bbox_inches='tight')
     
     plt.clf()
