@@ -29,7 +29,6 @@ sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grism_pipeline/')
 import grid_coadd as gd
 import fast_chi2_jackknife as fcj
-import get_stellar_prop_figs as getfigs
 import new_refine_grismz_gridsearch_parallel as ngp
 
 """

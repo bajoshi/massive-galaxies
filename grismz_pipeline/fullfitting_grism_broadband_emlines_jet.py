@@ -18,12 +18,6 @@ import glob
 import time
 import datetime
 
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import matplotlib as mpl
-
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
-
 home = os.getenv('HOME')
 pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
 stacking_analysis_dir = home + "/Desktop/FIGS/stacking-analysis-pears/"
@@ -694,7 +688,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    num_cores = 3
+    num_cores = 4
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
@@ -803,7 +797,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
-    ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
+    #ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
     # Save chi2 map
     np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
     np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
@@ -827,6 +821,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # get things needed to plot and plot
     bestalpha = alpha[min_idx_2d]
     print "Vertical scaling factor for best fit model:", bestalpha
+    """
     # chop model again to get the part within objects lam obs grid
     model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - grism_lam_obs[0]))
     model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - grism_lam_obs[-1]))
@@ -889,6 +884,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # Get best fit model at full resolution
     best_fit_model_fullres = model_comp_spec[model_idx]
+    """
 
     # ---------------------------------------------------------
     # again make sure that the arrays are the same length
@@ -896,9 +892,9 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     #    print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
     #    sys.exit(0)
     # plot
-    plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
-        all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha, model_lam_grid, best_fit_model_fullres,
-        obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000, z_wt)
+    #plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
+    #    all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha, model_lam_grid, best_fit_model_fullres,
+    #    obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000, z_wt)
 
     return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
@@ -1061,6 +1057,7 @@ def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, 
     # Find peak in p(z) and a measure of uncertainty in grism_z
 
     # PLot and save plot
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -1093,6 +1090,7 @@ def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, 
     plt.clf()
     plt.cla()
     plt.close()
+    """
 
     return pz
 
@@ -1167,8 +1165,8 @@ if __name__ == '__main__':
     # large differences between specz and grismz
     #large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
 
-    all_speccats = [specz_goodsn]#, specz_goodss]
-    all_match_cats = [matched_cat_n]#, matched_cat_s]
+    all_speccats = [specz_goodss]
+    all_match_cats = [matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
@@ -1187,7 +1185,7 @@ if __name__ == '__main__':
     d4000_err_list = []
 
     # start looping
-    catcount = 0
+    catcount = 1
     galaxy_count = 0
     for cat in all_match_cats:
 
