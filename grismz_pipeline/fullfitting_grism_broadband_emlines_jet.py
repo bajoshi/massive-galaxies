@@ -688,6 +688,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
+    """
     num_cores = 4
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
@@ -699,18 +700,18 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+    """
 
     # regular for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't need it
-    """
     count = 0
     for z in z_arr_to_check:
-        chi2[count], alpha[count] = get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-            model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
-            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time)
+        chi2[count], alpha[count] = get_chi2_alpha_at_z(z, \
+    grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+    model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
+    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time)
         count += 1
-    """
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
