@@ -604,6 +604,7 @@ if __name__ == '__main__':
 
     # start looping
     catcount = 0
+    galaxy_count = 0
     for cat in all_match_cats:
 
         for i in range(len(cat)):
@@ -745,6 +746,7 @@ if __name__ == '__main__':
             resampling_lam_grid = np.insert(lam_obs, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
+            """
             # ------------- Call actual fitting function ------------- #
             zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_fitting(flam_obs, ferr_obs, lam_obs, broad_lsf, starting_z, resampling_lam_grid, \
@@ -773,8 +775,14 @@ if __name__ == '__main__':
             av_list.append(av)
             d4000_list.append(d4000)
             d4000_err_list.append(d4000_err)
+            """
+
+            galaxy_count += 1
 
         catcount += 1
+
+    print "Total galaxies considered:", galaxy_count
+    sys.exit(0)
 
     id_list = np.asarray(id_list)
     field_list = np.asarray(field_list)

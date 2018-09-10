@@ -37,7 +37,6 @@ massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
-import grid_coadd as gd
 import refine_redshifts_dn4000 as old_ref
 import model_mods as mm
 import dn4000_catalog as dc
@@ -695,7 +694,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    num_cores = 4
+    num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
@@ -1105,7 +1104,7 @@ if __name__ == '__main__':
     # Flags to turn on-off broadband and emission lines in the fit
     use_broadband = True
     use_emlines = True
-    modify_lsf = False
+    modify_lsf = True
     num_filters = 7
 
     # ------------------------------ Add emission lines to models ------------------------------ #
@@ -1118,7 +1117,6 @@ if __name__ == '__main__':
     bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
     model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
     model_lam_grid = model_lam_grid.astype(np.float64)
-
 
     total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
@@ -1157,14 +1155,14 @@ if __name__ == '__main__':
     'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W']
     goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
         dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
-    #goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
-    #    dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
+    goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
+        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
 
     # large differences between specz and grismz
-    large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
+    #large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
 
-    all_speccats = [specz_goodsn]  #[specz_goodsn, specz_goodss]
-    all_match_cats = [matched_cat_n]  #[matched_cat_n, matched_cat_s]
+    all_speccats = [specz_goodsn, specz_goodss]
+    all_match_cats = [matched_cat_n, matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
@@ -1184,6 +1182,7 @@ if __name__ == '__main__':
 
     # start looping
     catcount = 0
+    galaxy_count = 0
     for cat in all_match_cats:
 
         for i in range(len(cat)):
@@ -1233,11 +1232,11 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
-            current_id = 85920
-            current_field = 'GOODS-N'
-            current_specz = 1.014
-            current_photz = 0.9718
-            starting_z = current_specz
+            #current_id = 118100
+            #current_field = 'GOODS-S'
+            #current_specz = 0.644
+            #current_photz = 0.627
+            #starting_z = current_specz
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
 
@@ -1261,6 +1260,29 @@ if __name__ == '__main__':
                 dec_lim = 0.5/3600
                 threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
                     (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
+
+                """
+                If there are multiple matches with the photometry catalog 
+                within 0.5 arseconds then choose the closest one.
+                """
+                if len(threed_phot_idx) > 1:
+
+                    ra_two = current_ra
+                    dec_two = current_dec
+
+                    dist_list = []
+                    for v in range(len(threed_phot_idx)):
+
+                        ra_one = threed_ra[threed_phot_idx][v]
+                        dec_one = threed_dec[threed_phot_idx][v]
+
+                        dist = np.arccos(np.cos(dec_one*np.pi/180) * np.cos(dec_two*np.pi/180) * np.cos(ra_one*np.pi/180 - ra_two*np.pi/180) + 
+                            np.sin(dec_one*np.pi/180) * np.sin(dec_two*np.pi/180))
+                        dist_list.append(dist)
+
+                    dist_list = np.asarray(dist_list)
+                    dist_idx = np.argmin(dist_list)
+                    threed_phot_idx = threed_phot_idx[dist_idx]
 
                 # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
                 flam_f435w = get_flam('F435W', phot_cat_3dhst['f_F435W'][threed_phot_idx])
@@ -1489,8 +1511,6 @@ if __name__ == '__main__':
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)# all_filters)
 
-            sys.exit(0)
-
             # Get d4000 at new zgrism
             lam_em = grism_lam_obs / (1 + zg)
             flam_em = grism_flam_obs * (1 + zg)
@@ -1514,7 +1534,11 @@ if __name__ == '__main__':
             d4000_list.append(d4000)
             d4000_err_list.append(d4000_err)
 
+            galaxy_count += 1
+
         catcount += 1
+
+    print "Total galaxies considered:", galaxy_count
 
     # Convert to numpy arrays
     id_list = np.asarray(id_list)
