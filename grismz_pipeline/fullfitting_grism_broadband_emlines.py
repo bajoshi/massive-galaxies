@@ -1,7 +1,6 @@
 from __future__ import division
 
 import numpy as np
-import numpy.ma as ma
 from scipy.signal import fftconvolve
 from astropy.io import fits
 from astropy.modeling import models, fitting
@@ -946,6 +945,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     # Now plot
     ax2.scatter(grism_lam_obs, resid_fit_grism, s=4, color='k')
+    ax2.axhline(y=0, ls='--', color='k')
 
     if use_broadband:
         # For the photometry
@@ -1066,22 +1066,22 @@ def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, 
     ax.minorticks_on()
 
     # ---------- text for info ---------- #
-    ax.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    ax.text(0.65, 0.4, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=10)
 
     low_zerr = grismz - low_z_lim
     high_zerr = upper_z_lim - grismz
 
-    ax.text(0.75, 0.35, \
+    ax.text(0.65, 0.35, \
     r'$\mathrm{z_{grism}\, [from\ min\ \chi^2]\, =\, }$' + "{:.4}".format(grismz) + \
     r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=10)
-    ax.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    ax.text(0.65, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=10)
-    ax.text(0.75, 0.22, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
+    ax.text(0.65, 0.22, r'$\mathrm{z_{phot}\, =\, }$' + "{:.4}".format(photoz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=10)
 
