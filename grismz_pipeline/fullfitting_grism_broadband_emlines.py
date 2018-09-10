@@ -375,9 +375,7 @@ def lsf_convolve(model_comp_spec, lsf, total_models):
     model_comp_spec_lsfconv = np.zeros(model_comp_spec.shape, dtype=np.float64)
 
     for i in range(total_models):
-
-        model_spec = model_comp_spec[i]
-        model_comp_spec_lsfconv[i] = fftconvolve(model_spec, lsf, mode = 'same')
+        model_comp_spec_lsfconv[i] = fftconvolve(model_comp_spec[i], lsf, mode = 'same')
 
     return model_comp_spec_lsfconv
 

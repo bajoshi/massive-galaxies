@@ -3,6 +3,7 @@ from __future__ import division
 import numpy as np
 from scipy.interpolate import griddata
 from astropy.io import fits
+from scipy.integrate import simps
 
 import os
 import sys
@@ -24,6 +25,14 @@ sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import fullfitting_grism_broadband_emlines as fg
 import refine_redshifts_dn4000 as old_ref
 import model_mods as mm
+import new_refine_grismz_gridsearch_parallel as ngp
+
+def simplemean(a):
+    s = 0 
+    arr_elem = len(a)
+    for j in range(0,arr_elem):
+        s += a[j]
+    return s / arr_elem
 
 if __name__ == '__main__':
     
@@ -65,6 +74,9 @@ if __name__ == '__main__':
     current_id = 85920
     current_field = 'GOODS-N'
     z = 1.014
+
+    grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
+
     # read in some test LSF
     # Read in LSF
     if current_field == 'GOODS-N':
@@ -95,7 +107,7 @@ if __name__ == '__main__':
     # First do the convolution with the LSF
     model_comp_spec_lsfconv = fg.lsf_convolve(model_comp_spec_withlines, lsf_to_use, total_models)
     print "Convolution done.",
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print "Total time taken up to now --", time.time() - start, "seconds."
 
     # ------- Make new resampling grid ------- # 
     # extend lam_grid to be able to move the lam_grid later 
@@ -109,47 +121,60 @@ if __name__ == '__main__':
 
     # --------------- Redshift model --------------- #
     redshift_factor = 1.0 + z
-    model_lam_grid_z = model_lam_grid_withlines * redshift_factor
-    model_comp_spec_redshifted = model_comp_spec_lsfconv / redshift_factor
+    model_lam_grid_withlines *= redshift_factor
+    model_comp_spec_lsfconv /= redshift_factor
 
     # --------------- Do resampling --------------- #
     # Define array to save modified models
     resampling_lam_grid_length = len(resampling_lam_grid)
-    model_comp_spec_modified = np.zeros((total_models, resampling_lam_grid_length), dtype=np.float64)
+    model_comp_spec_modified_interp = np.zeros((total_models, resampling_lam_grid_length), dtype=np.float64)
+    model_comp_spec_modified_weighted = np.zeros((total_models, resampling_lam_grid_length), dtype=np.float64)
     model_comp_spec_modified_old = np.zeros((total_models, resampling_lam_grid_length), dtype=np.float64)
 
     # --------------- Get indices for resampling --------------- #
     # These indices are going to be different each time depending on the redshfit.
-    # i.e. Since it uses the redshifted model_lam_grid_z to get indices.
+    # i.e. Since it uses the redshifted model_lam_grid_withlines to get indices.
     indices = []
     ### Zeroth element
     lam_step = resampling_lam_grid[1] - resampling_lam_grid[0]
-    indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_z < resampling_lam_grid[0] + lam_step))[0])
+    indices.append(np.where((model_lam_grid_withlines >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_withlines < resampling_lam_grid[0] + lam_step))[0])
 
     ### all elements in between
     for i in range(1, resampling_lam_grid_length - 1):
-        indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[i-1]) & (model_lam_grid_z < resampling_lam_grid[i+1]))[0])
+        indices.append(np.where((model_lam_grid_withlines >= resampling_lam_grid[i-1]) & (model_lam_grid_withlines < resampling_lam_grid[i+1]))[0])
 
     ### Last element
     lam_step = resampling_lam_grid[-1] - resampling_lam_grid[-2]
-    indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[-1] - lam_step) & (model_lam_grid_z < resampling_lam_grid[-1] + lam_step))[0])
+    indices.append(np.where((model_lam_grid_withlines >= resampling_lam_grid[-1] - lam_step) & (model_lam_grid_withlines < resampling_lam_grid[-1] + lam_step))[0])
 
     # Trying to do the resampling with griddata
     for k in range(total_models):
-        model_comp_spec_modified[k] = \
-        griddata(points=model_lam_grid_z, values=model_comp_spec_redshifted[k], xi=resampling_lam_grid, method='linear')
+        # --------- Method 1: Use interpolation grid --------- #
+        model_comp_spec_modified_interp[k] = \
+        griddata(points=model_lam_grid_withlines, values=model_comp_spec_lsfconv[k], xi=resampling_lam_grid, method='linear')
 
-        # Now try resampling the old way
-        model_comp_spec_modified_old[k] = [mm.simple_mean(model_comp_spec_redshifted[k][indices[q]]) for q in range(resampling_lam_grid_length)]
+        resampling_lam_grid_weighted = []
 
-    # Now plot and check
-    for i in range(total_models):
+        for u in range(resampling_lam_grid_length):
+
+            # --------- Method 2: Take mean in bin and use flux weighted bin centers --------- #
+            bin_center = np.sum(model_lam_grid_withlines[indices[u]] * model_comp_spec_lsfconv[k][indices[u]]) / np.sum(model_comp_spec_lsfconv[k][indices[u]])
+            resampling_lam_grid_weighted.append(bin_center)
+
+            model_comp_spec_modified_weighted[k, u] = simplemean(model_comp_spec_lsfconv[k][indices[u]])
+
+            # --------- Method 3: Take mean in wavelength bin without modifying bin center --------- #
+            model_comp_spec_modified_old[k, u] = simplemean(model_comp_spec_lsfconv[k][indices[u]])
+
+        print "Original resampling grid:", resampling_lam_grid
+        print "Weighted resampling grid:", resampling_lam_grid_weighted
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-        ax.plot(resampling_lam_grid, model_comp_spec_modified[i])
-        ax.plot(resampling_lam_grid, model_comp_spec_modified_old[i])
+        ax.plot(resampling_lam_grid, model_comp_spec_modified_interp[k])
+        ax.plot(resampling_lam_grid, model_comp_spec_modified_old[k])
+        ax.plot(resampling_lam_grid_weighted, model_comp_spec_modified_weighted[k])
 
         plt.show()
 
