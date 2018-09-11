@@ -759,9 +759,6 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
     z_grism = z_arr_to_check[min_idx_2d[0]]
-    print "Grism redshift:", z_grism
-    print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
-    print "Photometric redshift:", photoz
 
     print "Current best fit log(age [yr]):", "{:.4}".format(age)
     print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
@@ -814,6 +811,9 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
     z_wt = np.sum(z_arr_to_check * pz)
     print "Weighted z:", "{:.3}".format(z_wt)
+    print "Grism redshift:", z_grism
+    print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
+    print "Photometric redshift:", photoz
 
     # These low chi2 indices are useful as a first attempt to figure
     # out the spread in chi2 but otherwise not too enlightening.
@@ -1238,10 +1238,10 @@ if __name__ == '__main__':
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
             # do_fitting()
-            #current_id = 118100
-            #current_field = 'GOODS-S'
-            #current_specz = 0.644
-            #current_photz = 0.627
+            #current_id = 94851
+            #current_field = 'GOODS-N'
+            #current_specz = 0.955
+            #current_photz = 0.9167
             #starting_z = current_specz
 
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
@@ -1509,6 +1509,17 @@ if __name__ == '__main__':
 
             resampling_lam_grid = np.insert(grism_lam_obs, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
+
+            # Make sure that the photometry arrays all have finite values
+            # If any vlues are NaN then throw them out
+            phot_fluxes_finite_idx = np.where(np.isfinite(phot_fluxes_arr))[0]
+            phot_errors_finite_idx = np.where(np.isfinite(phot_errors_arr))[0]
+
+            phot_fin_idx = reduce(np.intersect1d, (phot_fluxes_finite_idx, phot_errors_finite_idx))
+
+            phot_fluxes_arr = phot_fluxes_arr[phot_fin_idx]
+            phot_errors_arr = phot_errors_arr[phot_fin_idx]
+            phot_lam = phot_lam[phot_fin_idx]
 
             # ------------- Call actual fitting function ------------- #
             zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
