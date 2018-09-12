@@ -1376,7 +1376,7 @@ if __name__ == '__main__':
                 phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
                 phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
 
-                #phot_errors_arr *= 2.0
+                phot_errors_arr *= 2.0
 
                 # Pivot wavelengths
                 # From here --
