@@ -412,8 +412,8 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
     return model_comp_spec_modified
 
-def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-        all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models):
+def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+    all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models):
 
     # chop the model to be consistent with the objects lam grid
     model_lam_grid_indx_low = np.argmin(abs(model_resampling_lam_grid - grism_lam_obs[0]))
@@ -1111,7 +1111,7 @@ if __name__ == '__main__':
     use_broadband = True
     use_emlines = True
     modify_lsf = True
-    num_filters = 7
+    num_filters = 12
 
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
@@ -1158,11 +1158,13 @@ if __name__ == '__main__':
     # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
     # The combined grism+photometry fits, redshifts, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
     photometry_names = ['id', 'ra', 'dec', 'f_F160W', 'e_F160W', 'f_F435W', 'e_F435W', 'f_F606W', 'e_F606W', \
-    'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W']
+    'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W', \
+    'f_U', 'e_U', 'f_IRAC1', 'e_IRAC1', 'f_IRAC2', 'e_IRAC2', 'f_IRAC3', 'e_IRAC3', 'f_IRAC4', 'e_IRAC4', \
+    'IRAC1_contam', 'IRAC2_contam', 'IRAC3_contam', 'IRAC4_contam']
     goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
+        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), skip_header=3)
     goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55), skip_header=3)
+        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
 
     # large differences between specz and grismz
     #large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
@@ -1244,6 +1246,7 @@ if __name__ == '__main__':
             #current_photz = 0.9167
             #starting_z = current_specz
 
+            print "Galaxies done so far:", galaxy_count
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
 
             grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
@@ -1332,7 +1335,7 @@ if __name__ == '__main__':
                 f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
                 f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
 
-                all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
+                all_filters = [ , f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, ]
 
                 """
                 Example to plot filter curves for ACS:
