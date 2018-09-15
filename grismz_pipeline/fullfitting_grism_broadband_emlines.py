@@ -665,7 +665,15 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
         for filt in all_filters:
 
             # first interpolate the grism transmission curve to the model lam grid
-            filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
+            # Check if the filter is an HST filter or not
+            # It is an HST filter if it comes from pysynphot
+            # IF it is a non-HST filter then it is a simple ascii file
+            if type(filt) == pysynphot.obsbandpass.ObsModeBandpass:
+                # Interpolate using the attributes of pysynphot filters
+                filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
+
+            elif type(filt) == np.ndarray:
+                filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
 
             # multiply model spectrum to filter curve
             for i in range(total_models):
@@ -1488,7 +1496,10 @@ if __name__ == '__main__':
                 irac4_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
                     names=['wav', 'trans'], skip_header=3)
 
-                irac1_curve = 
+                irac1_curve['wav'] *= 1e4
+                irac2_curve['wav'] *= 1e4
+                irac3_curve['wav'] *= 1e4
+                irac4_curve['wav'] *= 1e4
 
                 all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
                 f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
@@ -1553,6 +1564,7 @@ if __name__ == '__main__':
 
                 check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
                 sys.exit(0)
+
             else:
                 print "Not using broadband data in fit. Setting photometry related arrays to zero arrays."
                 phot_fluxes_arr = np.zeros(num_filters)
