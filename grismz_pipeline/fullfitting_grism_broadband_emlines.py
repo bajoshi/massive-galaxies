@@ -935,7 +935,15 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         for filt in all_filters:
 
             # first interpolate the grism transmission curve to the model lam grid
-            filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
+            # Check if the filter is an HST filter or not
+            # It is an HST filter if it comes from pysynphot
+            # IF it is a non-HST filter then it is a simple ascii file
+            if type(filt) == pysynphot.obsbandpass.ObsModeBandpass:
+                # Interpolate using the attributes of pysynphot filters
+                filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
+
+            elif type(filt) == np.ndarray:
+                filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
 
             # multiply model spectrum to filter curve
             for i in range(total_models):
@@ -1543,8 +1551,10 @@ if __name__ == '__main__':
                 grism_flam_obs *= aper_corr_factor  # applying factor
 
                 # ------------------------------- Make unified photometry arrays ------------------------------- #
-                phot_fluxes_arr = np.array([flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w])
-                phot_errors_arr = np.array([ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w])
+                phot_fluxes_arr = np.array([flam_U, flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w,
+                    flam_irac1, flam_irac2, flam_irac3, flam_irac4])
+                phot_errors_arr = np.array([ferr_U, ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w,
+                    ferr_irac1, ferr_irac2, ferr_irac3, ferr_irac4])
 
                 #phot_errors_arr *= 2.0
                 grism_ferr_obs *= 2.0
@@ -1553,7 +1563,10 @@ if __name__ == '__main__':
                 # From here --
                 # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
                 # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
-                phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
+                # KPNO/MOSAIC U-band: https://www.noao.edu/kpno/mosaic/filters/k1001.html
+                # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
+                phot_lam = np.array([3582.0, 4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369, 
+                35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
 
                 # ------------------------------- Plot to check ------------------------------- #
                 fig = plt.figure()
