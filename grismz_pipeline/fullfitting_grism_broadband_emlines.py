@@ -103,6 +103,70 @@ def get_flam(filtname, cat_flux):
 
     return flam
 
+def get_nonhst_filt_response(filtname):
+
+    # Read in filter
+    if filtname == 'kpno_mosaic_u':
+        filt = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/' + filtname + '.txt', dtype=None, \
+            names=['wav', 'trans'], skip_header=14)  # the transmission is given as a percentage in here
+
+    # Convert to the quantities needed
+    filt_resp = filt['trans']
+    filt_lam = filt['wav']
+
+    filt_nu = speed_of_light / filt_lam
+
+    return filt_resp, filt_nu, filt_lam
+
+def get_flam_nonhst(filtname, cat_flux, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam):
+
+    """
+    # Get filter response curves 
+    # Both with respect to wavelength and frequency
+    filt_resp, filt_nu, filt_lam = get_nonhst_filt_response(filtname)
+
+    # INterpolate the Vega spectrum to the same grid as the filter curve in nu space
+    vega_spec_fnu_interp = griddata(points=vega_nu, values=vega_spec_fnu, xi=filt_nu, method='linear')
+
+    # Now find the AB magnitude of Vega in the filter
+    vega_abmag_in_filt = -2.5 * np.log10(np.sum(vega_spec_fnu_interp * filt_resp) / np.sum(filt_resp)) - 48.6
+
+    # Get AB mag of object
+    cat_flux = float(cat_flux)  # because it should be a single float
+    abmag = 25.0 - 2.5*np.log10(cat_flux)
+
+    # Get Vega magnitude of object
+    vegamag = abmag - vega_abmag_in_filt
+    print abmag, vegamag, vega_abmag_in_filt
+
+    # Convert vegamag to flam
+    # INterpolate the Vega spectrum to the same grid as the filter curve in lambda space
+    vega_spec_flam_interp = griddata(points=vega_lam, values=vega_spec_flam, xi=filt_lam, method='linear')
+    vega_flam = np.sum(vega_spec_flam_interp * filt_resp)  # multiply by delta_lam?
+
+    flam = vega_flam * 10**(-1 * vegamag / 2.5)
+
+    # --------------- vegamag from fnu -------------- # 
+    fnu = 10**(-1 * (abmag + 48.6) / 2.5)
+    print fnu
+    vegamag_from_fnu = -2.5 * np.log10(fnu / np.sum(vega_spec_fnu_interp * filt_resp))
+    print vegamag_from_fnu
+    """
+
+    # Using just the stupid way of doing this for now
+    cat_flux = float(cat_flux)  # because it should be a single float
+    abmag = 25.0 - 2.5*np.log10(cat_flux)
+    fnu = 10**(-1 * (abmag + 48.6) / 2.5)
+
+    filtname_arr = np.array(['kpno_mosaic_u', 'irac1', 'irac2', 'irac3', 'irac4'])
+    filt_idx = int(np.where(filtname_arr == filtname)[0])
+    pivot_wavelengths = np.array([3582.0, 35500.0, 44930.0, 57310.0, 78720.0])  # in angstroms
+    lp = pivot_wavelengths[filt_idx]
+
+    flam = fnu * speed_of_light / lp**2
+
+    return flam
+
 def show_example_for_adding_emission_lines():
     """
     Call this function from within __main__ if you want to show
@@ -1113,6 +1177,7 @@ if __name__ == '__main__':
     modify_lsf = True
     num_filters = 12
 
+    """
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
@@ -1141,6 +1206,7 @@ if __name__ == '__main__':
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
+    """
 
     # ----------------------------------------- READ IN CATALOGS ----------------------------------------- #
     # read in matched files to get photo-z
@@ -1163,12 +1229,23 @@ if __name__ == '__main__':
     'IRAC1_contam', 'IRAC2_contam', 'IRAC3_contam', 'IRAC4_contam']
     goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
         dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), skip_header=3)
-    goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
+    #goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
+    #    dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
 
     # large differences between specz and grismz
     #large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
 
+    # Read in Vega spectrum and get it in the appropriate forms
+    vega = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/' + 'vega_reference.dat', dtype=None, \
+        names=['wav', 'flam'], skip_header=7)
+
+    speed_of_light = 3e18  # in Angstroms per second
+    vega_lam = vega['wav']
+    vega_spec_flam = vega['flam']
+    vega_nu = speed_of_light / vega_lam
+    vega_spec_fnu = vega_lam**2 * vega_spec_flam / speed_of_light
+
+    # Lists to loop over
     all_speccats = [specz_goodsn]#, specz_goodss]
     all_match_cats = [matched_cat_n]#, matched_cat_s]
 
@@ -1302,6 +1379,17 @@ if __name__ == '__main__':
                 flam_f140w = get_flam('F140W', phot_cat_3dhst['f_F140W'][threed_phot_idx])
                 flam_f160w = get_flam('F160W', phot_cat_3dhst['f_F160W'][threed_phot_idx])
 
+                flam_U = get_flam_nonhst('kpno_mosaic_u', phot_cat_3dhst['f_U'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+                flam_irac1 = get_flam_nonhst('irac1', phot_cat_3dhst['f_IRAC1'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+                flam_irac2 = get_flam_nonhst('irac2', phot_cat_3dhst['f_IRAC2'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+                flam_irac3 = get_flam_nonhst('irac3', phot_cat_3dhst['f_IRAC3'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+                flam_irac4 = get_flam_nonhst('irac4', phot_cat_3dhst['f_IRAC4'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+
                 ferr_f435w = get_flam('F435W', phot_cat_3dhst['e_F435W'][threed_phot_idx])
                 ferr_f606w = get_flam('F606W', phot_cat_3dhst['e_F606W'][threed_phot_idx])
                 ferr_f775w = get_flam('F775W', phot_cat_3dhst['e_F775W'][threed_phot_idx])
@@ -1309,6 +1397,58 @@ if __name__ == '__main__':
                 ferr_f125w = get_flam('F125W', phot_cat_3dhst['e_F125W'][threed_phot_idx])
                 ferr_f140w = get_flam('F140W', phot_cat_3dhst['e_F140W'][threed_phot_idx])
                 ferr_f160w = get_flam('F160W', phot_cat_3dhst['e_F160W'][threed_phot_idx])
+
+                ferr_U = get_flam_nonhst('kpno_mosaic_u', phot_cat_3dhst['e_U'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+                ferr_irac1 = get_flam_nonhst('irac1', phot_cat_3dhst['e_IRAC1'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+                ferr_irac2 = get_flam_nonhst('irac2', phot_cat_3dhst['e_IRAC2'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+                ferr_irac3 = get_flam_nonhst('irac3', phot_cat_3dhst['e_IRAC3'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+                ferr_irac4 = get_flam_nonhst('irac4', phot_cat_3dhst['e_IRAC4'][threed_phot_idx], \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+
+                # Block useful for printing info and checking 
+                # the simple way of getting flambda. Do not delete.
+                """
+                abmag_f435w = 25.0 - 2.5*np.log10(float(phot_cat_3dhst['f_F435W'][threed_phot_idx]))
+                abmag_f606w = 25.0 - 2.5*np.log10(float(phot_cat_3dhst['f_F606W'][threed_phot_idx]))
+                abmag_f775w = 25.0 - 2.5*np.log10(float(phot_cat_3dhst['f_F775W'][threed_phot_idx]))
+                abmag_f850lp = 25.0 - 2.5*np.log10(float(phot_cat_3dhst['f_F850LP'][threed_phot_idx]))
+                abmag_f125w = 25.0 - 2.5*np.log10(float(phot_cat_3dhst['f_F125W'][threed_phot_idx]))
+                abmag_f140w = 25.0 - 2.5*np.log10(float(phot_cat_3dhst['f_F140W'][threed_phot_idx]))
+                abmag_f160w = 25.0 - 2.5*np.log10(float(phot_cat_3dhst['f_F160W'][threed_phot_idx]))
+
+                fnu_f435w = 10**(-1 * (abmag_f435w + 48.6) / 2.5)
+                fnu_f606w = 10**(-1 * (abmag_f606w + 48.6) / 2.5)
+                fnu_f775w = 10**(-1 * (abmag_f775w + 48.6) / 2.5)
+                fnu_f850lp = 10**(-1 * (abmag_f850lp + 48.6) / 2.5)
+                fnu_f125w = 10**(-1 * (abmag_f125w + 48.6) / 2.5)
+                fnu_f140w = 10**(-1 * (abmag_f140w + 48.6) / 2.5)
+                fnu_f160w = 10**(-1 * (abmag_f160w + 48.6) / 2.5)
+
+                flam_simple_f435w = fnu_f435w * speed_of_light / 4328.2**2
+                flam_simple_f606w = fnu_f606w * speed_of_light / 5921.1**2
+                flam_simple_f775w = fnu_f775w * speed_of_light / 7692.4**2
+                flam_simple_f850lp = fnu_f850lp * speed_of_light / 9033.1**2
+                flam_simple_f125w = fnu_f125w * speed_of_light / 12486**2
+                flam_simple_f140w = fnu_f140w * speed_of_light / 13923**2
+                flam_simple_f160w = fnu_f160w * speed_of_light / 15369**2
+
+                print "flambda in U:", flam_U, "+-", ferr_U
+                print flam_f435w, flam_simple_f435w
+                print flam_f606w, flam_simple_f606w
+                print flam_f775w, flam_simple_f775w
+                print flam_f850lp, flam_simple_f850lp
+                print flam_f125w, flam_simple_f125w
+                print flam_f140w, flam_simple_f140w
+                print flam_f160w, flam_simple_f160w
+                print "flambda IRAC1:", flam_irac1, "+-", ferr_irac1
+                print "flambda IRAC2:", flam_irac2, "+-", ferr_irac2
+                print "flambda IRAC3:", flam_irac3, "+-", ferr_irac3
+                print "flambda IRAC4:", flam_irac4, "+-", ferr_irac4
+                """
 
                 # ------------------------------- Apply aperture correction ------------------------------- #
                 # We need to do this because the grism spectrum and the broadband photometry don't line up properly.
@@ -1335,7 +1475,23 @@ if __name__ == '__main__':
                 f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
                 f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
 
-                all_filters = [ , f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, ]
+                # non-HST filter curves
+                # IRac wavelengths are in mixrons # convert to angstroms
+                uband_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/kpno_mosaic_u.txt', dtype=None, \
+                    names=['wav', 'trans'], skip_header=14)
+                irac1_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
+                    names=['wav', 'trans'], skip_header=3)
+                irac2_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
+                    names=['wav', 'trans'], skip_header=3)
+                irac3_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
+                    names=['wav', 'trans'], skip_header=3)
+                irac4_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
+                    names=['wav', 'trans'], skip_header=3)
+
+                irac1_curve = 
+
+                all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
+                f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
 
                 """
                 Example to plot filter curves for ACS:
@@ -1389,7 +1545,6 @@ if __name__ == '__main__':
                 phot_lam = np.array([4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369])  # angstroms
 
                 # ------------------------------- Plot to check ------------------------------- #
-                """
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
                 ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
@@ -1398,7 +1553,6 @@ if __name__ == '__main__':
 
                 check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
                 sys.exit(0)
-                """
             else:
                 print "Not using broadband data in fit. Setting photometry related arrays to zero arrays."
                 phot_fluxes_arr = np.zeros(num_filters)
