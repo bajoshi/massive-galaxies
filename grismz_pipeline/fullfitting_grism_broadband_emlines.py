@@ -1510,8 +1510,8 @@ if __name__ == '__main__':
                 irac3_curve['wav'] *= 1e4
                 irac4_curve['wav'] *= 1e4
 
-                all_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
-                f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
+                all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
+                f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
 
                 """
                 Example to plot filter curves for ACS:
