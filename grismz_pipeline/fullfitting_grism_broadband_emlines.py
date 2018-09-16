@@ -1193,8 +1193,7 @@ if __name__ == '__main__':
     use_emlines = True
     modify_lsf = True
     num_filters = 12
-
-    """
+    
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
@@ -1223,7 +1222,6 @@ if __name__ == '__main__':
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
-    """
 
     # ----------------------------------------- READ IN CATALOGS ----------------------------------------- #
     # read in matched files to get photo-z
