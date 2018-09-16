@@ -1570,14 +1570,16 @@ if __name__ == '__main__':
                 35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
 
                 # ------------------------------- Plot to check ------------------------------- #
-                #fig = plt.figure()
-                #ax = fig.add_subplot(111)
-                #ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
-                #ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
-                #plt.show(block=False)
+                """
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+                ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+                plt.show(block=False)
 
                 check_spec_plot(current_id, current_field, grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
                 sys.exit(0)
+                """
 
             else:
                 print "Not using broadband data in fit. Setting photometry related arrays to zero arrays."
@@ -1701,9 +1703,13 @@ if __name__ == '__main__':
 
             phot_fin_idx = reduce(np.intersect1d, (phot_fluxes_finite_idx, phot_errors_finite_idx))
 
+            print "Started out with", num_filters, "photometry filters."
             phot_fluxes_arr = phot_fluxes_arr[phot_fin_idx]
             phot_errors_arr = phot_errors_arr[phot_fin_idx]
             phot_lam = phot_lam[phot_fin_idx]
+            all_filters = all_filters[phot_fin_idx]
+            num_filters = len(all_filters)
+            print "Now have", num_filters, "photometry filters."
 
             # ------------- Call actual fitting function ------------- #
             zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
