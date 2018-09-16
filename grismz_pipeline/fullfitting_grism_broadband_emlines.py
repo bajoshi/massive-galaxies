@@ -1045,8 +1045,8 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
         ax1.set_ylim(min_ylim, max_ylim)
 
-        ax1.set_xlim(3000, 17000)
-        ax2.set_xlim(3000, 17000)
+        ax1.set_xlim(3000, 80000)
+        ax2.set_xlim(3000, 80000)
 
     else:
         max_ylim = 1.1 * max_y_obs
@@ -1193,7 +1193,7 @@ if __name__ == '__main__':
     use_emlines = True
     modify_lsf = True
     num_filters = 12
-    
+
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
@@ -1556,7 +1556,7 @@ if __name__ == '__main__':
                     ferr_irac1, ferr_irac2, ferr_irac3, ferr_irac4])
 
                 #phot_errors_arr *= 2.0
-                grism_ferr_obs *= 2.0
+                #grism_ferr_obs *= 2.0
 
                 # Pivot wavelengths
                 # From here --
@@ -1701,7 +1701,6 @@ if __name__ == '__main__':
 
             phot_fin_idx = reduce(np.intersect1d, (phot_fluxes_finite_idx, phot_errors_finite_idx))
 
-            print "Started out with", num_filters, "photometry filters."
             phot_fluxes_arr = phot_fluxes_arr[phot_fin_idx]
             phot_errors_arr = phot_errors_arr[phot_fin_idx]
             phot_lam = phot_lam[phot_fin_idx]
@@ -1709,7 +1708,6 @@ if __name__ == '__main__':
             all_filters = np.asarray(all_filters)
             all_filters = all_filters[phot_fin_idx]
             num_filters = len(all_filters)
-            print "Now have", num_filters, "photometry filters."
 
             # ------------- Call actual fitting function ------------- #
             zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
