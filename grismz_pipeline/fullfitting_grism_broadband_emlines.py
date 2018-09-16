@@ -43,7 +43,7 @@ import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 import mocksim_results as mr
 
-def check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr):
+def check_spec_plot(obj_id, obj_field, grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -55,7 +55,8 @@ def check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, pho
         fmt='.', color='firebrick', markeredgecolor='firebrick', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
-    plt.show()
+    # plt.show()
+    fig.savefig(massive_figures_dir + obj_field + '_' + obj_id + '_' + 'obs_data.png', dpi=300, bbox_inches='tight')
 
     return None
 
@@ -1569,13 +1570,13 @@ if __name__ == '__main__':
                 35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
 
                 # ------------------------------- Plot to check ------------------------------- #
-                fig = plt.figure()
-                ax = fig.add_subplot(111)
-                ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
-                ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
-                plt.show(block=False)
+                #fig = plt.figure()
+                #ax = fig.add_subplot(111)
+                #ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+                #ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+                #plt.show(block=False)
 
-                check_spec_plot(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+                check_spec_plot(current_id, current_field, grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
                 sys.exit(0)
 
             else:
