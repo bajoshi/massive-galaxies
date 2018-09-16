@@ -654,7 +654,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     """
     if use_broadband:
 
-        all_filt_flam_model = np.zeros((num_filters, total_models), dtype=np.float64)
+        all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
         # Redshift the base models and also the lsf convolved model flux
         model_comp_spec_z = model_comp_spec / (1+z)
@@ -696,7 +696,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
         print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     else:
-        all_filt_flam_model = np.zeros((num_filters, total_models), dtype=np.float64)
+        all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
     # ------------- Now do the modifications for the grism data and get a chi2 using both grism and photometry ------------- #
     # first modify the models at the current redshift to be able to compare with data
@@ -927,7 +927,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
         # ------------ Get photomtery for model by convolving with filters ------------- #
         # This has to be done again at the correct z_grism
-        all_filt_flam_model = np.zeros((num_filters, total_models), dtype=np.float64)
+        all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
         # Redshift the base models
         model_comp_spec_z = model_comp_spec / (1+z_grism)
@@ -966,7 +966,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         all_filt_flam_bestmodel = all_filt_flam_model[model_idx]
 
     else:
-        all_filt_flam_bestmodel = np.zeros(num_filters)
+        all_filt_flam_bestmodel = np.zeros(len(all_filters))
 
     # Get best fit model at full resolution
     best_fit_model_fullres = model_comp_spec[model_idx]
@@ -1707,6 +1707,8 @@ if __name__ == '__main__':
             phot_fluxes_arr = phot_fluxes_arr[phot_fin_idx]
             phot_errors_arr = phot_errors_arr[phot_fin_idx]
             phot_lam = phot_lam[phot_fin_idx]
+
+            all_filters = np.asarray(all_filters)
             all_filters = all_filters[phot_fin_idx]
             num_filters = len(all_filters)
             print "Now have", num_filters, "photometry filters."
