@@ -29,6 +29,7 @@ def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, 
     zphot_list = []
     ra_list = []
     dec_list = []
+    zweighted_list = []
 
     # loop over all objects
     for i in range(len(id_arr)):
@@ -64,6 +65,12 @@ def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, 
                 ra = -99.0
                 dec = -99.0
 
+        # Get weighted redshift
+        pz_flname = massive_figures_dir + 'large_diff_specz_sample/' + field_arr[i] + '_' + str(id_arr[i]) + '_pz.npy'
+        pz = np.load(pz_flname)
+        z_arr = np.load(pz_flname.replace('_pz.npy','_z_arr.npy'))
+        z_wt = np.sum(z_arr * pz)
+
         #print id_arr[i], field_arr[i], ra, dec, specz_qual[0], specz_source[0], zphot
 
         # append
@@ -72,6 +79,7 @@ def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, 
         zphot_list.append(zphot)
         ra_list.append(ra)
         dec_list.append(dec)
+        zweighted_list.append(z_wt)
 
     # convert to numpy arrays
     specz_qual_list = np.asarray(specz_qual_list)
@@ -79,8 +87,9 @@ def get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, 
     zphot_list = np.asarray(zphot_list)
     ra_list = np.asarray(ra_list)
     dec_list = np.asarray(dec_list)
+    zweighted_list = np.asarray(zweighted_list)
 
-    return specz_qual_list, specz_source_list, zphot_list, ra_list, dec_list
+    return specz_qual_list, specz_source_list, zphot_list, ra_list, dec_list, zweighted_list
 
 def line_func(x, slope, intercept):
     return slope*x + intercept
@@ -377,14 +386,14 @@ def info_tocheck_ground_spec(id_plot, field_plot, zgrism_plot, zspec_plot, ra_pl
 if __name__ == '__main__':
     
     # Read in arrays
-    id_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/id_list.npy')
-    field_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/field_list.npy')
-    zgrism_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zgrism_list.npy')
-    zspec_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/zspec_list.npy')
-    chi2_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/chi2_list.npy')
-    netsig_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/netsig_list.npy')
-    d4000_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/d4000_list.npy')
-    d4000_err_arr = np.load(massive_figures_dir + 'new_specz_sample_fits/d4000_err_list.npy')
+    id_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_id_list_gn.npy')
+    field_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_field_list_gn.npy')
+    zgrism_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_zgrism_list_gn.npy')
+    zspec_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_zspec_list_gn.npy')
+    chi2_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_chi2_list_gn.npy')
+    netsig_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_netsig_list_gn.npy')
+    d4000_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_d4000_list_gn.npy')
+    d4000_err_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_d4000_err_list_gn.npy')
 
     # get d4000 and also specz quality for all galaxies
     # Read in Specz comparison catalogs
@@ -397,11 +406,11 @@ if __name__ == '__main__':
     matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
         dtype=None, names=True, skip_header=1)
 
-    specz_qual_arr, specz_source_arr, zphot_arr, ra_arr, dec_arr = \
+    specz_qual_arr, specz_source_arr, zphot_arr, ra_arr, dec_arr, zweighted_arr = \
     get_all_speczqual(id_arr, field_arr, zspec_arr, specz_goodsn, specz_goodss, matched_cat_n, matched_cat_s)
 
     # Place some cuts
-    chi2_thresh = 2.0
+    chi2_thresh = 20.0
     d4000_thresh_low = 1.0
     d4000_thresh_high = 1.6
     d4000_sig = d4000_arr / d4000_err_arr
@@ -421,7 +430,7 @@ if __name__ == '__main__':
 
     id_plot = id_arr[valid_idx]
     field_plot = field_arr[valid_idx]
-    zgrism_plot = zgrism_arr[valid_idx]
+    zgrism_plot = zweighted_arr[valid_idx]
     zspec_plot = zspec_arr[valid_idx]
     zphot_plot = zphot_arr[valid_idx]
     chi2_plot = chi2_arr[valid_idx]
@@ -503,7 +512,7 @@ if __name__ == '__main__':
     print "\n", "Large differences stats [abs(resid)>0.01]:"
     print len(large_diff_idx)
 
-    print_info_to_matchtkrs = True
+    print_info_to_matchtkrs = False
     if print_info_to_matchtkrs:
 
         np.set_printoptions(precision=6, suppress=True)
@@ -618,7 +627,7 @@ if __name__ == '__main__':
     if fullrange:
         fig.savefig(massive_figures_dir + \
             'residual_histogram_netsig_10_fullrange_d4000_' + \
-            str(d4000_thresh_low).replace('.', 'p') + 'to' + str(d4000_thresh_high).replace('.', 'p') + '.eps', \
+            str(d4000_thresh_low).replace('.', 'p') + 'to' + str(d4000_thresh_high).replace('.', 'p') + '_emlines_bb.eps', \
             dpi=300, bbox_inches='tight')
     else:
         fig.savefig(massive_figures_dir + 'residual_histogram_netsig_10.png', dpi=300, bbox_inches='tight')

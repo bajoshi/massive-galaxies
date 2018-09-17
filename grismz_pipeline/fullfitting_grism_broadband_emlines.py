@@ -998,7 +998,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     # ---------- labels ---------- #
     ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA^{-1}]}$')
     ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
-    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{model}_\lambda}{f^{obs;error}_\lambda}}$')
+    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{mod}_\lambda}{f^{obs;err}_\lambda}}$')
 
     # ---------- plot data, model, and residual ---------- #
     # plot full res model but you'll have to redshift it
@@ -1047,6 +1047,9 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
         ax1.set_xlim(3000, 80000)
         ax2.set_xlim(3000, 80000)
+
+        ax1.set_xscale('log')
+        ax2.set_xscale('log')
 
     else:
         max_ylim = 1.1 * max_y_obs
@@ -1244,8 +1247,8 @@ if __name__ == '__main__':
     'IRAC1_contam', 'IRAC2_contam', 'IRAC3_contam', 'IRAC4_contam']
     goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
         dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), skip_header=3)
-    #goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
-    #    dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
+    goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
+        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
 
     # large differences between specz and grismz
     #large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
@@ -1556,7 +1559,7 @@ if __name__ == '__main__':
                     ferr_irac1, ferr_irac2, ferr_irac3, ferr_irac4])
 
                 #phot_errors_arr *= 2.0
-                #grism_ferr_obs *= 2.0
+                grism_ferr_obs *= 2.0
 
                 # Pivot wavelengths
                 # From here --

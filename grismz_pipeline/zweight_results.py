@@ -34,6 +34,8 @@ if __name__ == '__main__':
     all_zwt_new = []  # the new redshifts have their grism errors artificially increased by 2x
     all_zwt_old = []  # the old ones did not have any changes made to either the grism or the photometry errors
 
+    check_old = False
+
     # loop over all galaxies that the code has run through
     fl_count = 0
     for fl in sorted(glob.glob(massive_figures_dir + 'large_diff_specz_sample/*_pz.npy')):
@@ -50,10 +52,11 @@ if __name__ == '__main__':
         current_field = split_arr[0]
         current_id = int(split_arr[1])
 
-        # The one galaxy that didn't finsih in the old run
-        # Will take this out once the entire code runs on all galaxies
-        if current_id == 94851:
-            continue
+        if check_old:
+            # The galaxies that didn't finsih in the old run
+            old_fl_path = fl.replace('large_diff_specz_sample', 'large_diff_specz_sample/run_with_1xphoterrors')
+            if not os.path.isfile(old_fl_path):
+                continue
 
         # Find specz and photoz by matching
         if current_field == 'GOODS-N':
@@ -76,18 +79,19 @@ if __name__ == '__main__':
 
         z_wt = np.sum(z_arr * pz)
         all_zwt_new.append(z_wt)
+        
+        if check_old:
+            # Get old z_wt
+            # read in pz and zarr files
+            old_fl_path = fl.replace('large_diff_specz_sample', 'large_diff_specz_sample/run_with_1xphoterrors')
+            pz = np.load(old_fl_path)
+            z_arr = np.load(old_fl_path.replace('_pz', '_z_arr'))
 
-        # Get old z_wt
-        # read in pz and zarr files
-        old_fl_path = fl.replace('large_diff_specz_sample', 'large_diff_specz_sample/run_with_1xphoterrors')
-        pz = np.load(old_fl_path)
-        z_arr = np.load(old_fl_path.replace('_pz', '_z_arr'))
+            z_wt_old = np.sum(z_arr * pz)
+            all_zwt_old.append(z_wt_old)
 
-        z_wt_old = np.sum(z_arr * pz)
-        all_zwt_old.append(z_wt_old)
-
-        # Dont remove this print line. Useful for debugging.
-        # print current_id, current_field, current_specz, current_photoz, "{:.4}".format(z_wt_old), "{:.4}".format(z_wt)
+            # Dont remove this print line. Useful for debugging.
+            # print current_id, current_field, current_specz, current_photoz, "{:.4}".format(z_wt_old), "{:.4}".format(z_wt)
 
         fl_count += 1
 
@@ -98,33 +102,41 @@ if __name__ == '__main__':
     all_specz = np.asarray(all_specz)
     all_photoz = np.asarray(all_photoz)
     all_zarr = np.asarray(all_zarr)
-    all_zwt_old = np.asarray(all_zwt_old)
     all_zwt_new = np.asarray(all_zwt_new)
+
+    if check_old:
+        all_zwt_old = np.asarray(all_zwt_old)
 
     # Get residuals
     resid_photoz = (all_specz - all_photoz) / (1+all_specz)
     resid_zweight_new = (all_specz - all_zwt_new) / (1+all_specz)
-    resid_zweight_old = (all_specz - all_zwt_old) / (1+all_specz)
+
+    if check_old:
+        resid_zweight_old = (all_specz - all_zwt_old) / (1+all_specz)
+        sigma_nmad_zwt_old = 1.48 * np.median(abs(((all_specz - all_zwt_old) - np.median((all_specz - all_zwt_old))) / (1 + all_specz)))
+
+    sigma_nmad_zwt_new = 1.48 * np.median(abs(((all_specz - all_zwt_new) - np.median((all_specz - all_zwt_new))) / (1 + all_specz)))
+    sigma_nmad_photo = 1.48 * np.median(abs(((all_specz - all_photoz) - np.median((all_specz - all_photoz))) / (1 + all_specz)))
 
     print "Max residual photo-z:", "{:.3}".format(max(resid_photoz))
     print "Max residual weighted z (new):", "{:.3}".format(max(resid_zweight_new))
-    print "Max residual weighted z (old):", "{:.3}".format(max(resid_zweight_old))
-
-    sigma_nmad_zwt_new = 1.48 * np.median(abs(((all_specz - all_zwt_new) - np.median((all_specz - all_zwt_new))) / (1 + all_specz)))
-    sigma_nmad_zwt_old = 1.48 * np.median(abs(((all_specz - all_zwt_old) - np.median((all_specz - all_zwt_old))) / (1 + all_specz)))
-    sigma_nmad_photo = 1.48 * np.median(abs(((all_specz - all_photoz) - np.median((all_specz - all_photoz))) / (1 + all_specz)))
+    if check_old:
+        print "Max residual weighted z (old):", "{:.3}".format(max(resid_zweight_old))
 
     print "Mean, std. dev., and sigma_NMAD for residual photo-z:", "{:.4}".format(np.mean(resid_photoz)), "{:.4}".format(np.std(resid_photoz)), "{:.4}".format(sigma_nmad_photo)
     print "Mean, std. dev., and sigma_NMAD for residual weighted z (new):", "{:.4}".format(np.mean(resid_zweight_new)), "{:.4}".format(np.std(resid_zweight_new)), "{:.4}".format(sigma_nmad_zwt_new)
-    print "Mean, std. dev., and sigma_NMAD for residual weighted z (old):", "{:.4}".format(np.mean(resid_zweight_old)), "{:.4}".format(np.std(resid_zweight_old)), "{:.4}".format( sigma_nmad_zwt_old)
+    if check_old:
+        print "Mean, std. dev., and sigma_NMAD for residual weighted z (old):", "{:.4}".format(np.mean(resid_zweight_old)), "{:.4}".format(np.std(resid_zweight_old)), "{:.4}".format( sigma_nmad_zwt_old)
 
     # Plot 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.hist(resid_photoz, color='r', histtype='step', lw=2)#, range=(-0.1, 0.1))
-    ax.hist(resid_zweight_old, color='b', histtype='step', lw=2)#, range=(-0.1, 0.1))
-    ax.hist(resid_zweight_new, color='g', histtype='step', lw=2)#, range=(-0.1, 0.1))
+    ax.hist(resid_photoz, 50, color='r', histtype='step', lw=2)#, range=(-0.15, 0.15))
+    ax.hist(resid_zweight_new, 50, color='g', histtype='step', lw=2)#, range=(-0.15, 0.15))
+
+    if check_old:
+        ax.hist(resid_zweight_old, color='b', histtype='step', lw=2)#, range=(-0.1, 0.1))
 
     ax.axvline(x=0.0, ls='--', color='k')
 
