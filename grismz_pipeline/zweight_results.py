@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
     # -------------------------------------------- Quantify results -------------------------------------------- #
     # Cut on D4000
-    d4000_idx = np.where((all_d4000 >= 1.1) & (all_d4000 < 1.4))[0]
+    d4000_idx = np.where((all_d4000 >= 1.1) & (all_d4000 < 1.6))[0]
     print "Galaxies in D4000 range:", len(d4000_idx)
 
     # apply cuts
@@ -169,12 +169,24 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.hist(resid_photoz, color='r', histtype='step', lw=2)#, range=(-0.12, 0.12))
-    ax.hist(resid_zweight_1xerr, color='b', histtype='step', lw=2)#, range=(-0.12, 0.12))
-    ax.hist(resid_zweight_2xgrismerr, color='g', histtype='step', lw=2)#, range=(-0.12, 0.12))
-    ax.hist(resid_zweight_2xphoterr, color='orange', histtype='step', lw=2)#, range=(-0.12, 0.12))
+    ax.hist(resid_photoz, 30, color='r', histtype='step', lw=2, label='Photo-z residuals', range=(-0.1, 0.1))
+    ax.hist(resid_zweight_1xerr, 30, color='b', histtype='step', lw=2, label='SPZ residuals', range=(-0.1, 0.1))
+    #ax.hist(resid_zweight_2xgrismerr, color='g', histtype='step', lw=2)#, range=(-0.12, 0.12))
+    #ax.hist(resid_zweight_2xphoterr, color='orange', histtype='step', lw=2)#, range=(-0.12, 0.12))
 
     ax.axvline(x=0.0, ls='--', color='k')
+
+    ax.set_xlabel(r'$\mathrm{Residuals}$')
+    ax.set_ylabel(r'$\mathrm{N}$')
+
+    ax.text(0.05, 0.85, r'$\mathrm{1.1\leq D4000 < 1.6}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=14)
+
+    ax.minorticks_on()
+    ax.legend(loc='upper left')
+
+    fig.savefig(massive_figures_dir + 'large_diff_specz_sample/resid_hist.png', dpi=300, bbox_inches='tight')
 
     plt.show()
 
