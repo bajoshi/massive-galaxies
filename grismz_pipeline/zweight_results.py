@@ -169,10 +169,10 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.hist(resid_photoz, 20, color='r', histtype='step', lw=2)#, range=(-0.12, 0.12))
-    ax.hist(resid_zweight_1xerr, 20, color='b', histtype='step', lw=2)#, range=(-0.12, 0.12))
-    ax.hist(resid_zweight_2xgrismerr, 20, color='g', histtype='step', lw=2)#, range=(-0.12, 0.12))
-    #ax.hist(resid_zweight_2xphoterr, 20, color='orange', histtype='step', lw=2, range=(-0.12, 0.12))
+    ax.hist(resid_photoz, color='r', histtype='step', lw=2)#, range=(-0.12, 0.12))
+    ax.hist(resid_zweight_1xerr, color='b', histtype='step', lw=2)#, range=(-0.12, 0.12))
+    ax.hist(resid_zweight_2xgrismerr, color='g', histtype='step', lw=2)#, range=(-0.12, 0.12))
+    ax.hist(resid_zweight_2xphoterr, color='orange', histtype='step', lw=2)#, range=(-0.12, 0.12))
 
     ax.axvline(x=0.0, ls='--', color='k')
 
