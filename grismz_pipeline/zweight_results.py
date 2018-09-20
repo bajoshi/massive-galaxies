@@ -26,6 +26,11 @@ if __name__ == '__main__':
     matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
         dtype=None, names=True, skip_header=1)
 
+    # Read in results arrays
+    id_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_id_list_gn.npy')
+    field_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_field_list_gn.npy')
+    d4000_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_d4000_list_gn.npy')
+
     # create empty lists to store final comparison arrays
     all_pz = []
     all_specz = []
@@ -34,6 +39,7 @@ if __name__ == '__main__':
     all_zwt_1xerr = []
     all_zwt_2xgrismerr = []
     all_zwt_2xphoterr = []
+    all_d4000 = []
 
     # loop over all galaxies that the code has run through
     fl_count = 0
@@ -79,6 +85,12 @@ if __name__ == '__main__':
 
         z_wt = np.sum(z_arr * pz)
         all_zwt_1xerr.append(z_wt)
+
+        # Read in D4000
+        results_idx = np.where((id_arr == current_id) & (field_arr == current_field))[0]
+        current_d4000 = d4000_arr[results_idx]
+
+        all_d4000.append(current_d4000)
         
         # Get weighted redshifts for other runs
         # define paths
@@ -100,7 +112,7 @@ if __name__ == '__main__':
         all_zwt_2xphoterr.append(z_wt_2xphoterr)
 
         # Dont remove this print line. Useful for debugging.
-        print current_id, current_field, current_specz, current_photoz, "{:.4}".format(z_wt), "{:.4}".format(z_wt_2xgrismerr), "{:.4}".format(z_wt_2xphoterr)
+        #print current_id, current_d4000, current_field, current_specz, current_photoz, "{:.4}".format(z_wt), "{:.4}".format(z_wt_2xgrismerr), "{:.4}".format(z_wt_2xphoterr)
 
         fl_count += 1
 
@@ -114,6 +126,22 @@ if __name__ == '__main__':
     all_zwt_1xerr = np.asarray(all_zwt_1xerr)
     all_zwt_2xgrismerr = np.asarray(all_zwt_2xgrismerr)
     all_zwt_2xphoterr = np.asarray(all_zwt_2xphoterr)
+    all_d4000 = np.asarray(all_d4000)
+
+    # -------------------------------------------- Quantify results -------------------------------------------- #
+    # Cut on D4000
+    d4000_idx = np.where((all_d4000 >= 1.1) & (all_d4000 < 1.4))[0]
+    print "Galaxies in D4000 range:", len(d4000_idx)
+
+    # apply cuts
+    all_pz = all_pz[d4000_idx]
+    all_specz = all_specz[d4000_idx]
+    all_photoz = all_photoz[d4000_idx]
+    all_zarr = all_zarr[d4000_idx]
+    all_zwt_1xerr = all_zwt_1xerr[d4000_idx]
+    all_zwt_2xgrismerr = all_zwt_2xgrismerr[d4000_idx]
+    all_zwt_2xphoterr = all_zwt_2xphoterr[d4000_idx]
+    all_d4000 = all_d4000[d4000_idx]
 
     # Get residuals
     resid_photoz = (all_specz - all_photoz) / (1+all_specz)
@@ -141,10 +169,10 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.hist(resid_photoz, 50, color='r', histtype='step', lw=2, range=(-0.12, 0.12))
-    ax.hist(resid_zweight_1xerr, 50, color='b', histtype='step', lw=2, range=(-0.12, 0.12))
-    #ax.hist(resid_zweight_2xgrismerr, 50, color='g', histtype='step', lw=2, range=(-0.12, 0.12))
-    #ax.hist(resid_zweight_2xphoterr, 50, color='pink', histtype='step', lw=2, range=(-0.12, 0.12))
+    ax.hist(resid_photoz, 20, color='r', histtype='step', lw=2)#, range=(-0.12, 0.12))
+    ax.hist(resid_zweight_1xerr, 20, color='b', histtype='step', lw=2)#, range=(-0.12, 0.12))
+    ax.hist(resid_zweight_2xgrismerr, 20, color='g', histtype='step', lw=2)#, range=(-0.12, 0.12))
+    #ax.hist(resid_zweight_2xphoterr, 20, color='orange', histtype='step', lw=2, range=(-0.12, 0.12))
 
     ax.axvline(x=0.0, ls='--', color='k')
 
