@@ -1558,7 +1558,7 @@ if __name__ == '__main__':
                 phot_errors_arr = np.array([ferr_U, ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w,
                     ferr_irac1, ferr_irac2, ferr_irac3, ferr_irac4])
 
-                phot_errors_arr *= 2.0
+                phot_errors_arr *= 4.0
                 #grism_ferr_obs *= 2.0
 
                 # Pivot wavelengths
