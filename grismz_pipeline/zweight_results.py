@@ -258,11 +258,14 @@ if __name__ == '__main__':
 
     ax.axvline(x=0.0, ls='--', color='k')
 
-    ax.set_xlabel(r'$\mathrm{Residuals}$')
+    ax.set_xlabel(r'$\mathrm{Residuals\ \left( \frac{\Delta z}{1+z_{spec}} \right)}$')
     ax.set_ylabel(r'$\mathrm{N}$')
 
     ax.minorticks_on()
     ax.legend(loc='upper left')
+
+    # Make sure tick marks are at every 0.01 instead of some matplotlib chosen tick interval
+    
 
     # Info text
     ax.text(0.05, 0.85, r'$' + str(d4000_low) + '\leq \mathrm{D4000} < ' + str(d4000_high) + '$', \
@@ -272,19 +275,19 @@ if __name__ == '__main__':
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=14)
 
-    ax.text(0.05, 0.71, r'$\mu_{\mathrm{photo-z}} = $' + mr.convert_to_sci_not(np.mean(resid_photoz)), \
+    ax.text(0.05, 0.71, r'${\left< \Delta \right>}_{\mathrm{photo-z}} = $' + mr.convert_to_sci_not(np.mean(resid_photoz)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
-    ax.text(0.05, 0.66, r'$\mathrm{\sigma^{NMAD}_{photo-z}} = $' + mr.convert_to_sci_not(sigma_nmad_photo), \
+    transform=ax.transAxes, color='k', size=9)
+    ax.text(0.05, 0.66, r'$\mathrm{\sigma^{NMAD}_{\Delta ; photo-z}} = $' + mr.convert_to_sci_not(sigma_nmad_photo), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
+    transform=ax.transAxes, color='k', size=9)
 
-    ax.text(0.05, 0.58, r'$\mu_{\mathrm{SPZ}} = $' + mr.convert_to_sci_not(np.mean(resid_zweight_1xerr)), \
+    ax.text(0.05, 0.58, r'${\left< \Delta \right>}_{\mathrm{SPZ}} = $' + mr.convert_to_sci_not(np.mean(resid_zweight_1xerr)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
-    ax.text(0.05, 0.53, r'$\mathrm{\sigma^{NMAD}_{SPZ}} = $' + mr.convert_to_sci_not(sigma_nmad_zwt_1xerr), \
+    transform=ax.transAxes, color='k', size=9)
+    ax.text(0.05, 0.53, r'$\mathrm{\sigma^{NMAD}_{\Delta ; SPZ}} = $' + mr.convert_to_sci_not(sigma_nmad_zwt_1xerr), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=10)
+    transform=ax.transAxes, color='k', size=9)
 
     # Save figure
     fig.savefig(massive_figures_dir + \
