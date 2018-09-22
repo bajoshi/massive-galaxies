@@ -228,7 +228,7 @@ if __name__ == '__main__':
     print "Mean, std. dev., and sigma_NMAD for residual weighted z (2xphoterr):", "{:.4}".format(np.mean(resid_zweight_2xphoterr)), "{:.4}".format(np.std(resid_zweight_2xphoterr)), "{:.4}".format(sigma_nmad_zwt_2xphoterr)
 
     # -------------------------------------------- Plotting -------------------------------------------- #
-    # ---------------------- Residual histogram ---------------------- #
+    # ---------------------- Residuals vs contamination ---------------------- #
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -268,11 +268,9 @@ if __name__ == '__main__':
     ax.text(0.05, 0.85, r'$' + str(d4000_low) + '\leq \mathrm{D4000} < ' + str(d4000_high) + '$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=14)
-
     ax.text(0.05, 0.8, r'$\mathrm{N = }$' + str(len(d4000_idx)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=14)
-
 
     ax.text(0.05, 0.71, r'$\mu_{\mathrm{photo-z}} = $' + mr.convert_to_sci_not(np.mean(resid_photoz)), \
     verticalalignment='top', horizontalalignment='left', \
