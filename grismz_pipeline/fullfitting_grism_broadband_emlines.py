@@ -1264,8 +1264,8 @@ if __name__ == '__main__':
     vega_spec_fnu = vega_lam**2 * vega_spec_flam / speed_of_light
 
     # Lists to loop over
-    all_speccats = [specz_goodsn]#, specz_goodss]
-    all_match_cats = [matched_cat_n]#, matched_cat_s]
+    all_speccats =  [specz_goodss] # [specz_goodsn, specz_goodss]
+    all_match_cats = [matched_cat_s] # [matched_cat_n, matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
@@ -1284,7 +1284,7 @@ if __name__ == '__main__':
     d4000_err_list = []
 
     # start looping
-    catcount = 0
+    catcount = 1
     galaxy_count = 0
     for cat in all_match_cats:
 
@@ -1558,7 +1558,7 @@ if __name__ == '__main__':
                 phot_errors_arr = np.array([ferr_U, ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w,
                     ferr_irac1, ferr_irac2, ferr_irac3, ferr_irac4])
 
-                phot_errors_arr *= 4.0
+                #phot_errors_arr *= 4.0
                 #grism_ferr_obs *= 2.0
 
                 # Pivot wavelengths
@@ -1697,6 +1697,7 @@ if __name__ == '__main__':
             resampling_lam_grid = np.insert(grism_lam_obs, obj=0, values=lam_low_to_insert)
             resampling_lam_grid = np.append(resampling_lam_grid, lam_high_to_append)
 
+            # ------- Finite photometry values ------- # 
             # Make sure that the photometry arrays all have finite values
             # If any vlues are NaN then throw them out
             phot_fluxes_finite_idx = np.where(np.isfinite(phot_fluxes_arr))[0]

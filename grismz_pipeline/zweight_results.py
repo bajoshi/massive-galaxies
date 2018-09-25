@@ -78,9 +78,14 @@ if __name__ == '__main__':
         dtype=None, names=True, skip_header=1)
 
     # Read in results arrays
-    id_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_id_list_gn.npy')
-    field_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_field_list_gn.npy')
-    d4000_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_d4000_list_gn.npy')
+    id_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_id_list_gn.npy')
+    id_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_id_list_gs.npy')
+
+    field_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_field_list_gn.npy')
+    field_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_field_list_gs.npy')
+
+    d4000_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_d4000_list_gn.npy')
+    d4000_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_d4000_list_gs.npy')
 
     # create empty lists to store final comparison arrays
     all_pz = []
@@ -102,6 +107,9 @@ if __name__ == '__main__':
         pz = np.load(fl)
         z_arr = np.load(fl.replace('_pz', '_z_arr'))
 
+        if np.isnan(pz).any() or np.isnan(z_arr).any():
+            continue
+
         # Get other info
         fl_name = os.path.basename(fl)
         split_arr = fl_name.split('.')[0].split('_')
@@ -113,13 +121,16 @@ if __name__ == '__main__':
         if current_field == 'GOODS-N':
             spec_cat = specz_goodsn
             cat = matched_cat_n
+            id_arr = id_arr_gn
+            field_arr = field_arr_gn
+            d4000_arr = d4000_arr_gn
 
         elif current_field == 'GOODS-S':
             spec_cat = specz_goodss
             cat = matched_cat_s
-
-        if (current_id == 125963) and (current_field == 'GOODS-N'):  # got nan for this galaxy for some reason # skipping
-            continue
+            id_arr = id_arr_gs
+            field_arr = field_arr_gs
+            d4000_arr = d4000_arr_gs
 
         specz_idx = np.where(spec_cat['pearsid'] == current_id)[0]
         photoz_idx = np.where(cat['pearsid'] == current_id)[0]
@@ -141,14 +152,13 @@ if __name__ == '__main__':
         # Read in D4000
         results_idx = np.where((id_arr == current_id) & (field_arr == current_field))[0]
         current_d4000 = d4000_arr[results_idx]
-
         all_d4000.append(current_d4000)
 
         # Get contamination
         lam_obs, flam_obs, ferr_obs, contam = get_contam(current_id, current_field)
-
         all_contam_frac.append(np.nansum(contam) / np.nansum(flam_obs))
 
+        """
         # -------------------------------------
         # Get weighted redshifts for other runs
         # define paths
@@ -168,6 +178,7 @@ if __name__ == '__main__':
 
         z_wt_2xphoterr = np.sum(z_arr_2xphoterr * pz_2xphoterr)
         all_zwt_2xphoterr.append(z_wt_2xphoterr)
+        """
 
         # Dont remove this print line. Useful for debugging.
         #print current_id, current_d4000, current_field, current_specz, current_photoz, "{:.4}".format(z_wt), "{:.4}".format(z_wt_2xgrismerr), "{:.4}".format(z_wt_2xphoterr)
@@ -182,14 +193,14 @@ if __name__ == '__main__':
     all_photoz = np.asarray(all_photoz)
     all_zarr = np.asarray(all_zarr)
     all_zwt_1xerr = np.asarray(all_zwt_1xerr)
-    all_zwt_2xgrismerr = np.asarray(all_zwt_2xgrismerr)
-    all_zwt_2xphoterr = np.asarray(all_zwt_2xphoterr)
+    #all_zwt_2xgrismerr = np.asarray(all_zwt_2xgrismerr)
+    #all_zwt_2xphoterr = np.asarray(all_zwt_2xphoterr)
     all_d4000 = np.asarray(all_d4000)
     all_contam_frac = np.asarray(all_contam_frac)
 
     # -------------------------------------------- Quantify results -------------------------------------------- #
     # Cut on D4000
-    d4000_low = 1.1
+    d4000_low = 1.5
     d4000_high = 1.6
     d4000_idx = np.where((all_d4000 >= d4000_low) & (all_d4000 < d4000_high))[0]
     print "Galaxies in D4000 range:", len(d4000_idx)
@@ -200,32 +211,32 @@ if __name__ == '__main__':
     all_photoz = all_photoz[d4000_idx]
     all_zarr = all_zarr[d4000_idx]
     all_zwt_1xerr = all_zwt_1xerr[d4000_idx]
-    all_zwt_2xgrismerr = all_zwt_2xgrismerr[d4000_idx]
-    all_zwt_2xphoterr = all_zwt_2xphoterr[d4000_idx]
+    #all_zwt_2xgrismerr = all_zwt_2xgrismerr[d4000_idx]
+    #all_zwt_2xphoterr = all_zwt_2xphoterr[d4000_idx]
     all_d4000 = all_d4000[d4000_idx]
     all_contam_frac = all_contam_frac[d4000_idx]
 
     # Get residuals
     resid_photoz = (all_specz - all_photoz) / (1+all_specz)
     resid_zweight_1xerr = (all_specz - all_zwt_1xerr) / (1+all_specz)
-    resid_zweight_2xgrismerr = (all_specz - all_zwt_2xgrismerr) / (1+all_specz)
-    resid_zweight_2xphoterr = (all_specz - all_zwt_2xphoterr) / (1+all_specz)
+    #resid_zweight_2xgrismerr = (all_specz - all_zwt_2xgrismerr) / (1+all_specz)
+    #resid_zweight_2xphoterr = (all_specz - all_zwt_2xphoterr) / (1+all_specz)
 
     # Get sigma_NMAD
     sigma_nmad_photo = 1.48 * np.median(abs(((all_specz - all_photoz) - np.median((all_specz - all_photoz))) / (1 + all_specz)))
     sigma_nmad_zwt_1xerr = 1.48 * np.median(abs(((all_specz - all_zwt_1xerr) - np.median((all_specz - all_zwt_1xerr))) / (1 + all_specz)))
-    sigma_nmad_zwt_2xgrismerr = 1.48 * np.median(abs(((all_specz - all_zwt_2xgrismerr) - np.median((all_specz - all_zwt_2xgrismerr))) / (1 + all_specz)))
-    sigma_nmad_zwt_2xphoterr = 1.48 * np.median(abs(((all_specz - all_zwt_2xphoterr) - np.median((all_specz - all_zwt_2xphoterr))) / (1 + all_specz)))
+    #sigma_nmad_zwt_2xgrismerr = 1.48 * np.median(abs(((all_specz - all_zwt_2xgrismerr) - np.median((all_specz - all_zwt_2xgrismerr))) / (1 + all_specz)))
+    #sigma_nmad_zwt_2xphoterr = 1.48 * np.median(abs(((all_specz - all_zwt_2xphoterr) - np.median((all_specz - all_zwt_2xphoterr))) / (1 + all_specz)))
 
     print "Max residual photo-z:", "{:.3}".format(max(resid_photoz))
     print "Max residual weighted z (1xerr):", "{:.3}".format(max(resid_zweight_1xerr))
-    print "Max residual weighted z (2xgrismerr):", "{:.3}".format(max(resid_zweight_2xgrismerr))
-    print "Max residual weighted z (2xphoterr):", "{:.3}".format(max(resid_zweight_2xphoterr))
+    #print "Max residual weighted z (2xgrismerr):", "{:.3}".format(max(resid_zweight_2xgrismerr))
+    #print "Max residual weighted z (2xphoterr):", "{:.3}".format(max(resid_zweight_2xphoterr))
 
     print "Mean, std. dev., and sigma_NMAD for residual photo-z:", "{:.4}".format(np.mean(resid_photoz)), "{:.4}".format(np.std(resid_photoz)), "{:.4}".format(sigma_nmad_photo)
     print "Mean, std. dev., and sigma_NMAD for residual weighted z (1xerr):", "{:.4}".format(np.mean(resid_zweight_1xerr)), "{:.4}".format(np.std(resid_zweight_1xerr)), "{:.4}".format(sigma_nmad_zwt_1xerr)
-    print "Mean, std. dev., and sigma_NMAD for residual weighted z (2xgrismerr):", "{:.4}".format(np.mean(resid_zweight_2xgrismerr)), "{:.4}".format(np.std(resid_zweight_2xgrismerr)), "{:.4}".format(sigma_nmad_zwt_2xgrismerr)
-    print "Mean, std. dev., and sigma_NMAD for residual weighted z (2xphoterr):", "{:.4}".format(np.mean(resid_zweight_2xphoterr)), "{:.4}".format(np.std(resid_zweight_2xphoterr)), "{:.4}".format(sigma_nmad_zwt_2xphoterr)
+    #print "Mean, std. dev., and sigma_NMAD for residual weighted z (2xgrismerr):", "{:.4}".format(np.mean(resid_zweight_2xgrismerr)), "{:.4}".format(np.std(resid_zweight_2xgrismerr)), "{:.4}".format(sigma_nmad_zwt_2xgrismerr)
+    #print "Mean, std. dev., and sigma_NMAD for residual weighted z (2xphoterr):", "{:.4}".format(np.mean(resid_zweight_2xphoterr)), "{:.4}".format(np.std(resid_zweight_2xphoterr)), "{:.4}".format(sigma_nmad_zwt_2xphoterr)
 
     # -------------------------------------------- Plotting -------------------------------------------- #
     # ---------------------- Residuals vs contamination ---------------------- #
@@ -261,11 +272,14 @@ if __name__ == '__main__':
     ax.set_xlabel(r'$\mathrm{Residuals\ \left( \frac{\Delta z}{1+z_{spec}} \right)}$')
     ax.set_ylabel(r'$\mathrm{N}$')
 
-    ax.minorticks_on()
     ax.legend(loc='upper left')
 
     # Make sure tick marks are at every 0.01 instead of some matplotlib chosen tick interval
-    
+    ax.set_xticks(np.arange(-0.1, 0.12, 0.02))
+    ax.minorticks_on()
+
+    # Put an arrow (or somehow indicate) at the mean and sigma_nmad
+
 
     # Info text
     ax.text(0.05, 0.85, r'$' + str(d4000_low) + '\leq \mathrm{D4000} < ' + str(d4000_high) + '$', \
