@@ -1264,8 +1264,8 @@ if __name__ == '__main__':
     vega_spec_fnu = vega_lam**2 * vega_spec_flam / speed_of_light
 
     # Lists to loop over
-    all_speccats =  [specz_goodss] # [specz_goodsn, specz_goodss]
-    all_match_cats = [matched_cat_s] # [matched_cat_n, matched_cat_s]
+    all_speccats =  [specz_goodsn, specz_goodss]
+    all_match_cats = [matched_cat_n, matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
@@ -1624,7 +1624,7 @@ if __name__ == '__main__':
                 continue
 
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-            if (d4000 < 1.1) or (d4000 > 1.6):
+            if d4000 < 1.6:
                 print "Skipping", current_id, "in", current_field, "due to D4000:", d4000
                 continue
 
