@@ -1284,7 +1284,7 @@ if __name__ == '__main__':
     d4000_err_list = []
 
     # start looping
-    catcount = 1
+    catcount = 0
     galaxy_count = 0
     for cat in all_match_cats:
 
@@ -1387,6 +1387,10 @@ if __name__ == '__main__':
                     dist_list = np.asarray(dist_list)
                     dist_idx = np.argmin(dist_list)
                     threed_phot_idx = threed_phot_idx[dist_idx]
+
+                elif len(threed_phot_idx) == 0:
+                    print "Match not found in Photmetry catalog. Skipping."
+                    continue
 
                 # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
                 flam_f435w = get_flam('F435W', phot_cat_3dhst['f_F435W'][threed_phot_idx])
