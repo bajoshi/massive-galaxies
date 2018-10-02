@@ -77,30 +77,40 @@ if __name__ == '__main__':
     matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
         dtype=None, names=True, skip_header=1)
 
+    low_d4000 = False
+    # i.e. if I'm running on the low D4000 sample then the results 
+    # are stored in a separeate folder.
+
     # Read in results arrays
-    id_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_id_list_gn.npy')
-    id_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_id_list_gs.npy')
+    if low_d4000:
+        id_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_id_list_gn.npy')
+        id_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_id_list_gs.npy')
 
-    field_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_field_list_gn.npy')
-    field_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_field_list_gs.npy')
+        field_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_field_list_gn.npy')
+        field_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_field_list_gs.npy')
 
-    d4000_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_d4000_list_gn.npy')
-    d4000_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_d4000_list_gs.npy')
+        d4000_arr_gn = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_d4000_list_gn.npy')
+        d4000_arr_gs = np.load(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/withemlines_d4000_list_gs.npy')
+
+        glob_search_str = massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/*_pz.npy'
+
+    else:
+        id_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_id_list.npy')
+        field_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_field_list.npy')
+        d4000_arr = np.load(massive_figures_dir + 'large_diff_specz_sample/withemlines_d4000_list.npy')
+
+        glob_search_str = massive_figures_dir + 'large_diff_specz_sample/*_pz.npy'
 
     # create empty lists to store final comparison arrays
-    all_pz = []
     all_specz = []
     all_photoz = []
-    all_zarr = []
     all_zwt_1xerr = []
-    all_zwt_2xgrismerr = []
-    all_zwt_2xphoterr = []
     all_d4000 = []
     all_contam_frac = []
 
     # loop over all galaxies that the code has run through
     fl_count = 0
-    for fl in sorted(glob.glob(massive_figures_dir + 'large_diff_specz_sample/run_with_1xerrors/*_pz.npy')):
+    for fl in sorted(glob.glob(glob_search_str)):
         # the sorted() above just makes sure that I get galaxies in the right order
 
         # read in pz and zarr files
@@ -121,16 +131,18 @@ if __name__ == '__main__':
         if current_field == 'GOODS-N':
             spec_cat = specz_goodsn
             cat = matched_cat_n
-            id_arr = id_arr_gn
-            field_arr = field_arr_gn
-            d4000_arr = d4000_arr_gn
+            if low_d4000:
+                id_arr = id_arr_gn
+                field_arr = field_arr_gn
+                d4000_arr = d4000_arr_gn
 
         elif current_field == 'GOODS-S':
             spec_cat = specz_goodss
             cat = matched_cat_s
-            id_arr = id_arr_gs
-            field_arr = field_arr_gs
-            d4000_arr = d4000_arr_gs
+            if low_d4000:
+                id_arr = id_arr_gs
+                field_arr = field_arr_gs
+                d4000_arr = d4000_arr_gs
 
         specz_idx = np.where(spec_cat['pearsid'] == current_id)[0]
         photoz_idx = np.where(cat['pearsid'] == current_id)[0]
@@ -138,11 +150,10 @@ if __name__ == '__main__':
         current_photoz = float(cat['zphot'][photoz_idx])
         current_specz_qual = spec_cat['specz_qual'][specz_idx]
 
+        # Check spec-z quality
         if (current_specz_qual == 'D') or (current_specz_qual == '2'):
             continue
 
-        all_pz.append(pz)
-        all_zarr.append(z_arr)
         all_specz.append(current_specz)
         all_photoz.append(current_photoz)
 
@@ -188,55 +199,39 @@ if __name__ == '__main__':
     print "Total galaxies:", fl_count
 
     # Convert to numpy arrays
-    all_pz = np.asarray(all_pz)
     all_specz = np.asarray(all_specz)
     all_photoz = np.asarray(all_photoz)
-    all_zarr = np.asarray(all_zarr)
     all_zwt_1xerr = np.asarray(all_zwt_1xerr)
-    #all_zwt_2xgrismerr = np.asarray(all_zwt_2xgrismerr)
-    #all_zwt_2xphoterr = np.asarray(all_zwt_2xphoterr)
     all_d4000 = np.asarray(all_d4000)
     all_contam_frac = np.asarray(all_contam_frac)
 
     # -------------------------------------------- Quantify results -------------------------------------------- #
     # Cut on D4000
-    d4000_low = 1.5
-    d4000_high = 1.6
+    d4000_low = 1.6
+    d4000_high = 2.5
     d4000_idx = np.where((all_d4000 >= d4000_low) & (all_d4000 < d4000_high))[0]
     print "Galaxies in D4000 range:", len(d4000_idx)
 
     # apply cuts
-    all_pz = all_pz[d4000_idx]
     all_specz = all_specz[d4000_idx]
     all_photoz = all_photoz[d4000_idx]
-    all_zarr = all_zarr[d4000_idx]
     all_zwt_1xerr = all_zwt_1xerr[d4000_idx]
-    #all_zwt_2xgrismerr = all_zwt_2xgrismerr[d4000_idx]
-    #all_zwt_2xphoterr = all_zwt_2xphoterr[d4000_idx]
     all_d4000 = all_d4000[d4000_idx]
     all_contam_frac = all_contam_frac[d4000_idx]
 
     # Get residuals
     resid_photoz = (all_specz - all_photoz) / (1+all_specz)
     resid_zweight_1xerr = (all_specz - all_zwt_1xerr) / (1+all_specz)
-    #resid_zweight_2xgrismerr = (all_specz - all_zwt_2xgrismerr) / (1+all_specz)
-    #resid_zweight_2xphoterr = (all_specz - all_zwt_2xphoterr) / (1+all_specz)
 
     # Get sigma_NMAD
     sigma_nmad_photo = 1.48 * np.median(abs(((all_specz - all_photoz) - np.median((all_specz - all_photoz))) / (1 + all_specz)))
     sigma_nmad_zwt_1xerr = 1.48 * np.median(abs(((all_specz - all_zwt_1xerr) - np.median((all_specz - all_zwt_1xerr))) / (1 + all_specz)))
-    #sigma_nmad_zwt_2xgrismerr = 1.48 * np.median(abs(((all_specz - all_zwt_2xgrismerr) - np.median((all_specz - all_zwt_2xgrismerr))) / (1 + all_specz)))
-    #sigma_nmad_zwt_2xphoterr = 1.48 * np.median(abs(((all_specz - all_zwt_2xphoterr) - np.median((all_specz - all_zwt_2xphoterr))) / (1 + all_specz)))
 
     print "Max residual photo-z:", "{:.3}".format(max(resid_photoz))
     print "Max residual weighted z (1xerr):", "{:.3}".format(max(resid_zweight_1xerr))
-    #print "Max residual weighted z (2xgrismerr):", "{:.3}".format(max(resid_zweight_2xgrismerr))
-    #print "Max residual weighted z (2xphoterr):", "{:.3}".format(max(resid_zweight_2xphoterr))
 
     print "Mean, std. dev., and sigma_NMAD for residual photo-z:", "{:.4}".format(np.mean(resid_photoz)), "{:.4}".format(np.std(resid_photoz)), "{:.4}".format(sigma_nmad_photo)
     print "Mean, std. dev., and sigma_NMAD for residual weighted z (1xerr):", "{:.4}".format(np.mean(resid_zweight_1xerr)), "{:.4}".format(np.std(resid_zweight_1xerr)), "{:.4}".format(sigma_nmad_zwt_1xerr)
-    #print "Mean, std. dev., and sigma_NMAD for residual weighted z (2xgrismerr):", "{:.4}".format(np.mean(resid_zweight_2xgrismerr)), "{:.4}".format(np.std(resid_zweight_2xgrismerr)), "{:.4}".format(sigma_nmad_zwt_2xgrismerr)
-    #print "Mean, std. dev., and sigma_NMAD for residual weighted z (2xphoterr):", "{:.4}".format(np.mean(resid_zweight_2xphoterr)), "{:.4}".format(np.std(resid_zweight_2xphoterr)), "{:.4}".format(sigma_nmad_zwt_2xphoterr)
 
     # -------------------------------------------- Plotting -------------------------------------------- #
     # ---------------------- Residuals vs contamination ---------------------- #
@@ -264,8 +259,6 @@ if __name__ == '__main__':
 
     ax.hist(resid_photoz, 20, color='r', histtype='step', lw=2, label='Photo-z residuals', range=(-0.1, 0.1))
     ax.hist(resid_zweight_1xerr, 20, color='b', histtype='step', lw=2, label='SPZ residuals', range=(-0.1, 0.1))
-    #ax.hist(resid_zweight_2xgrismerr, color='g', histtype='step', lw=2)#, range=(-0.12, 0.12))
-    #ax.hist(resid_zweight_2xphoterr, color='orange', histtype='step', lw=2)#, range=(-0.12, 0.12))
 
     ax.axvline(x=0.0, ls='--', color='k')
 
