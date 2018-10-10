@@ -2,6 +2,7 @@ from __future__ import division
 
 import numpy as np
 from astropy.io import fits
+from scipy import stats
 
 import glob
 import os
@@ -77,7 +78,7 @@ if __name__ == '__main__':
     matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
         dtype=None, names=True, skip_header=1)
 
-    low_d4000 = False
+    low_d4000 = True
     # i.e. if I'm running on the low D4000 sample then the results 
     # are stored in a separeate folder.
 
@@ -207,8 +208,8 @@ if __name__ == '__main__':
 
     # -------------------------------------------- Quantify results -------------------------------------------- #
     # Cut on D4000
-    d4000_low = 1.6
-    d4000_high = 2.5
+    d4000_low = 1.1
+    d4000_high = 1.2
     d4000_idx = np.where((all_d4000 >= d4000_low) & (all_d4000 < d4000_high))[0]
     print "Galaxies in D4000 range:", len(d4000_idx)
 
@@ -234,6 +235,11 @@ if __name__ == '__main__':
     print "Mean, std. dev., and sigma_NMAD for residual weighted z (1xerr):", "{:.4}".format(np.mean(resid_zweight_1xerr)), "{:.4}".format(np.std(resid_zweight_1xerr)), "{:.4}".format(sigma_nmad_zwt_1xerr)
 
     # -------------------------------------------- Plotting -------------------------------------------- #
+    # Convert histograms to KDEs
+    zweight_kde = stats.gaussian_kde(resid_zweight_1xerr)
+    zphot_kde = stats.gaussian_kde(resid_photoz)
+    xx = np.linspace(-0.1, 0.1, 1000)
+
     # ---------------------- Residuals vs contamination ---------------------- #
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -259,6 +265,8 @@ if __name__ == '__main__':
 
     ax.hist(resid_photoz, 20, color='r', histtype='step', lw=2, label='Photo-z residuals', range=(-0.1, 0.1))
     ax.hist(resid_zweight_1xerr, 20, color='b', histtype='step', lw=2, label='SPZ residuals', range=(-0.1, 0.1))
+    ax.plot(xx, zweight_kde(xx), color='seagreen')
+    ax.plot(xx, zphot_kde(xx), color='indianred')
 
     ax.axvline(x=0.0, ls='--', color='k')
 
@@ -297,10 +305,10 @@ if __name__ == '__main__':
     transform=ax.transAxes, color='k', size=9)
 
     # Save figure
-    fig.savefig(massive_figures_dir + \
-        'large_diff_specz_sample/resid_hist_' + 'd4000_' + str(d4000_low) + 'to' + str(d4000_high) + '.png', \
-        dpi=300, bbox_inches='tight')
+    #fig.savefig(massive_figures_dir + \
+    #    'large_diff_specz_sample/resid_hist_' + 'd4000_' + str(d4000_low) + 'to' + str(d4000_high) + '.png', \
+    #    dpi=300, bbox_inches='tight')
 
-    #plt.show()
+    plt.show()
 
     sys.exit(0)
