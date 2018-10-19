@@ -3,6 +3,8 @@ from __future__ import division
 import numpy as np
 from astropy.io import fits
 from scipy import stats
+from astropy.modeling import models, fitting
+from scipy.optimize import curve_fit
 
 import glob
 import os
@@ -21,6 +23,9 @@ sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import grid_coadd as gd
 import mocksim_results as mr
+
+def gaussian(x, a, mu, sigma):
+    return a*np.exp(-(x-mu)**2/(2*sigma**2))
 
 def get_contam(pears_index, field):
 
@@ -105,9 +110,10 @@ if __name__ == '__main__':
     # create empty lists to store final comparison arrays
     all_specz = []
     all_photoz = []
-    all_zwt_1xerr = []
+    all_zwt = []
     all_d4000 = []
     all_contam_frac = []
+    all_zwt_err = []
 
     # loop over all galaxies that the code has run through
     fl_count = 0
@@ -149,6 +155,8 @@ if __name__ == '__main__':
         photoz_idx = np.where(cat['pearsid'] == current_id)[0]
         current_specz = float(spec_cat['specz'][specz_idx])
         current_photoz = float(cat['zphot'][photoz_idx])
+        current_photoz_lerr = float(cat['zphot_l68'][photoz_idx])
+        current_photoz_uerr = float(cat['zphot_u68'][photoz_idx])
         current_specz_qual = spec_cat['specz_qual'][specz_idx]
 
         # Check spec-z quality
@@ -159,7 +167,7 @@ if __name__ == '__main__':
         all_photoz.append(current_photoz)
 
         z_wt = np.sum(z_arr * pz)
-        all_zwt_1xerr.append(z_wt)
+        all_zwt.append(z_wt)
 
         # Read in D4000
         results_idx = np.where((id_arr == current_id) & (field_arr == current_field))[0]
@@ -169,6 +177,35 @@ if __name__ == '__main__':
         # Get contamination
         lam_obs, flam_obs, ferr_obs, contam = get_contam(current_id, current_field)
         all_contam_frac.append(np.nansum(contam) / np.nansum(flam_obs))
+
+        # Fit a gaussian to the p(z) curve and get an estimate of its width
+        # Fitting with Astropy
+        # this fails a lot actually so I'm using the results from scipy.curve_fit()
+        gauss_init = models.Gaussian1D(amplitude=1.0, mean=z_wt, stddev=1.0)
+        fit_gauss = fitting.LevMarLSQFitter()
+        g = fit_gauss(gauss_init, z_arr, pz)
+
+        # Fitting with scipy
+        popt, pcov = curve_fit(gaussian, z_arr, pz, p0 = [1.0, z_wt, 0.5])
+
+        all_zwt_err.append(abs(popt[-1]))  # the last param from scipy fitting is the stddev
+
+        # plot to test fit
+        """
+        print "\n", "Astropy fitting:", g.param_names, g.parameters
+        print "Scipy fitting: (amp, mean, stddev)", popt
+        print "z_wt:", "{:.3}".format(z_wt), "+-", abs(popt[-1]), "z_spec:", current_specz, 
+        print "z_phot:", current_photoz, "+", current_photoz_uerr, "-", current_photoz_lerr
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        ax.plot(z_arr, pz, color='k')
+        ax.plot(z_arr, g(z_arr), color='g')
+        ax.plot(z_arr, gaussian(z_arr, *popt), color='r')
+
+        plt.show()
+        """
 
         """
         # -------------------------------------
@@ -202,9 +239,10 @@ if __name__ == '__main__':
     # Convert to numpy arrays
     all_specz = np.asarray(all_specz)
     all_photoz = np.asarray(all_photoz)
-    all_zwt_1xerr = np.asarray(all_zwt_1xerr)
+    all_zwt = np.asarray(all_zwt)
     all_d4000 = np.asarray(all_d4000)
     all_contam_frac = np.asarray(all_contam_frac)
+    all_zwt_err = np.asarray(all_zwt_err)
 
     # -------------------------------------------- Quantify results -------------------------------------------- #
     # Cut on D4000
@@ -216,27 +254,27 @@ if __name__ == '__main__':
     # apply cuts
     all_specz = all_specz[d4000_idx]
     all_photoz = all_photoz[d4000_idx]
-    all_zwt_1xerr = all_zwt_1xerr[d4000_idx]
+    all_zwt = all_zwt[d4000_idx]
     all_d4000 = all_d4000[d4000_idx]
     all_contam_frac = all_contam_frac[d4000_idx]
 
     # Get residuals
     resid_photoz = (all_specz - all_photoz) / (1+all_specz)
-    resid_zweight_1xerr = (all_specz - all_zwt_1xerr) / (1+all_specz)
+    resid_zweight = (all_specz - all_zwt) / (1+all_specz)
 
     # Get sigma_NMAD
     sigma_nmad_photo = 1.48 * np.median(abs(((all_specz - all_photoz) - np.median((all_specz - all_photoz))) / (1 + all_specz)))
-    sigma_nmad_zwt_1xerr = 1.48 * np.median(abs(((all_specz - all_zwt_1xerr) - np.median((all_specz - all_zwt_1xerr))) / (1 + all_specz)))
+    sigma_nmad_zwt = 1.48 * np.median(abs(((all_specz - all_zwt) - np.median((all_specz - all_zwt))) / (1 + all_specz)))
 
     print "Max residual photo-z:", "{:.3}".format(max(resid_photoz))
-    print "Max residual weighted z (1xerr):", "{:.3}".format(max(resid_zweight_1xerr))
+    print "Max residual weighted z (1xerr):", "{:.3}".format(max(resid_zweight))
 
     print "Mean, std. dev., and sigma_NMAD for residual photo-z:", "{:.4}".format(np.mean(resid_photoz)), "{:.4}".format(np.std(resid_photoz)), "{:.4}".format(sigma_nmad_photo)
-    print "Mean, std. dev., and sigma_NMAD for residual weighted z (1xerr):", "{:.4}".format(np.mean(resid_zweight_1xerr)), "{:.4}".format(np.std(resid_zweight_1xerr)), "{:.4}".format(sigma_nmad_zwt_1xerr)
+    print "Mean, std. dev., and sigma_NMAD for residual weighted z (1xerr):", "{:.4}".format(np.mean(resid_zweight)), "{:.4}".format(np.std(resid_zweight)), "{:.4}".format(sigma_nmad_zwt)
 
     # -------------------------------------------- Plotting -------------------------------------------- #
-    # Convert histograms to KDEs
-    zweight_kde = stats.gaussian_kde(resid_zweight_1xerr)
+    # Convert histograms to PDFs
+    zweight_kde = stats.gaussian_kde(resid_zweight)
     zphot_kde = stats.gaussian_kde(resid_photoz)
     xx = np.linspace(-0.1, 0.1, 1000)
 
@@ -247,7 +285,7 @@ if __name__ == '__main__':
     ax.set_xlabel(r'Contamination Fraction')
     ax.set_ylabel(r'Abs(Residuals [SPZ])')
 
-    ax.scatter(all_contam_frac, abs(resid_zweight_1xerr), s=5)
+    ax.scatter(all_contam_frac, abs(resid_zweight), s=5)
 
     ax.set_xlim(min(all_contam_frac), max(all_contam_frac))
 
@@ -264,7 +302,7 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
 
     ax.hist(resid_photoz, 20, color='r', histtype='step', lw=2, label='Photo-z residuals', range=(-0.1, 0.1))
-    ax.hist(resid_zweight_1xerr, 20, color='b', histtype='step', lw=2, label='SPZ residuals', range=(-0.1, 0.1))
+    ax.hist(resid_zweight, 20, color='b', histtype='step', lw=2, label='SPZ residuals', range=(-0.1, 0.1))
     ax.plot(xx, zweight_kde(xx), color='seagreen')
     ax.plot(xx, zphot_kde(xx), color='indianred')
 
@@ -297,10 +335,10 @@ if __name__ == '__main__':
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=9)
 
-    ax.text(0.05, 0.58, r'${\left< \Delta \right>}_{\mathrm{SPZ}} = $' + mr.convert_to_sci_not(np.mean(resid_zweight_1xerr)), \
+    ax.text(0.05, 0.58, r'${\left< \Delta \right>}_{\mathrm{SPZ}} = $' + mr.convert_to_sci_not(np.mean(resid_zweight)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=9)
-    ax.text(0.05, 0.53, r'$\mathrm{\sigma^{NMAD}_{\Delta ; SPZ}} = $' + mr.convert_to_sci_not(sigma_nmad_zwt_1xerr), \
+    ax.text(0.05, 0.53, r'$\mathrm{\sigma^{NMAD}_{\Delta ; SPZ}} = $' + mr.convert_to_sci_not(sigma_nmad_zwt), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=9)
 
