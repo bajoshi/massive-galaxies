@@ -43,6 +43,8 @@ import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 import mocksim_results as mr
 
+speed_of_light = 299792458e10  # angsroms per second
+
 def check_spec_plot(obj_id, obj_field, grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr):
 
     fig = plt.figure()
@@ -1256,8 +1258,7 @@ if __name__ == '__main__':
     # Read in Vega spectrum and get it in the appropriate forms
     vega = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/' + 'vega_reference.dat', dtype=None, \
         names=['wav', 'flam'], skip_header=7)
-
-    speed_of_light = 3e18  # in Angstroms per second
+    
     vega_lam = vega['wav']
     vega_spec_flam = vega['flam']
     vega_nu = speed_of_light / vega_lam
