@@ -166,7 +166,6 @@ def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
     zp_minchi2 = z_arr_to_check[min_idx_2d[0]]
 
-    print "Photometric redshift from min chi2:", "{:.2}".format(zp_minchi2)
     print "Current best fit log(age [yr]):", "{:.4}".format(age)
     print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
     print "Current best fit Tau_V:", tauv
@@ -213,6 +212,7 @@ def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     zp = np.sum(z_arr_to_check * pz)
     print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
     print "Previous photometric redshift from 3DHST:", photoz
+    print "Photometric redshift from min chi2 from this code:", "{:.2}".format(zp_minchi2)
     print "Photometric redshift (weighted) from this code:", "{:.3}".format(zp)
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
@@ -311,6 +311,20 @@ if __name__ == '__main__':
     # Lists to loop over
     all_speccats =  [specz_goodsn, specz_goodss]
     all_match_cats = [matched_cat_n, matched_cat_s]
+
+    # save lists for comparing after code is done
+    id_list = []
+    field_list = []
+    zspec_list = []
+    zphot_list = []
+    chi2_list = []
+    age_list = []
+    tau_list = []
+    av_list = []
+    my_photoz_list = []
+    my_photoz_minchi2_list = []
+    my_photoz_lowerr_list = []
+    my_photoz_uperr_list = []
 
     # start looping
     catcount = 0
@@ -513,6 +527,34 @@ if __name__ == '__main__':
                 current_id, current_field, current_specz, current_photz)
 
             galaxy_count += 1
+
+            # ---------------------------------------------- SAVE PARAMETERS ----------------------------------------------- #
+            id_list.append(current_id)
+            field_list.append(current_field)
+            zspec_list.append(current_specz)
+            zphot_list.append(current_photz)
+            chi2_list.append(min_chi2)
+            age_list.append(age)
+            tau_list.append(tau)
+            av_list.append(av)
+            my_photoz_list.append(zp)
+            my_photoz_minchi2_list.append(zp_minchi2)
+            my_photoz_lowerr_list.append(zerr_low)
+            my_photoz_uperr_list.append(zerr_up)
+
+            # Save files
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_id_list.npy', id_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_field_list.npy', field_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_zspec_list.npy', zspec_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_3dzphot_list.npy', zphot_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_chi2_list.npy', chi2_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_age_list.npy', age_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_tau_list.npy', tau_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_av_list.npy', av_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_list.npy', zp)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_minchi2_list.npy', zp_minchi2)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_lowerr_list.npy', zerr_low)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_uperr_list.npy', zerr_up)
 
         catcount += 1
 
