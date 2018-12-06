@@ -42,7 +42,7 @@ speed_of_light = 299792458e10  # angsroms per second
 
 def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, total_models, start_time):
 
-    #print "\n", "Currently at redshift:", z
+    print "\n", "Currently at redshift:", z
 
     # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
     all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
@@ -66,7 +66,6 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, mo
             filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
 
         # multiply model spectrum to filter curve
-        """
         for i in range(total_models):
 
             num = np.nansum(model_comp_spec_z[i] * filt_interp)
@@ -74,25 +73,27 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, mo
 
             filt_flam_model = num / den
             all_filt_flam_model[filt_count,i] = filt_flam_model
-        """
 
-        all_filt_flam_model[filt_count] = np.nansum(model_comp_spec_z * filt_interp, axis=1) / np.nansum(filt_interp)
+        # This one-liner acomplishes the same thing as the small for loop above.
+        # But for some reason it is much slower. So I'm going to stick with the 
+        # explicit for loop which is ~1.6x faster.
+        # all_filt_flam_model[filt_count] = np.nansum(model_comp_spec_z * filt_interp, axis=1) / np.nansum(filt_interp)
         filt_count += 1
 
     # transverse array to make shape consistent with others
     # I did it this way so that in the above for loop each filter is looped over only once
     # i.e. minimizing the number of times each filter is gridded on to the model grid
-    all_filt_flam_model = all_filt_flam_model.T
+    all_filt_flam_model_t = all_filt_flam_model.T
 
-    #print "Filter f_lam for models computed."
-    #print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print "Filter f_lam for models computed."
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # ------------------------------------ Now do the chi2 computation ------------------------------------ #
     # compute alpha and chi2
-    alpha_ = np.sum(phot_flam_obs * all_filt_flam_model / (phot_ferr_obs**2), axis=1) / np.sum(all_filt_flam_model**2 / phot_ferr_obs**2, axis=1)
-    chi2_ = np.sum(((phot_flam_obs - (alpha_ * all_filt_flam_model.T).T) / phot_ferr_obs)**2, axis=1)
+    alpha_ = np.sum(phot_flam_obs * all_filt_flam_model_t / (phot_ferr_obs**2), axis=1) / np.sum(all_filt_flam_model_t**2 / phot_ferr_obs**2, axis=1)
+    chi2_ = np.sum(((phot_flam_obs - (alpha_ * all_filt_flam_model).T) / phot_ferr_obs)**2, axis=1)
 
-    #print "Min chi2 for redshift:", min(chi2_)
+    print "Min chi2 for redshift:", min(chi2_)
 
     return chi2_, alpha_
 
@@ -348,7 +349,7 @@ if __name__ == '__main__':
 
     # Lists to loop over
     all_speccats =  [specz_goodsn, specz_goodss]
-    all_match_cats = [matched_cat_n, matched_cat_s]
+    all_match_cats = [matched_cat_n]#, matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
@@ -408,6 +409,8 @@ if __name__ == '__main__':
             print "Galaxies done so far:", galaxy_count
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
             print "Total time taken:", time.time() - start, "seconds."
+            if galaxy_count > 2:
+                break
 
             # ------------------------------- Match and get photometry data ------------------------------- #
             # find obj ra,dec
