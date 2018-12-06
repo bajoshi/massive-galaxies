@@ -42,7 +42,7 @@ speed_of_light = 299792458e10  # angsroms per second
 
 def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, total_models, start_time):
 
-    print "\n", "Currently at redshift:", z
+    #print "\n", "Currently at redshift:", z
 
     # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
     all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
@@ -66,6 +66,7 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, mo
             filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
 
         # multiply model spectrum to filter curve
+        """
         for i in range(total_models):
 
             num = np.nansum(model_comp_spec_z[i] * filt_interp)
@@ -73,7 +74,9 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, mo
 
             filt_flam_model = num / den
             all_filt_flam_model[filt_count,i] = filt_flam_model
+        """
 
+        all_filt_flam_model[filt_count] = np.nansum(model_comp_spec_z * filt_interp, axis=1) / np.nansum(filt_interp)
         filt_count += 1
 
     # transverse array to make shape consistent with others
@@ -81,15 +84,15 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, mo
     # i.e. minimizing the number of times each filter is gridded on to the model grid
     all_filt_flam_model = all_filt_flam_model.T
 
-    print "Filter f_lam for models computed."
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    #print "Filter f_lam for models computed."
+    #print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # ------------------------------------ Now do the chi2 computation ------------------------------------ #
     # compute alpha and chi2
     alpha_ = np.sum(phot_flam_obs * all_filt_flam_model / (phot_ferr_obs**2), axis=1) / np.sum(all_filt_flam_model**2 / phot_ferr_obs**2, axis=1)
     chi2_ = np.sum(((phot_flam_obs - (alpha_ * all_filt_flam_model.T).T) / phot_ferr_obs)**2, axis=1)
 
-    print "Min chi2 for redshift:", min(chi2_)
+    #print "Min chi2 for redshift:", min(chi2_)
 
     return chi2_, alpha_
 
@@ -114,6 +117,7 @@ def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # looping
+    """
     num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z_photoz)(z, \
     phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, total_models, start_time) \
@@ -123,6 +127,12 @@ def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+    """
+
+    count = 0
+    for z in z_arr_to_check:
+        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, total_models, start_time)
+        count += 1
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
@@ -249,6 +259,10 @@ if __name__ == '__main__':
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
     total_models = 34542
 
+    # create fits file to save models with emission lines
+    hdu = fits.PrimaryHDU()
+    hdulist = fits.HDUList(hdu)    
+
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
     bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
@@ -257,6 +271,10 @@ if __name__ == '__main__':
 
     total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
+    # ----------------------------------- #
+    #### DO NOT delete this code block ####
+    # ----------------------------------- #
+    """
     for j in range(total_models):
         nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
         metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
@@ -269,6 +287,26 @@ if __name__ == '__main__':
         # the two types of models (ie. with and without lines) are on the same lambda grid.
         # I guess you could simply interpolate the model without lines on to the grid of
         # the models wiht lines.
+
+        hdr = fits.Header()
+        hdr['NLYC'] = str(nlyc)
+        hdr['METAL'] = str(metallicity)
+        hdulist.append(fits.ImageHDU(data=model_comp_spec_withlines[j], header=hdr))
+
+    # Save models with emission lines
+    hdulist.writeto(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits', overwrite=True)
+    # Also save the model lam grid for models with emission lines
+    np.save(figs_dir + 'model_lam_grid_withlines.npy', model_lam_grid_withlines)
+    """
+
+    # Read in models with emission lines adn put in numpy array
+    bc03_all_spec_hdulist_withlines = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
+    model_lam_grid_withlines = np.load(figs_dir + 'model_lam_grid_withlines.npy')
+    for q in range(total_models):
+        model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
+
+    bc03_all_spec_hdulist_withlines.close()
+    del bc03_all_spec_hdulist_withlines
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
@@ -369,6 +407,7 @@ if __name__ == '__main__':
 
             print "Galaxies done so far:", galaxy_count
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
+            print "Total time taken:", time.time() - start, "seconds."
 
             # ------------------------------- Match and get photometry data ------------------------------- #
             # find obj ra,dec
@@ -551,11 +590,18 @@ if __name__ == '__main__':
             np.save(figs_dir + 'massive-galaxies-figures/my_photoz_age_list.npy', age_list)
             np.save(figs_dir + 'massive-galaxies-figures/my_photoz_tau_list.npy', tau_list)
             np.save(figs_dir + 'massive-galaxies-figures/my_photoz_av_list.npy', av_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_list.npy', zp)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_minchi2_list.npy', zp_minchi2)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_lowerr_list.npy', zerr_low)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_uperr_list.npy', zerr_up)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_list.npy', my_photoz_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_minchi2_list.npy', my_photoz_minchi2_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_lowerr_list.npy', my_photoz_lowerr_list)
+            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_uperr_list.npy', my_photoz_uperr_list)
 
         catcount += 1
 
     print "Total galaxies considered:", galaxy_count
+
+    # Close HDUs
+    bc03_all_spec_hdulist.close()
+
+    # Total time taken
+    print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
+    sys.exit(0)
