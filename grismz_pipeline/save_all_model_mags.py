@@ -62,7 +62,13 @@ def main():
 
     # Read in models with emission lines adn put in numpy array
     total_models = 34542
+    total_emission_lines_to_add = 12
+
+    example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
+    bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
+    model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
+
     bc03_all_spec_hdulist_withlines = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
     model_lam_grid_withlines = np.load(figs_dir + 'model_lam_grid_withlines.npy')
     for q in range(total_models):
