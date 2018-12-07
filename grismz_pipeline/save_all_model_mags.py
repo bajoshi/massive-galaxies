@@ -48,7 +48,6 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
     all_filt_flam_model_t = all_filt_flam_model.T
 
     print "Filter f_lam for models computed."
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     return all_filt_flam_model_t
 
