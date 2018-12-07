@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+from numpy import nansum
 from scipy.signal import fftconvolve
 from astropy.io import fits
 from astropy.modeling import models, fitting
@@ -40,7 +41,7 @@ import fullfitting_grism_broadband_emlines as ff
 
 speed_of_light = 299792458e10  # angsroms per second
 
-def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, total_models, start_time):
+def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, all_filters, total_models, start_time):
 
     print "\n", "Currently at redshift:", z
 
@@ -66,10 +67,10 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, mo
             filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
 
         # multiply model spectrum to filter curve
-        for i in range(total_models):
+        for i in xrange(total_models):
 
-            num = np.nansum(model_comp_spec_z[i] * filt_interp)
-            den = np.nansum(filt_interp)
+            num = np.sum(model_comp_spec_z[i] * filt_interp)
+            den = np.sum(filt_interp)
 
             filt_flam_model = num / den
             all_filt_flam_model[filt_count,i] = filt_flam_model
@@ -99,7 +100,7 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, mo
 
 def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz):
+    obj_id, obj_field, specz, photoz, all_filters):
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -121,7 +122,7 @@ def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     """
     num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z_photoz)(z, \
-    phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, total_models, start_time) \
+        phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, all_filters, total_models, start_time) \
     for z in z_arr_to_check)
 
     # the parallel code seems to like returning only a list
@@ -132,14 +133,14 @@ def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
 
     count = 0
     for z in z_arr_to_check:
-        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, total_models, start_time)
+        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
         count += 1
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
 
-    for k in range(len(chi2.ravel())):
+    for k in xrange(len(chi2.ravel())):
 
         # Find the minimum chi2
         min_idx = sortargs[k]
@@ -244,8 +245,7 @@ def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, specz, photoz, grismz, low_
 
     return pz
 
-if __name__ == '__main__':
-
+def main():
     # Start time
     start = time.time()
     dt = datetime.datetime
@@ -370,7 +370,7 @@ if __name__ == '__main__':
     galaxy_count = 0
     for cat in all_match_cats:
 
-        for i in range(len(cat)):
+        for i in xrange(len(cat)):
 
             # --------------------------------------------- GET OBS DATA ------------------------------------------- #
             current_id = cat['pearsid'][i]
@@ -566,7 +566,7 @@ if __name__ == '__main__':
             zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_photoz_fitting(phot_fluxes_arr, phot_errors_arr, phot_lam, \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-                current_id, current_field, current_specz, current_photz)
+                current_id, current_field, current_specz, current_photz, all_filters)
 
             galaxy_count += 1
 
@@ -607,4 +607,7 @@ if __name__ == '__main__':
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
-    sys.exit(0)
+    return None
+
+if __name__ == '__main__':
+    main()
