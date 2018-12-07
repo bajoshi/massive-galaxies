@@ -62,6 +62,7 @@ def main():
 
     # Read in models with emission lines adn put in numpy array
     total_models = 34542
+    model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
     bc03_all_spec_hdulist_withlines = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
     model_lam_grid_withlines = np.load(figs_dir + 'model_lam_grid_withlines.npy')
     for q in range(total_models):
