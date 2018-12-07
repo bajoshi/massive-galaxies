@@ -45,11 +45,11 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
     # transverse array to make shape consistent with others
     # I did it this way so that in the above for loop each filter is looped over only once
     # i.e. minimizing the number of times each filter is gridded on to the model grid
-    all_filt_flam_model_t = all_filt_flam_model.T
+    #all_filt_flam_model_t = all_filt_flam_model.T
 
     print "Filter f_lam for models computed."
 
-    return all_filt_flam_model_t
+    return all_filt_flam_model
 
 def save_filter_mags(filtername, all_model_mags):
 
