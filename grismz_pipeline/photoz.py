@@ -2,14 +2,12 @@ from __future__ import division
 
 import numpy as np
 from numpy import nansum
-from scipy.signal import fftconvolve
 from astropy.io import fits
 from astropy.modeling import models, fitting
 from astropy.convolution import Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
 from joblib import Parallel, delayed
 from scipy.interpolate import griddata, interp1d
-from scipy.signal import fftconvolve
 import pysynphot
 from scipy.integrate import simps
 
@@ -347,6 +345,37 @@ def main():
     vega_nu = speed_of_light / vega_lam
     vega_spec_fnu = vega_lam**2 * vega_spec_flam / speed_of_light
 
+    # ------------------------------- Read in filter curves ------------------------------- #
+    f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
+    f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
+    f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
+    f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
+
+    f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
+    f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
+    f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
+
+    # non-HST filter curves
+    # IRac wavelengths are in mixrons # convert to angstroms
+    uband_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/kpno_mosaic_u.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=14)
+    irac1_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac2_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac3_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac4_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+
+    irac1_curve['wav'] *= 1e4
+    irac2_curve['wav'] *= 1e4
+    irac3_curve['wav'] *= 1e4
+    irac4_curve['wav'] *= 1e4
+
+    all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
+    f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
+
     # Lists to loop over
     all_speccats =  [specz_goodsn, specz_goodss]
     all_match_cats = [matched_cat_n]#, matched_cat_s]
@@ -490,37 +519,6 @@ def main():
                 vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
             ferr_irac4 = ff.get_flam_nonhst('irac4', phot_cat_3dhst['e_IRAC4'][threed_phot_idx], \
                 vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-
-            # ------------------------------- Read in filter curves ------------------------------- #
-            f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
-            f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
-            f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
-            f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
-
-            f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
-            f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
-            f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
-
-            # non-HST filter curves
-            # IRac wavelengths are in mixrons # convert to angstroms
-            uband_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/kpno_mosaic_u.txt', dtype=None, \
-                names=['wav', 'trans'], skip_header=14)
-            irac1_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
-                names=['wav', 'trans'], skip_header=3)
-            irac2_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
-                names=['wav', 'trans'], skip_header=3)
-            irac3_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
-                names=['wav', 'trans'], skip_header=3)
-            irac4_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
-                names=['wav', 'trans'], skip_header=3)
-
-            irac1_curve['wav'] *= 1e4
-            irac2_curve['wav'] *= 1e4
-            irac3_curve['wav'] *= 1e4
-            irac4_curve['wav'] *= 1e4
-
-            all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
-            f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
 
             # ------------------------------- Make unified photometry arrays ------------------------------- #
             phot_fluxes_arr = np.array([flam_U, flam_f435w, flam_f606w, flam_f775w, flam_f850lp, flam_f125w, flam_f140w, flam_f160w,
