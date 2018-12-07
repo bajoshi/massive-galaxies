@@ -13,10 +13,10 @@ home = os.getenv('HOME')
 figs_dir = home + "/Desktop/FIGS/"
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 
-def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z, total_filters):
+def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
 
     # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
-    all_filt_flam_model = np.zeros((total_filters, total_models), dtype=np.float64)
+    all_filt_flam_model = np.zeros(total_models, dtype=np.float64)
 
     # Redshift the base models
     model_comp_spec_z = model_comp_spec / (1+z)
@@ -40,7 +40,7 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z, 
         den = np.sum(filt_interp)
 
         filt_flam_model = num / den
-        all_filt_flam_model[filt_count,i] = filt_flam_model
+        all_filt_flam_model[i] = filt_flam_model
 
     # transverse array to make shape consistent with others
     # I did it this way so that in the above for loop each filter is looped over only once
@@ -121,8 +121,8 @@ def main():
             print "Filter:", filtername, "       Redshift:", redshift
 
             # compute the mags
-            all_model_mags_filt[i] = compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, \
-                total_models, redshift, len(all_filters))
+            all_model_mags_filt[i] = \
+            compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift)
 
         # save the mags
         save_filter_mags(filtername, all_model_mags_filt)
