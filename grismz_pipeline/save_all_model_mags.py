@@ -105,19 +105,20 @@ def main():
 
     filter_count = 0
     for filt in all_filters:
-
         all_model_mags_filt = np.zeros((len(zrange), total_models) dtype=np.float32)
+        filtername = all_filter_names[filter_count]
 
         for i in range(len(zrange)):
             redshift = zrange[i]
+            print "Filter:", filtername, "       Redshift:", redshift
 
             # compute the mags
             all_model_mags_filt[i] = \
             compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift)
 
-        filtername = all_filter_names[filter_count]
         # save the mags
         save_filter_mags(filtername, all_model_mags_filt)
+        print "Computation done and saved for:", filtername
 
         filter_count += 1
 
