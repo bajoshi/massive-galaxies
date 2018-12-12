@@ -338,8 +338,7 @@ def main():
     # Read in Vega spectrum and get it in the appropriate forms
     vega = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/' + 'vega_reference.dat', dtype=None, \
         names=['wav', 'flam'], skip_header=7)
-
-    speed_of_light = 3e18  # in Angstroms per second
+    
     vega_lam = vega['wav']
     vega_spec_flam = vega['flam']
     vega_nu = speed_of_light / vega_lam
