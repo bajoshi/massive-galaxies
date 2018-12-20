@@ -630,8 +630,6 @@ def main():
                 all_filters = np.asarray(all_filters)
                 all_filters = all_filters[phot_fin_idx]
 
-            num_filters = len(all_filters)
-
             # ------------- Call actual fitting function ------------- #
             #zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
             #do_photoz_fitting(phot_fluxes_arr, phot_errors_arr, phot_lam, \
