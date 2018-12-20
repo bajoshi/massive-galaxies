@@ -41,6 +41,8 @@ speed_of_light = 299792458e10  # angsroms per second
 
 def get_chi2_alpha_at_z_photoz_lookup(all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
 
+    print "\n", "Currently at redshift:", z
+
     all_filt_flam_model_t = all_filt_flam_model.T
 
     print all_filt_flam_model.shape
@@ -118,7 +120,7 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
 def do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam_obs, \
     model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-    current_id, current_field, current_specz, current_photz):
+    current_id, current_field, current_specz, current_photz, all_model_flam):
 
     # def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     #    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
@@ -639,7 +641,7 @@ def main():
             zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-                current_id, current_field, current_specz, current_photz)
+                current_id, current_field, current_specz, current_photz, all_model_flam)
 
             galaxy_count += 1
 
