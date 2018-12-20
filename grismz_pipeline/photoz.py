@@ -39,7 +39,7 @@ import fullfitting_grism_broadband_emlines as ff
 
 speed_of_light = 299792458e10  # angsroms per second
 
-def get_chi2_alpha_at_z_photoz_lookup(all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
+def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
 
     print "\n", "Currently at redshift:", z
 
@@ -166,7 +166,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         z_idx = np.where(z_model_arr == z)[0]
 
         all_filt_flam_model = all_model_flam[:, z_idx, :]
-        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz_lookup(all_filt_flam_model, phot_flam_obs, phot_ferr_obs)
+        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs)
 
         #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
