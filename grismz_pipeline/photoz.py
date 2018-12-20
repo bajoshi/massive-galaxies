@@ -118,9 +118,9 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     return chi2_, alpha_
 
-def do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam_obs, \
-    model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-    current_id, current_field, current_specz, current_photz, all_model_flam):
+def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
+    obj_id, obj_field, specz, photoz, all_model_flam):
 
     # def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     #    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
