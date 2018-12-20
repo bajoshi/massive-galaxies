@@ -116,9 +116,14 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     return chi2_, alpha_
 
-def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, all_filters):
+def do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam_obs, \
+    model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
+    current_id, current_field, current_specz, current_photz):
+
+    # def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+    #    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
+    #    obj_id, obj_field, specz, photoz, all_filters):
+
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -274,6 +279,41 @@ def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, specz, photoz, grismz, low_
 
     return pz
 
+def get_all_filters():
+
+    # ------------------------------- Read in filter curves ------------------------------- #
+    f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
+    f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
+    f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
+    f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
+
+    f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
+    f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
+    f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
+
+    # non-HST filter curves
+    # IRac wavelengths are in mixrons # convert to angstroms
+    uband_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/kpno_mosaic_u.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=14)
+    irac1_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac2_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac3_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac4_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+
+    irac1_curve['wav'] *= 1e4
+    irac2_curve['wav'] *= 1e4
+    irac3_curve['wav'] *= 1e4
+    irac4_curve['wav'] *= 1e4
+
+    all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
+    f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
+
+    return all_filters
+
 def main():
     # Start time
     start = time.time()
@@ -289,10 +329,6 @@ def main():
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
     total_models = 34542
 
-    # create fits file to save models with emission lines
-    hdu = fits.PrimaryHDU()
-    hdulist = fits.HDUList(hdu)    
-
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
     bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
@@ -304,6 +340,11 @@ def main():
     # ----------------------------------- #
     #### DO NOT delete this code block ####
     # ----------------------------------- #
+    """
+    # create fits file to save models with emission lines
+    hdu = fits.PrimaryHDU()
+    hdulist = fits.HDUList(hdu)
+
     for j in range(total_models):
         nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
         metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
@@ -327,6 +368,8 @@ def main():
     # Also save the model lam grid for models with emission lines
     np.save(figs_dir + 'model_lam_grid_withlines.npy', model_lam_grid_withlines)
     sys.exit(0)
+    """
+    # ----------------------------------- #
 
     # Read in models with emission lines adn put in numpy array
     bc03_all_spec_hdulist_withlines = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
@@ -361,6 +404,11 @@ def main():
 
     # cnovert to numpy array
     all_model_flam = np.asarray(all_model_flam)
+
+    # You only need to use the filters if you're not using the lookup tables
+    lookup = True
+    if not lookup:
+        all_filters = get_all_filters()
 
     # ----------------------------------------- Read in matched catalogs ----------------------------------------- #
     # Only reading this in to be able to loop over all matched galaxies
@@ -397,37 +445,6 @@ def main():
     vega_spec_flam = vega['flam']
     vega_nu = speed_of_light / vega_lam
     vega_spec_fnu = vega_lam**2 * vega_spec_flam / speed_of_light
-
-    # ------------------------------- Read in filter curves ------------------------------- #
-    f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
-    f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
-    f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
-    f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
-
-    f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
-    f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
-    f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
-
-    # non-HST filter curves
-    # IRac wavelengths are in mixrons # convert to angstroms
-    uband_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/kpno_mosaic_u.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=14)
-    irac1_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac2_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac3_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac4_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-
-    irac1_curve['wav'] *= 1e4
-    irac2_curve['wav'] *= 1e4
-    irac3_curve['wav'] *= 1e4
-    irac4_curve['wav'] *= 1e4
-
-    all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
-    f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
 
     # Lists to loop over
     all_speccats =  [specz_goodsn, specz_goodss]
@@ -609,15 +626,22 @@ def main():
             phot_errors_arr = phot_errors_arr[phot_fin_idx]
             phot_lam = phot_lam[phot_fin_idx]
 
-            all_filters = np.asarray(all_filters)
-            all_filters = all_filters[phot_fin_idx]
+            if not lookup:
+                all_filters = np.asarray(all_filters)
+                all_filters = all_filters[phot_fin_idx]
+
             num_filters = len(all_filters)
 
             # ------------- Call actual fitting function ------------- #
+            #zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
+            #do_photoz_fitting(phot_fluxes_arr, phot_errors_arr, phot_lam, \
+            #    model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
+            #    current_id, current_field, current_specz, current_photz, all_filters)
+
             zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
-            do_photoz_fitting(phot_fluxes_arr, phot_errors_arr, phot_lam, \
+            do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-                current_id, current_field, current_specz, current_photz, all_filters)
+                current_id, current_field, current_specz, current_photz)
 
             galaxy_count += 1
 
