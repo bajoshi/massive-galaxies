@@ -108,7 +108,7 @@ def main():
     'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
-    zrange = np.arange(0.3, 1.51, 0.01)
+    zrange = np.arange(0.1, 2.51, 0.01)
 
     filter_count = 0
     for filt in all_filters:

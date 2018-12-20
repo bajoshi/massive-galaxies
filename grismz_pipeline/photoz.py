@@ -39,7 +39,27 @@ import fullfitting_grism_broadband_emlines as ff
 
 speed_of_light = 299792458e10  # angsroms per second
 
-def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, all_filters, total_models, start_time):
+def get_chi2_alpha_at_z_photoz_lookup(all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
+
+    all_filt_flam_model_t = all_filt_flam_model.T
+
+    print all_filt_flam_model.shape
+    print all_filt_flam_model_t.shape
+    print phot_flam_obs.shape
+
+    # ------------------------------------ Now do the chi2 computation ------------------------------------ #
+    # compute alpha and chi2
+    alpha_ = np.sum(phot_flam_obs * all_filt_flam_model_t / (phot_ferr_obs**2), axis=1) / np.sum(all_filt_flam_model_t**2 / phot_ferr_obs**2, axis=1)
+    chi2_ = np.sum(((phot_flam_obs - (alpha_ * all_filt_flam_model).T) / phot_ferr_obs)**2, axis=1)
+
+    print chi2_.shape
+
+    print "Min chi2 for redshift:", min(chi2_)
+
+    return chi2_, alpha_
+
+def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+    model_lam_grid, model_comp_spec, all_filters, total_models, start_time):
 
     print "\n", "Currently at redshift:", z
 
@@ -110,6 +130,10 @@ def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     z_arr_to_check = np.linspace(start=0.3, stop=1.5, num=61, dtype=np.float64)
     print "Will check the following redshifts:", z_arr_to_check
 
+    # The model mags were computed on a finer redshift grid
+    # So make sure to get the z_idx correct
+    z_model_arr = np.arange(0.3, 1.51, 0.01)
+
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
     # set up chi2 and alpha arrays
@@ -131,7 +155,14 @@ def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
 
     count = 0
     for z in z_arr_to_check:
-        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
+
+        z_idx = np.where(z_model_arr == z)[0]
+
+        all_filt_flam_model = all_model_flam[:, z_idx, :]
+        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz_lookup(all_filt_flam_model, phot_flam_obs, phot_ferr_obs)
+
+        #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+        #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
         count += 1
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
@@ -273,7 +304,6 @@ def main():
     # ----------------------------------- #
     #### DO NOT delete this code block ####
     # ----------------------------------- #
-    """
     for j in range(total_models):
         nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
         metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
@@ -296,7 +326,7 @@ def main():
     hdulist.writeto(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits', overwrite=True)
     # Also save the model lam grid for models with emission lines
     np.save(figs_dir + 'model_lam_grid_withlines.npy', model_lam_grid_withlines)
-    """
+    sys.exit(0)
 
     # Read in models with emission lines adn put in numpy array
     bc03_all_spec_hdulist_withlines = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
@@ -309,6 +339,28 @@ def main():
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
+
+    # ---------------------------------- Read in look-up tables for model mags ------------------------------------- #
+    # Using the look-up table now since it should be much faster
+    # First get them all into an appropriate shape
+    u = np.load(figs_dir + 'all_model_mags_u.npy')
+    f435w = np.load(figs_dir + 'all_model_mags_f435w.npy')
+    f606w = np.load(figs_dir + 'all_model_mags_f606w.npy')
+    f775w = np.load(figs_dir + 'all_model_mags_f775w.npy')
+    f850lp = np.load(figs_dir + 'all_model_mags_f850lp.npy')
+    f125w = np.load(figs_dir + 'all_model_mags_f125w.npy')
+    f140w = np.load(figs_dir + 'all_model_mags_f140w.npy')
+    f160w = np.load(figs_dir + 'all_model_mags_f160w.npy')
+    irac1 = np.load(figs_dir + 'all_model_mags_irac1.npy')
+    irac2 = np.load(figs_dir + 'all_model_mags_irac2.npy')
+    irac3 = np.load(figs_dir + 'all_model_mags_irac3.npy')
+    irac4 = np.load(figs_dir + 'all_model_mags_irac4.npy')
+
+    # put them in a list since I need to iterate over it
+    all_model_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
+
+    # cnovert to numpy array
+    all_model_flam = np.asarray(all_model_flam)
 
     # ----------------------------------------- Read in matched catalogs ----------------------------------------- #
     # Only reading this in to be able to loop over all matched galaxies
@@ -331,14 +383,16 @@ def main():
     'f_U', 'e_U', 'f_IRAC1', 'e_IRAC1', 'f_IRAC2', 'e_IRAC2', 'f_IRAC3', 'e_IRAC3', 'f_IRAC4', 'e_IRAC4', \
     'IRAC1_contam', 'IRAC2_contam', 'IRAC3_contam', 'IRAC4_contam']
     goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), skip_header=3)
+        dtype=None, names=photometry_names, \
+        usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), skip_header=3)
     goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
+        dtype=None, names=photometry_names, \
+        usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
 
     # Read in Vega spectrum and get it in the appropriate forms
     vega = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/' + 'vega_reference.dat', dtype=None, \
         names=['wav', 'flam'], skip_header=7)
-    
+
     vega_lam = vega['wav']
     vega_spec_flam = vega['flam']
     vega_nu = speed_of_light / vega_lam
