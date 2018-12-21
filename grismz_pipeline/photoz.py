@@ -506,6 +506,7 @@ def main():
                 print "This much be fixed. Check why it happens. Exiting now."
                 sys.exit(0)
 
+            print "\n"
             print "Galaxies done so far:", galaxy_count
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
             print "Total time taken:", time.time() - start, "seconds."
@@ -640,8 +641,6 @@ def main():
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, current_photz, all_model_flam, phot_fin_idx)
 
-            galaxy_count += 1
-
             # ---------------------------------------------- SAVE PARAMETERS ----------------------------------------------- #
             id_list.append(current_id)
             field_list.append(current_field)
@@ -656,21 +655,23 @@ def main():
             my_photoz_lowerr_list.append(zerr_low)
             my_photoz_uperr_list.append(zerr_up)
 
-            # Save files
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_id_list.npy', id_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_field_list.npy', field_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_zspec_list.npy', zspec_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_3dzphot_list.npy', zphot_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_chi2_list.npy', chi2_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_age_list.npy', age_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_tau_list.npy', tau_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_av_list.npy', av_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_list.npy', my_photoz_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_minchi2_list.npy', my_photoz_minchi2_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_lowerr_list.npy', my_photoz_lowerr_list)
-            np.save(figs_dir + 'massive-galaxies-figures/my_photoz_uperr_list.npy', my_photoz_uperr_list)
+            galaxy_count += 1
 
         catcount += 1
+
+    # Save files
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_id_list.npy', id_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_field_list.npy', field_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_zspec_list.npy', zspec_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_3dzphot_list.npy', zphot_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_chi2_list.npy', chi2_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_age_list.npy', age_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_tau_list.npy', tau_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_av_list.npy', av_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_list.npy', my_photoz_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_minchi2_list.npy', my_photoz_minchi2_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_lowerr_list.npy', my_photoz_lowerr_list)
+    np.save(figs_dir + 'massive-galaxies-figures/my_photoz_uperr_list.npy', my_photoz_uperr_list)
 
     print "Total galaxies considered:", galaxy_count
 
