@@ -8,7 +8,6 @@ from astropy.convolution import Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
 from joblib import Parallel, delayed
 from scipy.interpolate import griddata, interp1d
-import pysynphot
 from scipy.integrate import simps
 
 import os
@@ -30,7 +29,6 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 savefits_dir = home + "/Desktop/FIGS/new_codes/bc03_fits_files_for_refining_redshifts/"
 lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
-threedhst_datadir = home + "/Desktop/3dhst_data/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
 
 sys.path.append(stacking_analysis_dir + 'codes/')
@@ -39,9 +37,21 @@ import fullfitting_grism_broadband_emlines as ff
 
 speed_of_light = 299792458e10  # angsroms per second
 
+figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+# This is if working on the laptop. 
+# Then you must be using the external hard drive where the models are saved.
+if not os.path.isdir(figs_data_dir):
+    import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
+    figs_data_dir = 'figs_dir'  # this path only exists on firstlight
+    threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+    if not os.path.isdir(figs_data_dir):
+        print "Model files not found. Exiting..."
+        sys.exit(0)
+
 def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
 
-    print "\n", "Currently at redshift:", z
+    print "Currently at redshift:", z
 
     all_filt_flam_model_t = all_filt_flam_model.T
 
@@ -120,7 +130,7 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
 def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, all_model_flam):
+    obj_id, obj_field, specz, photoz, all_model_flam, phot_fin_idx):
 
     # def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     #    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
@@ -134,12 +144,13 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=0.3, stop=1.5, num=61, dtype=np.float64)
+    z_arr_to_check = np.arange(0.3, 1.52, 0.02)
     print "Will check the following redshifts:", z_arr_to_check
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
     z_model_arr = np.arange(0.3, 1.51, 0.01)
+    print z_model_arr
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -164,8 +175,14 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     for z in z_arr_to_check:
 
         z_idx = np.where(z_model_arr == z)[0]
+        print '\n'
+        print np.where(z_model_arr == z)
+        print z
+        print z_idx
 
         all_filt_flam_model = all_model_flam[:, z_idx, :]
+        all_filt_flam_model = all_filt_flam_model[phot_fin_idx, :]
+        all_filt_flam_model = all_filt_flam_model.reshape(len(phot_fin_idx), total_models)
         chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs)
 
         #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
@@ -328,7 +345,7 @@ def main():
 
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
-    bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    bc03_all_spec_hdulist = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
     total_models = 34542
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
@@ -366,16 +383,16 @@ def main():
         hdulist.append(fits.ImageHDU(data=model_comp_spec_withlines[j], header=hdr))
 
     # Save models with emission lines
-    hdulist.writeto(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits', overwrite=True)
+    hdulist.writeto(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits', overwrite=True)
     # Also save the model lam grid for models with emission lines
-    np.save(figs_dir + 'model_lam_grid_withlines.npy', model_lam_grid_withlines)
+    np.save(figs_data_dir + 'model_lam_grid_withlines.npy', model_lam_grid_withlines)
     sys.exit(0)
     """
     # ----------------------------------- #
 
     # Read in models with emission lines adn put in numpy array
-    bc03_all_spec_hdulist_withlines = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
-    model_lam_grid_withlines = np.load(figs_dir + 'model_lam_grid_withlines.npy')
+    bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
+    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy')
     for q in range(total_models):
         model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
 
@@ -388,18 +405,18 @@ def main():
     # ---------------------------------- Read in look-up tables for model mags ------------------------------------- #
     # Using the look-up table now since it should be much faster
     # First get them all into an appropriate shape
-    u = np.load(figs_dir + 'all_model_mags_u.npy')
-    f435w = np.load(figs_dir + 'all_model_mags_f435w.npy')
-    f606w = np.load(figs_dir + 'all_model_mags_f606w.npy')
-    f775w = np.load(figs_dir + 'all_model_mags_f775w.npy')
-    f850lp = np.load(figs_dir + 'all_model_mags_f850lp.npy')
-    f125w = np.load(figs_dir + 'all_model_mags_f125w.npy')
-    f140w = np.load(figs_dir + 'all_model_mags_f140w.npy')
-    f160w = np.load(figs_dir + 'all_model_mags_f160w.npy')
-    irac1 = np.load(figs_dir + 'all_model_mags_irac1.npy')
-    irac2 = np.load(figs_dir + 'all_model_mags_irac2.npy')
-    irac3 = np.load(figs_dir + 'all_model_mags_irac3.npy')
-    irac4 = np.load(figs_dir + 'all_model_mags_irac4.npy')
+    u = np.load(figs_data_dir + 'all_model_mags_u.npy')
+    f435w = np.load(figs_data_dir + 'all_model_mags_f435w.npy')
+    f606w = np.load(figs_data_dir + 'all_model_mags_f606w.npy')
+    f775w = np.load(figs_data_dir + 'all_model_mags_f775w.npy')
+    f850lp = np.load(figs_data_dir + 'all_model_mags_f850lp.npy')
+    f125w = np.load(figs_data_dir + 'all_model_mags_f125w.npy')
+    f140w = np.load(figs_data_dir + 'all_model_mags_f140w.npy')
+    f160w = np.load(figs_data_dir + 'all_model_mags_f160w.npy')
+    irac1 = np.load(figs_data_dir + 'all_model_mags_irac1.npy')
+    irac2 = np.load(figs_data_dir + 'all_model_mags_irac2.npy')
+    irac3 = np.load(figs_data_dir + 'all_model_mags_irac3.npy')
+    irac4 = np.load(figs_data_dir + 'all_model_mags_irac4.npy')
 
     # put them in a list since I need to iterate over it
     all_model_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
@@ -641,7 +658,7 @@ def main():
             zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-                current_id, current_field, current_specz, current_photz, all_model_flam)
+                current_id, current_field, current_specz, current_photz, all_model_flam, phot_fin_idx)
 
             galaxy_count += 1
 
