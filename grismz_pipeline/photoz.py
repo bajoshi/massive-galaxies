@@ -51,22 +51,12 @@ if not os.path.isdir(figs_data_dir):
 
 def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
 
-    print "Currently at redshift:", z
-
     all_filt_flam_model_t = all_filt_flam_model.T
-
-    print all_filt_flam_model.shape
-    print all_filt_flam_model_t.shape
-    print phot_flam_obs.shape
 
     # ------------------------------------ Now do the chi2 computation ------------------------------------ #
     # compute alpha and chi2
     alpha_ = np.sum(phot_flam_obs * all_filt_flam_model_t / (phot_ferr_obs**2), axis=1) / np.sum(all_filt_flam_model_t**2 / phot_ferr_obs**2, axis=1)
     chi2_ = np.sum(((phot_flam_obs - (alpha_ * all_filt_flam_model).T) / phot_ferr_obs)**2, axis=1)
-
-    print chi2_.shape
-
-    print "Min chi2 for redshift:", min(chi2_)
 
     return chi2_, alpha_
 
@@ -145,12 +135,11 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     # Set up redshift grid to check
     z_arr_to_check = np.arange(0.3, 1.52, 0.02)
-    print "Will check the following redshifts:", z_arr_to_check
+    #print "Will check the following redshifts:", z_arr_to_check
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
     z_model_arr = np.arange(0.3, 1.51, 0.01)
-    print z_model_arr
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -175,10 +164,6 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     for z in z_arr_to_check:
 
         z_idx = np.where(z_model_arr == z)[0]
-        print '\n'
-        print np.where(z_model_arr == z)
-        print z
-        print z_idx
 
         all_filt_flam_model = all_model_flam[:, z_idx, :]
         all_filt_flam_model = all_filt_flam_model[phot_fin_idx, :]
@@ -253,13 +238,10 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     chi2_red = chi2 / dof
     chi2_red_error = np.sqrt(2/dof)
     min_chi2_red = min_chi2 / dof
-    print "Error in reduced chi-square:", chi2_red_error
     chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
-    print "Indices within 1-sigma of reduced chi-square:", chi2_red_2didx
 
     # use first dimension indices to get error on zphot
     z_range = z_arr_to_check[chi2_red_2didx[0]]
-    print "z range", z_range
 
     low_z_lim = np.min(z_range)
     upper_z_lim = np.max(z_range)
@@ -467,7 +449,7 @@ def main():
 
     # Lists to loop over
     all_speccats =  [specz_goodsn, specz_goodss]
-    all_match_cats = [matched_cat_n]#, matched_cat_s]
+    all_match_cats = [matched_cat_n, matched_cat_s]
 
     # save lists for comparing after code is done
     id_list = []
@@ -527,8 +509,6 @@ def main():
             print "Galaxies done so far:", galaxy_count
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
             print "Total time taken:", time.time() - start, "seconds."
-            if galaxy_count > 2:
-                break
 
             # ------------------------------- Match and get photometry data ------------------------------- #
             # find obj ra,dec
