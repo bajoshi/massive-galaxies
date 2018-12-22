@@ -30,24 +30,13 @@ savefits_dir = home + "/Desktop/FIGS/new_codes/bc03_fits_files_for_refining_reds
 lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
+savedir = figs_dir + "stacking-analysis-figures/pears_all_photoz/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 import fullfitting_grism_broadband_emlines as ff
 
 speed_of_light = 299792458e10  # angsroms per second
-
-figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
-threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
-# This is if working on the laptop. 
-# Then you must be using the external hard drive where the models are saved.
-if not os.path.isdir(figs_data_dir):
-    import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
-    figs_data_dir = 'figs_dir'  # this path only exists on firstlight
-    threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
-    if not os.path.isdir(figs_data_dir):
-        print "Model files not found. Exiting..."
-        sys.exit(0)
 
 def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
 
@@ -120,7 +109,7 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
 def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, all_model_flam, phot_fin_idx):
+    obj_id, obj_field, all_model_flam, phot_fin_idx, savedir):
 
     # def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     #    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
@@ -249,22 +238,22 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     print "Max z within 1-sigma error:", upper_z_lim
 
     # Save chi2 map
-    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
-    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
+    #np.save(savedir + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
+    #np.save(savedir + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
 
-    pz = get_pz_and_plot_photoz(chi2/dof, z_arr_to_check, specz, photoz, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field)
+    pz = get_pz_and_plot_photoz(chi2/dof, z_arr_to_check, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field)
 
     # Save p(z)
-    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
+    np.save(savedir + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
     zp = np.sum(z_arr_to_check * pz)
-    print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
-    print "Previous photometric redshift from 3DHST:", photoz
+    #print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
+    #print "Previous photometric redshift from 3DHST:", photoz
     print "Photometric redshift from min chi2 from this code:", "{:.2}".format(zp_minchi2)
     print "Photometric redshift (weighted) from this code:", "{:.3}".format(zp)
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
-def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, upper_z_lim, obj_id, obj_field):
+def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, grismz, low_z_lim, upper_z_lim, obj_id, obj_field):
 
     # Convert chi2 to likelihood
     likelihood = np.exp(-1 * chi2_map / 2)
@@ -316,10 +305,23 @@ def get_all_filters():
     return all_filters
 
 def main():
+    
     # Start time
     start = time.time()
     dt = datetime.datetime
     print "Starting at --", dt.now()
+
+    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+    threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+    # This is if working on the laptop. 
+    # Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(figs_data_dir):
+        import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
+        figs_data_dir = 'figs_dir'  # this path only exists on firstlight
+        threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+        if not os.path.isdir(figs_data_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
 
     # Flag to turn on-off emission lines in the fit
     use_emlines = True
@@ -602,7 +604,7 @@ def main():
             # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
             # KPNO/MOSAIC U-band: https://www.noao.edu/kpno/mosaic/filters/k1001.html
             # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
-            phot_lam = np.array([3582.0, 4328.2, 5921.1, 7692.4, 9033.1, 12486, 13923, 15369, 
+            phot_lam = np.array([3582.0, 4328.2, 5921.1, 7692.4, 9033.1, 12486.0, 13923.0, 15369.0, 
             35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
 
             # ------------------------------ Now start fitting ------------------------------ #
@@ -639,7 +641,7 @@ def main():
             zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-                current_id, current_field, current_specz, current_photz, all_model_flam, phot_fin_idx)
+                current_id, current_field, all_model_flam, phot_fin_idx, savedir)
 
             # ---------------------------------------------- SAVE PARAMETERS ----------------------------------------------- #
             id_list.append(current_id)
@@ -683,4 +685,7 @@ def main():
     return None
 
 if __name__ == '__main__':
+
     main()
+
+    sys.exit(0)
