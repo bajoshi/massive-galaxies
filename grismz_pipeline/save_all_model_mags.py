@@ -62,9 +62,6 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
     # i.e. minimizing the number of times each filter is gridded on to the model grid
     #all_filt_flam_model_t = all_filt_flam_model.T
 
-    print all_filt_flam_model
-    print len(np.where(np.isfinite(all_filt_flam_model))[0])
-
     return all_filt_flam_model
 
 def save_filter_mags(filtername, all_model_mags):
@@ -151,9 +148,6 @@ def main():
             # compute the mags
             all_model_mags_filt[i] = \
             compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift)
-
-            if i > 20:
-                sys.exit(0)
 
         # save the mags
         save_filter_mags(filtername, all_model_mags_filt)
