@@ -63,9 +63,7 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
     #all_filt_flam_model_t = all_filt_flam_model.T
 
     print all_filt_flam_model
-
-    print np.where(np.isfinite(all_filt_flam_model))
-    sys.exit(0)
+    print len(np.where(np.isfinite(all_filt_flam_model)))
 
     return all_filt_flam_model
 
@@ -147,6 +145,9 @@ def main():
             # compute the mags
             all_model_mags_filt[i] = \
             compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift)
+
+            if i > 20:
+                sys.exit(0)
 
         # save the mags
         save_filter_mags(filtername, all_model_mags_filt)
