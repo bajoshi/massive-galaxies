@@ -128,14 +128,16 @@ def main():
     irac3_curve['wav'] *= 1e4
     irac4_curve['wav'] *= 1e4
 
-    all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
-    f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
+    #all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
+    #f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
+    #all_filter_names = ['u', 'f435w', 'f606w', 'f775w', 'f850lp', \
+    #'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
-    all_filter_names = ['u', 'f435w', 'f606w', 'f775w', 'f850lp', \
-    'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
+    all_filters = [uband_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
+    all_filter_names = ['u', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
-    zrange = np.arange(0.005, 0.4, 0.005)
+    zrange = np.arange(0.005, 0.04, 0.005)
     print "Redshift grid for models:"
     print zrange
 
