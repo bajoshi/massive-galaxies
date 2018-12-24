@@ -63,7 +63,7 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
     #all_filt_flam_model_t = all_filt_flam_model.T
 
     print all_filt_flam_model
-    print len(np.where(np.isfinite(all_filt_flam_model)))
+    print len(np.where(np.isfinite(all_filt_flam_model))[0])
 
     return all_filt_flam_model
 
@@ -93,6 +93,12 @@ def main():
     model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy')
     for q in range(total_models):
         model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
+
+    bc03_all_spec_hdulist_withlines.close()
+    del bc03_all_spec_hdulist_withlines
+
+    # total run time up to now
+    print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
     # ------------------------------- Read in filter curves ------------------------------- #
     f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
