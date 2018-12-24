@@ -22,7 +22,7 @@ threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
 # Then you must be using the external hard drive where the models are saved.
 if not os.path.isdir(figs_data_dir):
     import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
-    figs_data_dir = 'figs_dir'  # this path only exists on firstlight
+    figs_data_dir = figs_dir  # this path only exists on firstlight
     threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
     if not os.path.isdir(figs_data_dir):
         print "Model files not found. Exiting..."
