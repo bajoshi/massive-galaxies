@@ -5,6 +5,7 @@ from numpy import nansum
 import pysynphot
 from scipy.interpolate import griddata
 from astropy.io import fits
+from joblib import Parallel, delayed
 
 import os
 import sys
@@ -66,7 +67,7 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
 
 def save_filter_mags(filtername, all_model_mags):
 
-    np.save(figs_data_dir + 'all_model_mags_' + filtername + '.npy', all_model_mags)
+    np.save(figs_data_dir + 'all_model_mags_par_' + filtername + '.npy', all_model_mags)
 
     return None
 
@@ -141,16 +142,22 @@ def main():
         all_model_mags_filt = np.zeros((len(zrange), total_models), dtype=np.float32)
         filtername = all_filter_names[filter_count]
 
+        num_cores = 4
+        all_model_mags_filt_list = Parallel(n_jobs=num_cores)(delayed(compute_filter_mags)(filt, \
+            model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift) for redshift in zrange)
+
+        """
         for i in range(len(zrange)):
             redshift = zrange[i]
             print "Filter:", filtername, "       Redshift:", redshift
-
+            
             # compute the mags
             all_model_mags_filt[i] = \
             compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift)
+        """
 
         # save the mags
-        save_filter_mags(filtername, all_model_mags_filt)
+        save_filter_mags(filtername, all_model_mags_filt_list)
         print "Computation done and saved for:", filtername, "\n"
         print "Total time taken:", time.time() - start
 
