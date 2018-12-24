@@ -51,8 +51,8 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
     # multiply model spectrum to filter curve
     for i in xrange(total_models):
 
-        num = np.sum(model_comp_spec_z[i] * filt_interp)
-        den = np.sum(filt_interp)
+        num = nansum(model_comp_spec_z[i] * filt_interp)
+        den = nansum(filt_interp)
 
         filt_flam_model = num / den
         all_filt_flam_model[i] = filt_flam_model
@@ -132,7 +132,7 @@ def main():
 
     # Loop over all redshifts and filters and compute magnitudes
     zrange = np.arange(0.005, 6.005, 0.005)
-    print "Redshift grid for models:", "\n"
+    print "Redshift grid for models:"
     print zrange
 
     filter_count = 0
