@@ -123,12 +123,12 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.arange(0.3, 1.52, 0.02)
+    z_arr_to_check = np.arange(0.0, 6.0, 0.02)
     #print "Will check the following redshifts:", z_arr_to_check
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
-    z_model_arr = np.arange(0.3, 1.51, 0.01)
+    z_model_arr = np.arange(0.0, 6.0, 0.005)
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -162,6 +162,17 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
         count += 1
+
+    # Check for all finite
+    if ~np.all(np.isfinite(chi2)):
+        finidx = np.where(np.isfinite(chi2))
+        print phot_flam_obs
+        print phot_ferr_obs
+        print all_model_flam
+        print finidx
+        print chi2[finidx]
+        print "Chi2 array contains some infinite numbers. Moving to next galaxy."
+        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
@@ -305,7 +316,7 @@ def get_all_filters():
     return all_filters
 
 def main():
-    
+
     # Start time
     start = time.time()
     dt = datetime.datetime

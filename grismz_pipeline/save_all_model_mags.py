@@ -8,10 +8,25 @@ from astropy.io import fits
 
 import os
 import sys
+import time
+import datetime
 
 home = os.getenv('HOME')
 figs_dir = home + "/Desktop/FIGS/"
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
+
+# Get directories
+figs_data_dir = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/"
+threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+# This is if working on the laptop. 
+# Then you must be using the external hard drive where the models are saved.
+if not os.path.isdir(figs_data_dir):
+    import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
+    figs_data_dir = 'figs_dir'  # this path only exists on firstlight
+    threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+    if not os.path.isdir(figs_data_dir):
+        print "Model files not found. Exiting..."
+        sys.exit(0)
 
 def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
 
@@ -47,17 +62,25 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
     # i.e. minimizing the number of times each filter is gridded on to the model grid
     #all_filt_flam_model_t = all_filt_flam_model.T
 
-    print "Filter f_lam for models computed."
+    print all_filt_flam_model
+
+    print np.where(np.isfinite(all_filt_flam_model))
+    sys.exit(0)
 
     return all_filt_flam_model
 
 def save_filter_mags(filtername, all_model_mags):
 
-    np.save(figs_dir + 'all_model_mags_' + filtername + '.npy', all_model_mags)
+    np.save(figs_data_dir + 'all_model_mags_' + filtername + '.npy', all_model_mags)
 
     return None
 
 def main():
+
+    # Start time
+    start = time.time()
+    dt = datetime.datetime
+    print "Starting at --", dt.now()
 
     # Read in models with emission lines adn put in numpy array
     total_models = 34542
@@ -68,8 +91,8 @@ def main():
     model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
 
-    bc03_all_spec_hdulist_withlines = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
-    model_lam_grid_withlines = np.load(figs_dir + 'model_lam_grid_withlines.npy')
+    bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
+    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy')
     for q in range(total_models):
         model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
 
@@ -108,7 +131,9 @@ def main():
     'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
-    zrange = np.arange(0.0, 6.0, 0.005)
+    zrange = np.arange(0.005, 6.005, 0.005)
+    print "Redshift grid for models:", "\n"
+    print zrange
 
     filter_count = 0
     for filt in all_filters:
@@ -125,10 +150,12 @@ def main():
 
         # save the mags
         save_filter_mags(filtername, all_model_mags_filt)
-        print "Computation done and saved for:", filtername
+        print "Computation done and saved for:", filtername, "\n"
+        print "Total time taken:", time.time() - start
 
         filter_count += 1
 
+    print "All done. Total time taken:", time.time() - start
     return None
 
 if __name__ == '__main__':
