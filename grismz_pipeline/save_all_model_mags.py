@@ -31,6 +31,8 @@ if not os.path.isdir(figs_data_dir):
 
 def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
 
+    print "At z:", z
+
     # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
     all_filt_flam_model = np.zeros(total_models, dtype=np.float64)
 
@@ -150,7 +152,7 @@ def main():
         for i in range(len(zrange)):
             redshift = zrange[i]
             print "Filter:", filtername, "       Redshift:", redshift
-            
+
             # compute the mags
             all_model_mags_filt[i] = \
             compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift)
