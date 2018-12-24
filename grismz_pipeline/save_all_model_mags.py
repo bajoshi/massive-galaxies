@@ -141,8 +141,8 @@ def main():
 
     filter_count = 0
     for filt in all_filters:
-        all_model_mags_filt = np.zeros((len(zrange), total_models), dtype=np.float32)
         filtername = all_filter_names[filter_count]
+        print "Working on filter:", filtername
 
         num_cores = 4
         all_model_mags_filt_list = Parallel(n_jobs=num_cores)(delayed(compute_filter_mags)(filt, \
