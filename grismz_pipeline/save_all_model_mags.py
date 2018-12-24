@@ -135,7 +135,7 @@ def main():
     'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
-    zrange = np.arange(0.005, 6.005, 0.005)
+    zrange = np.arange(0.005, 0.4, 0.005)
     print "Redshift grid for models:"
     print zrange
 
@@ -147,6 +147,10 @@ def main():
         num_cores = 4
         all_model_mags_filt_list = Parallel(n_jobs=num_cores)(delayed(compute_filter_mags)(filt, \
             model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift) for redshift in zrange)
+
+        print type(all_model_mags_filt_list)
+
+        all_model_mags_filt_list = np.array(all_model_mags_filt_list)
 
         """
         for i in range(len(zrange)):
