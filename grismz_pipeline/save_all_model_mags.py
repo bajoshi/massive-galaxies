@@ -125,6 +125,12 @@ def main():
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
     # ------------------------------- Read in filter curves ------------------------------- #
+    """
+    The HST filters, in their PYSYNPHOT form, cannot be used in conjunction with
+    the joblib module. So this function will read them and save them into numpy arrays.
+    This function has to be run once to convert the HST filters to text files that 
+    can be read with genfromtxt.
+    """
     #save_hst_filters_to_npy()
 
     uband_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/kpno_mosaic_u.txt', dtype=None, \
@@ -164,7 +170,7 @@ def main():
     'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
-    zrange = np.arange(0.005, 0.04, 0.005)
+    zrange = np.arange(0.005, 6.005, 0.005)
     print "Redshift grid for models:"
     print zrange
 
