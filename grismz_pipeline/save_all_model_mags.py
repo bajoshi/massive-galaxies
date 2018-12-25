@@ -41,15 +41,7 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
     model_lam_grid_z = model_lam_grid * (1+z)
 
     # first interpolate the transmission curve to the model lam grid
-    # Check if the filter is an HST filter or not
-    # It is an HST filter if it comes from pysynphot
-    # IF it is a non-HST filter then it is a simple ascii file
-    if type(filt) == pysynphot.obsbandpass.ObsModeBandpass:
-        # Interpolate using the attributes of pysynphot filters
-        filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
-
-    elif type(filt) == np.ndarray:
-        filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
+    filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
 
     # multiply model spectrum to filter curve
     for i in xrange(total_models):
@@ -70,6 +62,38 @@ def compute_filter_mags(filt, model_comp_spec, model_lam_grid, total_models, z):
 def save_filter_mags(filtername, all_model_mags):
 
     np.save(figs_data_dir + 'all_model_mags_par_' + filtername + '.npy', all_model_mags)
+
+    return None
+
+def save_hst_filters_to_npy():
+
+    # Read in HST filter curves using pysynphot
+    f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
+    f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
+    f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
+    f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
+
+    f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
+    f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
+    f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
+
+    # Save to simple numpy arrays
+    all_hst_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
+    f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
+    all_hst_filternames = ['f435w', 'f606w', 'f775w', 'f850lp', 'f125w', 'f140w', 'f160w']
+
+    for i in range(len(all_hst_filters)):
+        # Get filter and name
+        filt = all_hst_filters[i]
+        filtername = all_hst_filternames[i]
+
+        # Put into numpy arrays and save
+        wav = np.array(filt.binset)
+        trans = np.array(filt(filt.binset))
+        
+        data = np.array(zip(wav, trans), dtype=[('wav', np.float64), ('trans', np.float64)])
+        np.savetxt(massive_galaxies_dir + 'grismz_pipeline/' + filtername + '_filt_curve.txt', data, \
+            fmt=['%.6f', '%.6f'], header='wav trans')
 
     return None
 
@@ -101,19 +125,24 @@ def main():
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
     # ------------------------------- Read in filter curves ------------------------------- #
-    f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
-    f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
-    f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
-    f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
+    #save_hst_filters_to_npy()
 
-    f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
-    f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
-    f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
-
-    # non-HST filter curves
-    # IRac wavelengths are in mixrons # convert to angstroms
     uband_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/kpno_mosaic_u.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=14)
+    f435w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f435w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f606w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f606w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f850lp_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f850lp_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f125w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f125w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f140w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f140w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f160w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
     irac1_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=3)
     irac2_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
@@ -123,18 +152,16 @@ def main():
     irac4_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=3)
 
+    # IRAC wavelengths are in mixrons # convert to angstroms
     irac1_curve['wav'] *= 1e4
     irac2_curve['wav'] *= 1e4
     irac3_curve['wav'] *= 1e4
     irac4_curve['wav'] *= 1e4
 
-    #all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
-    #f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
-    #all_filter_names = ['u', 'f435w', 'f606w', 'f775w', 'f850lp', \
-    #'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
-
-    all_filters = [uband_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
-    all_filter_names = ['u', 'irac1', 'irac2', 'irac3', 'irac4']
+    all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
+    f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
+    all_filter_names = ['u', 'f435w', 'f606w', 'f775w', 'f850lp', \
+    'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
     zrange = np.arange(0.005, 0.04, 0.005)
@@ -149,20 +176,6 @@ def main():
         num_cores = 4
         all_model_mags_filt_list = Parallel(n_jobs=num_cores)(delayed(compute_filter_mags)(filt, \
             model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift) for redshift in zrange)
-
-        print type(all_model_mags_filt_list)
-
-        all_model_mags_filt_list = np.array(all_model_mags_filt_list)
-
-        """
-        for i in range(len(zrange)):
-            redshift = zrange[i]
-            print "Filter:", filtername, "       Redshift:", redshift
-
-            # compute the mags
-            all_model_mags_filt[i] = \
-            compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift)
-        """
 
         # save the mags
         save_filter_mags(filtername, all_model_mags_filt_list)
