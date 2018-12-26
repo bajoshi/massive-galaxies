@@ -163,17 +163,6 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
         count += 1
 
-    # Check for all finite
-    if ~np.all(np.isfinite(chi2)):
-        finidx = np.where(np.isfinite(chi2))
-        print phot_flam_obs
-        print phot_ferr_obs
-        print all_model_flam
-        print finidx
-        print chi2[finidx]
-        print "Chi2 array contains some infinite numbers. Moving to next galaxy."
-        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
-
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
@@ -261,6 +250,16 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     #print "Previous photometric redshift from 3DHST:", photoz
     print "Photometric redshift from min chi2 from this code:", "{:.2}".format(zp_minchi2)
     print "Photometric redshift (weighted) from this code:", "{:.3}".format(zp)
+
+    # Stellar mass
+    bestalpha = alpha[min_idx_2d]
+    print "Alpha for best-fit model:", bestalpha
+    ms = 1 / bestalpha
+    print "Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms)
+
+    # Rest frame magnitudes
+    zbest_idx = np.argmin(abs(z_model_arr - zp))
+    print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, :]
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 

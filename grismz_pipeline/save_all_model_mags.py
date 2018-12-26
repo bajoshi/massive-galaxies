@@ -18,13 +18,11 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 
 # Get directories
 figs_data_dir = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/"
-threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
 # This is if working on the laptop. 
 # Then you must be using the external hard drive where the models are saved.
 if not os.path.isdir(figs_data_dir):
     import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
-    figs_data_dir = figs_dir  # this path only exists on firstlight
-    threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+    figs_data_dir = figs_dir
     if not os.path.isdir(figs_data_dir):
         print "Model files not found. Exiting..."
         sys.exit(0)
@@ -179,12 +177,20 @@ def main():
         filtername = all_filter_names[filter_count]
         print "Working on filter:", filtername
 
+        """
         num_cores = 4
         all_model_mags_filt_list = Parallel(n_jobs=num_cores)(delayed(compute_filter_mags)(filt, \
             model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift) for redshift in zrange)
+        """
+
+        all_model_mags_filt = np.zeros((len(zrange), total_models), dtype=np.float64)
+        for i in xrange(len(zrange)):
+            all_model_mags_filt[i] = \
+            compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, zrange[i])
 
         # save the mags
-        save_filter_mags(filtername, all_model_mags_filt_list)
+        #save_filter_mags(filtername, all_model_mags_filt_list)
+        save_filter_mags(filtername, all_model_mags_filt)
         print "Computation done and saved for:", filtername, "\n"
         print "Total time taken:", time.time() - start
 
