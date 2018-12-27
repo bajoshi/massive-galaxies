@@ -202,7 +202,6 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
             # even if the loop is broken out of in the first iteration.
             break
 
-    print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
     zp_minchi2 = z_arr_to_check[min_idx_2d[0]]
 
     print "Current best fit log(age [yr]):", "{:.4}".format(age)
@@ -228,6 +227,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     chi2_red_error = np.sqrt(2/dof)
     min_chi2_red = min_chi2 / dof
     chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
+    print "Minimum chi2 (reduced):", "{:.4}".format(min_chi2_red)
 
     # use first dimension indices to get error on zphot
     z_range = z_arr_to_check[chi2_red_2didx[0]]
@@ -253,13 +253,14 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     # Stellar mass
     bestalpha = alpha[min_idx_2d]
+    print "Min idx 2d:", min_idx_2d
     print "Alpha for best-fit model:", bestalpha
-    ms = 1 / bestalpha
+    ms = 1 / bestalpha  # This should be template mass divided by alpha
     print "Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms)
 
     # Rest frame magnitudes
     zbest_idx = np.argmin(abs(z_model_arr - zp))
-    print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, :]
+    print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]]
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
