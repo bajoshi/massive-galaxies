@@ -163,6 +163,12 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
         count += 1
 
+    # Check for all NaNs in chi2 array
+    # For now skipping all galaxies that have any NaNs in them.
+    if ~all(np.isfinite(chi2)):
+        print "Chi2 has NaNs. Skiiping galaxy for now."
+        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
+
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
@@ -255,10 +261,11 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     bestalpha = alpha[min_idx_2d]
     print "Min idx 2d:", min_idx_2d
     print "Alpha for best-fit model:", bestalpha
-    ms = 1 / bestalpha  # This should be template mass divided by alpha
+
+    ms = 1 / bestalpha
     print "Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms)
 
-    # Rest frame magnitudes
+    # Rest frame f_lambda values
     zbest_idx = np.argmin(abs(z_model_arr - zp))
     print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]]
 

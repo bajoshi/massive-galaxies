@@ -197,8 +197,16 @@ def get_model_set():
         for tauval in tauarr:
             filename = model_dir + 'bc2003_hr_m62_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp_allspectra.npy'
 
-            # Open corresponding *.3color file
-            threecolor = np.genfromtxt(filename.replace('_allspectra.npy','.3color'), dtype=None, names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
+            # Open corresponding *.3color, *.4color, and *.1color files
+            # *.1color gives (U-B) and (B-V) colors 
+            # *.2color gives (V-J) color if you need to construct the UVJ diagram 
+            # *.3color gives NLyc
+            # *.4color gives M_stellar and M_galaxy (where M_galaxy = M_stellar + M_gas)
+            onecolor = 
+            threecolor = np.genfromtxt(filename.replace('_allspectra.npy','.3color'), dtype=None, \
+                names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
+            fourcolor = np.genfromtxt(filename.replace('_allspectra.npy','.4color'), dtype=None, \
+                names=['log_age','Mstar', 'Mgal'], usecols=(0,), skip_header=29)
 
             # define and initialize numpy array
             current_model_set_csp_array = np.load(filename)
@@ -230,6 +238,8 @@ def get_model_set():
                 #print "Current Log(age):", current_log_age
                 #print "Rate of Lyman continuum photons:", nlyc, "s^-1"
                 hdr['NLYC'] = str(nlyc)
+
+                # ---- 
 
                 # Append
                 hdulist.append(fits.ImageHDU(data=current_model_set_csp[i], header=hdr))
