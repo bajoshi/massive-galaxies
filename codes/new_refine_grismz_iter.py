@@ -106,7 +106,18 @@ def get_model_set():
     print "Running code to generate set of models for comparison."
 
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
-    total_ages, age_ind, ages = old_ref.get_valid_ages_in_model(pop='ssp', example_filename='bc2003_hr_m22_salp_ssp.fits')
+    src = home + "/Documents/galaxev_bc03_2016update/bc03/src/"
+    example_filename = "bc2003_hr_xmiless_m22_salp_ssp.fits"
+    example = fits.open(src + example_filename)
+    ages = example[2].data
+    age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
+    total_ages = int(len(age_ind))  # 57 for SSPs
+
+    print total_ages
+    print ages
+    print ages[age_ind]
+
+    sys.exit(0)
 
     # FITS file where the reduced number of spectra will be saved
     hdu = fits.PrimaryHDU()
@@ -120,7 +131,8 @@ def get_model_set():
         modellam = h[1].data
 
         # Open corresponding *.3color file
-        threecolor = np.genfromtxt(filename.replace('.fits','.3color'), dtype=None, names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
+        threecolor = np.genfromtxt(filename.replace('.fits','.3color'), dtype=None, \
+            names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
     
         # define and initialize numpy array
         current_model_set_ssp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
@@ -202,7 +214,7 @@ def get_model_set():
             # *.2color gives (V-J) color if you need to construct the UVJ diagram 
             # *.3color gives NLyc
             # *.4color gives M_stellar and M_galaxy (where M_galaxy = M_stellar + M_gas)
-            onecolor = 
+            #onecolor = 
             threecolor = np.genfromtxt(filename.replace('_allspectra.npy','.3color'), dtype=None, \
                 names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
             fourcolor = np.genfromtxt(filename.replace('_allspectra.npy','.4color'), dtype=None, \
