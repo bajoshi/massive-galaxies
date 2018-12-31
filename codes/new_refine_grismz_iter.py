@@ -143,12 +143,6 @@ def get_model_set():
             names=['log_age','log_nlyc'], usecols=(0,5), skip_header=30)
         fourcolor = np.genfromtxt(filename.replace('.fits','.4color'), dtype=None, \
             names=['log_age','ms','mgal'], usecols=(0,5,8), skip_header=30)
-
-        print onecolor[0]
-        print twocolor[0]
-        print threecolor[0]
-        print fourcolor[0]
-        sys.exit(0)
     
         # define and initialize numpy array
         current_model_set_ssp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
@@ -164,11 +158,32 @@ def get_model_set():
             hdr['LOG_AGE'] = str(current_log_age)
 
             # ---- Rate of Lyman continuum photons [# per second]
-            threecolor_idx = np.argmin(abs(threecolor['log_age'] - current_log_age))
-            nlyc = 10**(threecolor['log_nlyc'][threecolor_idx])
+            # Get idx corresponding to age first. This is valid for all color files.
+            color_idx = np.argmin(abs(onecolor['log_age'] - current_log_age))
+            nlyc = 10**(threecolor['log_nlyc'][color_idx])
             #print "Current Log(age):", current_log_age
             #print "Rate of Lyman continuum photons:", nlyc, "s^-1"
             hdr['NLYC'] = str(nlyc)
+
+            # ---- Colors
+            # ---- U-B
+            ub_col = onecolor['UB_col'][color_idx]
+            hdr['UB_col'] = str(ub_col)
+            # ---- B-V
+            bv_col = onecolor['BV_col'][color_idx]
+            hdr['BV_col'] = str(bv_col)
+            # ---- V-J
+            vj_col = twocolor['VJ_col'][color_idx]
+            hdr['VJ_col'] = str(vj_col)
+
+            # ---- Masses
+            # ---- Stellar mass
+            mstar = fourcolor['ms'][color_idx]
+            hdr['ms'] = str(mstar)
+
+            # ---- Galaxy mass = Stellar mass + Gas mass
+            mgalaxy = fourcolor['mgal'][color_idx]
+            hdr['mgal'] = str(mgalaxy)
 
             # ---- Metallicity
             if 'm22' in filename:
@@ -189,32 +204,39 @@ def get_model_set():
             # Append
             hdulist.append(fits.ImageHDU(data=current_model_set_ssp[i], header=hdr))
 
-    # currently restricted to solar metallicity
-    # first check where the models are
-    model_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/m62/'
-    # this is if working on the laptop. Then you must be using the external hard drive where the models are saved.
-    if not os.path.isdir(model_dir):
-        model_dir = home + '/Documents/GALAXEV_BC03/bc03/src/cspout_new/m62/'  # this path only exists on firstlight
-        if not os.path.isdir(model_dir):
-            print "Model files not found. Exiting..."
+        h.close()
+
+    # ---------- Currently restricted to solar metallicity ----------- #
+    # Check directories for the models
+    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
+    # This is if working on the laptop. 
+    # Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(cspout):
+        # On firstlight
+        cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
+        if not os.path.isdir(cspout):
+            print "Model directory not found. Exiting..."
             sys.exit(0)
 
-    # Get valid ages i.e. between 100 Myr and 8 Gyr
+    # Get valid ages i.e. between 10 Myr and 13 Gyr
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
-    example_filename='bc2003_hr_m62_tauV0_csp_tau100_salp_ages.npy'
-    ages = np.load(model_dir + example_filename)
-    age_ind = np.where((ages/1e9 > 0.01) & (ages/1e9 < 10))[0]
-    total_ages = int(len(age_ind))  #  for both SSP and CSP
+    example_filename = "bc2003_hr_m62_tauV0_csp_tau100_salp.fits"
+    metalfolder = "m62/"
+    model_dir = cspout + metalfolder
+    example = fits.open(model_dir + example_filename)
+    ages = example[2].data
+    age_ind = np.where((ages/1e9 > 0.01) & (ages/1e9 < 13))[0]
+    total_ages = int(len(age_ind))  # 123 for SSPs and CSPs
 
     # model grid parameters
     # they are being redefined here to be able to identify 
     # the different filenames which were set up in the exact same way.
     # I've restricted tauV, tau, lambda, and ages in distinguishing spectra
-    tauVarr = np.arange(0.0, 3.0, 0.1)
+    tauVarr = np.arange(0.0, 3.0, 0.2)
     logtauarr = np.arange(-2, 2, 0.2)
-    # This logtauarr is a bit more (2x) coarsely sampled than the 
+    # This tauVarr and logtauarr are a bit more (2x) coarsely sampled than the 
     # generated models to be less computationally expensive. 
-    # I'm choosing every second tau value as compared to the original grid.
+    # I'm choosing every second value as compared to the original grid.
     tauarr = np.empty(len(logtauarr)).astype(np.str)
     
     for i in range(len(logtauarr)):
@@ -223,24 +245,27 @@ def get_model_set():
     # Read in each individual spectrum and append it to the FITS HDU List
     for tauVarrval in tauVarr:
         for tauval in tauarr:
-            filename = model_dir + 'bc2003_hr_m62_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp_allspectra.npy'
+            filename = model_dir + 'bc2003_hr_m62_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp.fits'
+
+            # define and initialize fits file
+            h = fits.open(filename)
+            modellam = h[1].data
 
             # Open corresponding *.3color, *.4color, and *.1color files
             # See comment in the SSP part above for explanation
-            #onecolor = 
-            threecolor = np.genfromtxt(filename.replace('_allspectra.npy','.3color'), dtype=None, \
-                names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
-            fourcolor = np.genfromtxt(filename.replace('_allspectra.npy','.4color'), dtype=None, \
-                names=['log_age','Mstar', 'Mgal'], usecols=(0,), skip_header=29)
-
-            # define and initialize numpy array
-            current_model_set_csp_array = np.load(filename)
-            modellam = np.load(filename.replace('_allspectra.npy','_lamgrid.npy'))
+            onecolor = np.genfromtxt(filename.replace('.fits','.1color'), dtype=None, \
+                names=['log_age','UB_col','BV_col'], usecols=(0,13,14), skip_header=30)
+            twocolor = np.genfromtxt(filename.replace('.fits','.2color'), dtype=None, \
+                names=['log_age','VJ_col'], usecols=(0,6), skip_header=30)
+            threecolor = np.genfromtxt(filename.replace('.fits','.3color'), dtype=None, \
+                names=['log_age','log_nlyc'], usecols=(0,5), skip_header=30)
+            fourcolor = np.genfromtxt(filename.replace('.fits','.4color'), dtype=None, \
+                names=['log_age','ms','mgal'], usecols=(0,5,8), skip_header=30)
 
             current_model_set_csp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
             for i in range(total_ages):
                 # Spectrum to save
-                current_model_set_csp[i] = current_model_set_csp_array[age_ind[i]]
+                current_model_set_csp[i] = h[age_ind[i]+3].data
 
                 # Add info to header
                 hdr = fits.Header()
@@ -258,16 +283,37 @@ def get_model_set():
                 hdr['TAUV'] = str(tauVarrval)
 
                 # ---- Rate of Lyman continuum photons [# per second]
-                threecolor_idx = np.argmin(abs(threecolor['log_age'] - current_log_age))
-                nlyc = 10**(threecolor['log_nlyc'][threecolor_idx])
+                # Get idx corresponding to age first. This is valid for all color files.
+                color_idx = np.argmin(abs(onecolor['log_age'] - current_log_age))
+                nlyc = 10**(threecolor['log_nlyc'][color_idx])
                 #print "Current Log(age):", current_log_age
                 #print "Rate of Lyman continuum photons:", nlyc, "s^-1"
                 hdr['NLYC'] = str(nlyc)
 
-                # ---- 
+                # ---- Colors
+                # ---- U-B
+                ub_col = onecolor['UB_col'][color_idx]
+                hdr['UB_col'] = str(ub_col)
+                # ---- B-V
+                bv_col = onecolor['BV_col'][color_idx]
+                hdr['BV_col'] = str(bv_col)
+                # ---- V-J
+                vj_col = twocolor['VJ_col'][color_idx]
+                hdr['VJ_col'] = str(vj_col)
+
+                # ---- Masses
+                # ---- Stellar mass
+                mstar = fourcolor['ms'][color_idx]
+                hdr['ms'] = str(mstar)
+
+                # ---- Galaxy mass = Stellar mass + Gas mass
+                mgalaxy = fourcolor['mgal'][color_idx]
+                hdr['mgal'] = str(mgalaxy)
 
                 # Append
                 hdulist.append(fits.ImageHDU(data=current_model_set_csp[i], header=hdr))
+
+            h.close()
 
     final_fitsname = 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits'
     hdulist.writeto(figs_dir + final_fitsname, overwrite=True)
