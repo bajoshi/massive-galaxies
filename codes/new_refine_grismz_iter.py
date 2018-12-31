@@ -122,16 +122,33 @@ def get_model_set():
         h = fits.open(filename)
         modellam = h[1].data
 
-        # I'm not restricting the model wav range to something like 100 A to 10 micron
-        # which would be more useful because most of the model points are withing this 
-        # range anyway so it doesn't help save much space.
+        """
+        I'm not restricting the model wav range to something like 100 A to 10 micron
+        which would be more useful because most of the model points are withing this 
+        range anyway so it doesn't help save much space.
+        """
 
-        # Open corresponding *.*color files
-        onecolor = np.genfromtxt(filename.replace('.fits','.1color'), dtype=None,)
-        twocolor = np.genfromtxt(filename.replace('.fits','.2color'), dtype=None,)
+        # Open corresponding *.*color files.
+        # These files contain useful info avbout the spectra which I will 
+        # put in the header for each fits extension containing a spectrum.
+        # *.1color gives (U-B) and (B-V) colors 
+        # *.2color gives (V-J) color if you need to construct the UVJ diagram 
+        # *.3color gives NLyc
+        # *.4color gives M_stellar and M_galaxy (where M_galaxy = M_stellar + M_gas)
+        onecolor = np.genfromtxt(filename.replace('.fits','.1color'), dtype=None, \
+            names=['log_age','UB_col','BV_col'], usecols=(0,13,14), skip_header=30)
+        twocolor = np.genfromtxt(filename.replace('.fits','.2color'), dtype=None, \
+            names=['log_age','VJ_col'], usecols=(0,6), skip_header=30)
         threecolor = np.genfromtxt(filename.replace('.fits','.3color'), dtype=None, \
-            names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
-        fourcolor = np.genfromtxt(filename.replace('.fits','.4color'), dtype=None,)
+            names=['log_age','log_nlyc'], usecols=(0,5), skip_header=30)
+        fourcolor = np.genfromtxt(filename.replace('.fits','.4color'), dtype=None, \
+            names=['log_age','ms','mgal'], usecols=(0,5,8), skip_header=30)
+
+        print onecolor[0]
+        print twocolor[0]
+        print threecolor[0]
+        print fourcolor[0]
+        sys.exit(0)
     
         # define and initialize numpy array
         current_model_set_ssp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
@@ -209,10 +226,7 @@ def get_model_set():
             filename = model_dir + 'bc2003_hr_m62_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp_allspectra.npy'
 
             # Open corresponding *.3color, *.4color, and *.1color files
-            # *.1color gives (U-B) and (B-V) colors 
-            # *.2color gives (V-J) color if you need to construct the UVJ diagram 
-            # *.3color gives NLyc
-            # *.4color gives M_stellar and M_galaxy (where M_galaxy = M_stellar + M_gas)
+            # See comment in the SSP part above for explanation
             #onecolor = 
             threecolor = np.genfromtxt(filename.replace('_allspectra.npy','.3color'), dtype=None, \
                 names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
