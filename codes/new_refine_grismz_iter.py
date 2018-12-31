@@ -105,34 +105,33 @@ def get_model_set():
 
     print "Running code to generate set of models for comparison."
 
+    ssp_dir = home + "/Documents/galaxev_bc03_2016update/bc03/Miles_Atlas/Salpeter_IMF/"
+
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
-    src = home + "/Documents/galaxev_bc03_2016update/bc03/src/"
     example_filename = "bc2003_hr_xmiless_m22_salp_ssp.fits"
-    example = fits.open(src + example_filename)
+    example = fits.open(ssp_dir + example_filename)
     ages = example[2].data
-    age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
-    total_ages = int(len(age_ind))  # 57 for SSPs
-
-    print total_ages
-    print ages
-    print ages[age_ind]
-
-    sys.exit(0)
+    age_ind = np.where((ages/1e9 > 0.01) & (ages/1e9 < 13))[0]
+    total_ages = int(len(age_ind))  # 123 for SSPs and CSPs
 
     # FITS file where the reduced number of spectra will be saved
     hdu = fits.PrimaryHDU()
     hdulist = fits.HDUList(hdu)
     
-    for filename in glob.glob(home + '/Documents/GALAXEV_BC03/bc03/models/Padova1994/salpeter/' + '*.fits'):
-        # WHile the low resolution spectra are also in this directory 
-        # I did not create fits files for them so they won't be included here.
-        
-        h = fits.open(filename, memmap=False)
+    for filename in glob.glob(ssp_dir + '*.fits'):        
+        h = fits.open(filename)
         modellam = h[1].data
 
-        # Open corresponding *.3color file
+        # I'm not restricting the model wav range to something like 100 A to 10 micron
+        # which would be more useful because most of the model points are withing this 
+        # range anyway so it doesn't help save much space.
+
+        # Open corresponding *.*color files
+        onecolor = np.genfromtxt(filename.replace('.fits','.1color'), dtype=None,)
+        twocolor = np.genfromtxt(filename.replace('.fits','.2color'), dtype=None,)
         threecolor = np.genfromtxt(filename.replace('.fits','.3color'), dtype=None, \
             names=['log_age','log_nlyc'], usecols=(0,5), skip_header=29)
+        fourcolor = np.genfromtxt(filename.replace('.fits','.4color'), dtype=None,)
     
         # define and initialize numpy array
         current_model_set_ssp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
@@ -187,8 +186,8 @@ def get_model_set():
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
     example_filename='bc2003_hr_m62_tauV0_csp_tau100_salp_ages.npy'
     ages = np.load(model_dir + example_filename)
-    age_ind = np.where((ages/1e9 < 8) & (ages/1e9 > 0.1))[0]
-    total_ages = int(len(age_ind))  # 57 for both SSP and CSP
+    age_ind = np.where((ages/1e9 > 0.01) & (ages/1e9 < 10))[0]
+    total_ages = int(len(age_ind))  #  for both SSP and CSP
 
     # model grid parameters
     # they are being redefined here to be able to identify 
