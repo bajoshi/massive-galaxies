@@ -178,7 +178,7 @@ def show_example_for_adding_emission_lines():
 
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
-    total_models = 34542
+    total_models = 37761
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
@@ -225,7 +225,7 @@ def make_oii_ew_vs_age_plot():
 
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
-    total_models = 34542
+    total_models = 37761
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
@@ -1202,7 +1202,7 @@ if __name__ == '__main__':
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
-    total_models = 34542
+    total_models = 37761
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'

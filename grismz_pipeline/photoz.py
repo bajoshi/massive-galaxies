@@ -187,6 +187,12 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         current_z = z_arr_to_check[min_idx_2d[0]]
         age_at_z = cosmo.age(current_z).value * 1e9  # in yr
 
+        # Colors and stellar mass
+        ub_col = float(bc03_all_spec_hdulist[model_idx + 1].header['UB_col'])
+        bv_col = float(bc03_all_spec_hdulist[model_idx + 1].header['BV_col'])
+        vj_col = float(bc03_all_spec_hdulist[model_idx + 1].header['VJ_col'])
+        template_ms = float(bc03_all_spec_hdulist[model_idx + 1].header['ms'])
+
         # now check if the best fit model is an ssp or csp 
         # only the csp models have tau and tauV parameters
         # so if you try to get these keywords for the ssp fits files
@@ -262,12 +268,17 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     print "Min idx 2d:", min_idx_2d
     print "Alpha for best-fit model:", bestalpha
 
-    ms = 1 / bestalpha
+    ms = template_ms / bestalpha
+    print "Template mass [normalized to 1 sol]:", template_ms
     print "Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms)
 
     # Rest frame f_lambda values
     zbest_idx = np.argmin(abs(z_model_arr - zp))
     print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]]
+    print "Rest-frame U-B color:", ub_col
+    print "Rest-frame B-V color:", bv_col
+    print "Rest-frame U-V color:", ub_col - bv_col
+    print "Rest-frame V-J color:", vj_col
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
@@ -384,8 +395,8 @@ def main():
     # ----------------------------------- #
     #### DO NOT delete this code block ####
     # ----------------------------------- #
-    # create fits file to save models with emission lines
     """
+    # create fits file to save models with emission lines
     hdu = fits.PrimaryHDU()
     hdulist = fits.HDUList(hdu)
 
