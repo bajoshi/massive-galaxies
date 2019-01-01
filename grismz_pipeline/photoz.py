@@ -322,6 +322,24 @@ def get_all_filters():
 
     return all_filters
 
+def get_total_extensions(fitsfile):
+    """
+    This function will return the number of extensions in a fits file.
+    It does not count the 0th extension.
+
+    It takes the opened fits header data unit as its only argument.
+    """
+
+    nexten = 0 # this is the total number of extensions
+    while 1:
+        try:
+            if fitsfile[nexten+1]:
+                nexten += 1
+        except IndexError:
+            break
+
+    return nexten
+
 def main():
 
     # Start time
@@ -331,12 +349,14 @@ def main():
 
     figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
     threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
     # This is if working on the laptop. 
     # Then you must be using the external hard drive where the models are saved.
     if not os.path.isdir(figs_data_dir):
         import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
-        figs_data_dir = 'figs_dir'  # this path only exists on firstlight
+        figs_data_dir = figs_dir  # this path only exists on firstlight
         threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+        cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
         if not os.path.isdir(figs_data_dir):
             print "Model files not found. Exiting..."
             sys.exit(0)
@@ -348,25 +368,29 @@ def main():
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
-    total_models = 34542
+    total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
-    example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
-    bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
-    model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
+    example_filename_lamgrid = "bc2003_hr_m62_tauV0_csp_tau100_salp.fits"
+    metalfolder = "m62/"
+    model_dir = cspout + metalfolder
+    example_lamgrid_hdu = fits.open(model_dir + example_filename_lamgrid)
+    model_lam_grid = example_lamgrid_hdu[1].data
     model_lam_grid = model_lam_grid.astype(np.float64)
+    example_lamgrid_hdu.close()
 
     total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
     # ----------------------------------- #
     #### DO NOT delete this code block ####
     # ----------------------------------- #
-    """
     # create fits file to save models with emission lines
+    """
     hdu = fits.PrimaryHDU()
     hdulist = fits.HDUList(hdu)
 
     for j in range(total_models):
+        print "Working on emission lines for model:", j+1, "of", total_models
         nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
         metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
         model_lam_grid_withlines, model_comp_spec_withlines[j] = \

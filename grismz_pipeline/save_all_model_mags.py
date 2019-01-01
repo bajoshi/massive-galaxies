@@ -16,13 +16,14 @@ home = os.getenv('HOME')
 figs_dir = home + "/Desktop/FIGS/"
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 
-# Get directories
-figs_data_dir = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/"
+figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
 # This is if working on the laptop. 
 # Then you must be using the external hard drive where the models are saved.
 if not os.path.isdir(figs_data_dir):
     import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
-    figs_data_dir = figs_dir
+    figs_data_dir = figs_dir  # this path only exists on firstlight
+    cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
     if not os.path.isdir(figs_data_dir):
         print "Model files not found. Exiting..."
         sys.exit(0)
@@ -103,12 +104,17 @@ def main():
     print "Starting at --", dt.now()
 
     # Read in models with emission lines adn put in numpy array
-    total_models = 34542
+    total_models = 37761
     total_emission_lines_to_add = 12
 
-    example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
-    bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
-    model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
+    example_filename_lamgrid = "bc2003_hr_m62_tauV0_csp_tau100_salp.fits"
+    metalfolder = "m62/"
+    model_dir = cspout + metalfolder
+    example_lamgrid_hdu = fits.open(model_dir + example_filename_lamgrid)
+    model_lam_grid = example_lamgrid_hdu[1].data
+    model_lam_grid = model_lam_grid.astype(np.float64)
+    example_lamgrid_hdu.close()
+
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
 
     bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
@@ -177,20 +183,22 @@ def main():
         filtername = all_filter_names[filter_count]
         print "Working on filter:", filtername
 
-        """
+        # Parallel for loop
         num_cores = 4
         all_model_mags_filt_list = Parallel(n_jobs=num_cores)(delayed(compute_filter_mags)(filt, \
             model_comp_spec_withlines, model_lam_grid_withlines, total_models, redshift) for redshift in zrange)
-        """
 
+        # SErial for loop
+        """
         all_model_mags_filt = np.zeros((len(zrange), total_models), dtype=np.float64)
         for i in xrange(len(zrange)):
             all_model_mags_filt[i] = \
             compute_filter_mags(filt, model_comp_spec_withlines, model_lam_grid_withlines, total_models, zrange[i])
+        """
 
         # save the mags
-        #save_filter_mags(filtername, all_model_mags_filt_list)
-        save_filter_mags(filtername, all_model_mags_filt)
+        save_filter_mags(filtername, all_model_mags_filt_list)
+        #save_filter_mags(filtername, all_model_mags_filt)
         print "Computation done and saved for:", filtername, "\n"
         print "Total time taken:", time.time() - start
 
