@@ -165,7 +165,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     # Check for all NaNs in chi2 array
     # For now skipping all galaxies that have any NaNs in them.
-    if ~all(np.isfinite(chi2)):
+    if len(np.where(np.isfinite(chi2.ravel()))[0]) != len(chi2.ravel()):
         print "Chi2 has NaNs. Skiiping galaxy for now."
         return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
 
