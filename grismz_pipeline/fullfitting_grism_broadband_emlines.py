@@ -649,60 +649,12 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     #lsf = lsf.astype(np.float64)
 
     # ------------ Get photomtery for model by convolving with filters ------------- #
-    """
-    The photometry is computed using the higest resolution model spectrum 
-    available.... since this is how mother nature kinda does it anyway.
-    The only effect you need to take into account is redshift.
-    """
-    if use_broadband:
 
-        all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
-
-        # Redshift the base models and also the lsf convolved model flux
-        model_comp_spec_z = model_comp_spec / (1+z)
-        model_lam_grid_z = model_lam_grid * (1+z)
-
-        model_comp_spec_lsfconv_z = model_comp_spec_lsfconv / (1+z)
-
-        filt_count = 0
-        for filt in all_filters:
-
-            # first interpolate the grism transmission curve to the model lam grid
-            # Check if the filter is an HST filter or not
-            # It is an HST filter if it comes from pysynphot
-            # IF it is a non-HST filter then it is a simple ascii file
-            if type(filt) == pysynphot.obsbandpass.ObsModeBandpass:
-                # Interpolate using the attributes of pysynphot filters
-                filt_interp = griddata(points=filt.binset, values=filt(filt.binset), xi=model_lam_grid_z, method='linear')
-
-            elif type(filt) == np.ndarray:
-                filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
-
-            # multiply model spectrum to filter curve
-            for i in range(total_models):
-
-                num = np.nansum(model_comp_spec_z[i] * filt_interp)
-                den = np.nansum(filt_interp)
-
-                filt_flam_model = num / den
-                all_filt_flam_model[filt_count,i] = filt_flam_model
-
-            filt_count += 1
-
-        # transverse array to make shape consistent with others
-        # I did it this way so that in the above for loop each filter is looped over only once
-        # i.e. minimizing the number of times each filter is gridded on to the model grid
-        all_filt_flam_model = all_filt_flam_model.T
-
-        print "Filter f_lam for models computed."
-        print "Total time taken up to now --", time.time() - start_time, "seconds."
-
-    else:
-        all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
     # ------------- Now do the modifications for the grism data and get a chi2 using both grism and photometry ------------- #
     # first modify the models at the current redshift to be able to compare with data
-    model_comp_spec_modified = mm.redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
+    model_comp_spec_modified = \
+    mm.redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done at current z:", z
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
@@ -741,7 +693,8 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     lsf, starting_z, resampling_lam_grid, resampling_lam_grid_length, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, netsig, d4000, search_range):
+    obj_id, obj_field, specz, photoz):
+
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -750,12 +703,11 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=41, dtype=np.float64)
-    z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
-    z_arr_to_check = z_arr_to_check[z_idx]
-    print "Will check the following redshifts:", z_arr_to_check
-    if not z_arr_to_check.size:
-        return -99.0, -99.0, -99.0, -99.0, -99.0
+    z_arr_to_check = np.arange(0.6, 1.24, 0.01)
+
+    # The model mags were computed on a finer redshift grid
+    # So make sure to get the z_idx correct
+    z_model_arr = np.arange(0.0, 6.0, 0.005)
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -1193,6 +1145,21 @@ if __name__ == '__main__':
     # show_example_for_adding_emission_lines()
     # sys.exit(0)
 
+    # Get correct directories 
+    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+    threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
+    # This is if working on the laptop. 
+    # Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(figs_data_dir):
+        import pysynphot  # only import pysynphot on firstlight becasue that's the only place where I installed it.
+        figs_data_dir = figs_dir  # this path only exists on firstlight
+        threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+        cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
+        if not os.path.isdir(figs_data_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
+
     # Flags to turn on-off broadband and emission lines in the fit
     use_broadband = True
     use_emlines = True
@@ -1201,18 +1168,30 @@ if __name__ == '__main__':
 
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
-    bc03_all_spec_hdulist = fits.open(figs_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
-    total_models = 37761
+    bc03_all_spec_hdulist = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
-    example_filename_lamgrid = 'bc2003_hr_m22_tauV20_csp_tau50000_salp_lamgrid.npy'
-    bc03_galaxev_dir = home + '/Documents/GALAXEV_BC03/'
-    model_lam_grid = np.load(bc03_galaxev_dir + example_filename_lamgrid)
+    example_filename_lamgrid = "bc2003_hr_m62_tauV0_csp_tau100_salp.fits"
+    metalfolder = "m62/"
+    model_dir = cspout + metalfolder
+    example_lamgrid_hdu = fits.open(model_dir + example_filename_lamgrid)
+    model_lam_grid = example_lamgrid_hdu[1].data
     model_lam_grid = model_lam_grid.astype(np.float64)
+    example_lamgrid_hdu.close()
 
     total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
+    # ----------------------------------- #
+    #### DO NOT delete this code block ####
+    # ----------------------------------- #
+    """
+    # create fits file to save models with emission lines
+    hdu = fits.PrimaryHDU()
+    hdulist = fits.HDUList(hdu)
+
     for j in range(total_models):
+        print "Working on emission lines for model:", j+1, "of", total_models
         nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
         metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
         model_lam_grid_withlines, model_comp_spec_withlines[j] = \
@@ -1225,8 +1204,57 @@ if __name__ == '__main__':
         # I guess you could simply interpolate the model without lines on to the grid of
         # the models wiht lines.
 
+        hdr = fits.Header()
+        hdr['NLYC'] = str(nlyc)
+        hdr['METAL'] = str(metallicity)
+        hdulist.append(fits.ImageHDU(data=model_comp_spec_withlines[j], header=hdr))
+
+    # Save models with emission lines
+    hdulist.writeto(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits', overwrite=True)
+    # Also save the model lam grid for models with emission lines
+    np.save(figs_data_dir + 'model_lam_grid_withlines.npy', model_lam_grid_withlines)
+    sys.exit(0)
+    """
+    # ----------------------------------- #
+
+    # Read in models with emission lines adn put in numpy array
+    bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
+    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy')
+    for q in range(total_models):
+        model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
+
+    bc03_all_spec_hdulist_withlines.close()
+    del bc03_all_spec_hdulist_withlines
+
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
+
+    # ---------------------------------- Read in look-up tables for model mags ------------------------------------- #
+    # Using the look-up table now since it should be much faster
+    # First get them all into an appropriate shape
+    u = np.load(figs_data_dir + 'all_model_mags_u.npy')
+    f435w = np.load(figs_data_dir + 'all_model_mags_f435w.npy')
+    f606w = np.load(figs_data_dir + 'all_model_mags_f606w.npy')
+    f775w = np.load(figs_data_dir + 'all_model_mags_f775w.npy')
+    f850lp = np.load(figs_data_dir + 'all_model_mags_f850lp.npy')
+    f125w = np.load(figs_data_dir + 'all_model_mags_f125w.npy')
+    f140w = np.load(figs_data_dir + 'all_model_mags_f140w.npy')
+    f160w = np.load(figs_data_dir + 'all_model_mags_f160w.npy')
+    irac1 = np.load(figs_data_dir + 'all_model_mags_irac1.npy')
+    irac2 = np.load(figs_data_dir + 'all_model_mags_irac2.npy')
+    irac3 = np.load(figs_data_dir + 'all_model_mags_irac3.npy')
+    irac4 = np.load(figs_data_dir + 'all_model_mags_irac4.npy')
+
+    # put them in a list since I need to iterate over it
+    all_model_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
+
+    # cnovert to numpy array
+    all_model_flam = np.asarray(all_model_flam)
+
+    # You only need to use the filters if you're not using the lookup tables
+    lookup = True
+    if not lookup:
+        all_filters = get_all_filters()
 
     # ----------------------------------------- READ IN CATALOGS ----------------------------------------- #
     # read in matched files to get photo-z
@@ -1248,9 +1276,11 @@ if __name__ == '__main__':
     'f_U', 'e_U', 'f_IRAC1', 'e_IRAC1', 'f_IRAC2', 'e_IRAC2', 'f_IRAC3', 'e_IRAC3', 'f_IRAC4', 'e_IRAC4', \
     'IRAC1_contam', 'IRAC2_contam', 'IRAC3_contam', 'IRAC4_contam']
     goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), skip_header=3)
+        dtype=None, names=photometry_names, \
+        usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), skip_header=3)
     goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
+        dtype=None, names=photometry_names, \
+        usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), skip_header=3)
 
     # large differences between specz and grismz
     #large_diff_cat = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/large_diff_specz_short.txt', dtype=None, names=True)
@@ -1317,21 +1347,21 @@ if __name__ == '__main__':
             if len(specz_idx) == 1:
                 current_specz = float(spec_cat['specz'][specz_idx])
                 current_photz = float(cat['zphot'][i])
-                starting_z = current_specz
             elif len(specz_idx) == 0:
                 current_specz = -99.0
                 current_photz = float(cat['zphot'][i])
-                starting_z = current_photz
             else:
                 print "Got other than 1 or 0 matches for the specz for ID", current_id, "in", current_field
                 print "This much be fixed. Check why it happens. Exiting now."
                 sys.exit(0)
 
-            # Check that the starting redshfit is within the required range
-            if (starting_z < 0.6) or (starting_z > 1.235):
-                print "Current galaxy", current_id, current_field, "at starting_z", starting_z, "not within redshift range.",
-                print "Moving to the next galaxy."
-                continue
+            # Check that the spectroscopic redshift is within the required range
+            # Spec-z with some padded range
+            if current_specz != -99.0:
+                if (current_specz < 0.5) or (current_specz > 1.3):
+                    print "Current galaxy", current_id, current_field, "at spec-z", current_specz, "not within redshift range.",
+                    print "Moving to the next galaxy."
+                    continue
 
             # If you want to run it for a single galaxy then 
             # give the info here and put a sys.exit(0) after 
@@ -1342,8 +1372,10 @@ if __name__ == '__main__':
             #current_photz = 0.9167
             #starting_z = current_specz
 
+            print "\n"
             print "Galaxies done so far:", galaxy_count
             print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, current_photz
+            print "Total time taken:", time.time() - start, "seconds."
 
             grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
@@ -1488,37 +1520,6 @@ if __name__ == '__main__':
                 # Also take a look at this page: http://www.stsci.edu/hst/observatory/crds/throughput.html
                 # Pysynphot has been set up correctly. Its pretty useful for many other things too. See Pysynphot docs.
 
-                # read in filter curves
-                f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
-                f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
-                f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
-                f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
-
-                f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
-                f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
-                f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
-
-                # non-HST filter curves
-                # IRac wavelengths are in mixrons # convert to angstroms
-                uband_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/kpno_mosaic_u.txt', dtype=None, \
-                    names=['wav', 'trans'], skip_header=14)
-                irac1_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
-                    names=['wav', 'trans'], skip_header=3)
-                irac2_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
-                    names=['wav', 'trans'], skip_header=3)
-                irac3_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
-                    names=['wav', 'trans'], skip_header=3)
-                irac4_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
-                    names=['wav', 'trans'], skip_header=3)
-
-                irac1_curve['wav'] *= 1e4
-                irac2_curve['wav'] *= 1e4
-                irac3_curve['wav'] *= 1e4
-                irac4_curve['wav'] *= 1e4
-
-                all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
-                f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
-
                 """
                 Example to plot filter curves for ACS:
                 fig = plt.figure()
@@ -1533,7 +1534,10 @@ if __name__ == '__main__':
                 # First interpolate the given filter curve on to the wavelength frid of the grism data
                 # You only need the F775W filter here since you're only using this filter to get the 
                 # aperture correction factor.
-                f775w_trans_interp = griddata(points=f775w_filt_curve.binset, values=f775w_filt_curve(f775w_filt_curve.binset), xi=grism_lam_obs, method='linear')
+                f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
+                    dtype=None, names=['wav', 'trans'])
+                f775w_trans_interp = griddata(points=f775w_filt_curve['wav'], values=f775w_filt_curve['trans'], \
+                	xi=model_lam_grid_z, method='linear')
 
                 # check that the interpolated curve looks like hte original one
                 """
@@ -1563,9 +1567,6 @@ if __name__ == '__main__':
                 phot_errors_arr = np.array([ferr_U, ferr_f435w, ferr_f606w, ferr_f775w, ferr_f850lp, ferr_f125w, ferr_f140w, ferr_f160w,
                     ferr_irac1, ferr_irac2, ferr_irac3, ferr_irac4])
 
-                #phot_errors_arr *= 4.0
-                #grism_ferr_obs *= 2.0
-
                 # Pivot wavelengths
                 # From here --
                 # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
@@ -1583,7 +1584,8 @@ if __name__ == '__main__':
                 ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
                 plt.show(block=False)
 
-                check_spec_plot(current_id, current_field, grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr)
+                check_spec_plot(current_id, current_field, grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
+                phot_lam, phot_fluxes_arr, phot_errors_arr)
                 sys.exit(0)
                 """
 
@@ -1613,9 +1615,11 @@ if __name__ == '__main__':
                 continue
 
             # D4000 check 
+            # Don't really have to do this check so I'm skipping for now
             # You have to de-redshift it to get D4000. So if the original z is off then the D4000 will also be off.
             # This is way I'm letting some lower D4000 values into my sample. Just so I don't miss too many galaxies.
             # A few of the galaxies with really wrong starting_z will of course be missed.
+            """
             lam_em = grism_lam_obs / (1 + starting_z)
             flam_em = grism_flam_obs * (1 + starting_z)
             ferr_em = grism_ferr_obs * (1 + starting_z)
@@ -1632,6 +1636,7 @@ if __name__ == '__main__':
             if d4000 < 1.6:
                 print "Skipping", current_id, "in", current_field, "due to D4000:", d4000
                 continue
+            """
 
             # Read in LSF
             if current_field == 'GOODS-N':
@@ -1714,16 +1719,16 @@ if __name__ == '__main__':
             phot_errors_arr = phot_errors_arr[phot_fin_idx]
             phot_lam = phot_lam[phot_fin_idx]
 
-            all_filters = np.asarray(all_filters)
-            all_filters = all_filters[phot_fin_idx]
-            num_filters = len(all_filters)
+            if not lookup:
+                all_filters = np.asarray(all_filters)
+                all_filters = all_filters[phot_fin_idx]
 
             # ------------- Call actual fitting function ------------- #
             zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
                 lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-                current_id, current_field, current_specz, current_photz, netsig_chosen, d4000, 0.2)# all_filters)
+                current_id, current_field, current_specz, current_photz)
 
             # Get d4000 at new zgrism
             lam_em = grism_lam_obs / (1 + zg)

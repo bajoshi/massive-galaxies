@@ -358,6 +358,7 @@ def main():
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
+    # Get correct directories 
     figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
     threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
     cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
