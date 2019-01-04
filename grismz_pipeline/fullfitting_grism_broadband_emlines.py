@@ -635,10 +635,10 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     return chi2_, alpha_
 
 def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-    model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
+    model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
     resampling_lam_grid, resampling_lam_grid_length, total_models, start_time):
 
-    print "\n", "Currently at redshift:", z
+    print "Currently at redshift:", z
 
     # make sure the types are correct before passing to cython code
     #lam_obs = lam_obs.astype(np.float64)
@@ -649,7 +649,18 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     #lsf = lsf.astype(np.float64)
 
     # ------------ Get photomtery for model by convolving with filters ------------- #
+    z_idx = np.where(z_model_arr == z)[0]
 
+    # and because for some reason it does not find matches 
+    # in the model redshift array, I need this check here.
+    if not z_idx.size:
+        z_idx = np.argmin(abs(z_model_arr - z))
+
+    all_filt_flam_model = all_model_flam[:, z_idx, :]
+    all_filt_flam_model = all_filt_flam_model[phot_fin_idx, :]
+    all_filt_flam_model = all_filt_flam_model.reshape(len(phot_fin_idx), total_models)
+
+    all_filt_flam_model_t = all_filt_flam_model.T
 
     # ------------- Now do the modifications for the grism data and get a chi2 using both grism and photometry ------------- #
     # first modify the models at the current redshift to be able to compare with data
@@ -686,12 +697,12 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 
     # ------------- Now do the chi2 computation ------------- #
     chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-        all_filt_flam_model, model_comp_spec_modified, resampling_lam_grid, total_models)
+        all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models)
 
     return chi2_temp, alpha_temp
 
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-    lsf, starting_z, resampling_lam_grid, resampling_lam_grid_length, \
+    lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
     obj_id, obj_field, specz, photoz):
 
@@ -721,10 +732,11 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
+    """
     num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-    model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
+    model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
     resampling_lam_grid, resampling_lam_grid_length, total_models, start_time) \
     for z in z_arr_to_check)
 
@@ -732,18 +744,21 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+    """
 
-    # regular for loop 
+    # regular i.e. serial for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't need it
-    """
     count = 0
     for z in z_arr_to_check:
-        chi2[count], alpha[count] = get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-            model_lam_grid, model_comp_spec, model_comp_spec_lsfconv, \
+        chi2[count], alpha[count] = get_chi2_alpha_at_z(z, \
+            grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+            model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
             resampling_lam_grid, resampling_lam_grid_length, total_models, start_time)
+
+        #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+        #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
         count += 1
-    """
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
@@ -762,6 +777,12 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         age = float(bc03_all_spec_hdulist[model_idx + 1].header['LOG_AGE'])
         current_z = z_arr_to_check[min_idx_2d[0]]
         age_at_z = cosmo.age(current_z).value * 1e9  # in yr
+
+        # Colors and stellar mass
+        ub_col = float(bc03_all_spec_hdulist[model_idx + 1].header['UB_col'])
+        bv_col = float(bc03_all_spec_hdulist[model_idx + 1].header['BV_col'])
+        vj_col = float(bc03_all_spec_hdulist[model_idx + 1].header['VJ_col'])
+        template_ms = float(bc03_all_spec_hdulist[model_idx + 1].header['ms'])
 
         # now check if the best fit model is an ssp or csp 
         # only the csp models have tau and tauV parameters
@@ -812,13 +833,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     chi2_red = chi2 / dof
     chi2_red_error = np.sqrt(2/dof)
     min_chi2_red = min_chi2 / dof
-    print "Error in reduced chi-square:", chi2_red_error
+    #print "Error in reduced chi-square:", chi2_red_error
     chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
-    print "Indices within 1-sigma of reduced chi-square:", chi2_red_2didx
+    #print "Indices within 1-sigma of reduced chi-square:", chi2_red_2didx
 
     # use first dimension indices to get error on grism-z
     z_grism_range = z_arr_to_check[chi2_red_2didx[0]]
-    print "z_grism range", z_grism_range
+    #print "z_grism range", z_grism_range
 
     low_z_lim = np.min(z_grism_range)
     upper_z_lim = np.max(z_grism_range)
@@ -827,9 +848,9 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
-    ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
+    #ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
     # Save chi2 map
-    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
+    #np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
     np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
 
     pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field)
@@ -850,6 +871,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     #print low_chi2_idx
 
     ####### ------------------------------------------ Plotting ------------------------------------------ #######
+    """
     #### -------- Plot spectrum: Data, best fit model, and the residual --------- ####
     # get things needed to plot and plot
     bestalpha = alpha[min_idx_2d]
@@ -934,6 +956,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
         all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha, model_lam_grid, best_fit_model_fullres,
         obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000, z_wt)
+    """
 
     return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
@@ -1232,18 +1255,18 @@ if __name__ == '__main__':
     # ---------------------------------- Read in look-up tables for model mags ------------------------------------- #
     # Using the look-up table now since it should be much faster
     # First get them all into an appropriate shape
-    u = np.load(figs_data_dir + 'all_model_mags_u.npy')
-    f435w = np.load(figs_data_dir + 'all_model_mags_f435w.npy')
-    f606w = np.load(figs_data_dir + 'all_model_mags_f606w.npy')
-    f775w = np.load(figs_data_dir + 'all_model_mags_f775w.npy')
-    f850lp = np.load(figs_data_dir + 'all_model_mags_f850lp.npy')
-    f125w = np.load(figs_data_dir + 'all_model_mags_f125w.npy')
-    f140w = np.load(figs_data_dir + 'all_model_mags_f140w.npy')
-    f160w = np.load(figs_data_dir + 'all_model_mags_f160w.npy')
-    irac1 = np.load(figs_data_dir + 'all_model_mags_irac1.npy')
-    irac2 = np.load(figs_data_dir + 'all_model_mags_irac2.npy')
-    irac3 = np.load(figs_data_dir + 'all_model_mags_irac3.npy')
-    irac4 = np.load(figs_data_dir + 'all_model_mags_irac4.npy')
+    u = np.load(figs_data_dir + 'all_model_mags_par_u.npy')
+    f435w = np.load(figs_data_dir + 'all_model_mags_par_f435w.npy')
+    f606w = np.load(figs_data_dir + 'all_model_mags_par_f606w.npy')
+    f775w = np.load(figs_data_dir + 'all_model_mags_par_f775w.npy')
+    f850lp = np.load(figs_data_dir + 'all_model_mags_par_f850lp.npy')
+    f125w = np.load(figs_data_dir + 'all_model_mags_par_f125w.npy')
+    f140w = np.load(figs_data_dir + 'all_model_mags_par_f140w.npy')
+    f160w = np.load(figs_data_dir + 'all_model_mags_par_f160w.npy')
+    irac1 = np.load(figs_data_dir + 'all_model_mags_par_irac1.npy')
+    irac2 = np.load(figs_data_dir + 'all_model_mags_par_irac2.npy')
+    irac3 = np.load(figs_data_dir + 'all_model_mags_par_irac3.npy')
+    irac4 = np.load(figs_data_dir + 'all_model_mags_par_irac4.npy')
 
     # put them in a list since I need to iterate over it
     all_model_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
@@ -1537,7 +1560,7 @@ if __name__ == '__main__':
                 f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
                     dtype=None, names=['wav', 'trans'])
                 f775w_trans_interp = griddata(points=f775w_filt_curve['wav'], values=f775w_filt_curve['trans'], \
-                	xi=model_lam_grid_z, method='linear')
+                	xi=grism_lam_obs, method='linear')
 
                 # check that the interpolated curve looks like hte original one
                 """
@@ -1726,7 +1749,7 @@ if __name__ == '__main__':
             # ------------- Call actual fitting function ------------- #
             zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
-                lsf_to_use, starting_z, resampling_lam_grid, len(resampling_lam_grid), \
+                lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, current_photz)
 
