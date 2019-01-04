@@ -638,8 +638,6 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
     resampling_lam_grid, resampling_lam_grid_length, total_models, start_time):
 
-    print "Currently at redshift:", z
-
     # make sure the types are correct before passing to cython code
     #lam_obs = lam_obs.astype(np.float64)
     #model_lam_grid = model_lam_grid.astype(np.float64)
@@ -667,7 +665,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     model_comp_spec_modified = \
     mm.redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done at current z:", z
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    #print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # Check all model modifications and that the model photometry line up
     # Do not delete. Useful for debugging.
@@ -850,13 +848,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Should check if the minimum is global or local
     #ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
     # Save chi2 map
-    #np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
-    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
+    #np.save(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
+    np.save(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
 
     pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field)
 
     # Save p(z)
-    np.save(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
+    np.save(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
     z_wt = np.sum(z_arr_to_check * pz)
     print "Weighted z:", "{:.3}".format(z_wt)
     print "Grism redshift:", z_grism
@@ -1093,10 +1091,10 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     # ---------- Save figure ---------- #
     if use_broadband:
-        fig.savefig(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '.png', \
+        fig.savefig(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '.png', \
             dpi=300, bbox_inches='tight')
     else:
-        fig.savefig(massive_figures_dir + 'large_diff_specz_sample/' + obj_field + '_' + str(obj_id) + '_NoPhotometry.png', \
+        fig.savefig(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '_NoPhotometry.png', \
             dpi=300, bbox_inches='tight')
     
     plt.clf()
@@ -1149,7 +1147,7 @@ def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, 
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=10)
 
-    fig.savefig(massive_figures_dir + 'large_diff_specz_sample/' +  obj_field + '_' + str(obj_id) + '_pz.png', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'spz_run_jan2019/' +  obj_field + '_' + str(obj_id) + '_pz.png', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()
@@ -1776,43 +1774,43 @@ if __name__ == '__main__':
             d4000_list.append(d4000)
             d4000_err_list.append(d4000_err)
 
+            # Convert to numpy arrays
+            id_list = np.asarray(id_list)
+            field_list = np.asarray(field_list)
+            zgrism_list = np.asarray(zgrism_list)
+            zgrism_lowerr_list = np.asarray(zgrism_lowerr_list)
+            zgrism_uperr_list = np.asarray(zgrism_uperr_list)
+            zspec_list = np.asarray(zspec_list)
+            zphot_list = np.asarray(zphot_list)
+            chi2_list = np.asarray(chi2_list)
+            netsig_list = np.asarray(netsig_list)
+            age_list = np.asarray(age_list)
+            tau_list = np.asarray(tau_list)
+            av_list = np.asarray(av_list)
+            d4000_list = np.asarray(d4000_list)
+            d4000_err_list = np.asarray(d4000_err_list)
+
+            # Save files
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_id_list.npy', id_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_field_list.npy', field_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_zgrism_list.npy', zgrism_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_zgrism_lowerr_list.npy', zgrism_lowerr_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_zgrism_uperr_list.npy', zgrism_uperr_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_zspec_list.npy', zspec_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_zphot_list.npy', zphot_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_chi2_list.npy', chi2_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_netsig_list.npy', netsig_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_age_list.npy', age_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_tau_list.npy', tau_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_av_list.npy', av_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_d4000_list.npy', d4000_list)
+            np.save(figs_dir + 'massive-galaxies-figures/spz_run_jan2019/spz_d4000_err_list.npy', d4000_err_list)
+
             galaxy_count += 1
 
         catcount += 1
 
     print "Total galaxies considered:", galaxy_count
-
-    # Convert to numpy arrays
-    id_list = np.asarray(id_list)
-    field_list = np.asarray(field_list)
-    zgrism_list = np.asarray(zgrism_list)
-    zgrism_lowerr_list = np.asarray(zgrism_lowerr_list)
-    zgrism_uperr_list = np.asarray(zgrism_uperr_list)
-    zspec_list = np.asarray(zspec_list)
-    zphot_list = np.asarray(zphot_list)
-    chi2_list = np.asarray(chi2_list)
-    netsig_list = np.asarray(netsig_list)
-    age_list = np.asarray(age_list)
-    tau_list = np.asarray(tau_list)
-    av_list = np.asarray(av_list)
-    d4000_list = np.asarray(d4000_list)
-    d4000_err_list = np.asarray(d4000_err_list)
-
-    # Save files
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_id_list.npy', id_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_field_list.npy', field_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zgrism_list.npy', zgrism_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zgrism_lowerr_list.npy', zgrism_lowerr_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zgrism_uperr_list.npy', zgrism_uperr_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zspec_list.npy', zspec_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_zphot_list.npy', zphot_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_chi2_list.npy', chi2_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_netsig_list.npy', netsig_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_age_list.npy', age_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_tau_list.npy', tau_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_av_list.npy', av_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_d4000_list.npy', d4000_list)
-    np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/withemlines_d4000_err_list.npy', d4000_err_list)
 
     # Close HDUs
     bc03_all_spec_hdulist.close()
