@@ -247,7 +247,7 @@ if __name__ == '__main__':
     # -------------------------------------------- Quantify results -------------------------------------------- #
     # Cut on D4000
     d4000_low = 1.1
-    d4000_high = 1.2
+    d4000_high = 2.5
     d4000_idx = np.where((all_d4000 >= d4000_low) & (all_d4000 < d4000_high))[0]
     print "Galaxies in D4000 range:", len(d4000_idx)
 
@@ -271,6 +271,9 @@ if __name__ == '__main__':
 
     print "Mean, std. dev., and sigma_NMAD for residual photo-z:", "{:.4}".format(np.mean(resid_photoz)), "{:.4}".format(np.std(resid_photoz)), "{:.4}".format(sigma_nmad_photo)
     print "Mean, std. dev., and sigma_NMAD for residual weighted z (1xerr):", "{:.4}".format(np.mean(resid_zweight)), "{:.4}".format(np.std(resid_zweight)), "{:.4}".format(sigma_nmad_zwt)
+
+
+    sys.exit()
 
     # -------------------------------------------- Plotting -------------------------------------------- #
     # Convert histograms to PDFs

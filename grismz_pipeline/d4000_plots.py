@@ -218,7 +218,7 @@ def make_d4000_hist():
     ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
 
     # shade the selection region
-    edges_plot = np.where(edges >= 1.4)[0]
+    edges_plot = np.where(edges >= 1.1)[0]
     patches_plot = [patches[edge_ind] for edge_ind in edges_plot[:-1]]
     # I put in the [:-1] because for some reason edges was 1 element longer than patches
     col = np.full(len(patches_plot), 'lightblue', dtype='|S9')
@@ -228,6 +228,11 @@ def make_d4000_hist():
 
     ax.set_xlabel(r'$\mathrm{D}4000$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
+
+    d40001p1 = np.where(d4000_pears_plot >= 1.1)[0]
+    print "Number of galaxies with valid D4000 measurements in plot:", len(d4000_pears_plot)
+    print "Number of galaxies with D4000 >= 1.1:", len(d40001p1)
+    print "Fraction of total galaxies with D4000 >= 1.1:", len(d40001p1) / len(d4000_pears_plot)
 
     # save figure
     fig.savefig(massive_figures_dir + 'pears_d4000_hist.eps', dpi=300, bbox_inches='tight')
