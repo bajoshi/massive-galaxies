@@ -109,7 +109,7 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
 def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, all_model_flam, phot_fin_idx, savedir):
+    obj_id, obj_field, all_model_flam, phot_fin_idx, specz, savedir):
 
     # def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     #    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
@@ -123,7 +123,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.arange(0.0, 6.0, 0.02)
+    z_arr_to_check = np.arange(0.6, 1.24, 0.01)
     #print "Will check the following redshifts:", z_arr_to_check
 
     # The model mags were computed on a finer redshift grid
@@ -153,6 +153,11 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     for z in z_arr_to_check:
 
         z_idx = np.where(z_model_arr == z)[0]
+
+        # and because for some reason it does not find matches 
+        # in the model redshift array, I need this check here.
+        if not z_idx.size:
+            z_idx = np.argmin(abs(z_model_arr - z))
 
         all_filt_flam_model = all_model_flam[:, z_idx, :]
         all_filt_flam_model = all_filt_flam_model[phot_fin_idx, :]
@@ -258,7 +263,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     # Save p(z)
     np.save(savedir + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
     zp = np.sum(z_arr_to_check * pz)
-    #print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
+    print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
     #print "Previous photometric redshift from 3DHST:", photoz
     print "Photometric redshift from min chi2 from this code:", "{:.2}".format(zp_minchi2)
     print "Photometric redshift (weighted) from this code:", "{:.3}".format(zp)
@@ -443,18 +448,18 @@ def main():
     # ---------------------------------- Read in look-up tables for model mags ------------------------------------- #
     # Using the look-up table now since it should be much faster
     # First get them all into an appropriate shape
-    u = np.load(figs_data_dir + 'all_model_mags_u.npy')
-    f435w = np.load(figs_data_dir + 'all_model_mags_f435w.npy')
-    f606w = np.load(figs_data_dir + 'all_model_mags_f606w.npy')
-    f775w = np.load(figs_data_dir + 'all_model_mags_f775w.npy')
-    f850lp = np.load(figs_data_dir + 'all_model_mags_f850lp.npy')
-    f125w = np.load(figs_data_dir + 'all_model_mags_f125w.npy')
-    f140w = np.load(figs_data_dir + 'all_model_mags_f140w.npy')
-    f160w = np.load(figs_data_dir + 'all_model_mags_f160w.npy')
-    irac1 = np.load(figs_data_dir + 'all_model_mags_irac1.npy')
-    irac2 = np.load(figs_data_dir + 'all_model_mags_irac2.npy')
-    irac3 = np.load(figs_data_dir + 'all_model_mags_irac3.npy')
-    irac4 = np.load(figs_data_dir + 'all_model_mags_irac4.npy')
+    u = np.load(figs_data_dir + 'all_model_mags_par_u.npy')
+    f435w = np.load(figs_data_dir + 'all_model_mags_par_f435w.npy')
+    f606w = np.load(figs_data_dir + 'all_model_mags_par_f606w.npy')
+    f775w = np.load(figs_data_dir + 'all_model_mags_par_f775w.npy')
+    f850lp = np.load(figs_data_dir + 'all_model_mags_par_f850lp.npy')
+    f125w = np.load(figs_data_dir + 'all_model_mags_par_f125w.npy')
+    f140w = np.load(figs_data_dir + 'all_model_mags_par_f140w.npy')
+    f160w = np.load(figs_data_dir + 'all_model_mags_par_f160w.npy')
+    irac1 = np.load(figs_data_dir + 'all_model_mags_par_irac1.npy')
+    irac2 = np.load(figs_data_dir + 'all_model_mags_par_irac2.npy')
+    irac3 = np.load(figs_data_dir + 'all_model_mags_par_irac3.npy')
+    irac4 = np.load(figs_data_dir + 'all_model_mags_par_irac4.npy')
 
     # put them in a list since I need to iterate over it
     all_model_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
@@ -695,7 +700,7 @@ def main():
             zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-                current_id, current_field, all_model_flam, phot_fin_idx, savedir)
+                current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir)
 
             # ---------------------------------------------- SAVE PARAMETERS ----------------------------------------------- #
             id_list.append(current_id)
