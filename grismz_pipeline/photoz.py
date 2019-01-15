@@ -34,6 +34,7 @@ savedir = figs_dir + "stacking-analysis-figures/pears_all_photoz/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
+sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import fullfitting_grism_broadband_emlines as ff
 
 speed_of_light = 299792458e10  # angsroms per second
