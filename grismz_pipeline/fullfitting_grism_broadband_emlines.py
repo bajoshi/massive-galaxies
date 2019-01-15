@@ -956,7 +956,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000, z_wt)
     """
 
-    return z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
+    return z_grism, z_wt, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
 def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
     all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha, model_lam_grid, best_fit_model_fullres,
@@ -1745,16 +1745,16 @@ if __name__ == '__main__':
                 all_filters = all_filters[phot_fin_idx]
 
             # ------------- Call actual fitting function ------------- #
-            zg, zerr_low, zerr_up, min_chi2, age, tau, av = \
+            zg, zspz, zerr_low, zerr_up, min_chi2, age, tau, av = \
             do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
                 lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
                 model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
                 current_id, current_field, current_specz, current_photz)
 
-            # Get d4000 at new zgrism
-            lam_em = grism_lam_obs / (1 + zg)
-            flam_em = grism_flam_obs * (1 + zg)
-            ferr_em = grism_ferr_obs * (1 + zg)
+            # Get d4000 at SPZ
+            lam_em = grism_lam_obs / (1 + zspz)
+            flam_em = grism_flam_obs * (1 + zspz)
+            ferr_em = grism_ferr_obs * (1 + zspz)
 
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
