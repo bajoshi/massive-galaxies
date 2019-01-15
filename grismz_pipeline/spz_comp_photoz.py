@@ -75,6 +75,8 @@ def get_plotting_arrays():
     d4000_plot = []
     specz_qual_plot = []
     netsig_plot = []
+    all_ids = []
+    all_fields = []
 
     for i in range(len(zphot)):
 
@@ -137,6 +139,8 @@ def get_plotting_arrays():
                 d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
                 # Append
+                all_ids.append(photoz_id)   # these two arent' used for plotting but instead used to identify the interesting failures
+                all_fields.append(photoz_field)   # these two arent' used for plotting but instead used to identify the interesting failures
                 zspec_plot.append(current_specz)
                 zphot_plot.append(zphot[i])
                 zspz_plot.append(zspz)
@@ -145,6 +149,8 @@ def get_plotting_arrays():
                 d4000_plot.append(d4000)
 
     # Convert to numpy arrays and return
+    all_ids = np.asarray(all_ids)
+    all_fields = np.asarray(all_fields)
     zspec_plot = np.asarray(zspec_plot)
     zphot_plot = np.asarray(zphot_plot)
     zspz_plot = np.asarray(zspz_plot)
@@ -152,34 +158,25 @@ def get_plotting_arrays():
     specz_qual_plot = np.asarray(specz_qual_plot)
     netsig_plot = np.asarray(netsig_plot)
 
-    return zspec_plot, zphot_plot, zspz_plot, d4000_plot, netsig_plot, specz_qual_plot
+    return all_ids, all_fields, zspec_plot, zphot_plot, zspz_plot, d4000_plot, netsig_plot, specz_qual_plot
 
 def main():
 
-    zspec, zphot, zspz, d4000, netsig, specz_qual = get_plotting_arrays()
+    ids, fields, zspec, zphot, zspz, d4000, netsig, specz_qual = get_plotting_arrays()
 
     # Apply D4000 cut
-    d4000_low = 1.6
-    d4000_high = 1.8
+    d4000_low = 1.4
+    d4000_high = 1.6
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
+    ids = ids[d4000_idx]
+    fields = fields[d4000_idx]
     zspec = zspec[d4000_idx]
     zphot = zphot[d4000_idx]
     zspz = zspz[d4000_idx]
     d4000 = d4000[d4000_idx]
     netsig = netsig[d4000_idx]
     specz_qual = specz_qual[d4000_idx]
-
-    # Make figure
-    fig = plt.figure(figsize=(12,8))
-    gs = gridspec.GridSpec(10,24)
-    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.1, hspace=0)
-
-    ax1 = fig.add_subplot(gs[:7, :11])
-    ax2 = fig.add_subplot(gs[7:, :11])
-
-    ax3 = fig.add_subplot(gs[:7, 13:])
-    ax4 = fig.add_subplot(gs[7:, 13:])
 
     # Get residuals 
     resid_zphot = (zspec - zphot) / (1 + zspec)
@@ -204,6 +201,8 @@ def main():
 
     valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, catas_fail1, catas_fail2, valid_idx3))
 
+    ids = ids[valid_idx]
+    fields = fields[valid_idx]
     resid_zphot = resid_zphot[valid_idx]
     resid_zspz = resid_zspz[valid_idx]
     zspec = zspec[valid_idx]
@@ -227,6 +226,43 @@ def main():
     "{:.2e}".format(mean_zspz), "{:.2e}".format(std_zspz), "{:.2e}".format(nmad_zspz)
     print "Outlier fraction for photoz:", outlier_frac_photoz
     print "Outlier fraction for SPZ:", outlier_frac_spz
+
+    # ---------------------------------------------------------------------------------- # 
+    # Now look for the failures which you want to check individually
+    zphot_large_resid_idx = np.where(resid_zphot > 0.05)
+    zspz_large_resid_idx = np.where(resid_zspz > 0.05)
+
+    common_large_failures = reduce(np.intersect1d, (zphot_large_resid_idx, zspz_large_resid_idx))
+
+    print "\n", "Info for galaxies that have residuals larger than 0.05:"
+    print "ID        Field      zspec    zphot    zspz"
+
+    for j in range(len(common_large_failures)):
+
+        # Some formatting stuff just to make it easier to read on the screen
+        current_id_to_print = str(ids[common_large_failures][j])
+        if len(current_id_to_print) == 5:
+            current_id_to_print += ' '
+
+        print current_id_to_print, "  ",
+        print fields[common_large_failures][j], "  ",
+        print zspec[common_large_failures][j], "  ",
+        print "{:.3f}".format(zphot[common_large_failures][j]), "  ",
+        print "{:.3f}".format(zspz[common_large_failures][j])
+
+    sys.exit(0)
+
+    # ---------------------------------------------------------------------------------- # 
+    # Make figure
+    fig = plt.figure(figsize=(12,8))
+    gs = gridspec.GridSpec(10,24)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.1, hspace=0)
+
+    ax1 = fig.add_subplot(gs[:7, :11])
+    ax2 = fig.add_subplot(gs[7:, :11])
+
+    ax3 = fig.add_subplot(gs[:7, 13:])
+    ax4 = fig.add_subplot(gs[7:, 13:])
 
     ax1.plot(zspec, zphot, 'o', markersize=5, color='k', markeredgecolor='k')
     ax2.plot(zspec, resid_zphot, 'o', markersize=5, color='k', markeredgecolor='k')
