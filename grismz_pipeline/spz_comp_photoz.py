@@ -229,13 +229,14 @@ def main():
 
     # ---------------------------------------------------------------------------------- # 
     # Now look for the failures which you want to check individually
-    zphot_large_resid_idx = np.where(resid_zphot > 0.05)
-    zspz_large_resid_idx = np.where(resid_zspz > 0.05)
+    resid_lim = 0.05
+    zphot_large_resid_idx = np.where(resid_zphot > resid_lim)
+    zspz_large_resid_idx = np.where(resid_zspz > resid_lim)
 
     common_large_failures = reduce(np.intersect1d, (zphot_large_resid_idx, zspz_large_resid_idx))
 
-    print "\n", "Info for galaxies that have residuals larger than 0.05:"
-    print "ID        Field      zspec    zphot    zspz"
+    print "\n", "Info for galaxies that have residuals larger than", resid_lim, "---"
+    print "ID        Field      zspec    zphot    zspz   NetSig"
 
     for j in range(len(common_large_failures)):
 
@@ -243,12 +244,16 @@ def main():
         current_id_to_print = str(ids[common_large_failures][j])
         if len(current_id_to_print) == 5:
             current_id_to_print += ' '
+        current_specz_to_print = str(zspec[common_large_failures][j])
+        if len(current_specz_to_print) == 4:
+            current_specz_to_print += ' '
 
         print current_id_to_print, "  ",
         print fields[common_large_failures][j], "  ",
-        print zspec[common_large_failures][j], "  ",
+        print current_specz_to_print, "  ",
         print "{:.3f}".format(zphot[common_large_failures][j]), "  ",
-        print "{:.3f}".format(zspz[common_large_failures][j])
+        print "{:.3f}".format(zspz[common_large_failures][j]), "  ",
+        print 
 
     sys.exit(0)
 
