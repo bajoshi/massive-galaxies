@@ -262,7 +262,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     pz = get_pz_and_plot_photoz(chi2/dof, z_arr_to_check, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field)
 
     # Save p(z)
-    np.save(savedir + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
+    np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_pz.npy', pz)
     zp = np.sum(z_arr_to_check * pz)
     print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
     #print "Previous photometric redshift from 3DHST:", photoz

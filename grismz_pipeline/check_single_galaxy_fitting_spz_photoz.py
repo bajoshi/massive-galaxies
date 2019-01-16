@@ -20,6 +20,7 @@ lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 threedhst_datadir = home + "/Desktop/3dhst_data/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
+savedir_photoz = massive_figures_dir + 'single_galaxy_comparison/'  # Required to save p(z) curve
 
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
@@ -344,7 +345,7 @@ def main():
     zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
     photoz.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir)
+        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz)
 
     # ------------- Call actual fitting function for SPZ ------------- #
     zg, zspz, zerr_low, zerr_up, min_chi2, age, tau, av = \
