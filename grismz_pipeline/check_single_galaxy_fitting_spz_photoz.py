@@ -2,6 +2,7 @@ from __future__ import division
 
 import numpy as np
 from astropy.io import fits
+from scipy.interpolate import griddata
 
 import os
 import sys
@@ -19,7 +20,9 @@ figs_dir = home + "/Desktop/FIGS/"
 threedhst_datadir = home + "/Desktop/3dhst_data/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
 
+sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
+import refine_redshifts_dn4000 as old_ref
 import fullfitting_grism_broadband_emlines as ff
 import photoz
 import new_refine_grismz_gridsearch_parallel as ngp
