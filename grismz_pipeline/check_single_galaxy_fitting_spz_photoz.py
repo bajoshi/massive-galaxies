@@ -3,6 +3,7 @@ from __future__ import division
 import numpy as np
 from astropy.io import fits
 from scipy.interpolate import griddata
+from scipy.integrate import simps
 
 import os
 import sys
@@ -127,8 +128,10 @@ def main():
 
     # ------------------------------- Give galaxy data here ------------------------------- #
     # Only needs the ID and the field
+    # And flag to modify LSF
     current_id = 51522
     current_field = 'GOODS-S'
+    modify_lsf = True
 
     # Assign catalogs 
     if current_field == 'GOODS-N':
