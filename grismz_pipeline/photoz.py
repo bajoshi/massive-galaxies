@@ -259,7 +259,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     #np.save(savedir + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
     np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_z_arr.npy', z_arr_to_check)
 
-    pz = get_pz_and_plot_photoz(chi2/dof, z_arr_to_check, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field, savedir)
+    pz = get_pz_and_plot_photoz(chi2/dof, z_arr_to_check, zp_minchi2, specz, low_z_lim, upper_z_lim, obj_id, obj_field, savedir)
 
     # Save p(z)
     np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_pz.npy', pz)
@@ -288,7 +288,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, model_idx, age, tau, (tauv/1.086)
 
-def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field, savedir):
+def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, zp_minchi2, specz, low_z_lim, upper_z_lim, obj_id, obj_field, savedir):
 
     # Convert chi2 to likelihood
     likelihood = np.exp(-1 * chi2_map / 2)
@@ -319,7 +319,7 @@ def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, zp_minchi2, low_z_lim, uppe
     high_zerr = upper_z_lim - zp_minchi2
 
     ax.text(0.65, 0.35, \
-    r'$\mathrm{z_{phot\ minchi2}\, [from\ min\ \chi^2]\, =\, }$' + "{:.4}".format(zp_minchi2) + \
+    r'$\mathrm{z_p\, [from\ min\ \chi^2]\, =\, }$' + "{:.4}".format(zp_minchi2) + \
     r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=10)

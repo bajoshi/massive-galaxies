@@ -140,7 +140,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     transform=ax1.transAxes, color='k', size=10)
 
     # ---------- Save figure ---------- #
-    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_spz_fit.png', dpi=300, bbox_inches='tight')
+    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_photoz_fit.png', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()
@@ -651,10 +651,11 @@ def main():
     print "Ground-based spectroscopic redshift:", current_specz
     print "Photometric redshift from min chi2:", "{:.3f}".format(zp_minchi2)
     print "Weighted photometric redshift:", "{:.3f}".format(zp)
-    print "SPZ from min chi2:", "{:.3f}".format(zg)
+    print "SPZ from min chi2:", "{:.3f}".format(zg_minchi2)
     print "Weighted SPZ:", "{:.3f}".format(zspz)
 
-    print "\n", "Moving on to plotting fitting results now."
+    print "\n", "Time taken up to now--", str("{:.2f}".format(time.time() - start)), "seconds."
+    print "Moving on to plotting fitting results."
 
     # ------------------------------- Get best fit model for plotting ------------------------------- #
     # Will have to do this at the photo-z and SPZ separtely otherwise the plots will not look right
