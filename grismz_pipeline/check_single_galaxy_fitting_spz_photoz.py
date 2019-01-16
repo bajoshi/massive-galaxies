@@ -22,6 +22,7 @@ massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import fullfitting_grism_broadband_emlines as ff
 import photoz
+import new_refine_grismz_gridsearch_parallel as ngp
 
 speed_of_light = 299792458e10  # angsroms per second
 
