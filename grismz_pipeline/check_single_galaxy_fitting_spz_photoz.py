@@ -358,7 +358,11 @@ def main():
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, zp)
 
-    print current_specz, zp_minchi2, zp, zg, zspz
+    print "Ground-based spectroscopic redshift:", current_specz
+    print "Photometric redshift from min chi2:", zp_minchi2
+    print "Weighted photometric redshift:", zp
+    print "SPZ from min chi2:", zg
+    print "Weighted SPZ:", zspz
 
     return None
 

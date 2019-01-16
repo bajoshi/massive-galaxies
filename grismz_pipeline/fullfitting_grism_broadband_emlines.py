@@ -702,7 +702,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, use_broadband=True):
+    obj_id, obj_field, specz, photoz, use_broadband=True, single_galaxy=False):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,
@@ -710,6 +710,12 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     For each iteration through the redshift list it computes a chi2 for each model.
     """
+
+    # Set directory to save stuff in
+    if single_galaxy:
+        savedir = massive_figures_dir + 'single_galaxy_comparison/'
+    else:
+        savedir = massive_figures_dir + 'spz_run_jan2019/'
 
     # Set up redshift grid to check
     z_arr_to_check = np.arange(0.6, 1.24, 0.01)
@@ -848,13 +854,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Should check if the minimum is global or local
     #ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
     # Save chi2 map
-    #np.save(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
-    np.save(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
+    #np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_chi2_map.npy', chi2/dof)
+    np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy', z_arr_to_check)
 
     pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field)
 
     # Save p(z)
-    np.save(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '_pz.npy', pz)
+    np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_pz.npy', pz)
     z_wt = np.sum(z_arr_to_check * pz)
     print "Weighted z:", "{:.3}".format(z_wt)
     print "Grism redshift:", z_grism
