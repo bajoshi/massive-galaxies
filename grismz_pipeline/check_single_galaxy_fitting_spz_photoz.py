@@ -315,7 +315,7 @@ def get_photometry_best_fit_model(redshift, model_idx, phot_fin_idx, all_model_f
     all_filt_flam_model = all_filt_flam_model.reshape(len(phot_fin_idx), total_models)
 
     all_filt_flam_model_t = all_filt_flam_model.T
-    all_filt_flam_bestmodel = all_filt_flam_model_t[:, model_idx]
+    all_filt_flam_bestmodel = all_filt_flam_model_t[model_idx]
 
     return all_filt_flam_bestmodel
 
