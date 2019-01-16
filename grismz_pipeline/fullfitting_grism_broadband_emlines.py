@@ -959,14 +959,14 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # plot
     plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
         all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha, model_lam_grid, best_fit_model_fullres,
-        obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000, z_wt)
+        obj_id, obj_field, specz, photoz, z_grism, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086), netsig, d4000, z_wt, savedir)
     """
 
     return z_grism, z_wt, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
 def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,
     all_filt_flam_bestmodel, best_fit_model_in_objlamgrid, bestalpha, model_lam_grid, best_fit_model_fullres,
-    obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000, weightedz):
+    obj_id, obj_field, specz, photoz, grismz, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000, weightedz, savedir):
 
     # ---------- Create figure ---------- #
     fig = plt.figure()
@@ -1097,10 +1097,10 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     # ---------- Save figure ---------- #
     if use_broadband:
-        fig.savefig(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '.png', \
+        fig.savefig(savedir + obj_field + '_' + str(obj_id) + '.png', \
             dpi=300, bbox_inches='tight')
     else:
-        fig.savefig(massive_figures_dir + 'spz_run_jan2019/' + obj_field + '_' + str(obj_id) + '_NoPhotometry.png', \
+        fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_NoPhotometry.png', \
             dpi=300, bbox_inches='tight')
     
     plt.clf()
@@ -1153,7 +1153,7 @@ def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, 
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=10)
 
-    fig.savefig(savedir +  obj_field + '_' + str(obj_id) + '_pz.png', dpi=300, bbox_inches='tight')
+    fig.savefig(savedir +  obj_field + '_' + str(obj_id) + '_spz_pz.png', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()

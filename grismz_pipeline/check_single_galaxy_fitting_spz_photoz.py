@@ -20,7 +20,7 @@ lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 threedhst_datadir = home + "/Desktop/3dhst_data/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
-savedir_photoz = massive_figures_dir + 'single_galaxy_comparison/'  # Required to save p(z) curve
+savedir = massive_figures_dir + 'single_galaxy_comparison/'  # Required to save p(z) curve
 
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
@@ -47,13 +47,108 @@ def makefig():
 
     return fig, ax1, ax2
 
-def plot_photoz_fit():
+def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, \
+    best_fit_model_fullres, all_filt_flam_bestmodel, bestalpha, \
+    obj_id, obj_field, specz, zp, zp_minchi2, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000, savedir):
+
+    # Make figure and place on grid
+    fig, ax1, ax2 = makefig()
+
+    # ---------- plot data, model, and residual ---------- #
+    # plot full res model but you'll have to redshift it
+    ax1.plot(model_lam_grid * (1+zp), bestalpha*best_fit_model_fullres / (1+zp), color='mediumblue', alpha=0.3)
+    # plot model photometry
+    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=20)
+
+    # ----- plot data
+    ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, fmt='.', color='midnightblue', markeredgecolor='midnightblue', \
+        capsize=2, markersize=10.0, elinewidth=2.0)
+
+    # ----- Residuals
+    # For the photometry
+    resid_fit_phot = (phot_flam_obs - bestalpha*all_filt_flam_bestmodel) / phot_ferr_obs
+    ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
+
+    # ---------- limits ---------- #
+    max_y_obs = np.max(phot_flam_obs)
+    min_y_obs = np.min(phot_flam_obs)
+
+    max_ylim = 1.25 * max_y_obs
+    min_ylim = 0.75 * min_y_obs
+
+    max_ylim = 1.25 * max_y_obs
+    min_ylim = 0.75 * min_y_obs
+
+    ax1.set_ylim(min_ylim, max_ylim)
+
+    ax1.set_xlim(3000, 80000)
+    ax2.set_xlim(3000, 80000)
+
+    ax1.set_xscale('log')
+    ax2.set_xscale('log')
+
+    # ---------- minor ticks ---------- #
+    ax1.minorticks_on()
+    ax2.minorticks_on()
+
+    # ---------- text for info ---------- #
+    ax1.text(0.75, 0.45, obj_field + ' ' + str(obj_id), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    low_zerr = zp_minchi2 - low_z_lim
+    high_zerr = upper_z_lim - zp_minchi2
+
+    ax1.text(0.75, 0.35, \
+    r'$\mathrm{z_{p;min\,\chi^2}\, =\, }$' + "{:.4}".format(zp_minchi2) + \
+    r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.22, r'$\mathrm{z_{p;wt}\, =\, }$' + "{:.4}".format(zp), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spz})\, =\, }$' + "{:.3}".format(d4000), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+
+
+    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    if av < 0:
+        av = -99.0
+
+    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    # ---------- Save figure ---------- #
+    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_spz_fit.png', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
 
     return None
 
 def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, phot_flam_obs, phot_ferr_obs, \
     model_lam_grid, best_fit_model_fullres, best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, bestalpha, \
-    spz, ):
+    obj_id, obj_field, specz, zp, zg_minchi2, low_z_lim, upper_z_lim, zspz, chi2, age, tau, av, netsig, d4000, savedir):
 
     # Make figure and place on grid
     fig, ax1, ax2 = makefig()
@@ -106,6 +201,63 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     # ---------- minor ticks ---------- #
     ax1.minorticks_on()
     ax2.minorticks_on()
+
+    # ---------- text for info ---------- #
+    ax1.text(0.75, 0.45, obj_field + ' ' + str(obj_id), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.4, r'$\mathrm{z_{SPZ}\, =\, }$' + "{:.4}".format(zspz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    low_zerr = zg_minchi2 - low_z_lim
+    high_zerr = upper_z_lim - zg_minchi2
+
+    ax1.text(0.75, 0.35, \
+    r'$\mathrm{z_{g;min\,\chi^2}\, =\, }$' + "{:.4}".format(zg_minchi2) + \
+    r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.22, r'$\mathrm{z_{p;wt}\, =\, }$' + "{:.4}".format(zp), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spz})\, =\, }$' + "{:.3}".format(d4000), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+
+
+    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    if av < 0:
+        av = -99.0
+
+    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    # ---------- Save figure ---------- #
+    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_spz_fit.png', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
 
     return None
 
@@ -423,15 +575,15 @@ def main():
     # ------------- Call actual fitting function ------------- #
     print "\n", "Computing photo-z now."
 
-    zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
+    zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av = \
     photoz.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz)
+        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir)
 
     # ------------- Call actual fitting function for SPZ ------------- #
     print "\n", "Moving on to SPZ computation now."
 
-    zg, zspz, zerr_low, zerr_up, min_chi2, age, tau, av = \
+    zg_minchi2, zspz, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_age, zg_tau, zg_av = \
     ff.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
@@ -444,9 +596,17 @@ def main():
     print "SPZ from min chi2:", "{:.3f}".format(zg)
     print "Weighted SPZ:", "{:.3f}".format(zspz)
 
+    # ------------------------------- Get best fit model for plotting ------------------------------- #
+    
+
     # ------------------------------- Plotting based on results from the above two codes ------------------------------- #
-    plot_photoz_fit()
-    plot_spz_fit()
+    plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines, \
+    best_fit_model_fullres, all_filt_flam_bestmodel, bestalpha, \
+    current_id, current_field, current_specz, zp, zp_minchi2, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av, netsig, d4000, savedir)
+
+    plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
+    model_lam_grid_withlines, best_fit_model_fullres, best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, bestalpha, \
+    current_id, current_field, current_specz, zp, zg_minchi2, zg_zerr_low, zg_zerr_up, zspz, zg_min_chi2, zg_age, zg_tau, zg_av, netsig, d4000, savedir)
 
     # Total time taken
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."

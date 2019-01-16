@@ -257,9 +257,9 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     # Save chi2 map
     #np.save(savedir + obj_field + '_' + str(obj_id) + '_chi2_map.npy', chi2/dof)
-    #np.save(savedir + obj_field + '_' + str(obj_id) + '_z_arr.npy', z_arr_to_check)
+    np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_z_arr.npy', z_arr_to_check)
 
-    pz = get_pz_and_plot_photoz(chi2/dof, z_arr_to_check, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field)
+    pz = get_pz_and_plot_photoz(chi2/dof, z_arr_to_check, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field, savedir)
 
     # Save p(z)
     np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_pz.npy', pz)
@@ -288,7 +288,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
 
-def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, grismz, low_z_lim, upper_z_lim, obj_id, obj_field):
+def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field, savedir):
 
     # Convert chi2 to likelihood
     likelihood = np.exp(-1 * chi2_map / 2)
@@ -301,6 +301,37 @@ def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, grismz, low_z_lim, upper_z_
 
     for i in range(len(z_arr_to_check)):
         pz[i] = np.sum(norm_likelihood[i])
+
+    # PLot and save plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(z_arr_to_check, pz)
+
+    ax.minorticks_on()
+
+    # ---------- text for info ---------- #
+    ax.text(0.65, 0.4, obj_field + ' ' + str(obj_id), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+
+    low_zerr = zp_minchi2 - low_z_lim
+    high_zerr = upper_z_lim - zp_minchi2
+
+    ax.text(0.65, 0.35, \
+    r'$\mathrm{z_{phot\ minchi2}\, [from\ min\ \chi^2]\, =\, }$' + "{:.4}".format(zp_minchi2) + \
+    r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+    ax.text(0.65, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=10)
+
+    fig.savefig(savedir +  obj_field + '_' + str(obj_id) + '_photoz_pz.png', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
 
     return pz
 
