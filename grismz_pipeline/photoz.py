@@ -266,8 +266,8 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     zp = np.sum(z_arr_to_check * pz)
     print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
     #print "Previous photometric redshift from 3DHST:", photoz
-    print "Photometric redshift from min chi2 from this code:", "{:.2}".format(zp_minchi2)
-    print "Photometric redshift (weighted) from this code:", "{:.3}".format(zp)
+    print "Photometric redshift from min chi2 from this code:", "{:.3f}".format(zp_minchi2)
+    print "Photometric redshift (weighted) from this code:", "{:.3f}".format(zp)
 
     # Stellar mass
     bestalpha = alpha[min_idx_2d]
