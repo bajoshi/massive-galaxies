@@ -480,7 +480,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     return model_comp_spec_modified
 
 def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-    all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models):
+    all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models, use_broadband=True):
 
     # chop the model to be consistent with the objects lam grid
     model_lam_grid_indx_low = np.argmin(abs(model_resampling_lam_grid - grism_lam_obs[0]))
@@ -702,7 +702,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz):
+    obj_id, obj_field, specz, photoz, use_broadband=True):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,

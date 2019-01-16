@@ -342,12 +342,16 @@ def main():
     phot_lam = phot_lam[phot_fin_idx]
 
     # ------------- Call actual fitting function ------------- #
+    print "\n", "Computing photo-z now."
+
     zp_minchi2, zp, zerr_low, zerr_up, min_chi2, age, tau, av = \
     photoz.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz)
 
     # ------------- Call actual fitting function for SPZ ------------- #
+    print "\n", "Moving on to SPZ computation now."
+
     zg, zspz, zerr_low, zerr_up, min_chi2, age, tau, av = \
     ff.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
