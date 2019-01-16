@@ -286,7 +286,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     print "Rest-frame U-V color:", ub_col - bv_col
     print "Rest-frame V-J color:", vj_col
 
-    return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, age, tau, (tauv/1.086)
+    return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, model_idx, age, tau, (tauv/1.086)
 
 def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, zp_minchi2, low_z_lim, upper_z_lim, obj_id, obj_field, savedir):
 

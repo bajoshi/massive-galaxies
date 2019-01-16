@@ -24,12 +24,14 @@ savedir = massive_figures_dir + 'single_galaxy_comparison/'  # Required to save 
 
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
+sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import refine_redshifts_dn4000 as old_ref
 import fullfitting_grism_broadband_emlines as ff
 import photoz
 import new_refine_grismz_gridsearch_parallel as ngp
+import model_mods as mm
 
-speed_of_light = 299792458e10  # angsroms per second
+speed_of_light = 299792458e10  # angstroms per second
 
 def makefig():
     # ---------- Create figure ---------- #
@@ -260,6 +262,62 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     plt.close()
 
     return None
+
+def get_best_fit_model_spz(resampling_lam_grid, resampling_lam_grid_length, model_lam_grid, model_comp_spec, \
+    grism_lam_obs, redshift, model_idx, phot_fin_idx, all_model_flam, lsf, total_models):
+
+    # ------------ Get best fit model at grism resolution ------------ #
+    # First do the convolution with the LSF
+    model_comp_spec_lsfconv = ff.lsf_convolve(model_comp_spec, lsf, total_models)
+
+    # chop model to get the part within objects lam obs grid
+    model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - grism_lam_obs[0]))
+    model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - grism_lam_obs[-1]))
+
+    # force types before passing to cython code
+    #lam_obs = lam_obs.astype(np.float64)
+    #model_lam_grid = model_lam_grid.astype(np.float64)
+    #model_comp_spec = model_comp_spec.astype(np.float64)
+    #resampling_lam_grid = resampling_lam_grid.astype(np.float64)
+    #total_models = int(total_models)
+    #lsf = lsf.astype(np.float64)
+
+    # Will have to redo the model modifications at the new found redshift
+    model_comp_spec_modified = mm.redshift_and_resample(model_comp_spec_lsfconv, redshift, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
+    print "Model mods done (only for plotting purposes) at the new SPZ:", redshift
+
+    best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+
+    # ------------ Get photomtery for model ------------- #
+    all_filt_flam_bestmodel = get_photometry_best_fit_model(redshift, model_idx, phot_fin_idx, all_model_flam, total_models)
+
+    # ------------ Get best fit model at full resolution ------------ #
+    best_fit_model_fullres = model_comp_spec[model_idx]
+
+    return best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, best_fit_model_fullres
+
+def get_photometry_best_fit_model(redshift, model_idx, phot_fin_idx, all_model_flam, total_models):
+    # All you need from here is the photometry for the best fit model
+    # ------------ Get photomtery for model ------------- #
+    # The model mags were computed on a finer redshift grid
+    # So make sure to get the z_idx correct
+    z_model_arr = np.arange(0.0, 6.0, 0.005)
+
+    z_idx = np.where(z_model_arr == redshift)[0]
+
+    # and because for some reason it does not find matches 
+    # in the model redshift array (sometimes), I need this check here.
+    if not z_idx.size:
+        z_idx = np.argmin(abs(z_model_arr - redshift))
+
+    all_filt_flam_model = all_model_flam[:, z_idx, :]
+    all_filt_flam_model = all_filt_flam_model[phot_fin_idx, :]
+    all_filt_flam_model = all_filt_flam_model.reshape(len(phot_fin_idx), total_models)
+
+    all_filt_flam_model_t = all_filt_flam_model.T
+    all_filt_flam_bestmodel = all_filt_flam_model_t[:, model_idx]
+
+    return all_filt_flam_bestmodel
 
 def main():
     # Start time
@@ -572,18 +630,18 @@ def main():
     phot_errors_arr = phot_errors_arr[phot_fin_idx]
     phot_lam = phot_lam[phot_fin_idx]
 
-    # ------------- Call actual fitting function ------------- #
+    # ------------- Call fitting function for photo-z ------------- #
     print "\n", "Computing photo-z now."
 
-    zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av = \
+    zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
     photoz.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir)
 
-    # ------------- Call actual fitting function for SPZ ------------- #
+    # ------------- Call fitting function for SPZ ------------- #
     print "\n", "Moving on to SPZ computation now."
 
-    zg_minchi2, zspz, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_age, zg_tau, zg_av = \
+    zg_minchi2, zspz, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
     ff.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
@@ -596,20 +654,31 @@ def main():
     print "SPZ from min chi2:", "{:.3f}".format(zg)
     print "Weighted SPZ:", "{:.3f}".format(zspz)
 
+    print "\n", "Moving on to plotting fitting results now."
+
     # ------------------------------- Get best fit model for plotting ------------------------------- #
-    
+    # Will have to do this at the photo-z and SPZ separtely otherwise the plots will not look right
+    # ------------ Get best fit model for photo-z ------------ #
+    zp_best_fit_model_fullres = model_comp_spec_withlines[zp_model_idx]
+    zp_all_filt_flam_bestmodel = get_photometry_best_fit_model(zp, zp_model_idx, phot_fin_idx, all_model_flam, total_models)
+
+    # ------------ Get best fit model for SPZ ------------ #
+    zg_best_fit_model_in_objlamgrid, zg_all_filt_flam_bestmodel, zg_best_fit_model_fullres = \
+    get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid_length), model_lam_grid_withlines, model_comp_spec_withlines, \
+        grism_lam_obs, zspz, zg_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
 
     # ------------------------------- Plotting based on results from the above two codes ------------------------------- #
     plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines, \
-    best_fit_model_fullres, all_filt_flam_bestmodel, bestalpha, \
+    zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
     current_id, current_field, current_specz, zp, zp_minchi2, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av, netsig, d4000, savedir)
 
     plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
-    model_lam_grid_withlines, best_fit_model_fullres, best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, bestalpha, \
+    model_lam_grid_withlines, zg_best_fit_model_fullres, zg_best_fit_model_in_objlamgrid, zg_all_filt_flam_bestmodel, zg_bestalpha, \
     current_id, current_field, current_specz, zp, zg_minchi2, zg_zerr_low, zg_zerr_up, zspz, zg_min_chi2, zg_age, zg_tau, zg_av, netsig, d4000, savedir)
 
     # Total time taken
-    print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
+    print "\n", "All done."
+    print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds.", "\n"
 
     return None
 
