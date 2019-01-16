@@ -857,7 +857,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     #np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_chi2_map.npy', chi2/dof)
     np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy', z_arr_to_check)
 
-    pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field)
+    pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field, savedir)
 
     # Save p(z)
     np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_pz.npy', pz)
@@ -1109,7 +1109,7 @@ def plot_fit(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     return None
 
-def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, upper_z_lim, obj_id, obj_field):
+def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, upper_z_lim, obj_id, obj_field, savedir):
 
     # Convert chi2 to likelihood
     likelihood = np.exp(-1 * chi2_map / 2)
@@ -1153,7 +1153,7 @@ def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, 
     verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=10)
 
-    fig.savefig(massive_figures_dir + 'spz_run_jan2019/' +  obj_field + '_' + str(obj_id) + '_pz.png', dpi=300, bbox_inches='tight')
+    fig.savefig(savedir +  obj_field + '_' + str(obj_id) + '_pz.png', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()

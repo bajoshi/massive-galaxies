@@ -31,13 +31,98 @@ import new_refine_grismz_gridsearch_parallel as ngp
 
 speed_of_light = 299792458e10  # angsroms per second
 
+def makefig():
+    # ---------- Create figure ---------- #
+    fig = plt.figure()
+    gs = gridspec.GridSpec(10,10)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
+
+    ax1 = fig.add_subplot(gs[:8,:])
+    ax2 = fig.add_subplot(gs[8:,:])
+
+    # ---------- labels ---------- #
+    ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA^{-1}]}$')
+    ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
+    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{mod}_\lambda}{f^{obs;err}_\lambda}}$')
+
+    return fig, ax1, ax2
+
+def plot_photoz_fit():
+
+    return None
+
+def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, phot_flam_obs, phot_ferr_obs, \
+    model_lam_grid, best_fit_model_fullres, best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, bestalpha, \
+    spz, ):
+
+    # Make figure and place on grid
+    fig, ax1, ax2 = makefig()
+
+    # ---------- plot data, model, and residual ---------- #
+    # plot full res model but you'll have to redshift it
+    ax1.plot(model_lam_grid * (1+spz), bestalpha*best_fit_model_fullres / (1+spz), color='mediumblue', alpha=0.3)
+
+    # ----- plot data
+    ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2, zorder=10)
+    ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray', zorder=10)
+
+    ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, fmt='.', color='midnightblue', markeredgecolor='midnightblue', \
+        capsize=2, markersize=10.0, elinewidth=2.0)
+
+    # ----- plot best fit model
+    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='indianred', zorder=20)
+    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=20)
+
+    # ----- Residuals
+    # For the grism points
+    resid_fit_grism = (grism_flam_obs - bestalpha*best_fit_model_in_objlamgrid) / grism_ferr_obs
+
+    # Now plot
+    ax2.scatter(grism_lam_obs, resid_fit_grism, s=4, color='k')
+    ax2.axhline(y=0, ls='--', color='k')
+
+    # For the photometry
+    resid_fit_phot = (phot_flam_obs - bestalpha*all_filt_flam_bestmodel) / phot_ferr_obs
+    ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
+
+    # ---------- limits ---------- #
+    max_y_obs = np.max(np.concatenate((grism_flam_obs, phot_flam_obs)))
+    min_y_obs = np.min(np.concatenate((grism_flam_obs, phot_flam_obs)))
+
+    max_ylim = 1.25 * max_y_obs
+    min_ylim = 0.75 * min_y_obs
+
+    max_ylim = 1.25 * max_y_obs
+    min_ylim = 0.75 * min_y_obs
+
+    ax1.set_ylim(min_ylim, max_ylim)
+
+    ax1.set_xlim(3000, 80000)
+    ax2.set_xlim(3000, 80000)
+
+    ax1.set_xscale('log')
+    ax2.set_xscale('log')
+
+    # ---------- minor ticks ---------- #
+    ax1.minorticks_on()
+    ax2.minorticks_on()
+
+    return None
+
 def main():
     # Start time
     start = time.time()
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
-    # Get correct directories 
+    # ------------------------------- Give galaxy data here ------------------------------- #
+    # Only needs the ID and the field
+    # And flag to modify LSF
+    current_id = 51522
+    current_field = 'GOODS-S'
+    modify_lsf = True
+
+    # ------------------------------- Get correct directories ------------------------------- #
     figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
     threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
     cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
@@ -127,13 +212,7 @@ def main():
     vega_nu = speed_of_light / vega_lam
     vega_spec_fnu = vega_lam**2 * vega_spec_flam / speed_of_light
 
-    # ------------------------------- Give galaxy data here ------------------------------- #
-    # Only needs the ID and the field
-    # And flag to modify LSF
-    current_id = 51522
-    current_field = 'GOODS-S'
-    modify_lsf = True
-
+    # ------------------------------- Prep for getting photometry ------------------------------- #
     # Assign catalogs 
     if current_field == 'GOODS-N':
         cat = matched_cat_n
@@ -356,13 +435,21 @@ def main():
     ff.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, zp)
+        current_id, current_field, current_specz, zp, use_broadband=True, single_galaxy=True)
 
+    print "\n", "Results from both codes:"
     print "Ground-based spectroscopic redshift:", current_specz
-    print "Photometric redshift from min chi2:", zp_minchi2
-    print "Weighted photometric redshift:", zp
-    print "SPZ from min chi2:", zg
-    print "Weighted SPZ:", zspz
+    print "Photometric redshift from min chi2:", "{:.3f}".format(zp_minchi2)
+    print "Weighted photometric redshift:", "{:.3f}".format(zp)
+    print "SPZ from min chi2:", "{:.3f}".format(zg)
+    print "Weighted SPZ:", "{:.3f}".format(zspz)
+
+    # ------------------------------- Plotting based on results from the above two codes ------------------------------- #
+    plot_photoz_fit()
+    plot_spz_fit()
+
+    # Total time taken
+    print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
 
     return None
 
