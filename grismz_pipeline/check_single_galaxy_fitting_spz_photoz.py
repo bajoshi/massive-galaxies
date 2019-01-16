@@ -296,6 +296,10 @@ def main():
     elif current_field == 'GOODS-S':
         lsf_filename = lsfdir + "south_lsfs/" + "s" + str(current_id) + "_" + pa_chosen.replace('PA', 'pa') + "_lsf.txt"
 
+    # read in LSF file
+    lsf = np.genfromtxt(lsf_filename)
+    lsf = lsf.astype(np.float64)  # Force dtype for cython code
+
     # -------- Stetch the LSF ------- #
     if modify_lsf:
         # Stretch LSF instead of broadening
