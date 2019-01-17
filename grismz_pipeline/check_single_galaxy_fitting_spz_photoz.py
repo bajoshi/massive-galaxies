@@ -45,9 +45,9 @@ def makefig():
     ax2 = fig.add_subplot(gs[8:,:])
 
     # ---------- labels ---------- #
-    ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA^{-1}]}$')
-    ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$')
-    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{mod}_\lambda}{f^{obs;err}_\lambda}}$')
+    ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA^{-1}]}$', fontsize=14)
+    ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$', fontsize=15)
+    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{mod}_\lambda}{f^{obs;err}_\lambda}}$', fontsize=14)
 
     return fig, ax1, ax2
 
@@ -97,7 +97,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     ax2.minorticks_on()
 
     # ---------- text for info ---------- #
-    ax1.text(0.75, 0.45, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
@@ -146,7 +146,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     # Solution for inset came from SO:
     # https://stackoverflow.com/questions/21001088/how-to-add-different-graphs-as-an-inset-in-another-python-graph
     # These are in unitless percentages of the figure size. (0,0 is bottom left)
-    left, bottom, width, height = [0.1, 0.6, 0.3, 0.2]
+    left, bottom, width, height = [0.65, 0.75, 0.3, 0.2]
     ax3 = fig.add_axes([left, bottom, width, height])
 
     # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
@@ -178,14 +178,14 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     ax1.plot(model_lam_grid * (1+zspz), bestalpha*best_fit_model_fullres / (1+zspz), color='mediumblue', alpha=0.3)
 
     # ----- plot data
-    ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2, zorder=10)
+    ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2, lw=2, zorder=10)
     ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray', zorder=10)
 
     ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, fmt='.', color='midnightblue', markeredgecolor='midnightblue', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
     # ----- plot best fit model
-    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', color='indianred', zorder=20)
+    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', lw=1.2, color='indianred', zorder=20)
     ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=20)
 
     # ----- Residuals
@@ -276,7 +276,7 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     # Solution for inset came from SO:
     # https://stackoverflow.com/questions/21001088/how-to-add-different-graphs-as-an-inset-in-another-python-graph
     # These are in unitless percentages of the figure size. (0,0 is bottom left)
-    left, bottom, width, height = [0.1, 0.6, 0.3, 0.2]
+    left, bottom, width, height = [0.65, 0.75, 0.3, 0.2]
     ax3 = fig.add_axes([left, bottom, width, height])
 
     # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
@@ -361,8 +361,8 @@ def main():
     # ------------------------------- Give galaxy data here ------------------------------- #
     # Only needs the ID and the field
     # And flag to modify LSF
-    current_id = 51522
-    current_field = 'GOODS-S'
+    current_id = 87000
+    current_field = 'GOODS-N'
     modify_lsf = True
 
     # ------------------------------- Get correct directories ------------------------------- #
