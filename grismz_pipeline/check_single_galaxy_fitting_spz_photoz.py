@@ -30,6 +30,8 @@ import fullfitting_grism_broadband_emlines as ff
 import photoz
 import new_refine_grismz_gridsearch_parallel as ngp
 import model_mods as mm
+import dn4000_catalog as dc
+import mocksim_results as mr
 
 speed_of_light = 299792458e10  # angstroms per second
 
@@ -70,6 +72,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     # For the photometry
     resid_fit_phot = (phot_flam_obs - bestalpha*all_filt_flam_bestmodel) / phot_ferr_obs
     ax2.scatter(phot_lam_obs, resid_fit_phot, s=4, color='k')
+    ax2.axhline(y=0, ls='--', color='k')
 
     # ---------- limits ---------- #
     max_y_obs = np.max(phot_flam_obs)
@@ -157,7 +160,7 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
 
     # ---------- plot data, model, and residual ---------- #
     # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+spz), bestalpha*best_fit_model_fullres / (1+spz), color='mediumblue', alpha=0.3)
+    ax1.plot(model_lam_grid * (1+zspz), bestalpha*best_fit_model_fullres / (1+zspz), color='mediumblue', alpha=0.3)
 
     # ----- plot data
     ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2, zorder=10)
@@ -657,6 +660,14 @@ def main():
     print "\n", "Time taken up to now--", str("{:.2f}".format(time.time() - start)), "seconds."
     print "Moving on to plotting fitting results."
 
+    # ------------------------------- First get D4000. Only need to put D4000 info on plot. ------------------------------- # 
+    # Get d4000 at SPZ
+    lam_em = grism_lam_obs / (1 + zspz)
+    flam_em = grism_flam_obs * (1 + zspz)
+    ferr_em = grism_ferr_obs * (1 + zspz)
+
+    d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+
     # ------------------------------- Get best fit model for plotting ------------------------------- #
     # Will have to do this at the photo-z and SPZ separtely otherwise the plots will not look right
     # ------------ Get best fit model for photo-z ------------ #
@@ -665,17 +676,17 @@ def main():
 
     # ------------ Get best fit model for SPZ ------------ #
     zg_best_fit_model_in_objlamgrid, zg_all_filt_flam_bestmodel, zg_best_fit_model_fullres = \
-    get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid_length), model_lam_grid_withlines, model_comp_spec_withlines, \
+    get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
         grism_lam_obs, zspz, zg_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
 
     # ------------------------------- Plotting based on results from the above two codes ------------------------------- #
     plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines, \
     zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
-    current_id, current_field, current_specz, zp, zp_minchi2, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av, netsig, d4000, savedir)
+    current_id, current_field, current_specz, zp, zp_minchi2, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av, netsig_chosen, d4000, savedir)
 
     plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
     model_lam_grid_withlines, zg_best_fit_model_fullres, zg_best_fit_model_in_objlamgrid, zg_all_filt_flam_bestmodel, zg_bestalpha, \
-    current_id, current_field, current_specz, zp, zg_minchi2, zg_zerr_low, zg_zerr_up, zspz, zg_min_chi2, zg_age, zg_tau, zg_av, netsig, d4000, savedir)
+    current_id, current_field, current_specz, zp, zg_minchi2, zg_zerr_low, zg_zerr_up, zspz, zg_min_chi2, zg_age, zg_tau, zg_av, netsig_chosen, d4000, savedir)
 
     # Total time taken
     print "\n", "All done."
