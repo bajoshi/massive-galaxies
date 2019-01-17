@@ -142,6 +142,21 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
+    # ---------- Plot p(z) curve in an inset figure ---------- #
+    # Solution for inset came from SO:
+    # https://stackoverflow.com/questions/21001088/how-to-add-different-graphs-as-an-inset-in-another-python-graph
+    # These are in unitless percentages of the figure size. (0,0 is bottom left)
+    left, bottom, width, height = [0.1, 0.6, 0.3, 0.2]
+    ax3 = fig.add_axes([left, bottom, width, height])
+
+    # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
+    pz = np.load(savedir + obj_field + '_' + str(obj_id) + '_photoz_pz.npy')
+    zarr = np.load(savedir + obj_field + '_' + str(obj_id) + '_photoz_z_arr.npy')
+
+    ax3.plot(zarr, pz)
+    ax3.axvline(x=specz, ls='--', color='darkred')
+    ax3.minorticks_on()
+
     # ---------- Save figure ---------- #
     fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_photoz_fit.png', dpi=300, bbox_inches='tight')
 
@@ -256,6 +271,21 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
+
+    # ---------- Plot p(z) curve in an inset figure ---------- #
+    # Solution for inset came from SO:
+    # https://stackoverflow.com/questions/21001088/how-to-add-different-graphs-as-an-inset-in-another-python-graph
+    # These are in unitless percentages of the figure size. (0,0 is bottom left)
+    left, bottom, width, height = [0.1, 0.6, 0.3, 0.2]
+    ax3 = fig.add_axes([left, bottom, width, height])
+
+    # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
+    pz = np.load(savedir + obj_field + '_' + str(obj_id) + '_spz_pz.npy')
+    zarr = np.load(savedir + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy')
+
+    ax3.plot(zarr, pz)
+    ax3.axvline(x=specz, ls='--', color='darkred')
+    ax3.minorticks_on()
 
     # ---------- Save figure ---------- #
     fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_spz_fit.png', dpi=300, bbox_inches='tight')
