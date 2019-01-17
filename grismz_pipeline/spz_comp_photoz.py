@@ -201,6 +201,7 @@ def main():
 
     valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, catas_fail1, catas_fail2, valid_idx3))
 
+    # apply valid indices
     ids = ids[valid_idx]
     fields = fields[valid_idx]
     resid_zphot = resid_zphot[valid_idx]
@@ -208,6 +209,9 @@ def main():
     zspec = zspec[valid_idx]
     zphot = zphot[valid_idx]
     zspz = zspz[valid_idx]
+    # and these two are only for checks later
+    netsig = netsig[valid_idx]
+    d4000 = d4000[valid_idx]
 
     print "Number of galaxies in plot:", len(valid_idx)
 
@@ -229,31 +233,51 @@ def main():
 
     # ---------------------------------------------------------------------------------- # 
     # Now look for the failures which you want to check individually
-    resid_lim = 0.05
-    zphot_large_resid_idx = np.where(resid_zphot > resid_lim)
-    zspz_large_resid_idx = np.where(resid_zspz > resid_lim)
+    check_common_failures = False  # this is the check for when both SPZ and photo-z are far away from the ground-based specz
+    check_worse_spz = True  # this is the check for when the SPZ is worse than the photo-z
+    ### I only wrote the next for loop to be able to handle one of these checks at a time. ### 
+    if check_common_failures:
+        resid_lim = 0.05
+        zphot_large_resid_idx = np.where(resid_zphot > resid_lim)
+        zspz_large_resid_idx = np.where(resid_zspz > resid_lim)
 
-    common_large_failures = reduce(np.intersect1d, (zphot_large_resid_idx, zspz_large_resid_idx))
+        common_large_failures = reduce(np.intersect1d, (zphot_large_resid_idx, zspz_large_resid_idx))
+        current_indices = common_large_failures
 
-    print "\n", "Info for galaxies that have residuals larger than", resid_lim, "---"
-    print "ID        Field      zspec    zphot    zspz   NetSig"
+        print "\n", "Info for galaxies that have residuals larger than", resid_lim, "---"
 
-    for j in range(len(common_large_failures)):
+    if check_worse_spz:
+        resid_lim = 0.01
+        spz_worse_idx = np.where((abs(resid_zspz) - abs(resid_zphot)) > resid_lim)[0]
+        current_indices = spz_worse_idx
+
+        print "\n", "Info for galaxies that have SPZ residuals larger than photo-z residuals by", resid_lim, "---"
+
+    print "Total galaxies:", len(current_indices)
+    print "ID        Field      zspec    zphot    zspz     NetSig    D4000   res_zphot    res_zspz"
+
+    for j in range(len(current_indices)):
 
         # Some formatting stuff just to make it easier to read on the screen
-        current_id_to_print = str(ids[common_large_failures][j])
+        current_id_to_print = str(ids[current_indices][j])
         if len(current_id_to_print) == 5:
             current_id_to_print += ' '
-        current_specz_to_print = str(zspec[common_large_failures][j])
+        current_specz_to_print = str(zspec[current_indices][j])
         if len(current_specz_to_print) == 4:
             current_specz_to_print += ' '
+        current_netsig_to_print = str("{:.2f}".format(netsig[current_indices][j]))
+        if len(current_netsig_to_print) == 5:
+            current_netsig_to_print += ' '
 
         print current_id_to_print, "  ",
-        print fields[common_large_failures][j], "  ",
+        print fields[current_indices][j], "  ",
         print current_specz_to_print, "  ",
-        print "{:.3f}".format(zphot[common_large_failures][j]), "  ",
-        print "{:.3f}".format(zspz[common_large_failures][j]), "  ",
-        print 
+        print "{:.3f}".format(zphot[current_indices][j]), "  ",
+        print "{:.3f}".format(zspz[current_indices][j]), "  ",
+        print current_netsig_to_print, "  ",
+        print "{:.2f}".format(d4000[current_indices][j]), "  ",
+        print "{:.3f}".format(resid_zphot[current_indices][j]), "      ",
+        print "{:.3f}".format(resid_zspz[current_indices][j])
 
     sys.exit(0)
 
