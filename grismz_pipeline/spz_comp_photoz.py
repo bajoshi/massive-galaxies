@@ -165,8 +165,8 @@ def main():
     ids, fields, zspec, zphot, zspz, d4000, netsig, specz_qual = get_plotting_arrays()
 
     # Apply D4000 cut
-    d4000_low = 1.4
-    d4000_high = 1.6
+    d4000_low = 1.1
+    d4000_high = 2.5
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     ids = ids[d4000_idx]
@@ -247,7 +247,7 @@ def main():
         print "\n", "Info for galaxies that have residuals larger than", resid_lim, "---"
 
     if check_worse_spz:
-        resid_lim = 0.01
+        resid_lim = 0.005
         spz_worse_idx = np.where((abs(resid_zspz) - abs(resid_zphot)) > resid_lim)[0]
         current_indices = spz_worse_idx
 
@@ -269,6 +269,13 @@ def main():
         if len(current_netsig_to_print) == 5:
             current_netsig_to_print += ' '
 
+        current_res_zphot_to_print = str("{:.3f}".format(resid_zphot[current_indices][j]))
+        if current_res_zphot_to_print[0] != '-':
+            current_res_zphot_to_print = '+' + current_res_zphot_to_print
+        current_res_zspz_to_print = str("{:.3f}".format(resid_zspz[current_indices][j]))
+        if current_res_zspz_to_print[0] != '-':
+            current_res_zspz_to_print = '+' + current_res_zspz_to_print
+
         print current_id_to_print, "  ",
         print fields[current_indices][j], "  ",
         print current_specz_to_print, "  ",
@@ -276,8 +283,8 @@ def main():
         print "{:.3f}".format(zspz[current_indices][j]), "  ",
         print current_netsig_to_print, "  ",
         print "{:.2f}".format(d4000[current_indices][j]), "  ",
-        print "{:.3f}".format(resid_zphot[current_indices][j]), "      ",
-        print "{:.3f}".format(resid_zspz[current_indices][j])
+        print current_res_zphot_to_print, "     ",
+        print current_res_zspz_to_print
 
     sys.exit(0)
 
