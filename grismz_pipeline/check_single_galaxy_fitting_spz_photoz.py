@@ -146,7 +146,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     # Solution for inset came from SO:
     # https://stackoverflow.com/questions/21001088/how-to-add-different-graphs-as-an-inset-in-another-python-graph
     # These are in unitless percentages of the figure size. (0,0 is bottom left)
-    left, bottom, width, height = [0.65, 0.75, 0.3, 0.2]
+    left, bottom, width, height = [0.62, 0.72, 0.3, 0.2]
     ax3 = fig.add_axes([left, bottom, width, height])
 
     # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
@@ -276,7 +276,7 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     # Solution for inset came from SO:
     # https://stackoverflow.com/questions/21001088/how-to-add-different-graphs-as-an-inset-in-another-python-graph
     # These are in unitless percentages of the figure size. (0,0 is bottom left)
-    left, bottom, width, height = [0.65, 0.75, 0.3, 0.2]
+    left, bottom, width, height = [0.62, 0.72, 0.3, 0.2]
     ax3 = fig.add_axes([left, bottom, width, height])
 
     # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
@@ -361,8 +361,8 @@ def main():
     # ------------------------------- Give galaxy data here ------------------------------- #
     # Only needs the ID and the field
     # And flag to modify LSF
-    current_id = 87000
-    current_field = 'GOODS-N'
+    current_id = 134044
+    current_field = 'GOODS-S'
     modify_lsf = True
 
     # ------------------------------- Get correct directories ------------------------------- #
