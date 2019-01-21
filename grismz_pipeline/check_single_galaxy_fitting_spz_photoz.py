@@ -361,7 +361,7 @@ def main():
     # ------------------------------- Give galaxy data here ------------------------------- #
     # Only needs the ID and the field
     # And flag to modify LSF
-    current_id = 134044
+    current_id = 103146
     current_field = 'GOODS-S'
     modify_lsf = True
 

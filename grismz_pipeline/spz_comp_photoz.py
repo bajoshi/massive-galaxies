@@ -132,9 +132,9 @@ def get_plotting_arrays():
 
                 # Get d4000 at SPZ
                 current_specz = zspec[idx]
-                lam_em = grism_lam_obs / (1 + zspz)
-                flam_em = grism_flam_obs * (1 + zspz)
-                ferr_em = grism_ferr_obs * (1 + zspz)
+                lam_em = grism_lam_obs / (1 + current_specz)
+                flam_em = grism_flam_obs * (1 + current_specz)
+                ferr_em = grism_ferr_obs * (1 + current_specz)
 
                 d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
@@ -165,8 +165,8 @@ def main():
     ids, fields, zspec, zphot, zspz, d4000, netsig, specz_qual = get_plotting_arrays()
 
     # Apply D4000 cut
-    d4000_low = 1.1
-    d4000_high = 2.5
+    d4000_low = 1.4
+    d4000_high = 1.6
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     ids = ids[d4000_idx]

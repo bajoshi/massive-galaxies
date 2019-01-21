@@ -1126,6 +1126,7 @@ def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, 
     # Find peak in p(z) and a measure of uncertainty in grism_z
 
     # PLot and save plot
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -1158,6 +1159,7 @@ def get_pz_and_plot(chi2_map, z_arr_to_check, specz, photoz, grismz, low_z_lim, 
     plt.clf()
     plt.cla()
     plt.close()
+    """
 
     return pz
 

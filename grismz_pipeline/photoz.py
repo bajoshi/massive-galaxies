@@ -303,6 +303,7 @@ def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, zp_minchi2, specz, low_z_li
         pz[i] = np.sum(norm_likelihood[i])
 
     # PLot and save plot
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -332,6 +333,7 @@ def get_pz_and_plot_photoz(chi2_map, z_arr_to_check, zp_minchi2, specz, low_z_li
     plt.clf()
     plt.cla()
     plt.close()
+    """
 
     return pz
 
