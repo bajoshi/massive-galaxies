@@ -231,6 +231,8 @@ def main():
 
     # Now get pears data to get NetSig and D4000
     final_sample = 0
+    netsig_list = []
+    d4000_list = []
     for j in range(len(samp_zrange)):
 
         # Get data
@@ -278,9 +280,30 @@ def main():
             print "Skipping due to low D4000:", d4000
             continue
 
+        netsig_list.append(netsig_chosen)
+        d4000_list.append(d4000)
+
         final_sample += 1
 
     print "Total galaxies in final sample:", final_sample
+
+    # Resave file with D4000 and NetSig info
+    pears_id = samp_zrange['pearsid']
+    pears_field = samp_zrange['field']
+    pears_ra = samp_zrange['ra']
+    pears_dec = samp_zrange['dec']
+    specz = samp_zrange['specz']
+    specz_qual = samp_zrange['specz_qual']
+    netsig_arr = np.asarray(netsig_list)
+    d4000_arr = np.asarray(d4000_list)
+
+    # Resave to ASCII file
+    data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, specz, specz_qual, netsig_arr, d4000_arr),\
+        dtype=[('pears_id', int), ('pears_field', '|S7'), ('pears_ra', float), ('pears_dec', float), ('specz', float), ('specz_qual', '|S1'),\
+        ('netsig_arr', float), ('d4000_arr', float)])
+    np.savetxt(massive_galaxies_dir + 'spz_paper_sample.txt', data, \
+        fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%.2f', '%.2f'],\
+        delimiter=' ', header='pearsid field ra dec specz specz_qual netsig d4000')    
 
     return None
 
