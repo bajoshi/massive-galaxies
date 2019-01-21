@@ -36,6 +36,7 @@ massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
+sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import refine_redshifts_dn4000 as old_ref
 import model_mods as mm
