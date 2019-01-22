@@ -551,10 +551,10 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     else:
         # Check and make sure that all the photometry arrays are zeros
-        assert not np.any(phot_flam_obs), "Not using broadband data in fit but photometry flux array contains non-zero elements."
-        assert not np.any(phot_ferr_obs), "Not using broadband data in fit but photometry flux error array contains non-zero elements."
-        assert not np.any(phot_lam_obs), "Not using broadband data in fit but photometry wavelength array contains non-zero elements."
-        assert not np.any(all_filt_flam_model), "Not using broadband data in fit but model photometry flux array contains non-zero elements."
+        assert not np.any(phot_flam_obs), "Not using broadband data in fit but photometry flux array contains elements."
+        assert not np.any(phot_ferr_obs), "Not using broadband data in fit but photometry flux error array contains elements."
+        assert not np.any(phot_lam_obs), "Not using broadband data in fit but photometry wavelength array contains elements."
+        assert not np.any(all_filt_flam_model), "Not using broadband data in fit but model photometry flux array contains elements."
 
         # compute alpha and chi2
         alpha_ = np.sum(grism_flam_obs * model_spec_in_objlamgrid / (grism_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / grism_ferr_obs**2, axis=1)
@@ -637,7 +637,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
 def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
-    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time):
+    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, ub):
 
     # make sure the types are correct before passing to cython code
     #lam_obs = lam_obs.astype(np.float64)
@@ -696,7 +696,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 
     # ------------- Now do the chi2 computation ------------- #
     chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-        all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models)
+        all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=ub)
 
     return chi2_temp, alpha_temp
 
@@ -719,7 +719,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         savedir = massive_figures_dir + 'spz_run_jan2019/'
 
     # Set up redshift grid to check
-    z_arr_to_check = np.arange(0.6, 1.24, 0.01)
+    z_arr_to_check = np.arange(0.3, 1.5, 0.01)
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
@@ -737,7 +737,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    """s
+    """
     num_cores = 2
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
@@ -749,8 +749,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
-
     """
+
     # regular i.e. serial for loop 
     # use this if you dont want to use the parallel for loop above
     # comment it out if you don't need it
@@ -759,7 +759,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         chi2[count], alpha[count] = get_chi2_alpha_at_z(z, \
             grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
             model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
-            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time)
+            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband)
 
         #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
@@ -854,14 +854,19 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
     #ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
-    # Save chi2 map
-    #np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_chi2_map.npy', chi2/dof)
-    np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy', z_arr_to_check)
 
     pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field, savedir)
 
-    # Save p(z)
-    np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_pz.npy', pz)
+    # Save p(z), chi2 map, and redshift grid
+    if use_broadband:
+        #np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_chi2_map.npy', chi2/dof)
+        np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy', z_arr_to_check)
+        np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_pz.npy', pz)
+    else:
+        #np.save(savedir + obj_field + '_' + str(obj_id) + '_zg_chi2_map.npy', chi2/dof)
+        np.save(savedir + obj_field + '_' + str(obj_id) + '_zg_z_arr.npy', z_arr_to_check)
+        np.save(savedir + obj_field + '_' + str(obj_id) + '_zg_pz.npy', pz)
+
     z_wt = np.sum(z_arr_to_check * pz)
     print "Weighted z:", "{:.3}".format(z_wt)
     print "Grism redshift:", z_grism

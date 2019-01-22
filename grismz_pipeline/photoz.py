@@ -124,7 +124,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.arange(0.6, 1.24, 0.01)
+    z_arr_to_check = np.arange(0.3, 1.5, 0.01)
     #print "Will check the following redshifts:", z_arr_to_check
 
     # The model mags were computed on a finer redshift grid
