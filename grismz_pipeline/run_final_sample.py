@@ -21,7 +21,7 @@ lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 threedhst_datadir = home + "/Desktop/3dhst_data/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
-savedir = massive_figures_dir + 'single_galaxy_comparison/'  # Required to save p(z) curve
+savedir_photoz = massive_figures_dir + 'photoz_run_jan2019/'  # Required to save p(z) curve
 
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
@@ -37,9 +37,16 @@ import check_single_galaxy_fitting_spz_photoz as chk
 
 speed_of_light = 299792458e10  # angstroms per second
 
-def get_all_redshifts(current_id, current_field, current_ra, current_dec, phot_cat_3dhst):
+def get_all_redshifts(current_id, current_field, current_ra, current_dec, current_specz,\
+    goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam):
 
 	print "Working on:", current_field, current_id, "at "
+
+    # Assign catalogs 
+    if current_field == 'GOODS-N':
+        phot_cat_3dhst = goodsn_phot_cat_3dhst
+    elif current_field == 'GOODS-S':
+        phot_cat_3dhst = goodss_phot_cat_3dhst
 
     # ------------------------------- Get grism data and then match with photometry ------------------------------- #
     grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
@@ -226,7 +233,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, phot_c
     zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
     photoz.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir)
+        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz)
 
     # ------------- Call fitting function for SPZ ------------- #
     print "\n", "Photo-z done. Moving on to SPZ computation now."
@@ -343,24 +350,15 @@ def main():
     total_final_sample = len(final_sample)
     for j in range(total_final_sample):
 
-        # Get data
-        current_id = final_sample['pearsid'][j]
-        current_field = final_sample['field'][j]
-        current_ra = final_sample['ra'][j]
-        current_dec = final_sample['dec'][j]
-        current_specz = final_sample['specz'][j]
-
-        # Assign catalogs 
-        if current_field == 'GOODS-N':
-            phot_cat_3dhst = goodsn_phot_cat_3dhst
-        elif current_field == 'GOODS-S':
-            phot_cat_3dhst = goodss_phot_cat_3dhst
-
         zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
 	    zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
 	    zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
-	    get_all_redshifts(current_id, current_field, current_ra, current_dec, current_specz, phot_cat_3dhst)
+	    get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], \
+            final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
 
+        sys.exit(0)
+
+    """
 	num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
@@ -372,6 +370,7 @@ def main():
     # so I have to unpack the list
     for i in range(len(z_arr_to_check)):
         chi2[i], alpha[i] = chi2_alpha_list[i]
+    """
 
 	return None
 
