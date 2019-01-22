@@ -38,9 +38,10 @@ import check_single_galaxy_fitting_spz_photoz as chk
 speed_of_light = 299792458e10  # angstroms per second
 
 def get_all_redshifts(current_id, current_field, current_ra, current_dec, current_specz,\
-    goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam):
+    goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+    bc03_all_spec_hdulist, model_comp_spec_withlines, all_model_flam, total_models, start):
 
-	print "Working on:", current_field, current_id, "at "
+    print "Working on:", current_field, current_id, "at "
 
     # Assign catalogs 
     if current_field == 'GOODS-N':
@@ -254,9 +255,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, zp, use_broadband=False, single_galaxy=False)
 
-	return zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
-	zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
-	zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av
+    return zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
+    zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
+    zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av
 
 def main():
 
@@ -351,15 +352,16 @@ def main():
     for j in range(total_final_sample):
 
         zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
-	    zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
-	    zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
-	    get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], \
-            final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
+        zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
+        zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
+        get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], \
+            final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+            bc03_all_spec_hdulist, model_comp_spec_withlines, all_model_flam, total_models, start)
 
         sys.exit(0)
 
     """
-	num_cores = 3
+    num_cores = 3
     chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
     grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
@@ -372,8 +374,8 @@ def main():
         chi2[i], alpha[i] = chi2_alpha_list[i]
     """
 
-	return None
+    return None
 
 if __name__ == '__main__':
-	main()
-	sys.exit()
+    main()
+    sys.exit()
