@@ -12,6 +12,7 @@ import sys
 
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
+figs_dir = home + "/Desktop/FIGS/"
 
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import dn4000_catalog as dc
@@ -184,7 +185,7 @@ def get_sample_in_zrange():
             current_specz_source = spec_cat['catname'][spec_idx]
             if type(current_specz_source) is np.ndarray:
                 current_specz_source = current_specz_source[0]
-            if current_specz_source == '3DHST' or current_specz_source == 'Morris_2015':
+            if current_specz_source == '3D_HST' or current_specz_source == 'Morris_2015':
                 print "Grism based redshift in specz catalog. Skipping."
                 continue
 

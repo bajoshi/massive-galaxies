@@ -550,12 +550,6 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         print "Min chi2 for redshift:", min(chi2_)
 
     else:
-        # Check and make sure that all the photometry arrays are zeros
-        assert not np.any(phot_flam_obs), "Not using broadband data in fit but photometry flux array contains elements."
-        assert not np.any(phot_ferr_obs), "Not using broadband data in fit but photometry flux error array contains elements."
-        assert not np.any(phot_lam_obs), "Not using broadband data in fit but photometry wavelength array contains elements."
-        assert not np.any(all_filt_flam_model), "Not using broadband data in fit but model photometry flux array contains elements."
-
         # compute alpha and chi2
         alpha_ = np.sum(grism_flam_obs * model_spec_in_objlamgrid / (grism_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / grism_ferr_obs**2, axis=1)
         chi2_ = np.sum(((grism_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / grism_ferr_obs)**2, axis=1)
@@ -717,6 +711,23 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         savedir = massive_figures_dir + 'single_galaxy_comparison/'
     else:
         savedir = massive_figures_dir + 'spz_run_jan2019/'
+
+    if not use_broadband:
+        # Check and make sure that all the photometry arrays are empty
+        # This check will FAIL if only the flag has been switched off and
+        # this function is called from outside. So I'm going to empty 
+        # the arrays if the assertion fails. CANNOT delete them becasue 
+        # variable name is still passed around.
+        try:
+            assert not np.any(phot_flam_obs), "Not using broadband data in fit but photometry flux array contains elements."
+            assert not np.any(phot_ferr_obs), "Not using broadband data in fit but photometry flux error array contains elements."
+            assert not np.any(phot_lam_obs), "Not using broadband data in fit but photometry wavelength array contains elements."
+            assert not np.any(all_filt_flam_model), "Not using broadband data in fit but model photometry flux array contains elements."
+        except AssertionError:
+            phot_lam_obs = np.empty()
+            phot_flam_obs = np.empty()
+            phot_ferr_obs = np.empty()
+            all_filt_flam_model = np.empty()
 
     # Set up redshift grid to check
     z_arr_to_check = np.arange(0.3, 1.5, 0.01)
