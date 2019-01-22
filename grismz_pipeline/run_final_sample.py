@@ -43,6 +43,8 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
 
     print "Working on:", current_field, current_id, "at "
 
+    modify_lsf = True
+
     # Assign catalogs 
     if current_field == 'GOODS-N':
         phot_cat_3dhst = goodsn_phot_cat_3dhst
