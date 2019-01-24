@@ -27,9 +27,9 @@ sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import refine_redshifts_dn4000 as old_ref
-import fullfitting_grism_broadband_emlines as ff
-import photoz
-import new_refine_grismz_gridsearch_parallel as ngp
+from fullfitting_grism_broadband_emlines import do_fitting, get_flam, get_flam_nonhst
+from photoz import do_photoz_fitting_lookup
+from new_refine_grismz_gridsearch_parallel import get_data
 import model_mods as mm
 import dn4000_catalog as dc
 import mocksim_results as mr
@@ -52,7 +52,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         phot_cat_3dhst = goodss_phot_cat_3dhst
 
     # ------------------------------- Get grism data and then match with photometry ------------------------------- #
-    grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
+    grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
     threed_ra = phot_cat_3dhst['ra']
     threed_dec = phot_cat_3dhst['dec']
@@ -92,42 +92,42 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         sys.exit(0)
 
     # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
-    flam_f435w = ff.get_flam('F435W', phot_cat_3dhst['f_F435W'][threed_phot_idx])
-    flam_f606w = ff.get_flam('F606W', phot_cat_3dhst['f_F606W'][threed_phot_idx])
-    flam_f775w = ff.get_flam('F775W', phot_cat_3dhst['f_F775W'][threed_phot_idx])
-    flam_f850lp = ff.get_flam('F850LP', phot_cat_3dhst['f_F850LP'][threed_phot_idx])
-    flam_f125w = ff.get_flam('F125W', phot_cat_3dhst['f_F125W'][threed_phot_idx])
-    flam_f140w = ff.get_flam('F140W', phot_cat_3dhst['f_F140W'][threed_phot_idx])
-    flam_f160w = ff.get_flam('F160W', phot_cat_3dhst['f_F160W'][threed_phot_idx])
+    flam_f435w = get_flam('F435W', phot_cat_3dhst['f_F435W'][threed_phot_idx])
+    flam_f606w = get_flam('F606W', phot_cat_3dhst['f_F606W'][threed_phot_idx])
+    flam_f775w = get_flam('F775W', phot_cat_3dhst['f_F775W'][threed_phot_idx])
+    flam_f850lp = get_flam('F850LP', phot_cat_3dhst['f_F850LP'][threed_phot_idx])
+    flam_f125w = get_flam('F125W', phot_cat_3dhst['f_F125W'][threed_phot_idx])
+    flam_f140w = get_flam('F140W', phot_cat_3dhst['f_F140W'][threed_phot_idx])
+    flam_f160w = get_flam('F160W', phot_cat_3dhst['f_F160W'][threed_phot_idx])
 
-    flam_U = ff.get_flam_nonhst('kpno_mosaic_u', phot_cat_3dhst['f_U'][threed_phot_idx], \
+    flam_U = get_flam_nonhst('kpno_mosaic_u', phot_cat_3dhst['f_U'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-    flam_irac1 = ff.get_flam_nonhst('irac1', phot_cat_3dhst['f_IRAC1'][threed_phot_idx], \
+    flam_irac1 = get_flam_nonhst('irac1', phot_cat_3dhst['f_IRAC1'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-    flam_irac2 = ff.get_flam_nonhst('irac2', phot_cat_3dhst['f_IRAC2'][threed_phot_idx], \
+    flam_irac2 = get_flam_nonhst('irac2', phot_cat_3dhst['f_IRAC2'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-    flam_irac3 = ff.get_flam_nonhst('irac3', phot_cat_3dhst['f_IRAC3'][threed_phot_idx], \
+    flam_irac3 = get_flam_nonhst('irac3', phot_cat_3dhst['f_IRAC3'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-    flam_irac4 = ff.get_flam_nonhst('irac4', phot_cat_3dhst['f_IRAC4'][threed_phot_idx], \
+    flam_irac4 = get_flam_nonhst('irac4', phot_cat_3dhst['f_IRAC4'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
 
-    ferr_f435w = ff.get_flam('F435W', phot_cat_3dhst['e_F435W'][threed_phot_idx])
-    ferr_f606w = ff.get_flam('F606W', phot_cat_3dhst['e_F606W'][threed_phot_idx])
-    ferr_f775w = ff.get_flam('F775W', phot_cat_3dhst['e_F775W'][threed_phot_idx])
-    ferr_f850lp = ff.get_flam('F850LP', phot_cat_3dhst['e_F850LP'][threed_phot_idx])
-    ferr_f125w = ff.get_flam('F125W', phot_cat_3dhst['e_F125W'][threed_phot_idx])
-    ferr_f140w = ff.get_flam('F140W', phot_cat_3dhst['e_F140W'][threed_phot_idx])
-    ferr_f160w = ff.get_flam('F160W', phot_cat_3dhst['e_F160W'][threed_phot_idx])
+    ferr_f435w = get_flam('F435W', phot_cat_3dhst['e_F435W'][threed_phot_idx])
+    ferr_f606w = get_flam('F606W', phot_cat_3dhst['e_F606W'][threed_phot_idx])
+    ferr_f775w = get_flam('F775W', phot_cat_3dhst['e_F775W'][threed_phot_idx])
+    ferr_f850lp = get_flam('F850LP', phot_cat_3dhst['e_F850LP'][threed_phot_idx])
+    ferr_f125w = get_flam('F125W', phot_cat_3dhst['e_F125W'][threed_phot_idx])
+    ferr_f140w = get_flam('F140W', phot_cat_3dhst['e_F140W'][threed_phot_idx])
+    ferr_f160w = get_flam('F160W', phot_cat_3dhst['e_F160W'][threed_phot_idx])
 
-    ferr_U = ff.get_flam_nonhst('kpno_mosaic_u', phot_cat_3dhst['e_U'][threed_phot_idx], \
+    ferr_U = get_flam_nonhst('kpno_mosaic_u', phot_cat_3dhst['e_U'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-    ferr_irac1 = ff.get_flam_nonhst('irac1', phot_cat_3dhst['e_IRAC1'][threed_phot_idx], \
+    ferr_irac1 = get_flam_nonhst('irac1', phot_cat_3dhst['e_IRAC1'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-    ferr_irac2 = ff.get_flam_nonhst('irac2', phot_cat_3dhst['e_IRAC2'][threed_phot_idx], \
+    ferr_irac2 = get_flam_nonhst('irac2', phot_cat_3dhst['e_IRAC2'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-    ferr_irac3 = ff.get_flam_nonhst('irac3', phot_cat_3dhst['e_IRAC3'][threed_phot_idx], \
+    ferr_irac3 = get_flam_nonhst('irac3', phot_cat_3dhst['e_IRAC3'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
-    ferr_irac4 = ff.get_flam_nonhst('irac4', phot_cat_3dhst['e_IRAC4'][threed_phot_idx], \
+    ferr_irac4 = get_flam_nonhst('irac4', phot_cat_3dhst['e_IRAC4'][threed_phot_idx], \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam)
 
     # ------------------------------- Apply aperture correction ------------------------------- #
@@ -234,7 +234,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     print "\n", "Computing photo-z now."
 
     zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
-    photoz.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
+    do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz)
 
@@ -242,7 +242,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     print "\n", "Photo-z done. Moving on to SPZ computation now."
 
     zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
-    ff.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
+    do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, zp, use_broadband=True, single_galaxy=False)
@@ -252,7 +252,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     print "\n", "SPZ done. Moving on to grism-z computation now."
     
     zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
-    ff.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
+    do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, zp, use_broadband=False, single_galaxy=False)
@@ -289,16 +289,17 @@ def main():
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
     total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
-
-    # Read in models with emission lines adn put in numpy array
-    bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
     model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy')
-    model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid_withlines)), dtype=np.float64)
-    for q in range(total_models):
-        model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
+    model_comp_spec_withlines = np.load(figs_data_dir + 'model_comp_spec_withlines.npy')
 
-    bc03_all_spec_hdulist_withlines.close()
-    del bc03_all_spec_hdulist_withlines
+    # Older approach using for loop. For some reason, I though this was faster. It is very obviously NOT!
+    # Read in models with emission lines adn put in numpy array
+    #bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
+    #model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid_withlines)), dtype=np.float64)
+    #for q in range(total_models):
+    #    model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
+    #bc03_all_spec_hdulist_withlines.close()
+    #del bc03_all_spec_hdulist_withlines
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
@@ -351,10 +352,9 @@ def main():
 
     # ------------------------------- Looping over each object ------------------------------- #
     total_final_sample = len(final_sample)
-
     """
-    num_cores = 3
-    result_list = Parallel(n_jobs=num_cores, prefer='threads')(delayed(get_all_redshifts)(final_sample['pearsid'][j], final_sample['field'][j], \
+    #num_cores = 3
+    result_list = Parallel(prefer='threads')(delayed(get_all_redshifts)(final_sample['pearsid'][j], final_sample['field'][j], \
         final_sample['ra'][j], final_sample['dec'][j], \
         final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start) \

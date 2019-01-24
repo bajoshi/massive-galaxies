@@ -17,6 +17,7 @@ import sys
 import glob
 import time
 import datetime
+import warnings
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -437,15 +438,6 @@ def check_modified_lsf(lsf, modified_lsf):
 
     return None
 
-def lsf_convolve(model_comp_spec, lsf, total_models):
-
-    model_comp_spec_lsfconv = np.zeros(model_comp_spec.shape, dtype=np.float64)
-
-    for i in range(total_models):
-        model_comp_spec_lsfconv[i] = fftconvolve(model_comp_spec[i], lsf, mode = 'same')
-
-    return model_comp_spec_lsfconv
-
 def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length):
 
     # --------------- Redshift model --------------- #
@@ -697,7 +689,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, use_broadband=True, single_galaxy=False):
+    obj_id, obj_field, specz, photoz, use_broadband=True, single_galaxy=False, for_loop_method='serial'):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,
@@ -726,38 +718,44 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # First do the convolution with the LSF
-    model_comp_spec_lsfconv = lsf_convolve(model_comp_spec, lsf, total_models)
+    with warnings.catch_warnings():
+        # This does not seem to do anything at the moment. I still get a runtime warning from joblib.
+        # Seems safe to ignore though.
+        warnings.simplefilter("ignore")
+        model_comp_spec_lsfconv = Parallel(n_jobs=3)(delayed(fftconvolve)(model_comp_spec[i], lsf, mode = 'same') for i in range(total_models))
+        model_comp_spec_lsfconv = np.asarray(model_comp_spec_lsfconv)
+
     print "Convolution done.",
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
-    """
-    num_cores = 3
-    chi2_alpha_list = Parallel(n_jobs=num_cores, prefer='threads')(delayed(get_chi2_alpha_at_z)(z, \
-    grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-    model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
-    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband) \
-    for z in z_arr_to_check)
+    if for_loop_method == 'parallel':
+        num_cores = 3
+        chi2_alpha_list = Parallel(n_jobs=num_cores, prefer='threads')(delayed(get_chi2_alpha_at_z)(z, \
+        grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+        model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
+        resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband) \
+        for z in z_arr_to_check)
 
-    # the parallel code seems to like returning only a list
-    # so I have to unpack the list
-    for i in range(len(z_arr_to_check)):
-        chi2[i], alpha[i] = chi2_alpha_list[i]
-    """
+        # the parallel code seems to like returning only a list
+        # so I have to unpack the list
+        for i in range(len(z_arr_to_check)):
+            chi2[i], alpha[i] = chi2_alpha_list[i]
 
-    # regular i.e. serial for loop 
-    # use this if you dont want to use the parallel for loop above
-    # comment it out if you don't need it
-    count = 0
-    for z in z_arr_to_check:
-        chi2[count], alpha[count] = get_chi2_alpha_at_z(z, \
-            grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-            model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
-            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband)
+    elif for_loop_method == 'serial':
+        # regular i.e. serial for loop 
+        # use this if you dont want to use the parallel for loop above
+        # comment it out if you don't need it
+        count = 0
+        for z in z_arr_to_check:
+            chi2[count], alpha[count] = get_chi2_alpha_at_z(z, \
+                grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+                model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
+                resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband)
 
-        #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-        #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
-        count += 1
+            #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+            #    model_lam_grid, model_comp_spec, all_filters, total_models, start_time)
+            count += 1
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
