@@ -37,7 +37,7 @@ import grid_coadd as gd
 #import fast_chi2_jackknife_massive_galaxies as fcjm
 #import new_refine_grismz_iter as ni
 import refine_redshifts_dn4000 as old_ref
-import model_mods_cython_copytoedit as model_mods_cython
+#import model_mods_cython_copytoedit as model_mods_cython
 import dn4000_catalog as dc
 import mocksim_results as mr
 

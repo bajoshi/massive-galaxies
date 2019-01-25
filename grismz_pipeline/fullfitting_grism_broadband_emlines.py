@@ -38,7 +38,7 @@ massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
-sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
+sys.path.append(home + '/Desktop/test-codes/cython/cython_profiling/')
 import refine_redshifts_dn4000 as old_ref
 import model_mods as mm
 import dn4000_catalog as dc
@@ -438,6 +438,10 @@ def check_modified_lsf(lsf, modified_lsf):
 
     return None
 
+def do_resamp(model_comp_spec_z, model_grid_z, resamp_grid, p):
+    ix = np.where((model_grid_z >= resamp_grid[p-1]) & (model_grid_z < resamp_grid[p+1]))[0]
+    return np.mean(model_comp_spec_z[:, ix], axis=1)
+
 def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length):
 
     # --------------- Redshift model --------------- #
@@ -449,26 +453,23 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     # Define array to save modified models
     model_comp_spec_modified = np.zeros((total_models, resampling_lam_grid_length), dtype=np.float64)
 
-    # --------------- Get indices for resampling --------------- #
-    # These indices are going to be different each time depending on the redshfit.
-    # i.e. Since it uses the redshifted model_lam_grid_z to get indices.
-    indices = []
     ### Zeroth element
     lam_step = resampling_lam_grid[1] - resampling_lam_grid[0]
-    indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_z < resampling_lam_grid[0] + lam_step))[0])
+    idx = np.where((model_lam_grid_z >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_z < resampling_lam_grid[0] + lam_step))[0]
+    model_comp_spec_modified[:, 0] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
 
     ### all elements in between
     for i in range(1, resampling_lam_grid_length - 1):
-        indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[i-1]) & (model_lam_grid_z < resampling_lam_grid[i+1]))[0])
+        idx = np.where((model_lam_grid_z >= resampling_lam_grid[i-1]) & (model_lam_grid_z < resampling_lam_grid[i+1]))[0]
+        model_comp_spec_modified[:, i] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
+
+    #model_comp_spec_mod_list = Parallel(n_jobs=4)(delayed(do_resamp)(model_comp_spec_redshifted, model_lam_grid_z, resampling_lam_grid, i) for i in range(1, resampling_lam_grid_length - 1))
+    #model_comp_spec_modified[:, 1:-1] = np.asarray(model_comp_spec_mod_list)
 
     ### Last element
     lam_step = resampling_lam_grid[-1] - resampling_lam_grid[-2]
-    indices.append(np.where((model_lam_grid_z >= resampling_lam_grid[-1] - lam_step) & (model_lam_grid_z < resampling_lam_grid[-1] + lam_step))[0])
-
-    # ---------- Run for loop to resample ---------- #
-    for k in range(total_models):
-        for q in range(resampling_lam_grid_length):
-            model_comp_spec_modified[k, q] = np.mean(model_comp_spec_redshifted[k][indices[q]])
+    idx = np.where((model_lam_grid_z >= resampling_lam_grid[-1] - lam_step) & (model_lam_grid_z < resampling_lam_grid[-1] + lam_step))[0]
+    model_comp_spec_modified[:, -1] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
 
     return model_comp_spec_modified
 
@@ -650,9 +651,9 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     # ------------- Now do the modifications for the grism data and get a chi2 using both grism and photometry ------------- #
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = \
-    mm.redshift_and_resample_fast(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
+    redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done at current z:", z
-    #print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # Check all model modifications and that the model photometry line up
     # Do not delete. Useful for debugging.
@@ -722,7 +723,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         # This does not seem to do anything at the moment. I still get a runtime warning from joblib.
         # Seems safe to ignore though.
         warnings.simplefilter("ignore")
-        model_comp_spec_lsfconv = Parallel(n_jobs=3)(delayed(fftconvolve)(model_comp_spec[i], lsf, mode = 'same') for i in range(total_models))
+        model_comp_spec_lsfconv = Parallel(n_jobs=4)(delayed(fftconvolve)(model_comp_spec[i], lsf, mode = 'same') for i in range(total_models))
         model_comp_spec_lsfconv = np.asarray(model_comp_spec_lsfconv)
 
     print "Convolution done.",
@@ -730,7 +731,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # looping
     if for_loop_method == 'parallel':
-        num_cores = 3
+        num_cores = 4
         chi2_alpha_list = Parallel(n_jobs=num_cores, prefer='threads')(delayed(get_chi2_alpha_at_z)(z, \
         grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
