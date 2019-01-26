@@ -851,14 +851,14 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Should check if the minimum is global or local
     #ngp.plot_chi2(chi2, dof, z_arr_to_check, z_grism, specz, obj_id, obj_field, total_models)
 
-    pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field, savedir)
-
     # Save p(z), chi2 map, and redshift grid
     if use_broadband:
+        pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field, savedir_spz)
         #np.save(savedir_spz + obj_field + '_' + str(obj_id) + '_spz_chi2_map.npy', chi2/dof)
         np.save(savedir_spz + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy', z_arr_to_check)
         np.save(savedir_spz + obj_field + '_' + str(obj_id) + '_spz_pz.npy', pz)
     else:
+        pz = get_pz_and_plot(chi2/dof, z_arr_to_check, specz, photoz, z_grism, low_z_lim, upper_z_lim, obj_id, obj_field, savedir_grismz)
         #np.save(savedir_grismz + obj_field + '_' + str(obj_id) + '_zg_chi2_map.npy', chi2/dof)
         np.save(savedir_grismz + obj_field + '_' + str(obj_id) + '_zg_z_arr.npy', z_arr_to_check)
         np.save(savedir_grismz + obj_field + '_' + str(obj_id) + '_zg_pz.npy', pz)
