@@ -702,8 +702,11 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Set directory to save stuff in
     if single_galaxy:
         savedir = massive_figures_dir + 'single_galaxy_comparison/'
+        savedir_spz = savedir
+        savedir_grismz = savedir
     else:
-        savedir = massive_figures_dir + 'spz_run_jan2019/'
+        savedir_spz = massive_figures_dir + 'spz_run_jan2019/'  # Required to save p(z) curve and z_arr
+        savedir_grismz = massive_figures_dir + 'grismz_run_jan2019/'  # Required to save p(z) curve and z_arr
 
     # Set up redshift grid to check
     z_arr_to_check = np.arange(0.3, 1.5, 0.01)
@@ -852,13 +855,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # Save p(z), chi2 map, and redshift grid
     if use_broadband:
-        #np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_chi2_map.npy', chi2/dof)
-        np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy', z_arr_to_check)
-        np.save(savedir + obj_field + '_' + str(obj_id) + '_spz_pz.npy', pz)
+        #np.save(savedir_spz + obj_field + '_' + str(obj_id) + '_spz_chi2_map.npy', chi2/dof)
+        np.save(savedir_spz + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy', z_arr_to_check)
+        np.save(savedir_spz + obj_field + '_' + str(obj_id) + '_spz_pz.npy', pz)
     else:
-        #np.save(savedir + obj_field + '_' + str(obj_id) + '_zg_chi2_map.npy', chi2/dof)
-        np.save(savedir + obj_field + '_' + str(obj_id) + '_zg_z_arr.npy', z_arr_to_check)
-        np.save(savedir + obj_field + '_' + str(obj_id) + '_zg_pz.npy', pz)
+        #np.save(savedir_grismz + obj_field + '_' + str(obj_id) + '_zg_chi2_map.npy', chi2/dof)
+        np.save(savedir_grismz + obj_field + '_' + str(obj_id) + '_zg_z_arr.npy', z_arr_to_check)
+        np.save(savedir_grismz + obj_field + '_' + str(obj_id) + '_zg_pz.npy', pz)
 
     z_wt = np.sum(z_arr_to_check * pz)
     print "Weighted z:", "{:.3}".format(z_wt)

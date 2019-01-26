@@ -21,7 +21,9 @@ lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 threedhst_datadir = home + "/Desktop/3dhst_data/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
-savedir_photoz = massive_figures_dir + 'photoz_run_jan2019/'  # Required to save p(z) curve
+savedir_photoz = massive_figures_dir + 'photoz_run_jan2019/'  # Required to save p(z) curve and z_arr
+savedir_spz = massive_figures_dir + 'spz_run_jan2019/'  # Required to save p(z) curve and z_arr
+savedir_grismz = massive_figures_dir + 'grismz_run_jan2019/'  # Required to save p(z) curve and z_arr
 
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
@@ -387,8 +389,33 @@ def main():
     zp_tau_list = []
     zp_av_list = []
 
+    zspz_minchi2_list = []
+    zspz_list = []
+    zspz_zerr_low_list = []
+    zspz_zerr_up_list = []
+    zspz_min_chi2_list = []
+    zspz_bestalpha_list = []
+    zspz_model_idx_list = []
+    zspz_age_list = []
+    zspz_tau_list = []
+    zspz_av_list = []
+
+    zg_minchi2_list = []
+    zg_list = []
+    zg_zerr_low_list = []
+    zg_zerr_up_list = []
+    zg_min_chi2_list = []
+    zg_bestalpha_list = []
+    zg_model_idx_list = []
+    zg_age_list = []
+    zg_tau_list = []
+    zg_av_list = []
+
     galaxy_count = 0
     for j in range(total_final_sample):
+
+        print "Galaxies done so far:", galaxy_count
+        print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
 
         zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
         zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
@@ -398,17 +425,13 @@ def main():
         final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start)
 
-        sys.exit(0)
-
         """
-        print "Galaxies done so far:", galaxy_count
-        print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
-
         zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
         get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], \
         final_sample['ra'][j], final_sample['dec'][j], \
         final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start)
+        """
 
         if zp == -99.0:  # This is trigerred if the LSF isn't found and the function above returns prematurely
             continue
@@ -429,7 +452,28 @@ def main():
         zp_age_list.append(zp_age)
         zp_tau_list.append(zp_tau)
         zp_av_list.append(zp_av)
-        """
+
+        zspz_minchi2_list.append(zspz_minchi2)
+        zspz_list.append(zspz)
+        zspz_zerr_low_list.append(zspz_zerr_low)
+        zspz_zerr_up_list.append(zspz_zerr_up)
+        zspz_min_chi2_list.append(zspz_min_chi2)
+        zspz_bestalpha_list.append(zspz_bestalpha)
+        zspz_model_idx_list.append(zspz_model_idx)
+        zspz_age_list.append(zspz_age)
+        zspz_tau_list.append(zspz_tau)
+        zspz_av_list.append(zspz_av)
+
+        zg_minchi2_list.append(zg_minchi2)
+        zg_list.append(zg)
+        zg_zerr_low_list.append(zg_zerr_low)
+        zg_zerr_up_list.append(zg_zerr_up)
+        zg_min_chi2_list.append(zg_min_chi2)
+        zg_bestalpha_list.append(zg_bestalpha)
+        zg_model_idx_list.append(zg_model_idx)
+        zg_age_list.append(zg_age)
+        zg_tau_list.append(zg_tau)
+        zg_av_list.append(zg_av)
 
     print "All done. Saving results now."
     print "Final number within sample:", galaxy_count
@@ -450,6 +494,28 @@ def main():
     zp_tau_arr = np.asarray(zp_tau_list)
     zp_av_arr = np.asarray(zp_av_list)
 
+    zspz_minchi2_arr = np.asarray(zspz_minchi2_list)
+    zspz_arr = np.asarray(zspz_list)
+    zspz_zerr_low_arr = np.asarray(zspz_zerr_low_list)
+    zspz_zerr_up_arr = np.asarray(zspz_zerr_up_list)
+    zspz_min_chi2_arr = np.asarray(zspz_min_chi2_list)
+    zspz_bestalpha_arr = np.asarray(zspz_bestalpha_list)
+    zspz_model_idx_arr = np.asarray(zspz_model_idx_list)
+    zspz_age_arr = np.asarray(zspz_age_list)
+    zspz_tau_arr = np.asarray(zspz_tau_list)
+    zspz_av_arr = np.asarray(zspz_av_list)
+
+    zg_minchi2_arr = np.asarray(zg_minchi2_list)
+    zg_arr = np.asarray(zg_list)
+    zg_zerr_low_arr = np.asarray(zg_zerr_low_list)
+    zg_zerr_up_arr = np.asarray(zg_zerr_up_list)
+    zg_min_chi2_arr = np.asarray(zg_min_chi2_list)
+    zg_bestalpha_arr = np.asarray(zg_bestalpha_list)
+    zg_model_idx_arr = np.asarray(zg_model_idx_list)
+    zg_age_arr = np.asarray(zg_age_list)
+    zg_tau_arr = np.asarray(zg_tau_list)
+    zg_av_arr = np.asarray(zg_av_list)
+
     # Save numpy arrays
     np.save(savedir_photoz + 'id_arr.npy', id_arr)
     np.save(savedir_photoz + 'field_arr.npy', field_arr)
@@ -465,6 +531,28 @@ def main():
     np.save(savedir_photoz + 'zp_age_arr.npy', zp_age_arr)
     np.save(savedir_photoz + 'zp_tau_arr.npy', zp_tau_arr)
     np.save(savedir_photoz + 'zp_av_arr.npy', zp_av_arr)
+
+    np.save(savedir_spz + 'zspz_minchi2_arr.npy', zspz_minchi2_arr)
+    np.save(savedir_spz + 'zspz_arr.npy', zspz_arr)
+    np.save(savedir_spz + 'zspz_zerr_low_arr.npy', zspz_zerr_low_arr)
+    np.save(savedir_spz + 'zspz_zerr_up_arr.npy', zspz_zerr_up_arr)
+    np.save(savedir_spz + 'zspz_min_chi2_arr.npy', zspz_min_chi2_arr)
+    np.save(savedir_spz + 'zspz_bestalpha_arr.npy', zspz_bestalpha_arr)
+    np.save(savedir_spz + 'zspz_model_idx_arr.npy', zspz_model_idx_arr)
+    np.save(savedir_spz + 'zspz_age_arr.npy', zspz_age_arr)
+    np.save(savedir_spz + 'zspz_tau_arr.npy', zspz_tau_arr)
+    np.save(savedir_spz + 'zspz_av_arr.npy', zspz_av_arr)
+
+    np.save(savedir_grismz + 'zg_minchi2_arr.npy', zg_minchi2_arr)
+    np.save(savedir_grismz + 'zg_arr.npy', zg_arr)
+    np.save(savedir_grismz + 'zg_zerr_low_arr.npy', zg_zerr_low_arr)
+    np.save(savedir_grismz + 'zg_zerr_up_arr.npy', zg_zerr_up_arr)
+    np.save(savedir_grismz + 'zg_min_chi2_arr.npy', zg_min_chi2_arr)
+    np.save(savedir_grismz + 'zg_bestalpha_arr.npy', zg_bestalpha_arr)
+    np.save(savedir_grismz + 'zg_model_idx_arr.npy', zg_model_idx_arr)
+    np.save(savedir_grismz + 'zg_age_arr.npy', zg_age_arr)
+    np.save(savedir_grismz + 'zg_tau_arr.npy', zg_tau_arr)
+    np.save(savedir_grismz + 'zg_av_arr.npy', zg_av_arr)
 
     return None
 
