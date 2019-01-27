@@ -416,19 +416,11 @@ def main():
     zg_tau_list = []
     zg_av_list = []
 
-    # Skip galaxies already done
-    already_done_ids = np.load(savedir_photoz + 'id_arr.npy')
-    already_done_fields = np.load(savedir_photoz + 'field_arr.npy')
-
     galaxy_count = 0
-    for j in range(total_final_sample):
+    for j in range(150, total_final_sample):
 
         print "Galaxies done so far:", galaxy_count
         print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
-
-        if (final_sample['pearsid'][j] in already_done_ids) and (final_sample['field'][j] in already_done_fields):
-            print "At:", final_sample['pearsid'][j], "in", final_sample['field'][j], "Skipping since this has been done."
-            continue
 
         zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
         zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
