@@ -56,6 +56,13 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     # ------------------------------- Get grism data and then match with photometry ------------------------------- #
     grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
+    if return_code == 0:
+        print "Skipping due to an error with the obs data. See the error message just above this one.",
+        print "Moving to the next galaxy."
+        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0#, \
+        #-99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, \
+        #-99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
+
     threed_ra = phot_cat_3dhst['ra']
     threed_dec = phot_cat_3dhst['dec']
 
@@ -194,9 +201,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         lsf = lsf.astype(np.float64)  # Force dtype for cython code
     except IOError:
         print "LSF not found. Moving to next galaxy."
-        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, \
-        -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, \
-        -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
+        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0#, \
+        #-99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, \
+        #-99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
 
     # -------- Stetch the LSF ------- #
     if modify_lsf:
@@ -247,6 +254,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz)
 
     # ------------- Call fitting function for SPZ ------------- #
+    """
     print "\n", "Photo-z done. Moving on to SPZ computation now."
 
     zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
@@ -264,10 +272,11 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
         current_id, current_field, current_specz, zp, use_broadband=False, single_galaxy=False)
+    """
 
-    return zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
-    zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
-    zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av
+    return zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av#, \
+    #zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
+    #zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av
 
 def main():
 
@@ -417,27 +426,28 @@ def main():
         print "Galaxies done so far:", galaxy_count
         print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
 
-        zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
-        zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
-        zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
-        get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], \
-        final_sample['ra'][j], final_sample['dec'][j], \
-        final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-        bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start)
+        #zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
+        #zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
+        #zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
+        #get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], \
+        #final_sample['ra'][j], final_sample['dec'][j], \
+        #final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+        #bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start)
 
-        """
         zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
         get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], \
         final_sample['ra'][j], final_sample['dec'][j], \
         final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start)
-        """
 
-        if zp == -99.0:  # This is trigerred if the LSF isn't found and the function above returns prematurely
+        # This is trigerred if the return code from ngp.get_data() is 0. i.e. excess contamination or incomplete wav array.
+        # This is also trigerred if the LSF isn't found and the function above returns prematurely
+        if zp == -99.0:
             continue
 
         galaxy_count += 1
 
+        """
         id_list.append(final_sample['pearsid'][j])
         field_list.append(final_sample['field'][j])
         zs_list.append(final_sample['specz'][j])
@@ -513,7 +523,10 @@ def main():
         np.save(savedir_grismz + 'zg_tau_arr.npy', np.asarray(zg_tau_list))
         np.save(savedir_grismz + 'zg_av_arr.npy', np.asarray(zg_av_list))
 
-    print "All done. Saving results now."
+        print "Intermediate result arrays saved."
+        """
+
+    print "All done."
     print "Final number within sample:", galaxy_count
 
     return None
