@@ -682,15 +682,31 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     """
 
     # ------------- Now do the chi2 computation ------------- #
-    chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-        all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=ub)
+    if ub:
+        chi2_temp, alpha_temp = mm.cy_get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+            all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models)
+    else:
+        chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+            all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=False)
+
+    return chi2_temp, alpha_temp
+
+def get_chi2_alpha_at_z_wrapper(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+    total_models, start_time, ub):
+
+    model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
+    resampling_lam_grid, resampling_lam_grid_length = get_supporting_data()
+
+    get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+        model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
+        resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, ub)
 
     return chi2_temp, alpha_temp
 
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, use_broadband=True, single_galaxy=False, for_loop_method='serial'):
+    obj_id, obj_field, specz, photoz, use_broadband=True, single_galaxy=False, for_loop_method='sequential'):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,
@@ -734,11 +750,16 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # looping
     if for_loop_method == 'parallel':
-        num_cores = 4
-        chi2_alpha_list = Parallel(n_jobs=num_cores, prefer='threads')(delayed(get_chi2_alpha_at_z)(z, \
+        num_cores = 2
+        chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
         grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
         resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband) \
+        for z in z_arr_to_check)
+
+        chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z_wrapper)(z, \
+        grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+        total_models, start_time, use_broadband) \
         for z in z_arr_to_check)
 
         # the parallel code seems to like returning only a list
@@ -746,8 +767,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         for i in range(len(z_arr_to_check)):
             chi2[i], alpha[i] = chi2_alpha_list[i]
 
-    elif for_loop_method == 'serial':
-        # regular i.e. serial for loop 
+    elif for_loop_method == 'sequential':
+        # regular i.e. sequential for loop 
         # use this if you dont want to use the parallel for loop above
         # comment it out if you don't need it
         count = 0
