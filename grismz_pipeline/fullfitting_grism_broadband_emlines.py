@@ -705,8 +705,9 @@ def get_chi2_alpha_at_z_wrapper(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs
 
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
-    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, specz, photoz, use_broadband=True, single_galaxy=False, for_loop_method='sequential'):
+    model_lam_grid, total_models, model_comp_spec, start_time, obj_id, obj_field, specz, photoz, \
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+    use_broadband=True, single_galaxy=False, for_loop_method='sequential'):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,
@@ -738,29 +739,30 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # First do the convolution with the LSF
-    with warnings.catch_warnings():
-        # This does not seem to do anything at the moment. I still get a runtime warning from joblib.
-        # Seems safe to ignore though.
-        warnings.simplefilter("ignore")
+    if for_loop_method == 'parallel':
         model_comp_spec_lsfconv = Parallel(n_jobs=4)(delayed(fftconvolve)(model_comp_spec[i], lsf, mode = 'same') for i in range(total_models))
         model_comp_spec_lsfconv = np.asarray(model_comp_spec_lsfconv)
+    elif for_loop_method == 'sequential':
+        model_comp_spec_lsfconv = np.zeros(model_comp_spec.shape)
+        for i in range(total_models):
+            model_comp_spec_lsfconv[i] = fftconvolve(model_comp_spec[i], lsf, mode = 'same')
 
     print "Convolution done.",
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
     if for_loop_method == 'parallel':
-        num_cores = 2
-        chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
+        num_cores = 4
+        chi2_alpha_list = Parallel(n_jobs=num_cores, max_nbytes=1e6)(delayed(get_chi2_alpha_at_z)(z, \
         grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
         resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband) \
         for z in z_arr_to_check)
 
-        chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z_wrapper)(z, \
-        grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-        total_models, start_time, use_broadband) \
-        for z in z_arr_to_check)
+        #chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z_wrapper)(z, \
+        #grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+        #total_models, start_time, use_broadband) \
+        #for z in z_arr_to_check)
 
         # the parallel code seems to like returning only a list
         # so I have to unpack the list
@@ -796,16 +798,21 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         # first get the index for the best fit
         model_idx = int(min_idx_2d[1])
 
-        age = float(bc03_all_spec_hdulist[model_idx + 1].header['LOG_AGE'])
+        age = log_age_arr[model_idx] # float(bc03_all_spec_hdulist[model_idx + 1].header['LOGAGE'])
+
         current_z = z_arr_to_check[min_idx_2d[0]]
         age_at_z = cosmo.age(current_z).value * 1e9  # in yr
 
         # Colors and stellar mass
-        ub_col = float(bc03_all_spec_hdulist[model_idx + 1].header['UB_col'])
-        bv_col = float(bc03_all_spec_hdulist[model_idx + 1].header['BV_col'])
-        vj_col = float(bc03_all_spec_hdulist[model_idx + 1].header['VJ_col'])
-        template_ms = float(bc03_all_spec_hdulist[model_idx + 1].header['ms'])
+        ub_col = ub_col_arr[model_idx]   #float(bc03_all_spec_hdulist[model_idx + 1].header['UBCOL'])
+        bv_col = bv_col_arr[model_idx]   #float(bc03_all_spec_hdulist[model_idx + 1].header['BVCOL'])
+        vj_col = vj_col_arr[model_idx]   #float(bc03_all_spec_hdulist[model_idx + 1].header['VJCOL'])
+        template_ms = ms_arr[model_idx]  #float(bc03_all_spec_hdulist[model_idx + 1].header['ms'])
 
+        tau = tau_gyr_arr[model_idx]
+        tauv = tauv_arr[model_idx]
+
+        """
         # now check if the best fit model is an ssp or csp 
         # only the csp models have tau and tauV parameters
         # so if you try to get these keywords for the ssp fits files
@@ -817,6 +824,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
             # if the best fit model is an SSP then assign -99.0 to tau and tauV
             tau = -99.0
             tauv = -99.0
+        """
 
         # now check if the age is meaningful
         if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.1)):

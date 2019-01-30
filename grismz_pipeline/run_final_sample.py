@@ -39,7 +39,8 @@ speed_of_light = 299792458e10  # angstroms per second
 
 def get_all_redshifts(current_id, current_field, current_ra, current_dec, current_specz,\
     goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-    bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start):
+    model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start, \
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr):
 
     print "\n", "Working on:", current_field, current_id, "at", current_specz
 
@@ -248,8 +249,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
 
     zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
     do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz)
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start,\
+        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
 
     # ------------- Call fitting function for SPZ ------------- #
     print "\n", "Photo-z done. Moving on to SPZ computation now."
@@ -257,8 +259,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
     do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, zp, use_broadband=True, single_galaxy=False, for_loop_method='parallel')
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+        use_broadband=True, single_galaxy=False)
 
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
@@ -267,8 +270,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
     do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, zp, use_broadband=False, single_galaxy=False)
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+        use_broadband=False, single_galaxy=False)
 
     return zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
     zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \

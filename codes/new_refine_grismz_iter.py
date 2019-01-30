@@ -155,7 +155,7 @@ def get_model_set():
             # ---- Age
             hdr = fits.Header()
             current_log_age = np.log10(ages[age_ind[i]])
-            hdr['LOG_AGE'] = str(current_log_age)
+            hdr['LOGAGE'] = str(current_log_age)
 
             # ---- Rate of Lyman continuum photons [# per second]
             # Get idx corresponding to age first. This is valid for all color files.
@@ -168,22 +168,22 @@ def get_model_set():
             # ---- Colors
             # ---- U-B
             ub_col = onecolor['UB_col'][color_idx]
-            hdr['UB_col'] = str(ub_col)
+            hdr['UBCOL'] = str(ub_col)
             # ---- B-V
             bv_col = onecolor['BV_col'][color_idx]
-            hdr['BV_col'] = str(bv_col)
+            hdr['BVCOL'] = str(bv_col)
             # ---- V-J
             vj_col = twocolor['VJ_col'][color_idx]
-            hdr['VJ_col'] = str(vj_col)
+            hdr['VJCOL'] = str(vj_col)
 
             # ---- Masses
             # ---- Stellar mass
             mstar = fourcolor['ms'][color_idx]
-            hdr['ms'] = str(mstar)
+            hdr['MS'] = str(mstar)
 
             # ---- Galaxy mass = Stellar mass + Gas mass
             mgalaxy = fourcolor['mgal'][color_idx]
-            hdr['mgal'] = str(mgalaxy)
+            hdr['MGAL'] = str(mgalaxy)
 
             # ---- Metallicity
             if 'm22' in filename:
@@ -201,6 +201,11 @@ def get_model_set():
 
             hdr['METAL'] = str(metal_val)
 
+            # ---- Also put in TAU and TAUV for completeness 
+            # Since these are SSP models I'm forcing these values to -99.0
+            hdr['TAUGYR'] = str(-99.0)
+            hdr['TAUV'] = str(-99.0)
+            
             # Append
             hdulist.append(fits.ImageHDU(data=current_model_set_ssp[i], header=hdr))
 
@@ -272,14 +277,14 @@ def get_model_set():
 
                 # ---- Age 
                 current_log_age = np.log10(ages[age_ind[i]])
-                hdr['LOG_AGE'] = str(current_log_age)
+                hdr['LOGAGE'] = str(current_log_age)
 
                 # ---- Metallicity
                 metal_val = 0.02
                 hdr['METAL'] = str(metal_val)
 
                 # ---- Tau and TauV
-                hdr['TAU_GYR'] = str(float(tauval)/1e4)
+                hdr['TAUGYR'] = str(float(tauval)/1e4)
                 hdr['TAUV'] = str(tauVarrval)
 
                 # ---- Rate of Lyman continuum photons [# per second]
@@ -293,22 +298,22 @@ def get_model_set():
                 # ---- Colors
                 # ---- U-B
                 ub_col = onecolor['UB_col'][color_idx]
-                hdr['UB_col'] = str(ub_col)
+                hdr['UBCOL'] = str(ub_col)
                 # ---- B-V
                 bv_col = onecolor['BV_col'][color_idx]
-                hdr['BV_col'] = str(bv_col)
+                hdr['BVCOL'] = str(bv_col)
                 # ---- V-J
                 vj_col = twocolor['VJ_col'][color_idx]
-                hdr['VJ_col'] = str(vj_col)
+                hdr['VJCOL'] = str(vj_col)
 
                 # ---- Masses
                 # ---- Stellar mass
                 mstar = fourcolor['ms'][color_idx]
-                hdr['ms'] = str(mstar)
+                hdr['MS'] = str(mstar)
 
                 # ---- Galaxy mass = Stellar mass + Gas mass
                 mgalaxy = fourcolor['mgal'][color_idx]
-                hdr['mgal'] = str(mgalaxy)
+                hdr['MGAL'] = str(mgalaxy)
 
                 # Append
                 hdulist.append(fits.ImageHDU(data=current_model_set_csp[i], header=hdr))

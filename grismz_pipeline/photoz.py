@@ -109,8 +109,9 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     return chi2_, alpha_
 
 def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
-    obj_id, obj_field, all_model_flam, phot_fin_idx, specz, savedir):
+    model_lam_grid, total_models, model_comp_spec, start_time,\
+    obj_id, obj_field, all_model_flam, phot_fin_idx, specz, savedir, \
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr):
 
     # def do_photoz_fitting(phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
     #    model_lam_grid, total_models, model_comp_spec, bc03_all_spec_hdulist, start_time,\
@@ -163,6 +164,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         all_filt_flam_model = all_model_flam[:, z_idx, :]
         all_filt_flam_model = all_filt_flam_model[phot_fin_idx, :]
         all_filt_flam_model = all_filt_flam_model.reshape(len(phot_fin_idx), total_models)
+
         chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs)
 
         #chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
@@ -189,27 +191,33 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         # first get the index for the best fit
         model_idx = int(min_idx_2d[1])
 
-        age = float(bc03_all_spec_hdulist[model_idx + 1].header['LOG_AGE'])
+        age = log_age_arr[model_idx] # float(bc03_all_spec_hdulist[model_idx + 1].header['LOGAGE'])
+
         current_z = z_arr_to_check[min_idx_2d[0]]
         age_at_z = cosmo.age(current_z).value * 1e9  # in yr
 
         # Colors and stellar mass
-        ub_col = float(bc03_all_spec_hdulist[model_idx + 1].header['UB_col'])
-        bv_col = float(bc03_all_spec_hdulist[model_idx + 1].header['BV_col'])
-        vj_col = float(bc03_all_spec_hdulist[model_idx + 1].header['VJ_col'])
-        template_ms = float(bc03_all_spec_hdulist[model_idx + 1].header['ms'])
+        ub_col = ub_col_arr[model_idx]   #float(bc03_all_spec_hdulist[model_idx + 1].header['UBCOL'])
+        bv_col = bv_col_arr[model_idx]   #float(bc03_all_spec_hdulist[model_idx + 1].header['BVCOL'])
+        vj_col = vj_col_arr[model_idx]   #float(bc03_all_spec_hdulist[model_idx + 1].header['VJCOL'])
+        template_ms = ms_arr[model_idx]  #float(bc03_all_spec_hdulist[model_idx + 1].header['ms'])
 
+        tau = tau_gyr_arr[model_idx]
+        tauv = tauv_arr[model_idx]
+
+        """
         # now check if the best fit model is an ssp or csp 
         # only the csp models have tau and tauV parameters
         # so if you try to get these keywords for the ssp fits files
         # it will fail with a KeyError
-        if 'TAU_GYR' in list(bc03_all_spec_hdulist[model_idx + 1].header.keys()):
-            tau = float(bc03_all_spec_hdulist[model_idx + 1].header['TAU_GYR'])
+        if 'TAUGYR' in list(bc03_all_spec_hdulist[model_idx + 1].header.keys()):
+            tau = float(bc03_all_spec_hdulist[model_idx + 1].header['TAUGYR'])
             tauv = float(bc03_all_spec_hdulist[model_idx + 1].header['TAUV'])
         else:
             # if the best fit model is an SSP then assign -99.0 to tau and tauV
             tau = -99.0
             tauv = -99.0
+        """
 
         # now check if the age is meaningful
         if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.1)):
