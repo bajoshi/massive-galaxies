@@ -422,44 +422,35 @@ def main():
 
     # ------------------------------ Get models ------------------------------ #
     # read in entire model set
-    bc03_all_spec_hdulist = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    # To see how these arrays were created check the code:
+    # $HOME/Desktop/test-codes/shared_memory_multiprocessing/shmem_parallel_proc.py
+    # This part will fail if the arrays dont already exist.
     total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
-    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy')
-    model_comp_spec_withlines = np.load(figs_data_dir + 'model_comp_spec_withlines.npy')
 
-    # Older approach using for loop. For some reason, I though this was faster. It is very obviously NOT!
-    # Read in models with emission lines adn put in numpy array
-    #bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
-    #model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid_withlines)), dtype=np.float64)
-    #for q in range(total_models):
-    #    model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
-    #bc03_all_spec_hdulist_withlines.close()
-    #del bc03_all_spec_hdulist_withlines
+    log_age_arr = np.load(figs_data_dir + 'log_age_arr.npy', mmap_mode='r')
+    metal_arr = np.load(figs_data_dir + 'metal_arr.npy', mmap_mode='r')
+    nlyc_arr = np.load(figs_data_dir + 'nlyc_arr.npy', mmap_mode='r')
+    tau_gyr_arr = np.load(figs_data_dir + 'tau_gyr_arr.npy', mmap_mode='r')
+    tauv_arr = np.load(figs_data_dir + 'tauv_arr.npy', mmap_mode='r')
+    ub_col_arr = np.load(figs_data_dir + 'ub_col_arr.npy', mmap_mode='r')
+    bv_col_arr = np.load(figs_data_dir + 'bv_col_arr.npy', mmap_mode='r')
+    vj_col_arr = np.load(figs_data_dir + 'vj_col_arr.npy', mmap_mode='r')
+    ms_arr = np.load(figs_data_dir + 'ms_arr.npy', mmap_mode='r')
+    mgal_arr = np.load(figs_data_dir + 'mgal_arr.npy', mmap_mode='r')
+
+    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
+    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
     # ---------------------------------- Read in look-up tables for model mags ------------------------------------- #
     # Using the look-up table now since it should be much faster
-    # First get them all into an appropriate shape
-    u = np.load(figs_data_dir + 'all_model_mags_par_u.npy')
-    f435w = np.load(figs_data_dir + 'all_model_mags_par_f435w.npy')
-    f606w = np.load(figs_data_dir + 'all_model_mags_par_f606w.npy')
-    f775w = np.load(figs_data_dir + 'all_model_mags_par_f775w.npy')
-    f850lp = np.load(figs_data_dir + 'all_model_mags_par_f850lp.npy')
-    f125w = np.load(figs_data_dir + 'all_model_mags_par_f125w.npy')
-    f140w = np.load(figs_data_dir + 'all_model_mags_par_f140w.npy')
-    f160w = np.load(figs_data_dir + 'all_model_mags_par_f160w.npy')
-    irac1 = np.load(figs_data_dir + 'all_model_mags_par_irac1.npy')
-    irac2 = np.load(figs_data_dir + 'all_model_mags_par_irac2.npy')
-    irac3 = np.load(figs_data_dir + 'all_model_mags_par_irac3.npy')
-    irac4 = np.load(figs_data_dir + 'all_model_mags_par_irac4.npy')
-
-    # put them in a list since I need to iterate over it
-    all_model_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
-
-    # cnovert to numpy array
-    all_model_flam = np.asarray(all_model_flam)
+    # Again check the code --
+    # $HOME/Desktop/test-codes/shared_memory_multiprocessing/shmem_parallel_proc.py
+    # to see how this was created
+    # This part will fail if the array does not already exist.
+    all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam.npy', mmap_mode='r')
 
     # ------------------------------- Read in photometry catalogs ------------------------------- #
     # GOODS-N from 3DHST

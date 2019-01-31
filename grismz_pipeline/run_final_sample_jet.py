@@ -4,8 +4,7 @@ import numpy as np
 from astropy.io import fits
 from scipy.interpolate import griddata
 from scipy.integrate import simps
-from multiprocessing import Pool, Process
-#from joblib import Parallel, delayed
+import multiprocessing as mp
 
 import os
 import sys
@@ -39,7 +38,56 @@ speed_of_light = 299792458e10  # angstroms per second
 
 def get_all_redshifts(current_id, current_field, current_ra, current_dec, current_specz,\
     goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-    bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start):
+    model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start, \
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr):
+
+    # Skip galaxies already done. Read in data for galaxies already done.
+    # Yes this has to be read in every time this function is called.
+    # This is because if this function does run successfully (as in the normal
+    # case) then it will append to these arrays and change their contents.
+    # So it is necessary for this function to know the latest contents
+    # of these arrays.
+    id_arr = np.load(savedir_photoz + 'id_arr.npy')
+    field_arr = np.load(savedir_photoz + 'field_arr.npy')
+    zs_arr = np.load(savedir_photoz + 'zs_arr.npy')
+
+    zp_minchi2_arr = np.load(savedir_photoz + 'zp_minchi2_arr.npy')
+    zp_arr = np.load(savedir_photoz + 'zp_arr.npy')
+    zp_zerr_low_arr = np.load(savedir_photoz + 'zp_zerr_low_arr.npy')
+    zp_zerr_up_arr = np.load(savedir_photoz + 'zp_zerr_up_arr.npy')
+    zp_min_chi2_arr = np.load(savedir_photoz + 'zp_min_chi2_arr.npy')
+    zp_bestalpha_arr = np.load(savedir_photoz + 'zp_bestalpha_arr.npy')
+    zp_model_idx_arr = np.load(savedir_photoz + 'zp_model_idx_arr.npy')
+    zp_age_arr = np.load(savedir_photoz + 'zp_age_arr.npy')
+    zp_tau_arr = np.load(savedir_photoz + 'zp_tau_arr.npy')
+    zp_av_arr = np.load(savedir_photoz + 'zp_av_arr.npy')
+
+    zspz_minchi2_arr = np.load(savedir_spz + 'zspz_minchi2_arr.npy')
+    zspz_arr = np.load(savedir_spz + 'zspz_arr.npy')
+    zspz_zerr_low_arr = np.load(savedir_spz + 'zspz_zerr_low_arr.npy')
+    zspz_zerr_up_arr = np.load(savedir_spz + 'zspz_zerr_up_arr.npy')
+    zspz_min_chi2_arr = np.load(savedir_spz + 'zspz_min_chi2_arr.npy')
+    zspz_bestalpha_arr = np.load(savedir_spz + 'zspz_bestalpha_arr.npy')
+    zspz_model_idx_arr = np.load(savedir_spz + 'zspz_model_idx_arr.npy')
+    zspz_age_arr = np.load(savedir_spz + 'zspz_age_arr.npy')
+    zspz_tau_arr = np.load(savedir_spz + 'zspz_tau_arr.npy')
+    zspz_av_arr = np.load(savedir_spz + 'zspz_av_arr.npy')
+
+    zg_minchi2_arr = np.load(savedir_grismz + 'zg_minchi2_arr.npy')
+    zg_arr = np.load(savedir_grismz + 'zg_arr.npy')
+    zg_zerr_low_arr = np.load(savedir_grismz + 'zg_zerr_low_arr.npy')
+    zg_zerr_up_arr = np.load(savedir_grismz + 'zg_zerr_up_arr.npy')
+    zg_min_chi2_arr = np.load(savedir_grismz + 'zg_min_chi2_arr.npy')
+    zg_bestalpha_arr = np.load(savedir_grismz + 'zg_bestalpha_arr.npy')
+    zg_model_idx_arr = np.load(savedir_grismz + 'zg_model_idx_arr.npy')
+    zg_age_arr = np.load(savedir_grismz + 'zg_age_arr.npy')
+    zg_tau_arr = np.load(savedir_grismz + 'zg_tau_arr.npy')
+    zg_av_arr = np.load(savedir_grismz + 'zg_av_arr.npy')
+
+    # First check that the galaxy hasn't already been done
+    if (current_id in id_arr) and (current_field in field_arr):
+        print "At:", current_id, "in", current_field, "Skipping since this has been done."
+        return None
 
     print "\n", "Working on:", current_field, current_id, "at", current_specz
 
@@ -57,9 +105,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     if return_code == 0:
         print "Skipping due to an error with the obs data. See the error message just above this one.",
         print "Moving to the next galaxy."
-        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, \
-        -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, \
-        -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
+        return None
 
     threed_ra = phot_cat_3dhst['ra']
     threed_dec = phot_cat_3dhst['dec']
@@ -199,9 +245,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         lsf = lsf.astype(np.float64)  # Force dtype for cython code
     except IOError:
         print "LSF not found. Moving to next galaxy."
-        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, \
-        -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, \
-        -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
+        return None
 
     # -------- Stetch the LSF ------- #
     if modify_lsf:
@@ -248,8 +292,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
 
     zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
     do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz)
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start,\
+        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
 
     # ------------- Call fitting function for SPZ ------------- #
     print "\n", "Photo-z done. Moving on to SPZ computation now."
@@ -257,8 +302,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
     do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, zp, use_broadband=True, single_galaxy=False)
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+        use_broadband=True, single_galaxy=False)
 
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
@@ -267,12 +313,88 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
     do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, zp, use_broadband=False, single_galaxy=False)
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+        use_broadband=False, single_galaxy=False)
 
-    return zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
-    zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
-    zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av
+    # Append to existing numpy arrays and save
+    np.append(id_arr, current_id)
+    np.append(field_arr, current_field)
+    np.append(zs_arr, current_specz)
+
+    np.append(zp_minchi2_arr, zp_minchi2)
+    np.append(zp_arr, zp)
+    np.append(zp_zerr_low_arr, zp_zerr_low)
+    np.append(zp_zerr_up_arr, zp_zerr_up)
+    np.append(zp_min_chi2_arr, zp_min_chi2)
+    np.append(zp_bestalpha_arr, zp_bestalpha)
+    np.append(zp_model_idx_arr, zp_model_idx)
+    np.append(zp_age_arr, zp_age)
+    np.append(zp_tau_arr, zp_tau)
+    np.append(zp_av_arr, zp_av)
+
+    np.append(zspz_minchi2_arr, zspz_minchi2)
+    np.append(zspz_arr, zspz)
+    np.append(zspz_zerr_low_arr, zspz_zerr_low)
+    np.append(zspz_zerr_up_arr, zspz_zerr_up)
+    np.append(zspz_min_chi2_arr, zspz_min_chi2)
+    np.append(zspz_bestalpha_arr, zspz_bestalpha)
+    np.append(zspz_model_idx_arr, zspz_model_idx)
+    np.append(zspz_age_arr, zspz_age)
+    np.append(zspz_tau_arr, zspz_tau)
+    np.append(zspz_av_arr, zspz_av)
+
+    np.append(zg_minchi2_arr, zg_minchi2)
+    np.append(zg_arr, zg)
+    np.append(zg_zerr_low_arr, zg_zerr_low)
+    np.append(zg_zerr_up_arr, zg_zerr_up)
+    np.append(zg_min_chi2_arr, zg_min_chi2)
+    np.append(zg_bestalpha_arr, zg_bestalpha)
+    np.append(zg_model_idx_arr, zg_model_idx)
+    np.append(zg_age_arr, zg_age)
+    np.append(zg_tau_arr, zg_tau)
+    np.append(zg_av_arr, zg_av)
+
+    np.save(savedir_photoz + 'id_arr.npy', id_arr)
+    np.save(savedir_photoz + 'field_arr.npy', field_arr)
+    np.save(savedir_photoz + 'zs_arr.npy', zs_arr)
+
+    np.save(savedir_photoz + 'zp_minchi2_arr.npy', zp_minchi2_arr)
+    np.save(savedir_photoz + 'zp_arr.npy', zp_arr)
+    np.save(savedir_photoz + 'zp_zerr_low_arr.npy', zp_zerr_low_arr)
+    np.save(savedir_photoz + 'zp_zerr_up_arr.npy', zp_zerr_up_arr)
+    np.save(savedir_photoz + 'zp_min_chi2_arr.npy', zp_min_chi2_arr)
+    np.save(savedir_photoz + 'zp_bestalpha_arr.npy', zp_bestalpha_arr)
+    np.save(savedir_photoz + 'zp_model_idx_arr.npy', zp_model_idx_arr)
+    np.save(savedir_photoz + 'zp_age_arr.npy', zp_age_arr)
+    np.save(savedir_photoz + 'zp_tau_arr.npy', zp_tau_arr)
+    np.save(savedir_photoz + 'zp_av_arr.npy', zp_av_arr)
+
+    np.save(savedir_spz + 'zspz_minchi2_arr.npy', zspz_minchi2_arr)
+    np.save(savedir_spz + 'zspz_arr.npy', zspz_arr)
+    np.save(savedir_spz + 'zspz_zerr_low_arr.npy', zspz_zerr_low_arr)
+    np.save(savedir_spz + 'zspz_zerr_up_arr.npy', zspz_zerr_up_arr)
+    np.save(savedir_spz + 'zspz_min_chi2_arr.npy', zspz_min_chi2_arr)
+    np.save(savedir_spz + 'zspz_bestalpha_arr.npy', zspz_bestalpha_arr)
+    np.save(savedir_spz + 'zspz_model_idx_arr.npy', zspz_model_idx_arr)
+    np.save(savedir_spz + 'zspz_age_arr.npy', zspz_age_arr)
+    np.save(savedir_spz + 'zspz_tau_arr.npy', zspz_tau_arr)
+    np.save(savedir_spz + 'zspz_av_arr.npy', zspz_av_arr)
+
+    np.save(savedir_grismz + 'zg_minchi2_arr.npy', zg_minchi2_arr)
+    np.save(savedir_grismz + 'zg_arr.npy', zg_arr)
+    np.save(savedir_grismz + 'zg_zerr_low_arr.npy', zg_zerr_low_arr)
+    np.save(savedir_grismz + 'zg_zerr_up_arr.npy', zg_zerr_up_arr)
+    np.save(savedir_grismz + 'zg_min_chi2_arr.npy', zg_min_chi2_arr)
+    np.save(savedir_grismz + 'zg_bestalpha_arr.npy', zg_bestalpha_arr)
+    np.save(savedir_grismz + 'zg_model_idx_arr.npy', zg_model_idx_arr)
+    np.save(savedir_grismz + 'zg_age_arr.npy', zg_age_arr)
+    np.save(savedir_grismz + 'zg_tau_arr.npy', zg_tau_arr)
+    np.save(savedir_grismz + 'zg_av_arr.npy', zg_av_arr)
+
+    print "Intermediate result arrays saved."
+
+    return None
 
 def main():
 
@@ -300,44 +422,35 @@ def main():
 
     # ------------------------------ Get models ------------------------------ #
     # read in entire model set
-    bc03_all_spec_hdulist = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    # To see how these arrays were created check the code:
+    # $HOME/Desktop/test-codes/shared_memory_multiprocessing/shmem_parallel_proc.py
+    # This part will fail if the arrays dont already exist.
     total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
-    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy')
-    model_comp_spec_withlines = np.load(figs_data_dir + 'model_comp_spec_withlines.npy')
 
-    # Older approach using for loop. For some reason, I though this was faster. It is very obviously NOT!
-    # Read in models with emission lines adn put in numpy array
-    #bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
-    #model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid_withlines)), dtype=np.float64)
-    #for q in range(total_models):
-    #    model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
-    #bc03_all_spec_hdulist_withlines.close()
-    #del bc03_all_spec_hdulist_withlines
+    log_age_arr = np.load(figs_data_dir + 'log_age_arr.npy', mmap_mode='r')
+    metal_arr = np.load(figs_data_dir + 'metal_arr.npy', mmap_mode='r')
+    nlyc_arr = np.load(figs_data_dir + 'nlyc_arr.npy', mmap_mode='r')
+    tau_gyr_arr = np.load(figs_data_dir + 'tau_gyr_arr.npy', mmap_mode='r')
+    tauv_arr = np.load(figs_data_dir + 'tauv_arr.npy', mmap_mode='r')
+    ub_col_arr = np.load(figs_data_dir + 'ub_col_arr.npy', mmap_mode='r')
+    bv_col_arr = np.load(figs_data_dir + 'bv_col_arr.npy', mmap_mode='r')
+    vj_col_arr = np.load(figs_data_dir + 'vj_col_arr.npy', mmap_mode='r')
+    ms_arr = np.load(figs_data_dir + 'ms_arr.npy', mmap_mode='r')
+    mgal_arr = np.load(figs_data_dir + 'mgal_arr.npy', mmap_mode='r')
+
+    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
+    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
     # ---------------------------------- Read in look-up tables for model mags ------------------------------------- #
     # Using the look-up table now since it should be much faster
-    # First get them all into an appropriate shape
-    u = np.load(figs_data_dir + 'all_model_mags_par_u.npy')
-    f435w = np.load(figs_data_dir + 'all_model_mags_par_f435w.npy')
-    f606w = np.load(figs_data_dir + 'all_model_mags_par_f606w.npy')
-    f775w = np.load(figs_data_dir + 'all_model_mags_par_f775w.npy')
-    f850lp = np.load(figs_data_dir + 'all_model_mags_par_f850lp.npy')
-    f125w = np.load(figs_data_dir + 'all_model_mags_par_f125w.npy')
-    f140w = np.load(figs_data_dir + 'all_model_mags_par_f140w.npy')
-    f160w = np.load(figs_data_dir + 'all_model_mags_par_f160w.npy')
-    irac1 = np.load(figs_data_dir + 'all_model_mags_par_irac1.npy')
-    irac2 = np.load(figs_data_dir + 'all_model_mags_par_irac2.npy')
-    irac3 = np.load(figs_data_dir + 'all_model_mags_par_irac3.npy')
-    irac4 = np.load(figs_data_dir + 'all_model_mags_par_irac4.npy')
-
-    # put them in a list since I need to iterate over it
-    all_model_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
-
-    # cnovert to numpy array
-    all_model_flam = np.asarray(all_model_flam)
+    # Again check the code --
+    # $HOME/Desktop/test-codes/shared_memory_multiprocessing/shmem_parallel_proc.py
+    # to see how this was created
+    # This part will fail if the array does not already exist.
+    all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam.npy', mmap_mode='r')
 
     # ------------------------------- Read in photometry catalogs ------------------------------- #
     # GOODS-N from 3DHST
@@ -365,195 +478,23 @@ def main():
 
     # ------------------------------- Looping over each object ------------------------------- #
     total_final_sample = len(final_sample)
-    """
-    #num_cores = 3
-    result_list = Parallel(prefer='threads')(delayed(get_all_redshifts)(final_sample['pearsid'][0], final_sample['field'][j], \
-        final_sample['ra'][j], final_sample['dec'][j], \
-        final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-        bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start) \
-        for j in range(total_final_sample))
-
-    # the parallel code seems to like returning only a list
-    # so I have to unpack the list
-    for i in range(len(z_arr_to_check)):
-        chi2[i], alpha[i] = chi2_alpha_list[i]
-    """
-
-    id_list = []
-    field_list = []
-    zs_list = []
-
-    zp_minchi2_list = []
-    zp_list = []
-    zp_zerr_low_list = []
-    zp_zerr_up_list = []
-    zp_min_chi2_list = []
-    zp_bestalpha_list = []
-    zp_model_idx_list = []
-    zp_age_list = []
-    zp_tau_list = []
-    zp_av_list = []
-
-    zspz_minchi2_list = []
-    zspz_list = []
-    zspz_zerr_low_list = []
-    zspz_zerr_up_list = []
-    zspz_min_chi2_list = []
-    zspz_bestalpha_list = []
-    zspz_model_idx_list = []
-    zspz_age_list = []
-    zspz_tau_list = []
-    zspz_av_list = []
-
-    zg_minchi2_list = []
-    zg_list = []
-    zg_zerr_low_list = []
-    zg_zerr_up_list = []
-    zg_min_chi2_list = []
-    zg_bestalpha_list = []
-    zg_model_idx_list = []
-    zg_age_list = []
-    zg_tau_list = []
-    zg_av_list = []
-
-    # Skip galaxies already done. Read in data for galaxies already done.
-    already_done_ids = np.load(savedir_photoz + 'id_arr.npy')
-    already_done_fields = np.load(savedir_photoz + 'field_arr.npy')
-    already_done_zs = np.load(savedir_photoz + 'zs_arr.npy')
-
-    already_done_zp_minchi2 = np.load(savedir_photoz + 'zp_minchi2_arr.npy')
-    already_done_zp = np.load(savedir_photoz + 'zp_arr.npy')
-    already_done_zp_zerr_low = np.load(savedir_photoz + 'zp_zerr_low_arr.npy')
-    already_done_zp_zerr_up = np.load(savedir_photoz + 'zp_zerr_up_arr.npy')
-    already_done_zp_min_chi2 = np.load(savedir_photoz + 'zp_min_chi2_arr.npy')
-    already_done_zp_bestalpha = np.load(savedir_photoz + 'zp_bestalpha_arr.npy')
-    already_done_zp_model_idx = np.load(savedir_photoz + 'zp_model_idx_arr.npy')
-    already_done_zp_age = np.load(savedir_photoz + 'zp_age_arr.npy')
-    already_done_zp_tau = np.load(savedir_photoz + 'zp_tau_arr.npy')
-    already_done_zp_av = np.load(savedir_photoz + 'zp_av_arr.npy')
-
-    already_done_zspz_minchi2 = np.load(savedir_spz + 'zspz_minchi2_arr.npy')
-    already_done_zspz = np.load(savedir_spz + 'zspz_arr.npy')
-    already_done_zspz_zerr_low = np.load(savedir_spz + 'zspz_zerr_low_arr.npy')
-    already_done_zspz_zerr_up = np.load(savedir_spz + 'zspz_zerr_up_arr.npy')
-    already_done_zspz_min_chi2 = np.load(savedir_spz + 'zspz_min_chi2_arr.npy')
-    already_done_zspz_bestalpha = np.load(savedir_spz + 'zspz_bestalpha_arr.npy')
-    already_done_zspz_model_idx = np.load(savedir_spz + 'zspz_model_idx_arr.npy')
-    already_done_zspz_age = np.load(savedir_spz + 'zspz_age_arr.npy')
-    already_done_zspz_tau = np.load(savedir_spz + 'zspz_tau_arr.npy')
-    already_done_zspz_av = np.load(savedir_spz + 'zspz_av_arr.npy')
-
-    already_done_zg_minchi2 = np.load(savedir_grismz + 'zg_minchi2_arr.npy')
-    already_done_zg = np.load(savedir_grismz + 'zg_arr.npy')
-    already_done_zg_zerr_low = np.load(savedir_grismz + 'zg_zerr_low_arr.npy')
-    already_done_zg_zerr_up = np.load(savedir_grismz + 'zg_zerr_up_arr.npy')
-    already_done_zg_min_chi2 = np.load(savedir_grismz + 'zg_min_chi2_arr.npy')
-    already_done_zg_bestalpha = np.load(savedir_grismz + 'zg_bestalpha_arr.npy')
-    already_done_zg_model_idx = np.load(savedir_grismz + 'zg_model_idx_arr.npy')
-    already_done_zg_age = np.load(savedir_grismz + 'zg_age_arr.npy')
-    already_done_zg_tau = np.load(savedir_grismz + 'zg_tau_arr.npy')
-    already_done_zg_av = np.load(savedir_grismz + 'zg_av_arr.npy')
-
     galaxy_count = 0
-    for j in range(150, total_final_sample):
+    for j in range(45, total_final_sample):  # doing the remaining galaxies on jet
 
         print "Galaxies done so far:", galaxy_count
         print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
 
-        current_id = final_sample['pearsid'][j]
-        current_field = final_sample['field'][j]
+        num_cores = 6
 
-        if (current_id in already_done_ids) and (current_field in already_done_fields):
-            print "At:", current_id, "in", current_field, "Skipping since this has been done."
-
-            # Need to get all the data and append it to current lists otherwise
-            # the arrays will be overwritten and you will loose the information 
-            # that has been previously saved.
-            done_idx = np.where((already_done_ids == current_id) & (already_done_fields == current_field))[0]
-            id_list.append(already_done_ids[done_idx])
-            field_list.append(already_done_fields[done_idx])
-            zs_list.append(already_done_zs[done_idx])
-
-            zp_minchi2_list.append(already_done_zp_minchi2[done_idx])
-            zp_list.append(already_done_zp[done_idx])
-            zp_zerr_low_list.append(already_done_zp_zerr_low[done_idx])
-            zp_zerr_up_list.append(already_done_zp_zerr_up[done_idx])
-            zp_min_chi2_list.append(already_done_zp_min_chi2[done_idx])
-            zp_bestalpha_list.append(already_done_zp_bestalpha[done_idx])
-            zp_model_idx_list.append(already_done_zp_model_idx[done_idx])
-            zp_age_list.append(already_done_zp_age[done_idx])
-            zp_tau_list.append(already_done_zp_tau[done_idx])
-            zp_av_list.append(already_done_zp_av[done_idx])
-
-            zspz_minchi2_list.append(already_done_zspz_minchi2[done_idx])
-            zspz_list.append(already_done_zspz[done_idx])
-            zspz_zerr_low_list.append(already_done_zspz_zerr_low[done_idx])
-            zspz_zerr_up_list.append(already_done_zspz_zerr_up[done_idx])
-            zspz_min_chi2_list.append(already_done_zspz_min_chi2[done_idx])
-            zspz_bestalpha_list.append(already_done_zspz_bestalpha[done_idx])
-            zspz_model_idx_list.append(already_done_zspz_model_idx[done_idx])
-            zspz_age_list.append(already_done_zspz_age[done_idx])
-            zspz_tau_list.append(already_done_zspz_tau[done_idx])
-            zspz_av_list.append(already_done_zspz_av[done_idx])
-
-            zg_minchi2_list.append(already_done_zg_minchi2[done_idx])
-            zg_list.append(already_done_zg[done_idx])
-            zg_zerr_low_list.append(already_done_zg_zerr_low[done_idx])
-            zg_zerr_up_list.append(already_done_zg_zerr_up[done_idx])
-            zg_min_chi2_list.append(already_done_zg_min_chi2[done_idx])
-            zg_bestalpha_list.append(already_done_zg_bestalpha[done_idx])
-            zg_model_idx_list.append(already_done_zg_model_idx[done_idx])
-            zg_age_list.append(already_done_zg_age[done_idx])
-            zg_tau_list.append(already_done_zg_tau[done_idx])
-            zg_av_list.append(already_done_zg_av[done_idx])
-
-            # Convert to numpy arrays and save
-            np.save(savedir_photoz + 'id_arr.npy', np.asarray(id_list))
-            np.save(savedir_photoz + 'field_arr.npy', np.asarray(field_list))
-            np.save(savedir_photoz + 'zs_arr.npy', np.asarray(zs_list))
-
-            np.save(savedir_photoz + 'zp_minchi2_arr.npy', np.asarray(zp_minchi2_list))
-            np.save(savedir_photoz + 'zp_arr.npy', np.asarray(zp_list))
-            np.save(savedir_photoz + 'zp_zerr_low_arr.npy', np.asarray(zp_zerr_low_list))
-            np.save(savedir_photoz + 'zp_zerr_up_arr.npy', np.asarray(zp_zerr_up_list))
-            np.save(savedir_photoz + 'zp_min_chi2_arr.npy', np.asarray(zp_min_chi2_list))
-            np.save(savedir_photoz + 'zp_bestalpha_arr.npy', np.asarray(zp_bestalpha_list))
-            np.save(savedir_photoz + 'zp_model_idx_arr.npy', np.asarray(zp_model_idx_list))
-            np.save(savedir_photoz + 'zp_age_arr.npy', np.asarray(zp_age_list))
-            np.save(savedir_photoz + 'zp_tau_arr.npy', np.asarray(zp_tau_list))
-            np.save(savedir_photoz + 'zp_av_arr.npy', np.asarray(zp_av_list))
-
-            np.save(savedir_spz + 'zspz_minchi2_arr.npy', np.asarray(zspz_minchi2_list))
-            np.save(savedir_spz + 'zspz_arr.npy', np.asarray(zspz_list))
-            np.save(savedir_spz + 'zspz_zerr_low_arr.npy', np.asarray(zspz_zerr_low_list))
-            np.save(savedir_spz + 'zspz_zerr_up_arr.npy', np.asarray(zspz_zerr_up_list))
-            np.save(savedir_spz + 'zspz_min_chi2_arr.npy', np.asarray(zspz_min_chi2_list))
-            np.save(savedir_spz + 'zspz_bestalpha_arr.npy', np.asarray(zspz_bestalpha_list))
-            np.save(savedir_spz + 'zspz_model_idx_arr.npy', np.asarray(zspz_model_idx_list))
-            np.save(savedir_spz + 'zspz_age_arr.npy', np.asarray(zspz_age_list))
-            np.save(savedir_spz + 'zspz_tau_arr.npy', np.asarray(zspz_tau_list))
-            np.save(savedir_spz + 'zspz_av_arr.npy', np.asarray(zspz_av_list))
-
-            np.save(savedir_grismz + 'zg_minchi2_arr.npy', np.asarray(zg_minchi2_list))
-            np.save(savedir_grismz + 'zg_arr.npy', np.asarray(zg_list))
-            np.save(savedir_grismz + 'zg_zerr_low_arr.npy', np.asarray(zg_zerr_low_list))
-            np.save(savedir_grismz + 'zg_zerr_up_arr.npy', np.asarray(zg_zerr_up_list))
-            np.save(savedir_grismz + 'zg_min_chi2_arr.npy', np.asarray(zg_min_chi2_list))
-            np.save(savedir_grismz + 'zg_bestalpha_arr.npy', np.asarray(zg_bestalpha_list))
-            np.save(savedir_grismz + 'zg_model_idx_arr.npy', np.asarray(zg_model_idx_list))
-            np.save(savedir_grismz + 'zg_age_arr.npy', np.asarray(zg_age_list))
-            np.save(savedir_grismz + 'zg_tau_arr.npy', np.asarray(zg_tau_list))
-            np.save(savedir_grismz + 'zg_av_arr.npy', np.asarray(zg_av_list))
-
-            continue
-
-        zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av, \
-        zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av, \
-        zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
-        get_all_redshifts(current_id, current_field, \
-        final_sample['ra'][j], final_sample['dec'][j], \
-        final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-        bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start)
+        processes = [mp.Process(target=get_all_redshifts, args=(final_sample['pearsid'][u], final_sample['field'][u], final_sample['ra'][u], final_sample['dec'][u], 
+            final_sample['specz'][u], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+            model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
+            log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for u in xrange(num_cores*j, num_cores*(j+1))]
+        for p in processes:
+            p.start()
+            print "Current process ID:", p.pid
+        for p in processes:
+            p.join()
 
         #zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
         #get_all_redshifts(current_id, current_field, \
@@ -563,87 +504,10 @@ def main():
 
         # This is trigerred if the return code from ngp.get_data() is 0. i.e. excess contamination or incomplete wav array.
         # This is also trigerred if the LSF isn't found and the function above returns prematurely
-        if zp == -99.0:
-            continue
+        #if zp == -99.0:
+        #    continue
 
-        galaxy_count += 1
-
-        id_list.append(current_id)
-        field_list.append(current_field)
-        zs_list.append(final_sample['specz'][j])
-
-        zp_minchi2_list.append(zp_minchi2)
-        zp_list.append(zp)
-        zp_zerr_low_list.append(zp_zerr_low)
-        zp_zerr_up_list.append(zp_zerr_up)
-        zp_min_chi2_list.append(zp_min_chi2)
-        zp_bestalpha_list.append(zp_bestalpha)
-        zp_model_idx_list.append(zp_model_idx)
-        zp_age_list.append(zp_age)
-        zp_tau_list.append(zp_tau)
-        zp_av_list.append(zp_av)
-
-        zspz_minchi2_list.append(zspz_minchi2)
-        zspz_list.append(zspz)
-        zspz_zerr_low_list.append(zspz_zerr_low)
-        zspz_zerr_up_list.append(zspz_zerr_up)
-        zspz_min_chi2_list.append(zspz_min_chi2)
-        zspz_bestalpha_list.append(zspz_bestalpha)
-        zspz_model_idx_list.append(zspz_model_idx)
-        zspz_age_list.append(zspz_age)
-        zspz_tau_list.append(zspz_tau)
-        zspz_av_list.append(zspz_av)
-
-        zg_minchi2_list.append(zg_minchi2)
-        zg_list.append(zg)
-        zg_zerr_low_list.append(zg_zerr_low)
-        zg_zerr_up_list.append(zg_zerr_up)
-        zg_min_chi2_list.append(zg_min_chi2)
-        zg_bestalpha_list.append(zg_bestalpha)
-        zg_model_idx_list.append(zg_model_idx)
-        zg_age_list.append(zg_age)
-        zg_tau_list.append(zg_tau)
-        zg_av_list.append(zg_av)
-
-        # Convert to numpy arrays and save
-        np.save(savedir_photoz + 'id_arr.npy', np.asarray(id_list))
-        np.save(savedir_photoz + 'field_arr.npy', np.asarray(field_list))
-        np.save(savedir_photoz + 'zs_arr.npy', np.asarray(zs_list))
-
-        np.save(savedir_photoz + 'zp_minchi2_arr.npy', np.asarray(zp_minchi2_list))
-        np.save(savedir_photoz + 'zp_arr.npy', np.asarray(zp_list))
-        np.save(savedir_photoz + 'zp_zerr_low_arr.npy', np.asarray(zp_zerr_low_list))
-        np.save(savedir_photoz + 'zp_zerr_up_arr.npy', np.asarray(zp_zerr_up_list))
-        np.save(savedir_photoz + 'zp_min_chi2_arr.npy', np.asarray(zp_min_chi2_list))
-        np.save(savedir_photoz + 'zp_bestalpha_arr.npy', np.asarray(zp_bestalpha_list))
-        np.save(savedir_photoz + 'zp_model_idx_arr.npy', np.asarray(zp_model_idx_list))
-        np.save(savedir_photoz + 'zp_age_arr.npy', np.asarray(zp_age_list))
-        np.save(savedir_photoz + 'zp_tau_arr.npy', np.asarray(zp_tau_list))
-        np.save(savedir_photoz + 'zp_av_arr.npy', np.asarray(zp_av_list))
-
-        np.save(savedir_spz + 'zspz_minchi2_arr.npy', np.asarray(zspz_minchi2_list))
-        np.save(savedir_spz + 'zspz_arr.npy', np.asarray(zspz_list))
-        np.save(savedir_spz + 'zspz_zerr_low_arr.npy', np.asarray(zspz_zerr_low_list))
-        np.save(savedir_spz + 'zspz_zerr_up_arr.npy', np.asarray(zspz_zerr_up_list))
-        np.save(savedir_spz + 'zspz_min_chi2_arr.npy', np.asarray(zspz_min_chi2_list))
-        np.save(savedir_spz + 'zspz_bestalpha_arr.npy', np.asarray(zspz_bestalpha_list))
-        np.save(savedir_spz + 'zspz_model_idx_arr.npy', np.asarray(zspz_model_idx_list))
-        np.save(savedir_spz + 'zspz_age_arr.npy', np.asarray(zspz_age_list))
-        np.save(savedir_spz + 'zspz_tau_arr.npy', np.asarray(zspz_tau_list))
-        np.save(savedir_spz + 'zspz_av_arr.npy', np.asarray(zspz_av_list))
-
-        np.save(savedir_grismz + 'zg_minchi2_arr.npy', np.asarray(zg_minchi2_list))
-        np.save(savedir_grismz + 'zg_arr.npy', np.asarray(zg_list))
-        np.save(savedir_grismz + 'zg_zerr_low_arr.npy', np.asarray(zg_zerr_low_list))
-        np.save(savedir_grismz + 'zg_zerr_up_arr.npy', np.asarray(zg_zerr_up_list))
-        np.save(savedir_grismz + 'zg_min_chi2_arr.npy', np.asarray(zg_min_chi2_list))
-        np.save(savedir_grismz + 'zg_bestalpha_arr.npy', np.asarray(zg_bestalpha_list))
-        np.save(savedir_grismz + 'zg_model_idx_arr.npy', np.asarray(zg_model_idx_list))
-        np.save(savedir_grismz + 'zg_age_arr.npy', np.asarray(zg_age_list))
-        np.save(savedir_grismz + 'zg_tau_arr.npy', np.asarray(zg_tau_list))
-        np.save(savedir_grismz + 'zg_av_arr.npy', np.asarray(zg_av_list))
-
-        print "Intermediate result arrays saved."
+        galaxy_count += 4
 
     print "All done."
     print "Final number within sample:", galaxy_count
