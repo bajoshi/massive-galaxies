@@ -330,7 +330,7 @@ def main():
         ('specz', float), ('specz_source', '|S10'), ('specz_qual', '|S1'), ('netsig_arr', float), ('d4000_arr', float)])
     np.savetxt(massive_galaxies_dir + 'spz_paper_sample.txt', data, \
         fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f'],\
-        delimiter=' ', header='pearsid field ra dec specz specz_source specz_qual netsig d4000')    
+        delimiter=' ', header='pearsid field ra dec specz specz_source specz_qual netsig d4000')
 
     return None
 
