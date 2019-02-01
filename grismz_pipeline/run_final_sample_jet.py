@@ -30,9 +30,6 @@ from fullfitting_grism_broadband_emlines import do_fitting, get_flam, get_flam_n
 from photoz import do_photoz_fitting_lookup
 from new_refine_grismz_gridsearch_parallel import get_data
 import model_mods as mm
-import dn4000_catalog as dc
-import mocksim_results as mr
-import check_single_galaxy_fitting_spz_photoz as chk
 
 speed_of_light = 299792458e10  # angstroms per second
 
@@ -304,7 +301,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-        use_broadband=True, single_galaxy=False)
+        use_broadband=True, single_galaxy=False, for_loop_method='parallel')
 
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
@@ -315,45 +312,45 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-        use_broadband=False, single_galaxy=False)
+        use_broadband=False, single_galaxy=False, for_loop_method='parallel')
 
     # Append to existing numpy arrays and save
-    np.append(id_arr, current_id)
-    np.append(field_arr, current_field)
-    np.append(zs_arr, current_specz)
+    id_arr = np.append(id_arr, current_id)
+    field_arr = np.append(field_arr, current_field)
+    zs_arr = np.append(zs_arr, current_specz)
 
-    np.append(zp_minchi2_arr, zp_minchi2)
-    np.append(zp_arr, zp)
-    np.append(zp_zerr_low_arr, zp_zerr_low)
-    np.append(zp_zerr_up_arr, zp_zerr_up)
-    np.append(zp_min_chi2_arr, zp_min_chi2)
-    np.append(zp_bestalpha_arr, zp_bestalpha)
-    np.append(zp_model_idx_arr, zp_model_idx)
-    np.append(zp_age_arr, zp_age)
-    np.append(zp_tau_arr, zp_tau)
-    np.append(zp_av_arr, zp_av)
+    zp_minchi2_arr = np.append(zp_minchi2_arr, zp_minchi2)
+    zp_arr = np.append(zp_arr, zp)
+    zp_zerr_low_arr = np.append(zp_zerr_low_arr, zp_zerr_low)
+    zp_zerr_up_arr = np.append(zp_zerr_up_arr, zp_zerr_up)
+    zp_min_chi2_arr = np.append(zp_min_chi2_arr, zp_min_chi2)
+    zp_bestalpha_arr = np.append(zp_bestalpha_arr, zp_bestalpha)
+    zp_model_idx_arr = np.append(zp_model_idx_arr, zp_model_idx)
+    zp_age_arr = np.append(zp_age_arr, zp_age)
+    zp_tau_arr = np.append(zp_tau_arr, zp_tau)
+    zp_av_arr = np.append(zp_av_arr, zp_av)
 
-    np.append(zspz_minchi2_arr, zspz_minchi2)
-    np.append(zspz_arr, zspz)
-    np.append(zspz_zerr_low_arr, zspz_zerr_low)
-    np.append(zspz_zerr_up_arr, zspz_zerr_up)
-    np.append(zspz_min_chi2_arr, zspz_min_chi2)
-    np.append(zspz_bestalpha_arr, zspz_bestalpha)
-    np.append(zspz_model_idx_arr, zspz_model_idx)
-    np.append(zspz_age_arr, zspz_age)
-    np.append(zspz_tau_arr, zspz_tau)
-    np.append(zspz_av_arr, zspz_av)
+    zspz_minchi2_arr = np.append(zspz_minchi2_arr, zspz_minchi2)
+    zspz_arr = np.append(zspz_arr, zspz)
+    zspz_zerr_low_arr = np.append(zspz_zerr_low_arr, zspz_zerr_low)
+    zspz_zerr_up_arr = np.append(zspz_zerr_up_arr, zspz_zerr_up)
+    zspz_min_chi2_arr = np.append(zspz_min_chi2_arr, zspz_min_chi2)
+    zspz_bestalpha_arr = np.append(zspz_bestalpha_arr, zspz_bestalpha)
+    zspz_model_idx_arr = np.append(zspz_model_idx_arr, zspz_model_idx)
+    zspz_age_arr = np.append(zspz_age_arr, zspz_age)
+    zspz_tau_arr = np.append(zspz_tau_arr, zspz_tau)
+    zspz_av_arr = np.append(zspz_av_arr, zspz_av)
 
-    np.append(zg_minchi2_arr, zg_minchi2)
-    np.append(zg_arr, zg)
-    np.append(zg_zerr_low_arr, zg_zerr_low)
-    np.append(zg_zerr_up_arr, zg_zerr_up)
-    np.append(zg_min_chi2_arr, zg_min_chi2)
-    np.append(zg_bestalpha_arr, zg_bestalpha)
-    np.append(zg_model_idx_arr, zg_model_idx)
-    np.append(zg_age_arr, zg_age)
-    np.append(zg_tau_arr, zg_tau)
-    np.append(zg_av_arr, zg_av)
+    zg_minchi2_arr = np.append(zg_minchi2_arr, zg_minchi2)
+    zg_arr = np.append(zg_arr, zg)
+    zg_zerr_low_arr = np.append(zg_zerr_low_arr, zg_zerr_low)
+    zg_zerr_up_arr = np.append(zg_zerr_up_arr, zg_zerr_up)
+    zg_min_chi2_arr = np.append(zg_min_chi2_arr, zg_min_chi2)
+    zg_bestalpha_arr = np.append(zg_bestalpha_arr, zg_bestalpha)
+    zg_model_idx_arr = np.append(zg_model_idx_arr, zg_model_idx)
+    zg_age_arr = np.append(zg_age_arr, zg_age)
+    zg_tau_arr = np.append(zg_tau_arr, zg_tau)
+    zg_av_arr = np.append(zg_av_arr, zg_av)
 
     np.save(savedir_photoz + 'id_arr.npy', id_arr)
     np.save(savedir_photoz + 'field_arr.npy', field_arr)
@@ -479,35 +476,18 @@ def main():
     # ------------------------------- Looping over each object ------------------------------- #
     total_final_sample = len(final_sample)
     galaxy_count = 0
-    for j in range(45, total_final_sample):  # doing the remaining galaxies on jet
+
+    for j in range(175, total_final_sample):
 
         print "Galaxies done so far:", galaxy_count
         print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
 
-        num_cores = 6
-
-        processes = [mp.Process(target=get_all_redshifts, args=(final_sample['pearsid'][u], final_sample['field'][u], final_sample['ra'][u], final_sample['dec'][u], 
-            final_sample['specz'][u], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+        get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
+            final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
             model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
-            log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for u in xrange(num_cores*j, num_cores*(j+1))]
-        for p in processes:
-            p.start()
-            print "Current process ID:", p.pid
-        for p in processes:
-            p.join()
+            log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
 
-        #zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
-        #get_all_redshifts(current_id, current_field, \
-        #final_sample['ra'][j], final_sample['dec'][j], \
-        #final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-        #bc03_all_spec_hdulist, model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start)
-
-        # This is trigerred if the return code from ngp.get_data() is 0. i.e. excess contamination or incomplete wav array.
-        # This is also trigerred if the LSF isn't found and the function above returns prematurely
-        #if zp == -99.0:
-        #    continue
-
-        galaxy_count += 4
+        galaxy_count += 1
 
     print "All done."
     print "Final number within sample:", galaxy_count

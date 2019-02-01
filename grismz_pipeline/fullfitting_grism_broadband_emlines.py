@@ -739,30 +739,29 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     alpha = np.empty((len(z_arr_to_check), total_models))
 
     # First do the convolution with the LSF
-    if for_loop_method == 'parallel':
-        model_comp_spec_lsfconv = Parallel(n_jobs=4)(delayed(fftconvolve)(model_comp_spec[i], lsf, mode = 'same') for i in range(total_models))
-        model_comp_spec_lsfconv = np.asarray(model_comp_spec_lsfconv)
-    elif for_loop_method == 'sequential':
-        model_comp_spec_lsfconv = np.zeros(model_comp_spec.shape)
-        for i in range(total_models):
-            model_comp_spec_lsfconv[i] = fftconvolve(model_comp_spec[i], lsf, mode = 'same')
+    #if for_loop_method == 'parallel':
+    #    model_comp_spec_lsfconv = Parallel(n_jobs=4)(delayed(fftconvolve)(model_comp_spec[i], lsf, mode = 'same') for i in range(total_models))
+    #    model_comp_spec_lsfconv = np.asarray(model_comp_spec_lsfconv)
+    #elif for_loop_method == 'sequential':
+    model_comp_spec_lsfconv = np.zeros(model_comp_spec.shape)
+    for i in range(total_models):
+        model_comp_spec_lsfconv[i] = fftconvolve(model_comp_spec[i], lsf, mode = 'same')
 
     print "Convolution done.",
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
     # looping
     if for_loop_method == 'parallel':
-        num_cores = 4
-        chi2_alpha_list = Parallel(n_jobs=num_cores, max_nbytes=1e6)(delayed(get_chi2_alpha_at_z)(z, \
+        uname = os.uname()
+        if 'firstlight' in uname[1]:
+            num_cores = 4
+        elif 'jet' in uname[1]:
+            num_cores = 6
+        chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
         grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
         resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband) \
         for z in z_arr_to_check)
-
-        #chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z_wrapper)(z, \
-        #grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-        #total_models, start_time, use_broadband) \
-        #for z in z_arr_to_check)
 
         # the parallel code seems to like returning only a list
         # so I have to unpack the list
