@@ -116,18 +116,18 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
 
     # Define figure
     fig = plt.figure(figsize=(14,8))
-    gs = gridspec.GridSpec(10,24)
+    gs = gridspec.GridSpec(10,26)
     gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.1, hspace=0)
 
     # Put axes on grid
-    ax1 = fig.add_subplot(gs[:7, :7])
-    ax2 = fig.add_subplot(gs[7:, :7])
+    ax1 = fig.add_subplot(gs[:7, :8])
+    ax2 = fig.add_subplot(gs[7:, :8])
 
-    ax3 = fig.add_subplot(gs[:7, 8:15])
-    ax4 = fig.add_subplot(gs[7:, 8:15])
+    ax3 = fig.add_subplot(gs[:7, 9:17])
+    ax4 = fig.add_subplot(gs[7:, 9:17])
 
-    ax5 = fig.add_subplot(gs[:7, 16:])
-    ax6 = fig.add_subplot(gs[7:, 16:])
+    ax5 = fig.add_subplot(gs[:7, 18:])
+    ax6 = fig.add_subplot(gs[7:, 18:])
 
     # Plot stuff
     ax1.plot(zs, zp, 'o', markersize=7, color='k', markeredgecolor='k')
@@ -139,26 +139,24 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
     ax5.plot(zs, zspz, 'o', markersize=7, color='k', markeredgecolor='k')
     ax6.plot(zs, resid_zspz, 'o', markersize=7, color='k', markeredgecolor='k')
 
-    plt.show()
-
     # Limits
     ax1.set_xlim(0.6, 1.24)
     ax1.set_ylim(0.6, 1.24)
 
     ax2.set_xlim(0.6, 1.24)
-    ax2.set_ylim(-0.1, 0.1)
+    ax2.set_ylim(-0.2, 0.2)
 
     ax3.set_xlim(0.6, 1.24)
     ax3.set_ylim(0.6, 1.24)
 
     ax4.set_xlim(0.6, 1.24)
-    ax4.set_ylim(-0.1, 0.1)
+    ax4.set_ylim(-0.2, 0.2)
 
     ax5.set_xlim(0.6, 1.24)
-    ax5.set_ylim(-0.1, 0.1)
+    ax5.set_ylim(0.6, 1.24)
 
     ax6.set_xlim(0.6, 1.24)
-    ax6.set_ylim(-0.1, 0.1)
+    ax6.set_ylim(-0.2, 0.2)
 
     # Other lines on plot
     ax2.axhline(y=0.0, ls='--', color='gray')
@@ -228,7 +226,8 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
     ax6.set_ylabel(r'$\mathrm{(z_{spz} - z_{s}) / (1+z_{s})}$', fontsize=20)
 
     # save figure and close
-    fig.savefig(massive_figures_dir + 'spz_comp_photoz_' + str(d4000_low) + 'to' + str(d4000_high) + '.pdf', \
+    fig.savefig(massive_figures_dir + 'spz_comp_photoz_' + \
+        str(d4000_low).replace('.','p') + 'to' + str(d4000_high).replace('.','p') + '.pdf', \
         dpi=300, bbox_inches='tight')
 
     return None
