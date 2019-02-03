@@ -191,8 +191,8 @@ def get_arrays_to_plot():
         all_d4000_list.append(d4000)
         all_netsig_list.append(netsig_chosen)
 
-        #if d4000 > 1.8:
-        #    print current_id, current_field, d4000, current_specz, zp[i], zspz[i]
+        if d4000 >= 1.4 and d4000 < 1.6:
+            print current_id, current_field#, d4000, current_specz, zp[i], zspz[i]
 
     return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
     np.array(all_d4000_list), np.array(all_netsig_list), np.array(zp_chi2_list), np.array(zg_chi2_list), np.array(zspz_chi2_list)
@@ -321,6 +321,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
 
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2 = get_arrays_to_plot()
+    sys.exit(0)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
