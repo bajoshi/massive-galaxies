@@ -20,7 +20,9 @@ lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 threedhst_datadir = home + "/Desktop/3dhst_data/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
-savedir = massive_figures_dir + 'single_galaxy_comparison/'  # Required to save p(z) curve
+savedir_photoz = massive_figures_dir + 'photoz_run_jan2019/'  # Required to save p(z) curve and z_arr
+savedir_spz = massive_figures_dir + 'spz_run_jan2019/'  # Required to save p(z) curve and z_arr
+savedir_grismz = massive_figures_dir + 'grismz_run_jan2019/'  # Required to save p(z) curve and z_arr
 
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
@@ -491,11 +493,11 @@ def main():
 
     # Setting errors to zero for now
     # Will use the width of the p(z) curve later
-    zp_zerr_low = 0.0
-    zp_zerr_up = 0.0
+    zp_zerr_low = zp + 0.0
+    zp_zerr_up = zp + 0.0
 
-    zspz_zerr_low = 0.0
-    zspz_zerr_up = 0.0
+    zspz_zerr_low = zspz + 0.0
+    zspz_zerr_up = zspz + 0.0
 
     # ------------------------------- Get best fit model for plotting ------------------------------- #
     # Will have to do this at the photo-z and SPZ separtely otherwise the plots will not look right

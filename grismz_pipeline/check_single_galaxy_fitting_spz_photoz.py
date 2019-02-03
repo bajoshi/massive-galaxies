@@ -4,6 +4,7 @@ import numpy as np
 from astropy.io import fits
 from scipy.interpolate import griddata
 from scipy.integrate import simps
+from scipy.signal import fftconvolve
 
 import os
 import sys
@@ -301,7 +302,9 @@ def get_best_fit_model_spz(resampling_lam_grid, resampling_lam_grid_length, mode
 
     # ------------ Get best fit model at grism resolution ------------ #
     # First do the convolution with the LSF
-    model_comp_spec_lsfconv = ff.lsf_convolve(model_comp_spec, lsf, total_models)
+    model_comp_spec_lsfconv = np.zeros(model_comp_spec.shape)
+    for i in range(total_models):
+        model_comp_spec_lsfconv[i] = fftconvolve(model_comp_spec[i], lsf, mode = 'same')
 
     # chop model to get the part within objects lam obs grid
     model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - grism_lam_obs[0]))
