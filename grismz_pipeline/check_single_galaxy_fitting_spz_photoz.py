@@ -54,19 +54,19 @@ def makefig():
 
 def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, \
     best_fit_model_fullres, all_filt_flam_bestmodel, bestalpha, \
-    obj_id, obj_field, specz, zp, zp_minchi2, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000, savedir):
+    obj_id, obj_field, specz, zp, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000, savedir):
 
     # Make figure and place on grid
     fig, ax1, ax2 = makefig()
 
     # ---------- plot data, model, and residual ---------- #
     # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+zp), bestalpha*best_fit_model_fullres / (1+zp), color='mediumblue', alpha=0.3)
+    ax1.plot(model_lam_grid * (1+zp), bestalpha*best_fit_model_fullres / (1+zp), color='dimgrey', alpha=0.2)
     # plot model photometry
-    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=20)
+    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='lightseagreen', zorder=20)
 
     # ----- plot data
-    ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, fmt='.', color='midnightblue', markeredgecolor='midnightblue', \
+    ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, fmt='.', color='crimson', markeredgecolor='crimson', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
     # ----- Residuals
@@ -98,24 +98,24 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     ax2.minorticks_on()
 
     # ---------- text for info ---------- #
-    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.75, 0.35, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    low_zerr = zp_minchi2 - low_z_lim
-    high_zerr = upper_z_lim - zp_minchi2
+    low_zerr = zp - low_z_lim
+    high_zerr = upper_z_lim - zp
 
-    ax1.text(0.75, 0.35, \
-    r'$\mathrm{z_{p;min\,\chi^2}\, =\, }$' + "{:.4}".format(zp_minchi2) + \
+    ax1.text(0.75, 0.27, \
+    r'$\mathrm{z_{p;best}\, =\, }$' + "{:.4}".format(zp) + \
     r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    ax1.text(0.75, 0.22, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.22, r'$\mathrm{z_{p;wt}\, =\, }$' + "{:.4}".format(zp), \
-    verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    #ax1.text(0.75, 0.22, r'$\mathrm{z_{p;wt}\, =\, }$' + "{:.4}".format(zp), \
+    #verticalalignment='top', horizontalalignment='left', \
+    #transform=ax1.transAxes, color='k', size=10)
 
     ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
@@ -159,7 +159,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     ax3.minorticks_on()
 
     # ---------- Save figure ---------- #
-    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_photoz_fit.png', dpi=300, bbox_inches='tight')
+    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_photoz_fit.pdf', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()
@@ -169,25 +169,25 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
 
 def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, phot_flam_obs, phot_ferr_obs, \
     model_lam_grid, best_fit_model_fullres, best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, bestalpha, \
-    obj_id, obj_field, specz, zp, zg_minchi2, low_z_lim, upper_z_lim, zspz, chi2, age, tau, av, netsig, d4000, savedir):
+    obj_id, obj_field, specz, zp, low_z_lim, upper_z_lim, zspz, chi2, age, tau, av, netsig, d4000, savedir):
 
     # Make figure and place on grid
     fig, ax1, ax2 = makefig()
 
     # ---------- plot data, model, and residual ---------- #
     # plot full res model but you'll have to redshift it
-    ax1.plot(model_lam_grid * (1+zspz), bestalpha*best_fit_model_fullres / (1+zspz), color='mediumblue', alpha=0.3)
+    ax1.plot(model_lam_grid * (1+zspz), bestalpha*best_fit_model_fullres / (1+zspz), color='dimgrey', alpha=0.2)
 
     # ----- plot data
     ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2, lw=2, zorder=10)
-    ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray', zorder=10)
+    ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='gray', zorder=10)
 
-    ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, fmt='.', color='midnightblue', markeredgecolor='midnightblue', \
+    ax1.errorbar(phot_lam_obs, phot_flam_obs, yerr=phot_ferr_obs, fmt='.', color='crimson', markeredgecolor='crimson', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
     # ----- plot best fit model
-    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', lw=1.2, color='indianred', zorder=20)
-    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='indianred', zorder=20)
+    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', lw=1.2, color='lightseagreen', zorder=20)
+    ax1.scatter(phot_lam_obs, bestalpha*all_filt_flam_bestmodel, s=20, color='lightseagreen', zorder=20)
 
     # ----- Residuals
     # For the grism points
@@ -224,26 +224,26 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     ax2.minorticks_on()
 
     # ---------- text for info ---------- #
-    ax1.text(0.75, 0.45, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
-    ax1.text(0.75, 0.4, r'$\mathrm{z_{SPZ}\, =\, }$' + "{:.4}".format(zspz), \
-    verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    #ax1.text(0.75, 0.4, r'$\mathrm{z_{SPZ}\, =\, }$' + "{:.4}".format(zspz), \
+    #verticalalignment='top', horizontalalignment='left', \
+    #transform=ax1.transAxes, color='k', size=10)
 
-    low_zerr = zg_minchi2 - low_z_lim
-    high_zerr = upper_z_lim - zg_minchi2
+    low_zerr = zspz - low_z_lim
+    high_zerr = upper_z_lim - zspz
 
     ax1.text(0.75, 0.35, \
-    r'$\mathrm{z_{g;min\,\chi^2}\, =\, }$' + "{:.4}".format(zg_minchi2) + \
+    r'$\mathrm{z_{spz;best}\, =\, }$' + "{:.4}".format(zspz) + \
     r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
     ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.22, r'$\mathrm{z_{p;wt}\, =\, }$' + "{:.4}".format(zp), \
+    ax1.text(0.75, 0.22, r'$\mathrm{z_{p;best}\, =\, }$' + "{:.4}".format(zp), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 
@@ -289,7 +289,7 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     ax3.minorticks_on()
 
     # ---------- Save figure ---------- #
-    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_spz_fit.png', dpi=300, bbox_inches='tight')
+    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_spz_fit.pdf', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()
@@ -319,7 +319,7 @@ def get_best_fit_model_spz(resampling_lam_grid, resampling_lam_grid_length, mode
     #lsf = lsf.astype(np.float64)
 
     # Will have to redo the model modifications at the new found redshift
-    model_comp_spec_modified = mm.redshift_and_resample(model_comp_spec_lsfconv, redshift, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
+    model_comp_spec_modified = mm.redshift_and_resample_fast(model_comp_spec_lsfconv, redshift, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done (only for plotting purposes) at the new SPZ:", redshift
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]

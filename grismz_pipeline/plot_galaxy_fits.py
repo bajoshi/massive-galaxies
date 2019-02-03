@@ -7,8 +7,6 @@ from scipy.integrate import simps
 
 import os
 import sys
-import time
-import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -27,13 +25,21 @@ savedir_grismz = massive_figures_dir + 'grismz_run_jan2019/'  # Required to save
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
+import refine_redshifts_dn4000 as old_ref
 import check_single_galaxy_fitting_spz_photoz as chk
 from new_refine_grismz_gridsearch_parallel import get_data
 from fullfitting_grism_broadband_emlines import get_flam, get_flam_nonhst
+import dn4000_catalog as dc
+
+speed_of_light = 299792458e10  # angstroms per second
 
 def get_arrays_for_plotting():
 
     # Read in arrays from Firstlight (fl) and Jet (jt) and combine them
+    zp_results_dir = savedir_photoz
+    zg_results_dir = savedir_grismz
+    spz_results_dir = savedir_spz
+
     # ----- Firstlight -----
     id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
@@ -227,16 +233,35 @@ def main():
     # ------------- Code basically copied from run_final_sample.py
     # and from single galaxy checking code.
     # --------------------------
-    current_id = 41759
-    current_field = 'GOODS-N'
+    current_id = 113298
+    current_field = 'GOODS-S'
+
+    # ------------------------------- Get catalog for final sample ------------------------------- #
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+
+    # Get RA and DEC
+    sample_idx = np.where((final_sample['pearsid'] == current_id) & (final_sample['field'] == current_field))[0]
+    current_ra = final_sample['ra'][sample_idx]
+    current_dec = final_sample['dec'][sample_idx]
+
+    # ------------------------------- Get correct directories ------------------------------- #
+    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+    threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
+    # This is if working on the laptop. 
+    # Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(figs_data_dir):
+        figs_data_dir = figs_dir  # this path only exists on firstlight
+        threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+        cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
+        if not os.path.isdir(figs_data_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
 
     # ------------------------------- Read in models ------------------------------- #
     total_models = 37761
     model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
     model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
-
-    # total run time up to now
-    print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
     all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam.npy', mmap_mode='r')
 
@@ -463,9 +488,10 @@ def main():
     zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr = get_arrays_for_plotting()
 
     # find match
-    match_idx = np.where((ids == current_id) & (fields == current_field))[0]
+    match_idx = int(np.where((ids == current_id) & (fields == current_field))[0])
 
     current_specz = zs_arr[match_idx]
+    current_d4000 = d4000[match_idx]
 
     # Get other fitting results
     # --- Peak (i.e. min chi2) redshifts
@@ -481,12 +507,12 @@ def main():
     zspz_bestalpha = zspz_bestalpha_arr[match_idx]
 
     # --- Params
-    zp_minchi2 = zp_chi2[match_idx]
+    zp_min_chi2 = zp_chi2[match_idx]
     zp_age = zp_age_arr[match_idx]
     zp_tau = zp_tau_arr[match_idx]
     zp_av = zp_av_arr[match_idx]
     
-    zspz_minchi2 = zspz_chi2[match_idx]
+    zspz_min_chi2 = zspz_chi2[match_idx]
     zspz_age = zspz_age_arr[match_idx]
     zspz_tau = zspz_tau_arr[match_idx]
     zspz_av = zspz_av_arr[match_idx]
@@ -503,22 +529,26 @@ def main():
     # Will have to do this at the photo-z and SPZ separtely otherwise the plots will not look right
     # ------------ Get best fit model for photo-z ------------ #
     zp_best_fit_model_fullres = model_comp_spec_withlines_mmap[zp_model_idx]
-    zp_all_filt_flam_bestmodel = chk.get_photometry_best_fit_model(zp, zp_model_idx, phot_fin_idx, all_model_flam, total_models)
+    zp_best_fit_model_fullres = zp_best_fit_model_fullres.ravel()  # This is more of a consistency forcing condition 
+    zp_all_filt_flam_bestmodel = chk.get_photometry_best_fit_model(zp, zp_model_idx, phot_fin_idx, all_model_flam_mmap, total_models)
 
     # ------------ Get best fit model for SPZ ------------ #
     zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_best_fit_model_fullres = \
     chk.get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines_mmap, \
-        model_comp_spec_withlines_mmap, grism_lam_obs, zspz, zspz_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
+        model_comp_spec_withlines_mmap, grism_lam_obs, zspz, zspz_model_idx, phot_fin_idx, all_model_flam_mmap, lsf_to_use, total_models)
+    # Again these reshaping  to 1D calls seem to be needed with the mmapped arrays
+    zspz_best_fit_model_fullres = zspz_best_fit_model_fullres.ravel()
+    zspz_best_fit_model_in_objlamgrid = zspz_best_fit_model_in_objlamgrid.ravel()
 
     # ---------------- Now actual plotting ---------------- #
     chk.plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines_mmap, \
     zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
-    current_id, current_field, current_specz, zp, zp_minchi2, \
+    current_id, current_field, current_specz, zp, \
     zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av, netsig_chosen, current_d4000, savedir_photoz)
 
     chk.plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
     model_lam_grid_withlines_mmap, zspz_best_fit_model_fullres, zspz_best_fit_model_in_objlamgrid, \
-    zspz_all_filt_flam_bestmodel, zspz_bestalpha, current_id, current_field, current_specz, zp, zspz_minchi2, \
+    zspz_all_filt_flam_bestmodel, zspz_bestalpha, current_id, current_field, current_specz, zp, \
     zspz_zerr_low, zspz_zerr_up, zspz, zspz_min_chi2, zspz_age, zspz_tau, zspz_av, netsig_chosen, current_d4000, savedir_spz)
 
     return None
