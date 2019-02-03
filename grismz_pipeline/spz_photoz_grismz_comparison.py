@@ -21,7 +21,7 @@ import mocksim_results as mr
 from new_refine_grismz_gridsearch_parallel import get_data
 import dn4000_catalog as dc
 
-def get_plotting_arrays():
+def get_arrays_to_plot():
 
     # Read in arrays from Firstlight (fl) and Jet (jt) and combine them
     # ----- Firstlight -----
@@ -54,6 +54,40 @@ def get_plotting_arrays():
 
     # ----- Concatenate -----
     # check for any accidental overlaps
+    # I'm just doing an explicit for loop because I need to compare both ID and field
+    min_len = len(id_arr_fl)  # Since firstlight went through fewer galaxies
+    common_indices_jt = []
+    for j in range(min_len):
+
+        id_to_search = id_arr_fl[j]
+        field_to_search = field_arr_fl[j]
+
+        """
+        Note the order of the two if statements below. 
+        if (id_to_search in id_arr_jt) and (field_to_search in field_arr_jt)
+        WILL NOT WORK! 
+        This is because the second condition there is always true.
+        """
+        if (id_to_search in id_arr_jt):
+            jt_idx = int(np.where(id_arr_jt == id_to_search)[0])
+            if (field_arr_jt[jt_idx] == field_to_search):
+                common_indices_jt.append(jt_idx)
+
+    # Delete common galaxies from Jet arrays 
+    # ONly delete from one of the set of arrays since you want these galaxies included only once
+    # ----- Jet arrays with common galaxies deleted ----- 
+    id_arr_jt = np.delete(id_arr_jt, common_indices_jt, axis=None)
+    field_arr_jt = np.delete(field_arr_jt, common_indices_jt, axis=None)
+    zs_arr_jt = np.delete(zs_arr_jt, common_indices_jt, axis=None)
+
+    zp_arr_jt = np.delete(zp_arr_jt, common_indices_jt, axis=None)
+    zg_arr_jt = np.delete(zg_arr_jt, common_indices_jt, axis=None)
+    zspz_arr_jt = np.delete(zspz_arr_jt, common_indices_jt, axis=None)
+
+    # min chi2 values
+    zp_min_chi2_jt = np.delete(zp_min_chi2_jt, common_indices_jt, axis=None)
+    zg_min_chi2_jt = np.delete(zg_min_chi2_jt, common_indices_jt, axis=None)
+    zspz_min_chi2_jt = np.delete(zspz_min_chi2_jt, common_indices_jt, axis=None)
 
     # The order while concatenating is important! 
     # Stay consistent! fl is before jt
@@ -108,7 +142,7 @@ def get_plotting_arrays():
         all_d4000 = np.load(zp_results_dir + 'all_d4000_arr.npy')
         all_netsig = np.load(zp_results_dir + 'all_netsig_arr.npy')
 
-    return zs, zp, zg, zspz, all_d4000, all_netsig, zp_chi2, zg_chi2, zspz_chi2
+    return all_ids, all_fields, zs, zp, zg, zspz, all_d4000, all_netsig, zp_chi2, zg_chi2, zspz_chi2
 
 def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
     mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
@@ -233,11 +267,11 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
     return None
 
 def main():
-    zs, zp, zg, zspz, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2 = get_plotting_arrays()
+    ids, fields, zs, zp, zg, zspz, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2 = get_arrays_to_plot()
 
     # Cut on D4000
     d4000_low = 1.1
-    d4000_high = 1.2
+    d4000_high = 1.8
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
@@ -253,6 +287,8 @@ def main():
     zspz_chi2 = zspz_chi2[d4000_idx]
 
     netsig = netsig[d4000_idx]
+
+    d4000 = d4000[d4000_idx]  # this array only used as part of a sanity check
 
     # Get residuals 
     resid_zp = (zp - zs) / (1 + zs)
@@ -271,21 +307,20 @@ def main():
     # Remove catastrophic failures
     # i.e. only choose the valid ones
     catas_fail_thresh = 0.1
-    no_catas_fail1 = np.where(resid_zp < catas_fail_thresh)[0]
-    no_catas_fail2 = np.where(resid_zg < catas_fail_thresh)[0]
-    no_catas_fail3 = np.where(resid_zspz < catas_fail_thresh)[0]
+    no_catas_fail1 = np.where(abs(resid_zp) < catas_fail_thresh)[0]
+    no_catas_fail2 = np.where(abs(resid_zg) < catas_fail_thresh)[0]
+    no_catas_fail3 = np.where(abs(resid_zspz) < catas_fail_thresh)[0]
 
-    outlier_frac_zp = len(np.where(resid_zp >= catas_fail_thresh)[0]) / len(valid_idx1)
-    outlier_frac_zg = len(np.where(resid_zg >= catas_fail_thresh)[0]) / len(valid_idx2)
-    outlier_frac_spz = len(np.where(resid_zspz >= catas_fail_thresh)[0]) / len(valid_idx3)
+    outlier_frac_zp = len(np.where(abs(resid_zp) >= catas_fail_thresh)[0]) / len(valid_idx1)
+    outlier_frac_zg = len(np.where(abs(resid_zg) >= catas_fail_thresh)[0]) / len(valid_idx2)
+    outlier_frac_spz = len(np.where(abs(resid_zspz) >= catas_fail_thresh)[0]) / len(valid_idx3)
 
     # apply cut on netsig
     netsig_thresh = 10
     valid_idx_ns = np.where(netsig > netsig_thresh)[0]
     print len(valid_idx_ns), "out of", len(netsig), "galaxies pass NetSig cut of", netsig_thresh
 
-    valid_idx = \
-    reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, \
+    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, \
         no_catas_fail1, no_catas_fail2, no_catas_fail3, valid_idx_ns))
 
     # apply valid indices
@@ -298,6 +333,21 @@ def main():
     zspz = zspz[valid_idx]
 
     print "Number of galaxies in plot:", len(valid_idx)
+
+    # ---------
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    cax = ax.scatter(d4000[valid_idx], resid_zspz, c=zs)
+    ax.axhline(y=0.0, ls='--')
+
+    ax.set_ylim(-0.1, 0.1)
+    fig.colorbar(cax)
+
+    plt.show()
+    sys.exit(0)
+    """
 
     # Print info
     mean_zphot = np.mean(resid_zp)
@@ -321,6 +371,8 @@ def main():
     print "Outlier fraction for Photo-z:", outlier_frac_zp
     print "Outlier fraction for Grism-z:", outlier_frac_zg
     print "Outlier fraction for SPZ:", outlier_frac_spz
+
+    sys.exit(0)
 
     make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
         mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
