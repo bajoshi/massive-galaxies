@@ -89,8 +89,49 @@ def get_arrays_to_plot():
     zg_min_chi2_jt = np.delete(zg_min_chi2_jt, common_indices_jt, axis=None)
     zspz_min_chi2_jt = np.delete(zspz_min_chi2_jt, common_indices_jt, axis=None)
 
-    # The order while concatenating is important! 
-    # Stay consistent! fl is before jt
+    # ---------------------------------------------------------------
+    # Read in emission line catalogs (Pirzkal 2013 and Straughn 2009)
+    pirzkal2013 = np.genfromtxt(massive_galaxies_dir + 'pirzkal_2013_emline.cat', \
+        dtype=None, names=['field', 'pearsid'], skip_header=30, usecols=(0,1))
+    straughn2009 = np.genfromtxt(massive_galaxies_dir + 'straughn_2009_emline.cat', \
+        dtype=None, names=['pearsid'], skip_header=46, usecols=(0))
+
+    pirzkal2013_emline_ids = np.unique(pirzkal2013['pearsid'])
+    straughn2009_emline_ids = np.unique(straughn2009['pearsid'])
+
+    straughn2009_emline_ids = straughn2009_emline_ids.astype(np.int)
+
+    # assign north and south ids
+    pirzkal2013_north_emline_ids = []
+    pirzkal2013_south_emline_ids = []
+
+    for i in  range(len(pirzkal2013_emline_ids)):
+        if 'n' == pirzkal2013_emline_ids[i][0]:
+            pirzkal2013_north_emline_ids.append(pirzkal2013_emline_ids[i][1:])
+        elif 's' == pirzkal2013_emline_ids[i][0]:
+            pirzkal2013_south_emline_ids.append(pirzkal2013_emline_ids[i][1:])
+
+    pirzkal2013_north_emline_ids = np.asarray(pirzkal2013_north_emline_ids, dtype=np.int)
+    pirzkal2013_south_emline_ids = np.asarray(pirzkal2013_south_emline_ids, dtype=np.int)
+
+    chuck_em_line_galaxies = False
+    # you will have to re-generate the all_d4000_arr.npy and all_netsig_arr.npy arrays every time this check is changed
+
+    # ----- Get D4000 -----
+    # Now loop over all galaxies to get D4000 and netsig
+    all_ids_list = []
+    all_fields_list = []
+    zs_list = []
+    zp_list = []
+    zg_list = []
+    zspz_list = []
+    zp_chi2_list = []
+    zg_chi2_list = []
+    zspz_chi2_list = []
+    all_d4000_list = []
+    all_netsig_list = []
+
+    # I need to concatenate these arrays for hte purposes of looping and appending in hte loop below
     all_ids = np.concatenate((id_arr_fl, id_arr_jt))
     all_fields = np.concatenate((field_arr_fl, field_arr_jt))
 
@@ -103,46 +144,58 @@ def get_arrays_to_plot():
     zg_chi2 = np.concatenate((zg_min_chi2_fl, zg_min_chi2_jt))
     zspz_chi2 = np.concatenate((zspz_min_chi2_fl, zspz_min_chi2_jt))
 
-    # ----- Get D4000 -----
-    # Now loop over all galaxies to get D4000 and netsig
-    all_d4000_list = []
-    all_netsig_list = []
-    if not os.path.isfile(zp_results_dir + 'all_d4000_arr.npy'):
-        for i in range(len(all_ids)):
-            current_id = all_ids[i]
-            current_field = all_fields[i]
+    for i in range(len(all_ids)):
+        current_id = all_ids[i]
+        current_field = all_fields[i]
 
-            # Get data
-            grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
+        # check if it is an emission line galaxy. If it is then skip
+        # Be carreful changing this check. I think it is correct as it is.
+        # I don think you can simply do:
+        # if (int(current_id) in pirzkal2013_emline_ids) or (int(current_id) in straughn2009_emline_ids):
+        #     continue
+        # This can mix up north and south IDs because the IDs are not unique in north and south.
+        if chuck_em_line_galaxies:
+            if current_field == 'GOODS-N':
+                if int(current_id) in pirzkal2013_north_emline_ids:
+                    continue
+            elif current_field == 'GOODS-S':
+                if (int(current_id) in pirzkal2013_south_emline_ids) or (int(current_id) in straughn2009_emline_ids):
+                    continue
 
-            if return_code == 0:
-                print current_id, current_field
-                print "Return code should not have been 0. Exiting."
-                sys.exit(0)
+        # Get data
+        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
-            # Get D4000 at specz
-            current_specz = zs[i]
-            lam_em = grism_lam_obs / (1 + current_specz)
-            flam_em = grism_flam_obs * (1 + current_specz)
-            ferr_em = grism_ferr_obs * (1 + current_specz)
+        if return_code == 0:
+            print current_id, current_field
+            print "Return code should not have been 0. Exiting."
+            sys.exit(0)
 
-            d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-            all_d4000_list.append(d4000)
+        # Get D4000 at specz
+        current_specz = zs[i]
+        lam_em = grism_lam_obs / (1 + current_specz)
+        flam_em = grism_flam_obs * (1 + current_specz)
+        ferr_em = grism_ferr_obs * (1 + current_specz)
 
-            all_netsig_list.append(netsig_chosen)
+        d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
-        # Convert to npy array and save
-        all_netsig = np.asarray(all_netsig_list)
-        np.save(zp_results_dir + 'all_netsig_arr.npy', all_netsig)
+        # Append all arrays 
+        all_ids_list.append(current_id)
+        all_fields_list.append(current_field)
+        zs_list.append(current_specz)
+        zp_list.append(zp[i])
+        zg_list.append(zg[i])
+        zspz_list.append(zspz[i])
+        zp_chi2_list.append(zp_chi2[i])
+        zg_chi2_list.append(zg_chi2[i])
+        zspz_chi2_list.append(zspz_chi2[i])
+        all_d4000_list.append(d4000)
+        all_netsig_list.append(netsig_chosen)
 
-        all_d4000 = np.asarray(all_d4000_list)
-        np.save(zp_results_dir + 'all_d4000_arr.npy', all_d4000)
+        #if d4000 > 1.8:
+        #    print current_id, current_field, d4000, current_specz, zp[i], zspz[i]
 
-    else:  # simply read in the npy array
-        all_d4000 = np.load(zp_results_dir + 'all_d4000_arr.npy')
-        all_netsig = np.load(zp_results_dir + 'all_netsig_arr.npy')
-
-    return all_ids, all_fields, zs, zp, zg, zspz, all_d4000, all_netsig, zp_chi2, zg_chi2, zspz_chi2
+    return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
+    np.array(all_d4000_list), np.array(all_netsig_list), np.array(zp_chi2_list), np.array(zg_chi2_list), np.array(zspz_chi2_list)
 
 def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
     mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
@@ -269,9 +322,22 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2 = get_arrays_to_plot()
 
+    # Just making sure that all returned arrays have the same length.
+    # Essential since I'm doing "where" operations below.
+    assert len(ids) == len(fields)
+    assert len(ids) == len(zs)
+    assert len(ids) == len(zp)
+    assert len(ids) == len(zg)
+    assert len(ids) == len(zspz)
+    assert len(ids) == len(d4000)
+    assert len(ids) == len(netsig)
+    assert len(ids) == len(zp_chi2)
+    assert len(ids) == len(zg_chi2)
+    assert len(ids) == len(zspz_chi2)
+
     # Cut on D4000
     d4000_low = 1.1
-    d4000_high = 1.8
+    d4000_high = 1.2
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
@@ -288,8 +354,6 @@ def main():
 
     netsig = netsig[d4000_idx]
 
-    d4000 = d4000[d4000_idx]  # this array only used as part of a sanity check
-
     # Get residuals 
     resid_zp = (zp - zs) / (1 + zs)
     resid_zg = (zg - zs) / (1 + zs)
@@ -300,46 +364,49 @@ def main():
     valid_idx2 = np.where(np.isfinite(resid_zg))[0]
     valid_idx3 = np.where(np.isfinite(resid_zspz))[0]
 
-    #valid_idx4 = np.where(zp_chi2 < 10.0)[0]
-    #valid_idx5 = np.where(zg_chi2 < 2.0)[0]
-    #valid_idx6 = np.where(zspz_chi2 < 2.0)[0]
-
     # Remove catastrophic failures
     # i.e. only choose the valid ones
     catas_fail_thresh = 0.1
-    no_catas_fail1 = np.where(abs(resid_zp) < catas_fail_thresh)[0]
-    no_catas_fail2 = np.where(abs(resid_zg) < catas_fail_thresh)[0]
-    no_catas_fail3 = np.where(abs(resid_zspz) < catas_fail_thresh)[0]
+    no_catas_fail1 = np.where(abs(resid_zp) <= catas_fail_thresh)[0]
+    no_catas_fail2 = np.where(abs(resid_zg) <= catas_fail_thresh)[0]
+    no_catas_fail3 = np.where(abs(resid_zspz) <= catas_fail_thresh)[0]
 
-    outlier_frac_zp = len(np.where(abs(resid_zp) >= catas_fail_thresh)[0]) / len(valid_idx1)
-    outlier_frac_zg = len(np.where(abs(resid_zg) >= catas_fail_thresh)[0]) / len(valid_idx2)
-    outlier_frac_spz = len(np.where(abs(resid_zspz) >= catas_fail_thresh)[0]) / len(valid_idx3)
+    outlier_frac_zp = len(np.where(abs(resid_zp) > catas_fail_thresh)[0]) / len(valid_idx1)
+    outlier_frac_zg = len(np.where(abs(resid_zg) > catas_fail_thresh)[0]) / len(valid_idx2)
+    outlier_frac_spz = len(np.where(abs(resid_zspz) > catas_fail_thresh)[0]) / len(valid_idx3)
 
     # apply cut on netsig
     netsig_thresh = 10
     valid_idx_ns = np.where(netsig > netsig_thresh)[0]
     print len(valid_idx_ns), "out of", len(netsig), "galaxies pass NetSig cut of", netsig_thresh
 
-    valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3, \
-        no_catas_fail1, no_catas_fail2, no_catas_fail3, valid_idx_ns))
+    # Apply indices
+    valid_idx_zp = reduce(np.intersect1d, (valid_idx1, no_catas_fail1))
+    resid_zp = resid_zp[valid_idx_zp]
+    zp = zp[valid_idx_zp]
+    zs_for_zp = zs[valid_idx_zp]
 
-    # apply valid indices
-    resid_zp = resid_zp[valid_idx]
-    resid_zg = resid_zg[valid_idx]
-    resid_zspz = resid_zspz[valid_idx]
-    zs = zs[valid_idx]
-    zp = zp[valid_idx]
-    zg = zg[valid_idx]
-    zspz = zspz[valid_idx]
+    valid_idx_zg = reduce(np.intersect1d, (valid_idx2, no_catas_fail2))
+    resid_zg = resid_zg[valid_idx_zg]
+    zg = zg[valid_idx_zg]
+    zs_for_zg = zs[valid_idx_zg]
 
-    print "Number of galaxies in plot:", len(valid_idx)
+    valid_idx_zspz = reduce(np.intersect1d, (valid_idx3, no_catas_fail3))
+    resid_zspz = resid_zspz[valid_idx_zspz]
+    zspz = zspz[valid_idx_zspz]
+    zs_for_zspz = zs[valid_idx_zspz]
+
+    print "Number of galaxies in photo-z plot:", len(valid_idx_zp)
+    print "Number of galaxies in grism-z plot:", len(valid_idx_zg)
+    print "Number of galaxies in SPZ plot:", len(valid_idx_zspz)
 
     # ---------
     """
+    d4000 = d4000[d4000_idx]
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    cax = ax.scatter(d4000[valid_idx], resid_zspz, c=zs)
+    cax = ax.scatter(d4000[valid_idx_spz], resid_zspz, c=zs)
     ax.axhline(y=0.0, ls='--')
 
     ax.set_ylim(-0.1, 0.1)
