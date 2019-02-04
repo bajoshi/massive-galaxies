@@ -508,7 +508,7 @@ def main():
         galaxy_count += num_cores
     """
 
-    for j in range(total_final_sample):
+    for j in range(175):
 
         print "Galaxies done so far:", galaxy_count
         print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
