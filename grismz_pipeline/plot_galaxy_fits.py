@@ -228,13 +228,7 @@ def get_arrays_for_plotting():
     zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
     zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr
 
-def main():
-
-    # ------------- Code basically copied from run_final_sample.py
-    # and from single galaxy checking code.
-    # --------------------------
-    current_id = 113298
-    current_field = 'GOODS-S'
+def plotfit(current_id, current_field):
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
     final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
@@ -487,6 +481,19 @@ def main():
     zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
     zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr = get_arrays_for_plotting()
 
+    # Just making sure that all returned arrays have the same length.
+    # Essential since I'm doing "where" operations below.
+    assert len(ids) == len(fields)
+    assert len(ids) == len(zs_arr)
+    assert len(ids) == len(zp_arr)
+    assert len(ids) == len(zg_arr)
+    assert len(ids) == len(zspz_arr)
+    assert len(ids) == len(d4000)
+    assert len(ids) == len(netsig)
+    assert len(ids) == len(zp_chi2)
+    assert len(ids) == len(zg_chi2)
+    assert len(ids) == len(zspz_chi2)
+
     # find match
     match_idx = int(np.where((ids == current_id) & (fields == current_field))[0])
 
@@ -550,6 +557,25 @@ def main():
     model_lam_grid_withlines_mmap, zspz_best_fit_model_fullres, zspz_best_fit_model_in_objlamgrid, \
     zspz_all_filt_flam_bestmodel, zspz_bestalpha, current_id, current_field, current_specz, zp, \
     zspz_zerr_low, zspz_zerr_up, zspz, zspz_min_chi2, zspz_age, zspz_tau, zspz_av, netsig_chosen, current_d4000, savedir_spz)
+
+    return None
+
+def main():
+
+    # ------------- Code basically copied from run_final_sample.py
+    # and from single galaxy checking code.
+    # --------------------------
+    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p4_to_1p6.txt', dtype=None, names=True, skip_header=1)
+
+    # plotting all 1.4 <= D4 < 1.6 galaxies now
+    for k in range(len(galaxies_to_plot)):
+
+        current_id = int(galaxies_to_plot['pearsid'][k])
+        current_field = str(galaxies_to_plot['field'][k])
+
+        print "Plotting:", current_id, current_field
+
+        plotfit(current_id, current_field)
 
     return None
 
