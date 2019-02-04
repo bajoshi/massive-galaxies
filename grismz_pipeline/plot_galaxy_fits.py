@@ -570,8 +570,12 @@ def main():
     # plotting all 1.4 <= D4 < 1.6 galaxies now
     for k in range(len(galaxies_to_plot)):
 
-        current_id = int(galaxies_to_plot['pearsid'][k])
-        current_field = str(galaxies_to_plot['field'][k])
+        current_id = int(galaxies_to_plot['ID'][k])
+        current_field = str(galaxies_to_plot['Field'][k])
+
+        if os.path.isfile(savedir_spz + current_field + '_' + str(current_id) + '_spz_fit.pdf'):
+            print "At:", current_id, current_field, "   File exists. Skipping."
+            continue
 
         print "Plotting:", current_id, current_field
 

@@ -144,6 +144,19 @@ def get_arrays_to_plot():
     zg_chi2 = np.concatenate((zg_min_chi2_fl, zg_min_chi2_jt))
     zspz_chi2 = np.concatenate((zspz_min_chi2_fl, zspz_min_chi2_jt))
 
+    # Comment this print statement out if out don't want to actually print this list on paper
+    print "ID        Field      zspec    zphot    zspz     NetSig    D4000   res_zphot    res_zspz    iABmag"
+
+    # Read in master catalogs to get i-band mag
+    # ------------------------------- Read PEARS cats ------------------------------- #
+    pears_ncat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_north_master.cat', dtype=None,\
+                               names=['id', 'pearsra', 'pearsdec', 'imag'], usecols=(0,1,2,3))
+    pears_scat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_south_master.cat', dtype=None,\
+                               names=['id', 'pearsra', 'pearsdec', 'imag'], usecols=(0,1,2,3))
+    
+    dec_offset_goodsn_v19 = 0.32/3600 # from GOODS ACS v2.0 readme
+    pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
+
     for i in range(len(all_ids)):
         current_id = all_ids[i]
         current_field = all_fields[i]
@@ -191,8 +204,50 @@ def get_arrays_to_plot():
         all_d4000_list.append(d4000)
         all_netsig_list.append(netsig_chosen)
 
+        # Get i_mag for printing
+        if current_field == 'GOODS-N':
+            master_cat_idx = int(np.where(pears_ncat['id'] == current_id)[0])
+            current_imag = pears_ncat['imag'][master_cat_idx]
+        elif current_field == 'GOODS-S':
+            master_cat_idx = int(np.where(pears_scat['id'] == current_id)[0])
+            current_imag = pears_scat['imag'][master_cat_idx]
+
         if d4000 >= 1.4 and d4000 < 1.6:
-            print current_id, current_field#, d4000, current_specz, zp[i], zspz[i]
+            # Some formatting stuff just to make it easier to read on the screen
+            current_id_to_print = str(current_id)
+            if len(current_id_to_print) == 5:
+                current_id_to_print += ' '
+
+            current_specz_to_print = str(current_specz)
+            if len(current_specz_to_print) == 4:
+                current_specz_to_print += '  '
+            elif len(current_specz_to_print) == 5:
+                current_specz_to_print += ' '
+
+            current_netsig_to_print = str("{:.2f}".format(netsig_chosen))
+            if len(current_netsig_to_print) == 5:
+                current_netsig_to_print += ' '
+
+            current_res_zphot = (zp[i] - current_specz) / (1 + current_specz)
+            current_res_zspz = (zspz[i] - current_specz) / (1 + current_specz)
+
+            current_res_zphot_to_print = str("{:.3f}".format(current_res_zphot))
+            if current_res_zphot_to_print[0] != '-':
+                current_res_zphot_to_print = '+' + current_res_zphot_to_print
+            current_res_zspz_to_print = str("{:.3f}".format(current_res_zspz))
+            if current_res_zspz_to_print[0] != '-':
+                current_res_zspz_to_print = '+' + current_res_zspz_to_print
+
+            print current_id_to_print, "  ",
+            print current_field, "  ",
+            print current_specz_to_print, "  ",
+            print "{:.3f}".format(zp[i]), "  ",
+            print "{:.3f}".format(zspz[i]), "  ",
+            print current_netsig_to_print, "  ",
+            print "{:.2f}".format(d4000), "  ",
+            print current_res_zphot_to_print, "     ",
+            print current_res_zspz_to_print, "    ",
+            print "{:.2f}".format(current_imag)
 
     return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
     np.array(all_d4000_list), np.array(all_netsig_list), np.array(zp_chi2_list), np.array(zg_chi2_list), np.array(zspz_chi2_list)
