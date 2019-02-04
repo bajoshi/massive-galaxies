@@ -702,8 +702,6 @@ def sort_and_save(galaxies_to_plot):
             fh.write(current_res_zspz_to_write + "      ")
             fh.write(current_imag_to_write + "\n")
 
-    sys.exit()
-
     return None
 
 def main():
@@ -713,6 +711,7 @@ def main():
     # --------------------------
     galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p4_to_1p6.txt', dtype=None, names=True, skip_header=1)
     sort_and_save(galaxies_to_plot)
+    sys.exit()
 
     # plotting all 1.4 <= D4 < 1.6 galaxies now
     for k in range(len(galaxies_to_plot)):

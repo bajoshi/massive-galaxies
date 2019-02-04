@@ -29,28 +29,59 @@ def get_arrays_to_plot():
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
     zs_arr_fl = np.load(zp_results_dir + 'firstlight_zs_arr.npy')
 
-    zp_arr_fl = np.load(zp_results_dir + 'firstlight_zp_minchi2_arr.npy')
-    zg_arr_fl = np.load(zg_results_dir + 'firstlight_zg_minchi2_arr.npy')
-    zspz_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
+    zp_arr_fl = np.zeros(id_arr_fl.shape[0])  #np.load(zp_results_dir + 'firstlight_zp_minchi2_arr.npy')
+    zg_arr_fl = np.zeros(id_arr_fl.shape[0])  #np.load(zg_results_dir + 'firstlight_zg_minchi2_arr.npy')
+    zspz_arr_fl = np.zeros(id_arr_fl.shape[0])  #np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
 
     # min chi2 values
     zp_min_chi2_fl = np.load(zp_results_dir + 'firstlight_zp_min_chi2_arr.npy')
     zg_min_chi2_fl = np.load(zg_results_dir + 'firstlight_zg_min_chi2_arr.npy')
     zspz_min_chi2_fl = np.load(spz_results_dir + 'firstlight_zspz_min_chi2_arr.npy')
 
+    # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
+    for u in range(len(id_arr_fl)):
+        zp_pz = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_pz.npy')
+        zp_zarr = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_z_arr.npy')
+        zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
+
+        spz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
+        spz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
+        zspz_arr_fl[u] = spz_zarr[np.argmax(spz_pz)]
+
+        zg_pz = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_pz.npy')
+        zg_zarr = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_z_arr.npy')
+        zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
+
+        # Get the width of the p(z) curve when 68% of the area is covered and save the error on both sides
+        
+
     # ----- Jet ----- 
     id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
     field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
     zs_arr_jt = np.load(zp_results_dir + 'jet_zs_arr.npy')
 
-    zp_arr_jt = np.load(zp_results_dir + 'jet_zp_minchi2_arr.npy')
-    zg_arr_jt = np.load(zg_results_dir + 'jet_zg_minchi2_arr.npy')
-    zspz_arr_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
+    zp_arr_jt = np.zeros(id_arr_jt.shape[0])  #np.load(zp_results_dir + 'jet_zp_minchi2_arr.npy')
+    zg_arr_jt = np.zeros(id_arr_jt.shape[0])  #np.load(zg_results_dir + 'jet_zg_minchi2_arr.npy')
+    zspz_arr_jt = np.zeros(id_arr_jt.shape[0])  #np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
 
     # min chi2 values
     zp_min_chi2_jt = np.load(zp_results_dir + 'jet_zp_min_chi2_arr.npy')
     zg_min_chi2_jt = np.load(zg_results_dir + 'jet_zg_min_chi2_arr.npy')
     zspz_min_chi2_jt = np.load(spz_results_dir + 'jet_zspz_min_chi2_arr.npy')
+
+    # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
+    for v in range(len(id_arr_jt)):
+        zp_pz = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_pz.npy')
+        zp_zarr = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_z_arr.npy')
+        zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
+
+        spz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
+        spz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
+        zspz_arr_jt[v] = spz_zarr[np.argmax(spz_pz)]
+
+        zg_pz = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_pz.npy')
+        zg_zarr = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_z_arr.npy')
+        zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
 
     # ----- Concatenate -----
     # check for any accidental overlaps
@@ -145,7 +176,7 @@ def get_arrays_to_plot():
     zspz_chi2 = np.concatenate((zspz_min_chi2_fl, zspz_min_chi2_jt))
 
     # Comment this print statement out if out don't want to actually print this list on paper
-    print "ID        Field      zspec    zphot    zspz     NetSig    D4000   res_zphot    res_zspz    iABmag"
+    #print "ID        Field      zspec    zphot    zspz     NetSig    D4000   res_zphot    res_zspz    iABmag"
 
     # Read in master catalogs to get i-band mag
     # ------------------------------- Read PEARS cats ------------------------------- #
@@ -212,6 +243,7 @@ def get_arrays_to_plot():
             master_cat_idx = int(np.where(pears_scat['id'] == current_id)[0])
             current_imag = pears_scat['imag'][master_cat_idx]
 
+        """
         if d4000 >= 1.4 and d4000 < 1.6:
             # Some formatting stuff just to make it easier to read on the screen
             current_id_to_print = str(current_id)
@@ -248,6 +280,7 @@ def get_arrays_to_plot():
             print current_res_zphot_to_print, "     ",
             print current_res_zspz_to_print, "    ",
             print "{:.2f}".format(current_imag)
+        """
 
     return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
     np.array(all_d4000_list), np.array(all_netsig_list), np.array(zp_chi2_list), np.array(zg_chi2_list), np.array(zspz_chi2_list)
@@ -376,7 +409,6 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zs, zp, zg, zspz, \
 
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2 = get_arrays_to_plot()
-    sys.exit(0)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -392,8 +424,8 @@ def main():
     assert len(ids) == len(zspz_chi2)
 
     # Cut on D4000
-    d4000_low = 1.1
-    d4000_high = 1.2
+    d4000_low = 1.2
+    d4000_high = 1.3
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
