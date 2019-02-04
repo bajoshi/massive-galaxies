@@ -560,12 +560,159 @@ def plotfit(current_id, current_field):
 
     return None
 
+def sort_and_save(galaxies_to_plot):
+
+    # SOrt and resave txt file accoring to field and ID
+    # Sort all goods-n
+    goodsn_idx = np.where(galaxies_to_plot['Field'] == 'GOODS-N')
+    goodsn_sortidx = np.argsort(galaxies_to_plot['ID'][goodsn_idx])
+
+    # Sort all goods-s
+    goodss_idx = np.where(galaxies_to_plot['Field'] == 'GOODS-S')
+    goodss_sortidx = np.argsort(galaxies_to_plot['ID'][goodss_idx])
+
+    # Now save line by line:
+    with open(massive_galaxies_dir + 'd4000_1p4_to_1p6_sorted.txt', 'w') as fh:
+        fh.write("# All galaxies in bin:   1.4 <= D4000 < 1.6" + "\n")
+        fh.write("ID        Field      zspec    zphot    zspz     NetSig    D4000   res_zphot    res_zspz    iABmag" + "\n")
+
+        for u in range(len(goodsn_sortidx)):
+            line_idx = goodsn_sortidx[u]
+
+            current_id_to_write = str(galaxies_to_plot['ID'][goodsn_idx][line_idx])
+            current_field_to_write = str(galaxies_to_plot['Field'][goodsn_idx][line_idx])
+            current_specz_to_write = str(galaxies_to_plot['zspec'][goodsn_idx][line_idx])
+            zp_to_write = str(galaxies_to_plot['zphot'][goodsn_idx][line_idx])
+            zspz_to_write = str(galaxies_to_plot['zspz'][goodsn_idx][line_idx])
+            current_netsig_to_write = str(galaxies_to_plot['NetSig'][goodsn_idx][line_idx])
+            d4000_to_write = str(galaxies_to_plot['D4000'][goodsn_idx][line_idx])
+            current_res_zphot_to_write = str(galaxies_to_plot['res_zphot'][goodsn_idx][line_idx])
+            current_res_zspz_to_write = str(galaxies_to_plot['res_zspz'][goodsn_idx][line_idx])
+            current_imag_to_write = str(galaxies_to_plot['iABmag'][goodsn_idx][line_idx])
+
+            if len(current_id_to_write) == 5:
+                current_id_to_write += ' '
+
+            if len(current_specz_to_write) == 4:
+                current_specz_to_write += '  '
+            elif len(current_specz_to_write) == 5:
+                current_specz_to_write += ' '
+
+            if len(zp_to_write) == 3:
+                zp_to_write += ' '
+
+            if len(zspz_to_write) == 3:
+                zspz_to_write += ' '
+
+            if len(current_netsig_to_write) == 4:
+                current_netsig_to_write += '  '
+            elif len(current_netsig_to_write) == 5:
+                current_netsig_to_write += ' '
+
+            if len(d4000_to_write) == 3:
+                d4000_to_write += ' '
+
+            if current_res_zphot_to_write[0] != '-':
+                current_res_zphot_to_write = '+' + current_res_zphot_to_write
+
+            if len(current_res_zphot_to_write) == 4:
+                current_res_zphot_to_write += '  '
+            elif len(current_res_zphot_to_write) == 5:
+                current_res_zphot_to_write += ' '
+
+            if current_res_zspz_to_write[0] != '-':
+                current_res_zspz_to_write = '+' + current_res_zspz_to_write
+
+            if len(current_res_zspz_to_write) == 4:
+                current_res_zspz_to_write += '  '
+            elif len(current_res_zspz_to_write) == 5:
+                current_res_zspz_to_write += ' '
+
+            fh.write(current_id_to_write + "    ")
+            fh.write(current_field_to_write + "    ")
+            fh.write(current_specz_to_write + "   ")
+            fh.write(zp_to_write + "     ")
+            fh.write(zspz_to_write + "     ")
+            fh.write(current_netsig_to_write + "    ")
+            fh.write(d4000_to_write + "    ")
+            fh.write(current_res_zphot_to_write + "       ")
+            fh.write(current_res_zspz_to_write + "      ")
+            fh.write(current_imag_to_write + "\n")
+
+        for v in range(len(goodss_sortidx)):
+            line_idx = goodss_sortidx[v]
+
+            current_id_to_write = str(galaxies_to_plot['ID'][goodss_idx][line_idx])
+            current_field_to_write = str(galaxies_to_plot['Field'][goodss_idx][line_idx])
+            current_specz_to_write = str(galaxies_to_plot['zspec'][goodss_idx][line_idx])
+            zp_to_write = str(galaxies_to_plot['zphot'][goodss_idx][line_idx])
+            zspz_to_write = str(galaxies_to_plot['zspz'][goodss_idx][line_idx])
+            current_netsig_to_write = str(galaxies_to_plot['NetSig'][goodss_idx][line_idx])
+            d4000_to_write = str(galaxies_to_plot['D4000'][goodss_idx][line_idx])
+            current_res_zphot_to_write = str(galaxies_to_plot['res_zphot'][goodss_idx][line_idx])
+            current_res_zspz_to_write = str(galaxies_to_plot['res_zspz'][goodss_idx][line_idx])
+            current_imag_to_write = str(galaxies_to_plot['iABmag'][goodss_idx][line_idx])
+
+            if len(current_id_to_write) == 5:
+                current_id_to_write += ' '
+
+            if len(current_specz_to_write) == 4:
+                current_specz_to_write += '  '
+            elif len(current_specz_to_write) == 5:
+                current_specz_to_write += ' '
+
+            if len(zp_to_write) == 3:
+                zp_to_write += ' '
+
+            if len(zspz_to_write) == 3:
+                zspz_to_write += ' '
+
+            if len(current_netsig_to_write) == 4:
+                current_netsig_to_write += '  '
+            elif len(current_netsig_to_write) == 5:
+                current_netsig_to_write += ' '
+
+            if len(d4000_to_write) == 3:
+                d4000_to_write += ' '
+
+            if current_res_zphot_to_write[0] != '-':
+                current_res_zphot_to_write = '+' + current_res_zphot_to_write
+
+            if len(current_res_zphot_to_write) == 4:
+                current_res_zphot_to_write += '  '
+            elif len(current_res_zphot_to_write) == 5:
+                current_res_zphot_to_write += ' '
+
+            if current_res_zspz_to_write[0] != '-':
+                current_res_zspz_to_write = '+' + current_res_zspz_to_write
+
+            if len(current_res_zspz_to_write) == 4:
+                current_res_zspz_to_write += '  '
+            elif len(current_res_zspz_to_write) == 5:
+                current_res_zspz_to_write += ' '
+
+            fh.write(current_id_to_write + "    ")
+            fh.write(current_field_to_write + "    ")
+            fh.write(current_specz_to_write + "   ")
+            fh.write(zp_to_write + "     ")
+            fh.write(zspz_to_write + "     ")
+            fh.write(current_netsig_to_write + "    ")
+            fh.write(d4000_to_write + "    ")
+            fh.write(current_res_zphot_to_write + "       ")
+            fh.write(current_res_zspz_to_write + "      ")
+            fh.write(current_imag_to_write + "\n")
+
+    sys.exit()
+
+    return None
+
 def main():
 
     # ------------- Code basically copied from run_final_sample.py
     # and from single galaxy checking code.
     # --------------------------
     galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p4_to_1p6.txt', dtype=None, names=True, skip_header=1)
+    sort_and_save(galaxies_to_plot)
 
     # plotting all 1.4 <= D4 < 1.6 galaxies now
     for k in range(len(galaxies_to_plot)):
