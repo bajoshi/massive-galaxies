@@ -25,10 +25,15 @@ import dn4000_catalog as dc
 
 def get_z_errors(zarr, pz):
 
+    # Since some p(z) curves have all nans in them
+    if np.isnan(pz).any():
+        return -99.0, -99.0
+
     # Get the width of the p(z) curve when 68% of the area is covered and save the error on both sides
     # Interpolate and get finer arrays
     zarray = np.arange(0.3, 1.495, 0.005)
     pz_curve = griddata(points=zarr, values=pz, xi=zarray, method='linear')
+
     total_area = simps(pz_curve, zarray)
 
     # Now shorten the zarray and compute area again
@@ -100,6 +105,8 @@ def get_arrays_to_plot():
     zspz_low_bound_fl = np.zeros(id_arr_fl.shape[0])
     zspz_high_bound_fl = np.zeros(id_arr_fl.shape[0])
 
+    resave = False
+
     # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
     for u in range(len(id_arr_fl)):
         zp_pz = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_pz.npy')
@@ -115,18 +122,19 @@ def get_arrays_to_plot():
         zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
 
         # Get errors and save them to a file
-        zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz)
-        zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz)
-        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
+        #zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz)
+        #zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz)
+        #zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
 
-    np.save(zp_results_dir + 'firstlight_zp_low_bound.npy', zp_low_bound_fl)
-    np.save(zp_results_dir + 'firstlight_zp_high_bound.npy', zp_high_bound_fl)
+    if resave:
+        np.save(zp_results_dir + 'firstlight_zp_low_bound.npy', zp_low_bound_fl)
+        np.save(zp_results_dir + 'firstlight_zp_high_bound.npy', zp_high_bound_fl)
 
-    np.save(zg_results_dir + 'firstlight_zg_low_bound.npy', zg_low_bound_fl)
-    np.save(zg_results_dir + 'firstlight_zg_high_bound.npy', zg_high_bound_fl)
+        np.save(zg_results_dir + 'firstlight_zg_low_bound.npy', zg_low_bound_fl)
+        np.save(zg_results_dir + 'firstlight_zg_high_bound.npy', zg_high_bound_fl)
 
-    np.save(spz_results_dir + 'firstlight_zspz_low_bound.npy', zspz_low_bound_fl)
-    np.save(spz_results_dir + 'firstlight_zspz_high_bound.npy', zspz_high_bound_fl)
+        np.save(spz_results_dir + 'firstlight_zspz_low_bound.npy', zspz_low_bound_fl)
+        np.save(spz_results_dir + 'firstlight_zspz_high_bound.npy', zspz_high_bound_fl)
 
     # ----- Jet ----- 
     id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
@@ -167,18 +175,19 @@ def get_arrays_to_plot():
         zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
 
         # Get errors and save them to a file
-        zp_low_bound_jt[u], zp_high_bound_jt[u] = get_z_errors(zp_zarr, zp_pz)
-        zg_low_bound_jt[u], zg_high_bound_jt[u] = get_z_errors(zg_zarr, zg_pz)
-        zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
+        #zp_low_bound_jt[u], zp_high_bound_jt[u] = get_z_errors(zp_zarr, zp_pz)
+        #zg_low_bound_jt[u], zg_high_bound_jt[u] = get_z_errors(zg_zarr, zg_pz)
+        #zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
 
-    np.save(zp_results_dir + 'jet_zp_low_bound.npy', zp_low_bound_jt)
-    np.save(zp_results_dir + 'jet_zp_high_bound.npy', zp_high_bound_jt)
+    if resave:
+        np.save(zp_results_dir + 'jet_zp_low_bound.npy', zp_low_bound_jt)
+        np.save(zp_results_dir + 'jet_zp_high_bound.npy', zp_high_bound_jt)
 
-    np.save(zg_results_dir + 'jet_zg_low_bound.npy', zg_low_bound_jt)
-    np.save(zg_results_dir + 'jet_zg_high_bound.npy', zg_high_bound_jt)
+        np.save(zg_results_dir + 'jet_zg_low_bound.npy', zg_low_bound_jt)
+        np.save(zg_results_dir + 'jet_zg_high_bound.npy', zg_high_bound_jt)
 
-    np.save(spz_results_dir + 'jet_zspz_low_bound.npy', zspz_low_bound_jt)
-    np.save(spz_results_dir + 'jet_zspz_high_bound.npy', zspz_high_bound_jt)
+        np.save(spz_results_dir + 'jet_zspz_low_bound.npy', zspz_low_bound_jt)
+        np.save(spz_results_dir + 'jet_zspz_high_bound.npy', zspz_high_bound_jt)
 
     # ----- Concatenate -----
     # check for any accidental overlaps
@@ -274,7 +283,7 @@ def get_arrays_to_plot():
     zspz_chi2 = np.concatenate((zspz_min_chi2_fl, zspz_min_chi2_jt))
 
     # Comment this print statement out if out don't want to actually print this list on paper
-    #print "ID        Field      zspec    zphot    zspz     NetSig    D4000   res_zphot    res_zspz    iABmag"
+    print "ID        Field      zspec    zphot    zg     zspz    NetSig    D4000   res_zphot    res_zspz    iABmag"
 
     # Read in master catalogs to get i-band mag
     # ------------------------------- Read PEARS cats ------------------------------- #
@@ -342,7 +351,6 @@ def get_arrays_to_plot():
         all_netsig_list.append(netsig_chosen)
         imag_list.append(current_imag)
 
-        """
         if d4000 >= 1.4 and d4000 < 1.6:
             # Some formatting stuff just to make it easier to read on the screen
             current_id_to_print = str(current_id)
@@ -371,15 +379,15 @@ def get_arrays_to_plot():
 
             print current_id_to_print, "  ",
             print current_field, "  ",
-            print current_specz_to_print, "  ",
-            print "{:.3f}".format(zp[i]), "  ",
-            print "{:.3f}".format(zspz[i]), "  ",
+            print "{:.3f}".format(current_specz), "  ",
+            print "{:.2f}".format(zp[i]), "  ",
+            print "{:.2f}".format(zg[i]), "  ",
+            print "{:.2f}".format(zspz[i]), "  ",
             print current_netsig_to_print, "  ",
             print "{:.2f}".format(d4000), "  ",
             print current_res_zphot_to_print, "     ",
             print current_res_zspz_to_print, "    ",
             print "{:.2f}".format(current_imag)
-        """
 
     return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
     np.array(all_d4000_list), np.array(all_netsig_list), np.array(zp_chi2_list), np.array(zg_chi2_list), np.array(zspz_chi2_list), np.array(imag_list)
@@ -389,7 +397,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     d4000_low, d4000_high):
 
     # Define figure
-    fig = plt.figure(figsize=(14,8))
+    fig = plt.figure(figsize=(10, 4))
     gs = gridspec.GridSpec(10,28)
     gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.0, hspace=0.25)
 
@@ -404,14 +412,14 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax6 = fig.add_subplot(gs[7:, 20:])
 
     # Plot stuff
-    ax1.plot(zs_for_zp, zp, 'o', markersize=4, color='k', markeredgecolor='k')
-    ax2.plot(zs_for_zp, resid_zp, 'o', markersize=4, color='k', markeredgecolor='k')
+    ax1.plot(zs_for_zp, zp, 'o', markersize=3, color='k', markeredgecolor='k')
+    ax2.plot(zs_for_zp, resid_zp, 'o', markersize=3, color='k', markeredgecolor='k')
 
-    ax3.plot(zs_for_zg, zg, 'o', markersize=4, color='k', markeredgecolor='k')
-    ax4.plot(zs_for_zg, resid_zg, 'o', markersize=4, color='k', markeredgecolor='k')
+    ax3.plot(zs_for_zg, zg, 'o', markersize=3, color='k', markeredgecolor='k')
+    ax4.plot(zs_for_zg, resid_zg, 'o', markersize=3, color='k', markeredgecolor='k')
 
-    ax5.plot(zs_for_zspz, zspz, 'o', markersize=4, color='k', markeredgecolor='k')
-    ax6.plot(zs_for_zspz, resid_zspz, 'o', markersize=4, color='k', markeredgecolor='k')
+    ax5.plot(zs_for_zspz, zspz, 'o', markersize=3, color='k', markeredgecolor='k')
+    ax6.plot(zs_for_zspz, resid_zspz, 'o', markersize=3, color='k', markeredgecolor='k')
 
     # Limits
     ax1.set_xlim(0.6, 1.24)
@@ -455,23 +463,23 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax6.axhline(y=mean_zspz - nmad_zspz, ls='-', color='red')
 
     # Make tick labels larger
-    ax1.set_xticklabels(ax1.get_xticks().tolist(), size=14)
-    ax1.set_yticklabels(ax1.get_yticks().tolist(), size=14)
+    ax1.set_xticklabels(ax1.get_xticks().tolist(), size=10)
+    ax1.set_yticklabels(ax1.get_yticks().tolist(), size=10)
 
-    ax2.set_xticklabels(ax2.get_xticks().tolist(), size=14)
-    ax2.set_yticklabels(ax2.get_yticks().tolist(), size=14)
+    ax2.set_xticklabels(ax2.get_xticks().tolist(), size=10)
+    ax2.set_yticklabels(ax2.get_yticks().tolist(), size=10)
 
-    ax3.set_xticklabels(ax3.get_xticks().tolist(), size=14)
-    ax3.set_yticklabels(ax3.get_yticks().tolist(), size=14)
+    ax3.set_xticklabels(ax3.get_xticks().tolist(), size=10)
+    ax3.set_yticklabels(ax3.get_yticks().tolist(), size=10)
 
-    ax4.set_xticklabels(ax4.get_xticks().tolist(), size=14)
-    ax4.set_yticklabels(ax4.get_yticks().tolist(), size=14)
+    ax4.set_xticklabels(ax4.get_xticks().tolist(), size=10)
+    ax4.set_yticklabels(ax4.get_yticks().tolist(), size=10)
 
-    ax5.set_xticklabels(ax5.get_xticks().tolist(), size=14)
-    ax5.set_yticklabels(ax5.get_yticks().tolist(), size=14)
+    ax5.set_xticklabels(ax5.get_xticks().tolist(), size=10)
+    ax5.set_yticklabels(ax5.get_yticks().tolist(), size=10)
 
-    ax6.set_xticklabels(ax6.get_xticks().tolist(), size=14)
-    ax6.set_yticklabels(ax6.get_yticks().tolist(), size=14)
+    ax6.set_xticklabels(ax6.get_xticks().tolist(), size=10)
+    ax6.set_yticklabels(ax6.get_yticks().tolist(), size=10)
 
     # Get rid of Xaxis tick labels on top subplot
     ax1.set_xticklabels([])
@@ -487,54 +495,54 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax6.minorticks_on()
 
     # Axis labels
-    ax1.set_ylabel(r'$\mathrm{z_{p}}$', fontsize=20)
-    ax2.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=20)
-    ax2.set_ylabel(r'$\mathrm{(z_{p} - z_{s}) / (1+z_{s})}$', fontsize=20)
+    ax1.set_ylabel(r'$\mathrm{z_{p}}$', fontsize=13)
+    ax2.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=13)
+    ax2.set_ylabel(r'$\mathrm{(z_{p} - z_{s}) / (1+z_{s})}$', fontsize=13)
 
-    ax3.set_ylabel(r'$\mathrm{z_{g}}$', fontsize=20)
-    ax4.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=20)
-    ax4.set_ylabel(r'$\mathrm{(z_{g} - z_{s}) / (1+z_{s})}$', fontsize=20)
+    ax3.set_ylabel(r'$\mathrm{z_{g}}$', fontsize=13)
+    ax4.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=13)
+    ax4.set_ylabel(r'$\mathrm{(z_{g} - z_{s}) / (1+z_{s})}$', fontsize=13)
 
-    ax5.set_ylabel(r'$\mathrm{z_{spz}}$', fontsize=20)
-    ax6.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=20)
-    ax6.set_ylabel(r'$\mathrm{(z_{spz} - z_{s}) / (1+z_{s})}$', fontsize=20)
+    ax5.set_ylabel(r'$\mathrm{z_{spz}}$', fontsize=13)
+    ax6.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=13)
+    ax6.set_ylabel(r'$\mathrm{(z_{spz} - z_{s}) / (1+z_{s})}$', fontsize=13)
 
     # Text on figures
     # print D4000 range
-    ax3.text(0.15, 1.1, "{:.1f}".format(d4000_low) + r"$\, \leq \mathrm{D4000} < \,$" + "{:.1f}".format(d4000_high), \
+    ax3.text(0.34, 0.11, "{:.1f}".format(d4000_low) + r"$\, \leq \mathrm{D4000} < \,$" + "{:.1f}".format(d4000_high), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax3.transAxes, color='k', size=24)
+    transform=ax3.transAxes, color='k', size=15)
 
     # print N, mean, nmad, outlier frac
     ax1.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_zp)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=18)
-    ax1.text(0.05, 0.89, r'${\left< \Delta \right>}_{\mathrm{Photo-z}} = $' + mr.convert_to_sci_not(mean_zphot), \
+    transform=ax1.transAxes, color='k', size=12)
+    ax1.text(0.04, 0.89, r'${\left< \Delta \right>}_{\mathrm{Photo-z}} = $' + mr.convert_to_sci_not(mean_zphot), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=18)
-    ax1.text(0.05, 0.81, r'$\mathrm{\sigma^{NMAD}_{Photo-z}} = $' + mr.convert_to_sci_not(nmad_zphot), \
+    transform=ax1.transAxes, color='k', size=12)
+    ax1.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{Photo-z}} = $' + mr.convert_to_sci_not(nmad_zphot), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=18)
+    transform=ax1.transAxes, color='k', size=12)
 
     ax3.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_zg)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax3.transAxes, color='k', size=18)
-    ax3.text(0.05, 0.89, r'${\left< \Delta \right>}_{\mathrm{Grism-z}} = $' + mr.convert_to_sci_not(mean_zgrism), \
+    transform=ax3.transAxes, color='k', size=12)
+    ax3.text(0.04, 0.89, r'${\left< \Delta \right>}_{\mathrm{Grism-z}} = $' + mr.convert_to_sci_not(mean_zgrism), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax3.transAxes, color='k', size=18)
-    ax3.text(0.05, 0.81, r'$\mathrm{\sigma^{NMAD}_{Grism-z}} = $' + mr.convert_to_sci_not(nmad_zgrism), \
+    transform=ax3.transAxes, color='k', size=12)
+    ax3.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{Grism-z}} = $' + mr.convert_to_sci_not(nmad_zgrism), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax3.transAxes, color='k', size=18)
+    transform=ax3.transAxes, color='k', size=12)
 
     ax5.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_zspz)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax5.transAxes, color='k', size=18)
-    ax5.text(0.05, 0.89, r'${\left< \Delta \right>}_{\mathrm{SPZ}} = $' + mr.convert_to_sci_not(mean_zspz), \
+    transform=ax5.transAxes, color='k', size=12)
+    ax5.text(0.04, 0.89, r'${\left< \Delta \right>}_{\mathrm{SPZ}} = $' + mr.convert_to_sci_not(mean_zspz), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax5.transAxes, color='k', size=18)
-    ax5.text(0.05, 0.81, r'$\mathrm{\sigma^{NMAD}_{SPZ}} = $' + mr.convert_to_sci_not(nmad_zspz), \
+    transform=ax5.transAxes, color='k', size=12)
+    ax5.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{SPZ}} = $' + mr.convert_to_sci_not(nmad_zspz), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax5.transAxes, color='k', size=18)
+    transform=ax5.transAxes, color='k', size=12)
 
     # save figure and close
     fig.savefig(massive_figures_dir + 'spz_comp_photoz_' + \
@@ -560,9 +568,11 @@ def main():
     assert len(ids) == len(zspz_chi2)
     assert len(ids) == len(imag)
 
+    sys.exit(0)
+
     # Cut on D4000
-    d4000_low = 1.2
-    d4000_high = 1.3
+    d4000_low = 1.1
+    d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
@@ -663,8 +673,6 @@ def main():
     print "Outlier fraction for Photo-z:", outlier_frac_zp
     print "Outlier fraction for Grism-z:", outlier_frac_zg
     print "Outlier fraction for SPZ:", outlier_frac_spz
-
-    sys.exit(0)
 
     make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
         mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
