@@ -44,46 +44,52 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     # case) then it will append to these arrays and change their contents.
     # So it is necessary for this function to know the latest contents
     # of these arrays.
-    id_arr = np.load(savedir_photoz + 'id_arr.npy')
-    field_arr = np.load(savedir_photoz + 'field_arr.npy')
-    zs_arr = np.load(savedir_photoz + 'zs_arr.npy')
+    id_arr_jt = np.load(savedir_photoz + 'jet_id_arr.npy')
+    field_arr_jt = np.load(savedir_photoz + 'jet_field_arr.npy')
+    zs_arr_jt = np.load(savedir_photoz + 'jet_zs_arr.npy')
 
-    zp_minchi2_arr = np.load(savedir_photoz + 'zp_minchi2_arr.npy')
-    zp_arr = np.load(savedir_photoz + 'zp_arr.npy')
-    zp_zerr_low_arr = np.load(savedir_photoz + 'zp_zerr_low_arr.npy')
-    zp_zerr_up_arr = np.load(savedir_photoz + 'zp_zerr_up_arr.npy')
-    zp_min_chi2_arr = np.load(savedir_photoz + 'zp_min_chi2_arr.npy')
-    zp_bestalpha_arr = np.load(savedir_photoz + 'zp_bestalpha_arr.npy')
-    zp_model_idx_arr = np.load(savedir_photoz + 'zp_model_idx_arr.npy')
-    zp_age_arr = np.load(savedir_photoz + 'zp_age_arr.npy')
-    zp_tau_arr = np.load(savedir_photoz + 'zp_tau_arr.npy')
-    zp_av_arr = np.load(savedir_photoz + 'zp_av_arr.npy')
+    zp_minchi2_arr_jt = np.load(savedir_photoz + 'jet_zp_minchi2_arr.npy')
+    zp_arr_jt = np.load(savedir_photoz + 'jet_zp_arr.npy')
+    zp_zerr_low_arr_jt = np.load(savedir_photoz + 'jet_zp_zerr_low_arr.npy')
+    zp_zerr_up_arr_jt = np.load(savedir_photoz + 'jet_zp_zerr_up_arr.npy')
+    zp_min_chi2_arr_jt = np.load(savedir_photoz + 'jet_zp_min_chi2_arr.npy')
+    zp_bestalpha_arr_jt = np.load(savedir_photoz + 'jet_zp_bestalpha_arr.npy')
+    zp_model_idx_arr_jt = np.load(savedir_photoz + 'jet_zp_model_idx_arr.npy')
+    zp_age_arr_jt = np.load(savedir_photoz + 'jet_zp_age_arr.npy')
+    zp_tau_arr_jt = np.load(savedir_photoz + 'jet_zp_tau_arr.npy')
+    zp_av_arr_jt = np.load(savedir_photoz + 'jet_zp_av_arr.npy')
 
-    zspz_minchi2_arr = np.load(savedir_spz + 'zspz_minchi2_arr.npy')
-    zspz_arr = np.load(savedir_spz + 'zspz_arr.npy')
-    zspz_zerr_low_arr = np.load(savedir_spz + 'zspz_zerr_low_arr.npy')
-    zspz_zerr_up_arr = np.load(savedir_spz + 'zspz_zerr_up_arr.npy')
-    zspz_min_chi2_arr = np.load(savedir_spz + 'zspz_min_chi2_arr.npy')
-    zspz_bestalpha_arr = np.load(savedir_spz + 'zspz_bestalpha_arr.npy')
-    zspz_model_idx_arr = np.load(savedir_spz + 'zspz_model_idx_arr.npy')
-    zspz_age_arr = np.load(savedir_spz + 'zspz_age_arr.npy')
-    zspz_tau_arr = np.load(savedir_spz + 'zspz_tau_arr.npy')
-    zspz_av_arr = np.load(savedir_spz + 'zspz_av_arr.npy')
+    zspz_minchi2_arr_jt = np.load(savedir_spz + 'jet_zspz_minchi2_arr.npy')
+    zspz_arr_jt = np.load(savedir_spz + 'jet_zspz_arr.npy')
+    zspz_zerr_low_arr_jt = np.load(savedir_spz + 'jet_zspz_zerr_low_arr.npy')
+    zspz_zerr_up_arr_jt = np.load(savedir_spz + 'jet_zspz_zerr_up_arr.npy')
+    zspz_min_chi2_arr_jt = np.load(savedir_spz + 'jet_zspz_min_chi2_arr.npy')
+    zspz_bestalpha_arr_jt = np.load(savedir_spz + 'jet_zspz_bestalpha_arr.npy')
+    zspz_model_idx_arr_jt = np.load(savedir_spz + 'jet_zspz_model_idx_arr.npy')
+    zspz_age_arr_jt = np.load(savedir_spz + 'jet_zspz_age_arr.npy')
+    zspz_tau_arr_jt = np.load(savedir_spz + 'jet_zspz_tau_arr.npy')
+    zspz_av_arr_jt = np.load(savedir_spz + 'jet_zspz_av_arr.npy')
 
-    zg_minchi2_arr = np.load(savedir_grismz + 'zg_minchi2_arr.npy')
-    zg_arr = np.load(savedir_grismz + 'zg_arr.npy')
-    zg_zerr_low_arr = np.load(savedir_grismz + 'zg_zerr_low_arr.npy')
-    zg_zerr_up_arr = np.load(savedir_grismz + 'zg_zerr_up_arr.npy')
-    zg_min_chi2_arr = np.load(savedir_grismz + 'zg_min_chi2_arr.npy')
-    zg_bestalpha_arr = np.load(savedir_grismz + 'zg_bestalpha_arr.npy')
-    zg_model_idx_arr = np.load(savedir_grismz + 'zg_model_idx_arr.npy')
-    zg_age_arr = np.load(savedir_grismz + 'zg_age_arr.npy')
-    zg_tau_arr = np.load(savedir_grismz + 'zg_tau_arr.npy')
-    zg_av_arr = np.load(savedir_grismz + 'zg_av_arr.npy')
+    zg_minchi2_arr_jt = np.load(savedir_grismz + 'jet_zg_minchi2_arr.npy')
+    zg_arr_jt = np.load(savedir_grismz + 'jet_zg_arr.npy')
+    zg_zerr_low_arr_jt = np.load(savedir_grismz + 'jet_zg_zerr_low_arr.npy')
+    zg_zerr_up_arr_jt = np.load(savedir_grismz + 'jet_zg_zerr_up_arr.npy')
+    zg_min_chi2_arr_jt = np.load(savedir_grismz + 'jet_zg_min_chi2_arr.npy')
+    zg_bestalpha_arr_jt = np.load(savedir_grismz + 'jet_zg_bestalpha_arr.npy')
+    zg_model_idx_arr_jt = np.load(savedir_grismz + 'jet_zg_model_idx_arr.npy')
+    zg_age_arr_jt = np.load(savedir_grismz + 'jet_zg_age_arr.npy')
+    zg_tau_arr_jt = np.load(savedir_grismz + 'jet_zg_tau_arr.npy')
+    zg_av_arr_jt = np.load(savedir_grismz + 'jet_zg_av_arr.npy')
+
+    id_arr_fl = np.load(savedir_photoz + 'firstlight_id_arr.npy')
+    field_arr_fl = np.load(savedir_photoz + 'firstlight_field_arr.npy')
 
     # First check that the galaxy hasn't already been done
-    if (current_id in id_arr) and (current_field in field_arr):
-        print "At:", current_id, "in", current_field, "Skipping since this has been done."
+    if (current_id in id_arr_fl) and (current_field in field_arr_fl):
+        print "At:", current_id, "in", current_field, "Skipping since this has been done by Firstlight."
+        return None
+    if (current_id in id_arr_jt) and (current_field in field_arr_jt):
+        print "At:", current_id, "in", current_field, "Skipping since this has been done by Jet."
         return None
 
     print "\n", "Working on:", current_field, current_id, "at", current_specz
@@ -100,9 +106,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
     if return_code == 0:
-        print "Skipping due to an error with the obs data. See the error message just above this one.",
-        print "Moving to the next galaxy."
-        return None
+        print current_id, current_field
+        print "Return code should not have been 0. Exiting."
+        sys.exit(0)
 
     threed_ra = phot_cat_3dhst['ra']
     threed_dec = phot_cat_3dhst['dec']
@@ -315,79 +321,79 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
         use_broadband=False, single_galaxy=False, for_loop_method='parallel')
 
     # Append to existing numpy arrays and save
-    id_arr = np.append(id_arr, current_id)
-    field_arr = np.append(field_arr, current_field)
-    zs_arr = np.append(zs_arr, current_specz)
+    id_arr_jt = np.append(id_arr_jt, current_id)
+    field_arr_jt = np.append(field_arr_jt, current_field)
+    zs_arr_jt = np.append(zs_arr_jt, current_specz)
+    
+    zp_minchi2_arr_jt = np.append(zp_minchi2_arr_jt, zp_minchi2)
+    zp_arr_jt = np.append(zp_arr_jt, zp)
+    zp_zerr_low_arr_jt = np.append(zp_zerr_low_arr_jt, zp_zerr_low)
+    zp_zerr_up_arr_jt = np.append(zp_zerr_up_arr_jt, zp_zerr_up)
+    zp_min_chi2_arr_jt = np.append(zp_min_chi2_arr_jt, zp_min_chi2)
+    zp_bestalpha_arr_jt = np.append(zp_bestalpha_arr_jt, zp_bestalpha)
+    zp_model_idx_arr_jt = np.append(zp_model_idx_arr_jt, zp_model_idx)
+    zp_age_arr_jt = np.append(zp_age_arr_jt, zp_age)
+    zp_tau_arr_jt = np.append(zp_tau_arr_jt, zp_tau)
+    zp_av_arr_jt = np.append(zp_av_arr_jt, zp_av)
+    
+    zspz_minchi2_arr_jt = np.append(zspz_minchi2_arr_jt, zspz_minchi2)
+    zspz_arr_jt = np.append(zspz_arr_jt, zspz)
+    zspz_zerr_low_arr_jt = np.append(zspz_zerr_low_arr_jt, zspz_zerr_low)
+    zspz_zerr_up_arr_jt = np.append(zspz_zerr_up_arr_jt, zspz_zerr_up)
+    zspz_min_chi2_arr_jt = np.append(zspz_min_chi2_arr_jt, zspz_min_chi2)
+    zspz_bestalpha_arr_jt = np.append(zspz_bestalpha_arr_jt, zspz_bestalpha)
+    zspz_model_idx_arr_jt = np.append(zspz_model_idx_arr_jt, zspz_model_idx)
+    zspz_age_arr_jt = np.append(zspz_age_arr_jt, zspz_age)
+    zspz_tau_arr_jt = np.append(zspz_tau_arr_jt, zspz_tau)
+    zspz_av_arr_jt = np.append(zspz_av_arr_jt, zspz_av)
+    
+    zg_minchi2_arr_jt = np.append(zg_minchi2_arr_jt, zg_minchi2)
+    zg_arr_jt = np.append(zg_arr_jt, zg)
+    zg_zerr_low_arr_jt = np.append(zg_zerr_low_arr_jt, zg_zerr_low)
+    zg_zerr_up_arr_jt = np.append(zg_zerr_up_arr_jt, zg_zerr_up)
+    zg_min_chi2_arr_jt = np.append(zg_min_chi2_arr_jt, zg_min_chi2)
+    zg_bestalpha_arr_jt = np.append(zg_bestalpha_arr_jt, zg_bestalpha)
+    zg_model_idx_arr_jt = np.append(zg_model_idx_arr_jt, zg_model_idx)
+    zg_age_arr_jt = np.append(zg_age_arr_jt, zg_age)
+    zg_tau_arr_jt = np.append(zg_tau_arr_jt, zg_tau)
+    zg_av_arr_jt = np.append(zg_av_arr_jt, zg_av)
 
-    zp_minchi2_arr = np.append(zp_minchi2_arr, zp_minchi2)
-    zp_arr = np.append(zp_arr, zp)
-    zp_zerr_low_arr = np.append(zp_zerr_low_arr, zp_zerr_low)
-    zp_zerr_up_arr = np.append(zp_zerr_up_arr, zp_zerr_up)
-    zp_min_chi2_arr = np.append(zp_min_chi2_arr, zp_min_chi2)
-    zp_bestalpha_arr = np.append(zp_bestalpha_arr, zp_bestalpha)
-    zp_model_idx_arr = np.append(zp_model_idx_arr, zp_model_idx)
-    zp_age_arr = np.append(zp_age_arr, zp_age)
-    zp_tau_arr = np.append(zp_tau_arr, zp_tau)
-    zp_av_arr = np.append(zp_av_arr, zp_av)
-
-    zspz_minchi2_arr = np.append(zspz_minchi2_arr, zspz_minchi2)
-    zspz_arr = np.append(zspz_arr, zspz)
-    zspz_zerr_low_arr = np.append(zspz_zerr_low_arr, zspz_zerr_low)
-    zspz_zerr_up_arr = np.append(zspz_zerr_up_arr, zspz_zerr_up)
-    zspz_min_chi2_arr = np.append(zspz_min_chi2_arr, zspz_min_chi2)
-    zspz_bestalpha_arr = np.append(zspz_bestalpha_arr, zspz_bestalpha)
-    zspz_model_idx_arr = np.append(zspz_model_idx_arr, zspz_model_idx)
-    zspz_age_arr = np.append(zspz_age_arr, zspz_age)
-    zspz_tau_arr = np.append(zspz_tau_arr, zspz_tau)
-    zspz_av_arr = np.append(zspz_av_arr, zspz_av)
-
-    zg_minchi2_arr = np.append(zg_minchi2_arr, zg_minchi2)
-    zg_arr = np.append(zg_arr, zg)
-    zg_zerr_low_arr = np.append(zg_zerr_low_arr, zg_zerr_low)
-    zg_zerr_up_arr = np.append(zg_zerr_up_arr, zg_zerr_up)
-    zg_min_chi2_arr = np.append(zg_min_chi2_arr, zg_min_chi2)
-    zg_bestalpha_arr = np.append(zg_bestalpha_arr, zg_bestalpha)
-    zg_model_idx_arr = np.append(zg_model_idx_arr, zg_model_idx)
-    zg_age_arr = np.append(zg_age_arr, zg_age)
-    zg_tau_arr = np.append(zg_tau_arr, zg_tau)
-    zg_av_arr = np.append(zg_av_arr, zg_av)
-
-    np.save(savedir_photoz + 'id_arr.npy', id_arr)
-    np.save(savedir_photoz + 'field_arr.npy', field_arr)
-    np.save(savedir_photoz + 'zs_arr.npy', zs_arr)
-
-    np.save(savedir_photoz + 'zp_minchi2_arr.npy', zp_minchi2_arr)
-    np.save(savedir_photoz + 'zp_arr.npy', zp_arr)
-    np.save(savedir_photoz + 'zp_zerr_low_arr.npy', zp_zerr_low_arr)
-    np.save(savedir_photoz + 'zp_zerr_up_arr.npy', zp_zerr_up_arr)
-    np.save(savedir_photoz + 'zp_min_chi2_arr.npy', zp_min_chi2_arr)
-    np.save(savedir_photoz + 'zp_bestalpha_arr.npy', zp_bestalpha_arr)
-    np.save(savedir_photoz + 'zp_model_idx_arr.npy', zp_model_idx_arr)
-    np.save(savedir_photoz + 'zp_age_arr.npy', zp_age_arr)
-    np.save(savedir_photoz + 'zp_tau_arr.npy', zp_tau_arr)
-    np.save(savedir_photoz + 'zp_av_arr.npy', zp_av_arr)
-
-    np.save(savedir_spz + 'zspz_minchi2_arr.npy', zspz_minchi2_arr)
-    np.save(savedir_spz + 'zspz_arr.npy', zspz_arr)
-    np.save(savedir_spz + 'zspz_zerr_low_arr.npy', zspz_zerr_low_arr)
-    np.save(savedir_spz + 'zspz_zerr_up_arr.npy', zspz_zerr_up_arr)
-    np.save(savedir_spz + 'zspz_min_chi2_arr.npy', zspz_min_chi2_arr)
-    np.save(savedir_spz + 'zspz_bestalpha_arr.npy', zspz_bestalpha_arr)
-    np.save(savedir_spz + 'zspz_model_idx_arr.npy', zspz_model_idx_arr)
-    np.save(savedir_spz + 'zspz_age_arr.npy', zspz_age_arr)
-    np.save(savedir_spz + 'zspz_tau_arr.npy', zspz_tau_arr)
-    np.save(savedir_spz + 'zspz_av_arr.npy', zspz_av_arr)
-
-    np.save(savedir_grismz + 'zg_minchi2_arr.npy', zg_minchi2_arr)
-    np.save(savedir_grismz + 'zg_arr.npy', zg_arr)
-    np.save(savedir_grismz + 'zg_zerr_low_arr.npy', zg_zerr_low_arr)
-    np.save(savedir_grismz + 'zg_zerr_up_arr.npy', zg_zerr_up_arr)
-    np.save(savedir_grismz + 'zg_min_chi2_arr.npy', zg_min_chi2_arr)
-    np.save(savedir_grismz + 'zg_bestalpha_arr.npy', zg_bestalpha_arr)
-    np.save(savedir_grismz + 'zg_model_idx_arr.npy', zg_model_idx_arr)
-    np.save(savedir_grismz + 'zg_age_arr.npy', zg_age_arr)
-    np.save(savedir_grismz + 'zg_tau_arr.npy', zg_tau_arr)
-    np.save(savedir_grismz + 'zg_av_arr.npy', zg_av_arr)
+    np.save(savedir_photoz + 'jet_id_arr.npy', id_arr_jt)
+    np.save(savedir_photoz + 'jet_field_arr.npy', field_arr_jt)
+    np.save(savedir_photoz + 'jet_zs_arr.npy', zs_arr_jt)
+    
+    np.save(savedir_photoz + 'jet_zp_minchi2_arr.npy', zp_minchi2_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_arr.npy', zp_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_zerr_low_arr.npy', zp_zerr_low_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_zerr_up_arr.npy', zp_zerr_up_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_min_chi2_arr.npy', zp_min_chi2_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_bestalpha_arr.npy', zp_bestalpha_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_model_idx_arr.npy', zp_model_idx_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_age_arr.npy', zp_age_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_tau_arr.npy', zp_tau_arr_jt)
+    np.save(savedir_photoz + 'jet_zp_av_arr.npy', zp_av_arr_jt)
+    
+    np.save(savedir_spz + 'jet_zspz_minchi2_arr.npy', zspz_minchi2_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_arr.npy', zspz_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_zerr_low_arr.npy', zspz_zerr_low_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_zerr_up_arr.npy', zspz_zerr_up_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_min_chi2_arr.npy', zspz_min_chi2_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_bestalpha_arr.npy', zspz_bestalpha_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_model_idx_arr.npy', zspz_model_idx_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_age_arr.npy', zspz_age_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_tau_arr.npy', zspz_tau_arr_jt)
+    np.save(savedir_spz + 'jet_zspz_av_arr.npy', zspz_av_arr_jt)
+    
+    np.save(savedir_grismz + 'jet_zg_minchi2_arr.npy', zg_minchi2_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_arr.npy', zg_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_zerr_low_arr.npy', zg_zerr_low_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_zerr_up_arr.npy', zg_zerr_up_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_min_chi2_arr.npy', zg_min_chi2_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_bestalpha_arr.npy', zg_bestalpha_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_model_idx_arr.npy', zg_model_idx_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_age_arr.npy', zg_age_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_tau_arr.npy', zg_tau_arr_jt)
+    np.save(savedir_grismz + 'jet_zg_av_arr.npy', zg_av_arr_jt)
 
     print "Intermediate result arrays saved."
 
@@ -477,13 +483,13 @@ def main():
     total_final_sample = len(final_sample)
     galaxy_count = 0
 
-    for j in range(175, total_final_sample):
+    for j in range(450, total_final_sample):
 
         print "Galaxies done so far:", galaxy_count
         print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
 
         get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
-            final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+            final_sample['zspec'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
             model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
 
