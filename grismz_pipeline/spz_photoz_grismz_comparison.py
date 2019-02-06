@@ -36,15 +36,19 @@ def get_z_errors(zarr, pz):
 
     total_area = simps(pz_curve, zarray)
 
-    # Now shorten the zarray and compute area again
+    # Now go outward from the peak of the p(z) curve and compute area again
     # Keep iterating until you reach 68% of the total area
-    # Redshift limits to integrate over are brought inward each time
+    # Redshift limits to integrate over are brought outward each time
     # in both directions by 0.005
 
+    # Get zpeak first
+    zpeak = zarray[np.argmax(pz_curve)]
+
+    # zstep while iterating
+    zstep = 0.005
     # Starting redshifts
-    zlow = 0.3
-    zhigh = 1.49
-    zstep = 0.005  # zstep while shortening
+    zlow = zpeak - zstep
+    zhigh = zpeak + zstep
 
     while True:
         # Find indices and shorten the pz and z curves
@@ -58,23 +62,29 @@ def get_z_errors(zarr, pz):
         area_now = simps(new_pz_curve, new_zarray)
         area_frac = area_now / total_area
 
-        if area_frac <= 0.68:
+        if area_frac >= 0.68:
             break
         else:
             zlow_prev = zlow
             zhigh_prev = zhigh
             area_frac_prev = area_frac
 
-            zlow += zstep
-            zhigh -= zstep
+            zlow -= zstep
+            zhigh += zstep
         
     # If the prevous step was closer to 68% area then choose that
-    if abs(area_frac_prev - 0.68) < abs(area_frac - 0.68):
-        zlow_bound = zlow_prev
-        zhigh_bound = zhigh_prev
-    else:
-        zlow_bound = zlow
-        zhigh_bound = zhigh
+    # This ensures that I get as close as possible to the 68% limits
+    # in cases where the p(z) curve is steep and the area changes quickly.
+
+    # In case it gets out on the first iteration then area_frac_prev 
+    # will not be defined. So only do the comparison if it is defined
+    # otherwise simply return the bounds at the current iteration.
+    zlow_bound = zlow
+    zhigh_bound = zhigh
+    if 'area_frac_prev' in locals():
+        if abs(area_frac_prev - 0.68) < abs(area_frac - 0.68):
+            zlow_bound = zlow_prev
+            zhigh_bound = zhigh_prev
 
     return zlow_bound, zhigh_bound
 
@@ -122,9 +132,9 @@ def get_arrays_to_plot():
         zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
 
         # Get errors and save them to a file
-        #zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz)
-        #zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz)
-        #zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
+        zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz)
+        zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz)
+        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
 
     if resave:
         np.save(zp_results_dir + 'firstlight_zp_low_bound.npy', zp_low_bound_fl)
@@ -175,9 +185,9 @@ def get_arrays_to_plot():
         zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
 
         # Get errors and save them to a file
-        #zp_low_bound_jt[u], zp_high_bound_jt[u] = get_z_errors(zp_zarr, zp_pz)
-        #zg_low_bound_jt[u], zg_high_bound_jt[u] = get_z_errors(zg_zarr, zg_pz)
-        #zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
+        zp_low_bound_jt[u], zp_high_bound_jt[u] = get_z_errors(zp_zarr, zp_pz)
+        zg_low_bound_jt[u], zg_high_bound_jt[u] = get_z_errors(zg_zarr, zg_pz)
+        zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
 
     if resave:
         np.save(zp_results_dir + 'jet_zp_low_bound.npy', zp_low_bound_jt)
@@ -568,14 +578,14 @@ def main():
     assert len(ids) == len(zspz_chi2)
     assert len(ids) == len(imag)
 
-    sys.exit(0)
-
     # Cut on D4000
     d4000_low = 1.1
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
+    print "Galaxies within D4000 range:", len(d4000_idx)
+    sys.exit(0)
 
     # Apply D4000 and magnitude indices
     zs = zs[d4000_idx]
