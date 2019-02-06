@@ -44,8 +44,8 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     # case) then it will append to these arrays and change their contents.
     # So it is necessary for this function to know the latest contents
     # of these arrays.
-    id_arr = np.load(savedir_photoz + 'id_arr.npy')
-    field_arr = np.load(savedir_photoz + 'field_arr.npy')
+    id_arr_fl = np.load(savedir_photoz + 'firstlight_id_arr.npy')
+    field_arr_fl = np.load(savedir_photoz + 'firstlight_field_arr.npy')
     zs_arr = np.load(savedir_photoz + 'zs_arr.npy')
 
     zp_minchi2_arr = np.load(savedir_photoz + 'zp_minchi2_arr.npy')
@@ -81,9 +81,15 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     zg_tau_arr = np.load(savedir_grismz + 'zg_tau_arr.npy')
     zg_av_arr = np.load(savedir_grismz + 'zg_av_arr.npy')
 
+    id_arr_jt = np.load(savedir_photoz + 'jet_id_arr.npy')
+    field_arr_jt = np.load(savedir_photoz + 'jet_field_arr.npy')
+
     # First check that the galaxy hasn't already been done
-    if (current_id in id_arr) and (current_field in field_arr):
-        print "At:", current_id, "in", current_field, "Skipping since this has been done."
+    if (current_id in id_arr_fl) and (current_field in field_arr_fl):
+        print "At:", current_id, "in", current_field, "Skipping since this has been done by FL."
+        return None
+    if (current_id in id_arr_jt) and (current_field in field_arr_jt):
+        print "At:", current_id, "in", current_field, "Skipping since this has been done by JT."
         return None
 
     print "\n", "Working on:", current_field, current_id, "at", current_specz
@@ -100,9 +106,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
     if return_code == 0:
-        print "Skipping due to an error with the obs data. See the error message just above this one.",
-        print "Moving to the next galaxy."
-        return None
+        print current_id, current_field
+        print "Return code should not have been 0. Exiting."
+        sys.exit(0)
 
     threed_ra = phot_cat_3dhst['ra']
     threed_dec = phot_cat_3dhst['dec']
@@ -286,39 +292,39 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
 
     # ------------- Call fitting function for photo-z ------------- #
     print "Computing photo-z now."
-
+    
     zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
     do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start,\
         current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
-
+    
     # ------------- Call fitting function for SPZ ------------- #
     print "\n", "Photo-z done. Moving on to SPZ computation now."
-
+    
     zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
     do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
         use_broadband=True, single_galaxy=False, for_loop_method='parallel')
-
+    
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
     print "\n", "SPZ done. Moving on to grism-z computation now."
-    
+        
     zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
     do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
         use_broadband=False, single_galaxy=False, for_loop_method='parallel')
-
+    
     # Append to existing numpy arrays and save
     id_arr = np.append(id_arr, current_id)
     field_arr = np.append(field_arr, current_field)
     zs_arr = np.append(zs_arr, current_specz)
-
+    
     zp_minchi2_arr = np.append(zp_minchi2_arr, zp_minchi2)
     zp_arr = np.append(zp_arr, zp)
     zp_zerr_low_arr = np.append(zp_zerr_low_arr, zp_zerr_low)
@@ -329,7 +335,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     zp_age_arr = np.append(zp_age_arr, zp_age)
     zp_tau_arr = np.append(zp_tau_arr, zp_tau)
     zp_av_arr = np.append(zp_av_arr, zp_av)
-
+    
     zspz_minchi2_arr = np.append(zspz_minchi2_arr, zspz_minchi2)
     zspz_arr = np.append(zspz_arr, zspz)
     zspz_zerr_low_arr = np.append(zspz_zerr_low_arr, zspz_zerr_low)
@@ -340,7 +346,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     zspz_age_arr = np.append(zspz_age_arr, zspz_age)
     zspz_tau_arr = np.append(zspz_tau_arr, zspz_tau)
     zspz_av_arr = np.append(zspz_av_arr, zspz_av)
-
+    
     zg_minchi2_arr = np.append(zg_minchi2_arr, zg_minchi2)
     zg_arr = np.append(zg_arr, zg)
     zg_zerr_low_arr = np.append(zg_zerr_low_arr, zg_zerr_low)
@@ -351,11 +357,11 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     zg_age_arr = np.append(zg_age_arr, zg_age)
     zg_tau_arr = np.append(zg_tau_arr, zg_tau)
     zg_av_arr = np.append(zg_av_arr, zg_av)
-
+    
     np.save(savedir_photoz + 'id_arr.npy', id_arr)
     np.save(savedir_photoz + 'field_arr.npy', field_arr)
     np.save(savedir_photoz + 'zs_arr.npy', zs_arr)
-
+    
     np.save(savedir_photoz + 'zp_minchi2_arr.npy', zp_minchi2_arr)
     np.save(savedir_photoz + 'zp_arr.npy', zp_arr)
     np.save(savedir_photoz + 'zp_zerr_low_arr.npy', zp_zerr_low_arr)
@@ -366,7 +372,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     np.save(savedir_photoz + 'zp_age_arr.npy', zp_age_arr)
     np.save(savedir_photoz + 'zp_tau_arr.npy', zp_tau_arr)
     np.save(savedir_photoz + 'zp_av_arr.npy', zp_av_arr)
-
+    
     np.save(savedir_spz + 'zspz_minchi2_arr.npy', zspz_minchi2_arr)
     np.save(savedir_spz + 'zspz_arr.npy', zspz_arr)
     np.save(savedir_spz + 'zspz_zerr_low_arr.npy', zspz_zerr_low_arr)
@@ -377,7 +383,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     np.save(savedir_spz + 'zspz_age_arr.npy', zspz_age_arr)
     np.save(savedir_spz + 'zspz_tau_arr.npy', zspz_tau_arr)
     np.save(savedir_spz + 'zspz_av_arr.npy', zspz_av_arr)
-
+    
     np.save(savedir_grismz + 'zg_minchi2_arr.npy', zg_minchi2_arr)
     np.save(savedir_grismz + 'zg_arr.npy', zg_arr)
     np.save(savedir_grismz + 'zg_zerr_low_arr.npy', zg_zerr_low_arr)
@@ -388,9 +394,9 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     np.save(savedir_grismz + 'zg_age_arr.npy', zg_age_arr)
     np.save(savedir_grismz + 'zg_tau_arr.npy', zg_tau_arr)
     np.save(savedir_grismz + 'zg_av_arr.npy', zg_av_arr)
-
+    
     print "Intermediate result arrays saved."
-
+    
     return None
 
 def main():
@@ -508,13 +514,13 @@ def main():
         galaxy_count += num_cores
     """
 
-    for j in range(175):
+    for j in range(total_final_sample):
 
         print "Galaxies done so far:", galaxy_count
         print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
 
         get_all_redshifts(final_sample['pearsid'][j], final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
-            final_sample['specz'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+            final_sample['zspec'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
             model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
 

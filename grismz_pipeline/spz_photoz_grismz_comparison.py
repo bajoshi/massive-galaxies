@@ -361,7 +361,7 @@ def get_arrays_to_plot():
         all_netsig_list.append(netsig_chosen)
         imag_list.append(current_imag)
 
-        if d4000 >= 1.4 and d4000 < 1.6:
+        if d4000 < 1.1:
             # Some formatting stuff just to make it easier to read on the screen
             current_id_to_print = str(current_id)
             if len(current_id_to_print) == 5:
@@ -585,6 +585,14 @@ def main():
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
     print "Galaxies within D4000 range:", len(d4000_idx)
+
+
+    low_d4000_idx = np.where(d4000 < 1.1)
+    print ids[low_d4000_idx]
+    print fields[low_d4000_idx]
+    print zs[low_d4000_idx]
+    print d4000[low_d4000_idx]
+
     sys.exit(0)
 
     # Apply D4000 and magnitude indices
