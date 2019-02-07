@@ -21,127 +21,100 @@ import mag_hist as mh
 import new_refine_grismz_gridsearch_parallel as ngp
 import dn4000_catalog as dc
 
-def get_all_d4000():
+def get_all_arrays():
 
-    # read in matched files to get id
-    matched_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', \
-        dtype=None, names=True, skip_header=1)
-    matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
-        dtype=None, names=True, skip_header=1)
-    
-    # read in all arrays neded
-    id_n = np.load(massive_figures_dir + 'full_run/id_list_gn.npy')
-    id_s = np.load(massive_figures_dir + 'full_run/id_list_gs.npy')
+    # ------------------------------- Get catalog for final sample ------------------------------- #
+    # Don't use the final catalog for which all 3 redshifts were estimated
+    # Use the catlaog from one step before it
+    # i.e. all the matched galaxies within our z range.
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample_zrange.txt', dtype=None, names=True)
 
-    zgrism_n = np.load(massive_figures_dir + 'full_run/zgrism_list_gn.npy')
-    zgrism_s = np.load(massive_figures_dir + 'full_run/zgrism_list_gs.npy')
+    # Assign arrays
+    redshift_list = []
+    d4000_list = []
+    d4000_err_list = []
 
-    #  Initialize empty lists for storing final values
-    redshift_pears_arr = []
-    d4000_pears_arr = []
-    d4000_err_pears_arr = []
+    # Now loop over all galaxies and get their D4000
+    for i in range(len(final_sample)):
+        current_id = final_sample['pearsid'][i]
+        current_field = final_sample['field'][i]
+        current_zspec = final_sample['specz'][i]
 
-    # Now loop over all objects and get d4000
-    allcats = [matched_cat_n, matched_cat_s]
+        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
-    catcount = 0
-    for cat in allcats:
+        if return_code == 0:
+            print current_field, current_id,
+            print "Skipping due to an error with the obs data. See the error message just above this one.",
+            print "Moving to the next galaxy."
+            continue
 
-        if catcount == 0:
-            fieldname = 'GOODS-N'
-        elif catcount == 1:
-            fieldname = 'GOODS-S'
+        if netsig_chosen < 10:
+            print current_field, current_id,
+            print "Skipping due to low NetSig:", netsig_chosen
+            continue
 
-        # amke sure all objects are unique
-        pears_unique_ids, pears_unique_ids_indices = np.unique(cat['pearsid'], return_index=True)
+        # Now get D4000 based on zspec
+        lam_em = grism_lam_obs / (1 + current_zspec)
+        flam_em = grism_flam_obs * (1 + current_zspec)
+        ferr_em = grism_ferr_obs * (1 + current_zspec)
 
-        for i in range(len(pears_unique_ids)):
+        # These two checks will only be trigerred if the galaxy in question is 
+        # at the correct zspec but our wavelngth data array is incomplete.
+        # So it should have been in the sample if we had all the data points
+        # i.e. in these cases len(lam_em) < 88
+        # I've pushed the checking limits a bit inward because I also don't 
+        # want the D4000 code extrapolating too much.
+        if lam_em[-1] < 4150:
+            print current_field, current_id,
+            print "Skipping due to incomplete wavelength array."
+            continue
+        if lam_em[0] > 3850:
+            print current_field, current_id,
+            print "Skipping due to incomplete wavelength array."
+            continue
 
-            current_id = cat['pearsid'][pears_unique_ids_indices][i]
-            current_zphot = cat['zphot'][pears_unique_ids_indices][i]
+        d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
-            # get data and then d4000
-            lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, fieldname)
-            if return_code == 0:
-                continue
+        redshift_list.append(current_zspec)
+        d4000_list.append(d4000)
+        d4000_err_list.append(d4000_err)
 
-            lam_em = lam_obs / (1 + current_zphot)
-            flam_em = flam_obs * (1 + current_zphot)
-            ferr_em = ferr_obs * (1 + current_zphot)
+    # Convert to numpy arrays and then proceed
+    redshift_arr = np.asarray(redshift_list)
+    d4000_arr = np.asarray(d4000_list)
+    d4000_err_arr = np.asarray(d4000_err_list)
 
-            #print lam_em
-            d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-
-            # Now replace zphot with zgrism for those galaxies whose D4000 is >= 1.4
-            if np.isfinite(d4000) and np.isfinite(d4000_err):
-                if d4000 >= 1.4:
-
-                    if fieldname == 'GOODS-N':
-                        id_idx = np.where(id_n == current_id)[0]
-                        current_zgrism = zgrism_n[id_idx]
-
-                        if np.isfinite(current_zgrism):
-                            d4000_pears_arr.append(d4000)
-                            d4000_err_pears_arr.append(d4000_err)
-                            redshift_pears_arr.append(current_zgrism)
-
-                    elif fieldname == 'GOODS-S':
-                        id_idx = np.where(id_s == current_id)[0]
-                        current_zgrism = zgrism_s[id_idx]
-
-                        if np.isfinite(current_zgrism):
-                            d4000_pears_arr.append(d4000)
-                            d4000_err_pears_arr.append(d4000_err)
-                            redshift_pears_arr.append(current_zgrism)
-                else:
-                    if np.isfinite(current_zphot):
-                        d4000_pears_arr.append(d4000)
-                        d4000_err_pears_arr.append(d4000_err)
-                        redshift_pears_arr.append(current_zphot)
-
-        catcount += 1
-
-    # Convert to numpy arrays
-    redshift_pears_arr = np.asarray(redshift_pears_arr)
-    d4000_pears_arr = np.asarray(d4000_pears_arr)
-    d4000_err_pears_arr = np.asarray(d4000_err_pears_arr)
-
-    np.save(massive_figures_dir + 'all_redshift_array.npy', redshift_pears_arr)
-    np.save(massive_figures_dir + 'all_d4000_arr.npy', d4000_pears_arr)
-    np.save(massive_figures_dir + 'all_d4000_err_arr.npy', d4000_err_pears_arr)
-
-    return redshift_pears_arr, d4000_pears_arr, d4000_err_pears_arr
+    return redshift_arr, d4000_arr, d4000_err_arr
 
 def make_d4000_vs_redshift_plot():
 
-    # Only need to run this function once
-    # So it can store data. After that simply
-    # read the stored data. Commented out 
-    # right now because I already have the arrays.
-    #redshift_pears_arr, d4000_pears_arr, d4000_err_pears_arr = get_all_d4000()
-
-    # read arrays
-    redshift_pears_arr = np.load(massive_figures_dir + 'all_redshift_array.npy')
-    d4000_pears_arr = np.load(massive_figures_dir + 'all_d4000_arr.npy')
-    d4000_err_pears_arr = np.load(massive_figures_dir + 'all_d4000_err_arr.npy')
+    redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
 
     # Only consider finite elements
-    valid_idx1 = np.where(np.isfinite(redshift_pears_arr))[0]
-    valid_idx2 = np.where(np.isfinite(d4000_pears_arr))[0]
-    valid_idx3 = np.where(np.isfinite(d4000_err_pears_arr))[0]
+    # I don't seem to need this for the new final sample 
+    """
+    valid_idx1 = np.where(np.isfinite(redshift_arr))[0]
+    valid_idx2 = np.where(np.isfinite(d4000_arr))[0]
+    valid_idx3 = np.where(np.isfinite(d4000_err_arr))[0]
 
     valid_idx = reduce(np.intersect1d, (valid_idx1, valid_idx2, valid_idx3))
 
-    redshift_pears_plot = redshift_pears_arr[valid_idx]
-    d4000_pears_plot = d4000_pears_arr[valid_idx]
-    d4000_err_pears_plot = d4000_err_pears_arr[valid_idx]
+    redshift_pears_plot = redshift_arr[valid_idx]
+    d4000_pears_plot = d4000_arr[valid_idx]
+    d4000_err_pears_plot = d4000_err_arr[valid_idx]
+    """
 
+    redshift_pears_plot = redshift_arr
+    d4000_pears_plot = d4000_arr
+    d4000_err_pears_plot = d4000_err_arr
+
+    # ------------------------------- Actual plotting ------------------------------- #
     # d4000 vs redshift 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
     ax.errorbar(redshift_pears_plot, d4000_pears_plot, yerr=d4000_err_pears_plot,\
-    fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=0.65, elinewidth=0.1)
+    fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=2, elinewidth=0.1)
 
     ax.axhline(y=1, linewidth=1, linestyle='--', color='r', zorder=10)
 
@@ -164,7 +137,7 @@ def make_d4000_vs_redshift_plot():
 
     ax2.set_xlim(0.5, 1.3)
     ax.set_xlim(0.5, 1.3)
-    ax.set_ylim(0.5, 4.0)
+    ax.set_ylim(0.5, 2.5)
 
     ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$', fontsize=15)
 
@@ -189,20 +162,20 @@ def make_d4000_vs_redshift_plot():
     """
 
     # save the figure
-    fig.savefig(massive_figures_dir + 'd4000_redshift.eps', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'd4000_redshift.pdf', dpi=300, bbox_inches='tight')
 
     return None
 
 def make_d4000_hist():
 
-    # read arrays
-    d4000_pears_arr = np.load(massive_figures_dir + 'all_d4000_arr.npy')
+    # get arrays
+    redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
 
-    print "Number of galaxies with D4000 measurements:", len(d4000_pears_arr)
+    print "Number of galaxies with D4000 measurements:", len(d4000_arr)
 
     # Only consider finite elements
-    valid_idx = np.where(np.isfinite(d4000_pears_arr))[0]
-    d4000_pears_plot = d4000_pears_arr[valid_idx]
+    valid_idx = np.where(np.isfinite(d4000_arr))[0]
+    d4000_pears_plot = d4000_arr[valid_idx]
 
     # ----------------------- PLOT ----------------------- #
     # PEARS dn4000 histogram
@@ -212,9 +185,11 @@ def make_d4000_hist():
     # get total bins and plot histogram
     iqr = np.std(d4000_pears_plot, dtype=np.float64)
     binsize = 2*iqr*np.power(len(d4000_pears_plot),-1/3)
-    totalbins = np.floor((max(d4000_pears_plot) - min(d4000_pears_plot))/binsize)
+    totalbins = int(np.floor((max(d4000_pears_plot) - min(d4000_pears_plot))/binsize))
 
-    ncount, edges, patches = ax.hist(d4000_pears_plot, totalbins, range=[0.0,4.0], color='lightgray', align='mid', zorder=10)
+    print "Total Bins:", totalbins
+
+    ncount, edges, patches = ax.hist(d4000_pears_plot, totalbins, range=[0.0,2.5], color='lightgray', align='mid', zorder=10)
     ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
 
     # shade the selection region
@@ -229,13 +204,16 @@ def make_d4000_hist():
     ax.set_xlabel(r'$\mathrm{D}4000$', fontsize=15)
     ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
 
+    ax.set_xlim(0.0, 2.5)
+    ax.minorticks_on()
+
     d40001p1 = np.where(d4000_pears_plot >= 1.1)[0]
     print "Number of galaxies with valid D4000 measurements in plot:", len(d4000_pears_plot)
     print "Number of galaxies with D4000 >= 1.1:", len(d40001p1)
     print "Fraction of total galaxies with D4000 >= 1.1:", len(d40001p1) / len(d4000_pears_plot)
 
     # save figure
-    fig.savefig(massive_figures_dir + 'pears_d4000_hist.eps', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'pears_d4000_hist.pdf', dpi=300, bbox_inches='tight')
 
     return None
 

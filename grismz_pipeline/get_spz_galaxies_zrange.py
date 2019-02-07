@@ -266,6 +266,7 @@ def main():
     zspec_qual_list = []
     netsig_list = []
     d4000_list = []
+    d4000_err_list = []
     for j in range(len(samp_zrange)):
 
         # Get data
@@ -329,6 +330,7 @@ def main():
         zspec_qual_list.append(samp_zrange['specz_qual'][j])
         netsig_list.append(netsig_chosen)
         d4000_list.append(d4000)
+        d4000_err_list.append(d4000_err)
 
         final_sample += 1
 
@@ -344,14 +346,16 @@ def main():
     zspec_qual = np.asarray(zspec_qual_list)
     netsig_arr = np.asarray(netsig_list)
     d4000_arr = np.asarray(d4000_list)
+    d4000_err_arr = np.asarray(d4000_err_list)
 
     # Resave to ASCII file
-    data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, zspec, zspec_source, zspec_qual, netsig_arr, d4000_arr),\
+    data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, zspec, zspec_source, zspec_qual, netsig_arr, d4000_arr, d4000_err_arr),\
         dtype=[('pears_id', int), ('pears_field', '|S7'), ('pears_ra', float), ('pears_dec', float), \
-        ('zspec', float), ('zspec_source', '|S10'), ('zspec_qual', '|S1'), ('netsig_arr', float), ('d4000_arr', float)])
+        ('zspec', float), ('zspec_source', '|S10'), ('zspec_qual', '|S1'), ('netsig_arr', float), \
+        ('d4000_arr', float), ('d4000_err_arr', float)])
     np.savetxt(massive_galaxies_dir + 'spz_paper_sample.txt', data, \
-        fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f'],\
-        delimiter=' ', header='pearsid field ra dec zspec zspec_source zspec_qual netsig d4000')
+        fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f', '%.2f'],\
+        delimiter=' ', header='pearsid field ra dec zspec zspec_source zspec_qual netsig d4000 d4000_err')
 
     return None
 
