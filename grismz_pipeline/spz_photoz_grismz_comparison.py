@@ -115,7 +115,7 @@ def get_arrays_to_plot():
     zspz_low_bound_fl = np.zeros(id_arr_fl.shape[0])
     zspz_high_bound_fl = np.zeros(id_arr_fl.shape[0])
 
-    resave = False
+    resave = True
 
     # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
     for u in range(len(id_arr_fl)):
@@ -361,7 +361,7 @@ def get_arrays_to_plot():
         all_netsig_list.append(netsig_chosen)
         imag_list.append(current_imag)
 
-        if d4000 < 1.1:
+        if d4000 >= 1.1 and d4000 < 1.4:
             # Some formatting stuff just to make it easier to read on the screen
             current_id_to_print = str(current_id)
             if len(current_id_to_print) == 5:

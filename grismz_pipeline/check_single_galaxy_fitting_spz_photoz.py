@@ -169,7 +169,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
 
 def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, phot_flam_obs, phot_ferr_obs, \
     model_lam_grid, best_fit_model_fullres, best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, bestalpha, \
-    obj_id, obj_field, specz, zp, low_z_lim, upper_z_lim, zspz, chi2, age, tau, av, netsig, d4000, savedir):
+    obj_id, obj_field, specz, low_zp_lim, upper_zp_lim, zp, low_zspz_lim, upper_zspz_lim, zspz, chi2, age, tau, av, netsig, d4000, savedir):
 
     # Make figure and place on grid
     fig, ax1, ax2 = makefig()
@@ -232,18 +232,23 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     #verticalalignment='top', horizontalalignment='left', \
     #transform=ax1.transAxes, color='k', size=10)
 
-    low_zerr = zspz - low_z_lim
-    high_zerr = upper_z_lim - zspz
+    low_zspz_err = zspz - low_zspz_lim
+    high_zspz_err = upper_zspz_lim - zspz
+
+    low_zp_err = zp - low_zp_lim
+    high_zp_err = upper_zp_lim - zp
 
     ax1.text(0.75, 0.35, \
     r'$\mathrm{z_{spz;best}\, =\, }$' + "{:.4}".format(zspz) + \
-    r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
+    r'$\substack{+$' + "{:.3}".format(high_zspz_err) + r'$\\ -$' + "{:.3}".format(low_zspz_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
     ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.22, r'$\mathrm{z_{p;best}\, =\, }$' + "{:.4}".format(zp), \
+    ax1.text(0.75, 0.22, \
+    r'$\mathrm{z_{p;best}\, =\, }$' + "{:.4}".format(zp) + \
+    r'$\substack{+$' + "{:.3}".format(high_zp_err) + r'$\\ -$' + "{:.3}".format(low_zp_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
 

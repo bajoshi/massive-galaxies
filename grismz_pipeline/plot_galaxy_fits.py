@@ -45,14 +45,28 @@ def get_arrays_for_plotting():
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
     zs_arr_fl = np.load(zp_results_dir + 'firstlight_zs_arr.npy')
 
-    zp_arr_fl = np.load(zp_results_dir + 'firstlight_zp_minchi2_arr.npy')
-    zg_arr_fl = np.load(zg_results_dir + 'firstlight_zg_minchi2_arr.npy')
-    zspz_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
+    zp_arr_fl = np.zeros(id_arr_fl.shape[0])
+    zg_arr_fl = np.zeros(id_arr_fl.shape[0])
+    zspz_arr_fl = np.zeros(id_arr_fl.shape[0])
 
     # min chi2 values
     zp_min_chi2_fl = np.load(zp_results_dir + 'firstlight_zp_min_chi2_arr.npy')
     zg_min_chi2_fl = np.load(zg_results_dir + 'firstlight_zg_min_chi2_arr.npy')
     zspz_min_chi2_fl = np.load(spz_results_dir + 'firstlight_zspz_min_chi2_arr.npy')
+
+    # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
+    for u in range(len(id_arr_fl)):
+        zp_pz = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_pz.npy')
+        zp_zarr = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_z_arr.npy')
+        zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
+
+        zspz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
+        zspz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
+        zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
+
+        zg_pz = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_pz.npy')
+        zg_zarr = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_z_arr.npy')
+        zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
 
     # Best fit model idx and alpha
     ## --- Not including zg stuff here for now
@@ -71,19 +85,40 @@ def get_arrays_for_plotting():
     zspz_tau_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_tau_arr.npy')
     zspz_av_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_av_arr.npy')
 
+    # --- Lower and Upper bounds
+    zp_low_bound_fl = np.load(zp_results_dir + 'firstlight_zp_low_bound.npy')
+    zp_high_bound_fl = np.load(zp_results_dir + 'firstlight_zp_high_bound.npy')
+
+    zspz_low_bound_fl = np.load(spz_results_dir + 'firstlight_zspz_low_bound.npy')
+    zspz_high_bound_fl = np.load(spz_results_dir + 'firstlight_zspz_high_bound.npy')
+
     # ----- Jet ----- 
     id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
     field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
     zs_arr_jt = np.load(zp_results_dir + 'jet_zs_arr.npy')
 
-    zp_arr_jt = np.load(zp_results_dir + 'jet_zp_minchi2_arr.npy')
-    zg_arr_jt = np.load(zg_results_dir + 'jet_zg_minchi2_arr.npy')
-    zspz_arr_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
+    zp_arr_jt = np.zeros(id_arr_jt.shape[0])
+    zg_arr_jt = np.zeros(id_arr_jt.shape[0])
+    zspz_arr_jt = np.zeros(id_arr_jt.shape[0])
 
     # min chi2 values
     zp_min_chi2_jt = np.load(zp_results_dir + 'jet_zp_min_chi2_arr.npy')
     zg_min_chi2_jt = np.load(zg_results_dir + 'jet_zg_min_chi2_arr.npy')
     zspz_min_chi2_jt = np.load(spz_results_dir + 'jet_zspz_min_chi2_arr.npy')
+
+    # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
+    for v in range(len(id_arr_jt)):
+        zp_pz = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_pz.npy')
+        zp_zarr = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_z_arr.npy')
+        zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
+
+        zspz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
+        zspz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
+        zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
+
+        zg_pz = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_pz.npy')
+        zg_zarr = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_z_arr.npy')
+        zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
 
     # Best fit model idx and alpha
     ## --- Not including zg stuff here for now
@@ -101,6 +136,13 @@ def get_arrays_for_plotting():
     zspz_age_arr_jt = np.load(spz_results_dir + 'jet_zspz_age_arr.npy')
     zspz_tau_arr_jt = np.load(spz_results_dir + 'jet_zspz_tau_arr.npy')
     zspz_av_arr_jt = np.load(spz_results_dir + 'jet_zspz_av_arr.npy')
+
+    # --- Lower and Upper bounds
+    zp_low_bound_jt = np.load(zp_results_dir + 'jet_zp_low_bound.npy')
+    zp_high_bound_jt = np.load(zp_results_dir + 'jet_zp_high_bound.npy')
+
+    zspz_low_bound_jt = np.load(spz_results_dir + 'jet_zspz_low_bound.npy')
+    zspz_high_bound_jt = np.load(spz_results_dir + 'jet_zspz_high_bound.npy')
 
     # ----- Concatenate -----
     # check for any accidental overlaps
@@ -156,6 +198,13 @@ def get_arrays_for_plotting():
     zspz_tau_arr_jt = np.delete(zspz_tau_arr_jt, common_indices_jt, axis=None)
     zspz_av_arr_jt = np.delete(zspz_av_arr_jt, common_indices_jt, axis=None)
 
+    # --- Lower and Upper bounds
+    zp_low_bound_jt = np.delete(zp_low_bound_jt, common_indices_jt, axis=None)
+    zp_high_bound_jt = np.delete(zp_high_bound_jt, common_indices_jt, axis=None)
+
+    zspz_low_bound_jt = np.delete(zspz_low_bound_jt, common_indices_jt, axis=None)
+    zspz_high_bound_jt = np.delete(zspz_high_bound_jt, common_indices_jt, axis=None)
+
     # -------------------- Actual concatenation
     # The order while concatenating is important! 
     # Stay consistent! fl is before jt
@@ -185,48 +234,45 @@ def get_arrays_for_plotting():
     zspz_tau_arr = np.concatenate((zspz_tau_arr_fl, zspz_tau_arr_jt))
     zspz_av_arr = np.concatenate((zspz_av_arr_fl, zspz_av_arr_jt))
 
+    zp_low_bound_arr = np.concatenate((zp_low_bound_fl, zp_low_bound_jt))
+    zp_high_bound_arr = np.concatenate((zp_high_bound_fl, zp_high_bound_jt))
+    zspz_low_bound_arr = np.concatenate((zspz_low_bound_fl, zspz_low_bound_jt))
+    zspz_high_bound_arr = np.concatenate((zspz_high_bound_fl, zspz_high_bound_jt))
+
     # ----- Get D4000 -----
     # Now loop over all galaxies to get D4000 and netsig
     all_d4000_list = []
     all_netsig_list = []
-    if not os.path.isfile(zp_results_dir + 'all_d4000_arr.npy'):
-        for i in range(len(all_ids)):
-            current_id = all_ids[i]
-            current_field = all_fields[i]
+    for i in range(len(all_ids)):
+        current_id = all_ids[i]
+        current_field = all_fields[i]
 
-            # Get data
-            grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
+        # Get data
+        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
-            if return_code == 0:
-                print current_id, current_field
-                print "Return code should not have been 0. Exiting."
-                sys.exit(0)
+        if return_code == 0:
+            print current_id, current_field
+            print "Return code should not have been 0. Exiting."
+            sys.exit(0)
 
-            # Get D4000 at specz
-            current_specz = zs[i]
-            lam_em = grism_lam_obs / (1 + current_specz)
-            flam_em = grism_flam_obs * (1 + current_specz)
-            ferr_em = grism_ferr_obs * (1 + current_specz)
+        # Get D4000 at specz
+        current_specz = zs[i]
+        lam_em = grism_lam_obs / (1 + current_specz)
+        flam_em = grism_flam_obs * (1 + current_specz)
+        ferr_em = grism_ferr_obs * (1 + current_specz)
 
-            d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
-            all_d4000_list.append(d4000)
+        d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+        all_d4000_list.append(d4000)
+        all_netsig_list.append(netsig_chosen)
 
-            all_netsig_list.append(netsig_chosen)
-
-        # Convert to npy array and save
-        all_netsig = np.asarray(all_netsig_list)
-        np.save(zp_results_dir + 'all_netsig_arr.npy', all_netsig)
-
-        all_d4000 = np.asarray(all_d4000_list)
-        np.save(zp_results_dir + 'all_d4000_arr.npy', all_d4000)
-
-    else:  # simply read in the npy array
-        all_d4000 = np.load(zp_results_dir + 'all_d4000_arr.npy')
-        all_netsig = np.load(zp_results_dir + 'all_netsig_arr.npy')
+    # Convert to arrays and return
+    all_d4000 = np.array(all_d4000_list)
+    all_netsig = np.array(all_netsig_list)
 
     return all_ids, all_fields, zs, zp, zg, zspz, all_d4000, all_netsig, zp_chi2, zg_chi2, zspz_chi2, \
     zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
-    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr
+    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+    zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr
 
 def plotfit(current_id, current_field):
 
@@ -479,7 +525,8 @@ def plotfit(current_id, current_field):
     # first get information arrays
     ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
     zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
-    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr = get_arrays_for_plotting()
+    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+    zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr = get_arrays_for_plotting()
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -524,13 +571,12 @@ def plotfit(current_id, current_field):
     zspz_tau = zspz_tau_arr[match_idx]
     zspz_av = zspz_av_arr[match_idx]
 
-    # Setting errors to zero for now
-    # Will use the width of the p(z) curve later
-    zp_zerr_low = zp + 0.0
-    zp_zerr_up = zp + 0.0
+    # --- Lower and Upper bounds
+    zp_zerr_low = zp_low_bound_arr[match_idx]
+    zp_zerr_up = zp_high_bound_arr[match_idx]
 
-    zspz_zerr_low = zspz + 0.0
-    zspz_zerr_up = zspz + 0.0
+    zspz_zerr_low = zspz_low_bound_arr[match_idx]
+    zspz_zerr_up = zspz_high_bound_arr[match_idx]
 
     # ------------------------------- Get best fit model for plotting ------------------------------- #
     # Will have to do this at the photo-z and SPZ separtely otherwise the plots will not look right
@@ -555,8 +601,9 @@ def plotfit(current_id, current_field):
 
     chk.plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
     model_lam_grid_withlines_mmap, zspz_best_fit_model_fullres, zspz_best_fit_model_in_objlamgrid, \
-    zspz_all_filt_flam_bestmodel, zspz_bestalpha, current_id, current_field, current_specz, zp, \
-    zspz_zerr_low, zspz_zerr_up, zspz, zspz_min_chi2, zspz_age, zspz_tau, zspz_av, netsig_chosen, current_d4000, savedir_spz)
+    zspz_all_filt_flam_bestmodel, zspz_bestalpha, current_id, current_field, current_specz, \
+    zp_zerr_low, zp_zerr_up, zp, zspz_zerr_low, zspz_zerr_up, zspz, zspz_min_chi2, \
+    zspz_age, zspz_tau, zspz_av, netsig_chosen, current_d4000, savedir_spz)
 
     return None
 
@@ -710,8 +757,8 @@ def main():
     # and from single galaxy checking code.
     # --------------------------
     galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p4_to_1p6.txt', dtype=None, names=True, skip_header=1)
-    sort_and_save(galaxies_to_plot)
-    sys.exit()
+    #sort_and_save(galaxies_to_plot)
+    #sys.exit()
 
     # plotting all 1.4 <= D4 < 1.6 galaxies now
     for k in range(len(galaxies_to_plot)):
