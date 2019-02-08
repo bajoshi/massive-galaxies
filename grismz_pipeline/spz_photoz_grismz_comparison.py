@@ -557,7 +557,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.6
+    d4000_low = 1.1
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
@@ -576,6 +576,16 @@ def main():
     resid_zp = (zp - zs) / (1 + zs)
     resid_zg = (zg - zs) / (1 + zs)
     resid_zspz = (zspz - zs) / (1 + zs)
+
+    # Estimate accurate fraction for paper
+    # This is only to be done for the full D4000 range
+    do_frac = False
+    if do_frac:
+        two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
+        print len(two_percent_idx), len(resid_zspz)
+        f_acc = len(two_percent_idx) / len(resid_zspz)
+        print "Fraction of SPZ redshift galaxies with accuracy at 2% or better:", f_acc
+        sys.exit(0)
 
     # Make sure they are finite
     valid_idx1 = np.where(np.isfinite(resid_zp))[0]
