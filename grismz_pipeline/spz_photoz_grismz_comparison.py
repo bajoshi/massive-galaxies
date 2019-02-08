@@ -89,23 +89,27 @@ def get_z_errors(zarr, pz):
     return zlow_bound, zhigh_bound
 
 def get_arrays_to_plot():
-
     # Read in arrays from Firstlight (fl) and Jet (jt) and combine them
-    # ----- Firstlight -----
+    """
+    Im' not reading in any chi2 value arrays here.
+    I checked this already. Seems like making a cut on the 
+    reduced chi2 does not really affect the final results too much.
+    """
+
+    # ------------- Firstlight -------------
     id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
     zs_arr_fl = np.load(zp_results_dir + 'firstlight_zs_arr.npy')
 
-    zp_arr_fl = np.zeros(id_arr_fl.shape[0])  #np.load(zp_results_dir + 'firstlight_zp_minchi2_arr.npy')
-    zg_arr_fl = np.zeros(id_arr_fl.shape[0])  #np.load(zg_results_dir + 'firstlight_zg_minchi2_arr.npy')
-    zspz_arr_fl = np.zeros(id_arr_fl.shape[0])  #np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
+    # Length checks
+    assert len(id_arr_fl) == len(field_arr_fl)
+    assert len(id_arr_fl) == len(zs_arr_fl)
 
-    # min chi2 values
-    zp_min_chi2_fl = np.load(zp_results_dir + 'firstlight_zp_min_chi2_arr.npy')
-    zg_min_chi2_fl = np.load(zg_results_dir + 'firstlight_zg_min_chi2_arr.npy')
-    zspz_min_chi2_fl = np.load(spz_results_dir + 'firstlight_zspz_min_chi2_arr.npy')
+    # Redshift and Error arrays
+    zp_arr_fl = np.zeros(id_arr_fl.shape[0])
+    zg_arr_fl = np.zeros(id_arr_fl.shape[0])
+    zspz_arr_fl = np.zeros(id_arr_fl.shape[0])
 
-    # Empty error arrays
     zp_low_bound_fl = np.zeros(id_arr_fl.shape[0])
     zp_high_bound_fl = np.zeros(id_arr_fl.shape[0])
 
@@ -114,8 +118,6 @@ def get_arrays_to_plot():
 
     zspz_low_bound_fl = np.zeros(id_arr_fl.shape[0])
     zspz_high_bound_fl = np.zeros(id_arr_fl.shape[0])
-
-    resave = True
 
     # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
     for u in range(len(id_arr_fl)):
@@ -136,31 +138,20 @@ def get_arrays_to_plot():
         zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz)
         zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
 
-    if resave:
-        np.save(zp_results_dir + 'firstlight_zp_low_bound.npy', zp_low_bound_fl)
-        np.save(zp_results_dir + 'firstlight_zp_high_bound.npy', zp_high_bound_fl)
-
-        np.save(zg_results_dir + 'firstlight_zg_low_bound.npy', zg_low_bound_fl)
-        np.save(zg_results_dir + 'firstlight_zg_high_bound.npy', zg_high_bound_fl)
-
-        np.save(spz_results_dir + 'firstlight_zspz_low_bound.npy', zspz_low_bound_fl)
-        np.save(spz_results_dir + 'firstlight_zspz_high_bound.npy', zspz_high_bound_fl)
-
-    # ----- Jet ----- 
+    # ------------- Jet -------------
     id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
     field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
     zs_arr_jt = np.load(zp_results_dir + 'jet_zs_arr.npy')
 
-    zp_arr_jt = np.zeros(id_arr_jt.shape[0])  #np.load(zp_results_dir + 'jet_zp_minchi2_arr.npy')
-    zg_arr_jt = np.zeros(id_arr_jt.shape[0])  #np.load(zg_results_dir + 'jet_zg_minchi2_arr.npy')
-    zspz_arr_jt = np.zeros(id_arr_jt.shape[0])  #np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
+    # Length checks
+    assert len(id_arr_jt) == len(field_arr_jt)
+    assert len(id_arr_jt) == len(zs_arr_jt)
 
-    # min chi2 values
-    zp_min_chi2_jt = np.load(zp_results_dir + 'jet_zp_min_chi2_arr.npy')
-    zg_min_chi2_jt = np.load(zg_results_dir + 'jet_zg_min_chi2_arr.npy')
-    zspz_min_chi2_jt = np.load(spz_results_dir + 'jet_zspz_min_chi2_arr.npy')
+    # Redshift and Error arrays
+    zp_arr_jt = np.zeros(id_arr_jt.shape[0])
+    zg_arr_jt = np.zeros(id_arr_jt.shape[0])
+    zspz_arr_jt = np.zeros(id_arr_jt.shape[0])
 
-    # Empty error arrays
     zp_low_bound_jt = np.zeros(id_arr_jt.shape[0])
     zp_high_bound_jt = np.zeros(id_arr_jt.shape[0])
 
@@ -188,16 +179,6 @@ def get_arrays_to_plot():
         zp_low_bound_jt[u], zp_high_bound_jt[u] = get_z_errors(zp_zarr, zp_pz)
         zg_low_bound_jt[u], zg_high_bound_jt[u] = get_z_errors(zg_zarr, zg_pz)
         zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
-
-    if resave:
-        np.save(zp_results_dir + 'jet_zp_low_bound.npy', zp_low_bound_jt)
-        np.save(zp_results_dir + 'jet_zp_high_bound.npy', zp_high_bound_jt)
-
-        np.save(zg_results_dir + 'jet_zg_low_bound.npy', zg_low_bound_jt)
-        np.save(zg_results_dir + 'jet_zg_high_bound.npy', zg_high_bound_jt)
-
-        np.save(spz_results_dir + 'jet_zspz_low_bound.npy', zspz_low_bound_jt)
-        np.save(spz_results_dir + 'jet_zspz_high_bound.npy', zspz_high_bound_jt)
 
     # ----- Concatenate -----
     # check for any accidental overlaps
@@ -231,10 +212,12 @@ def get_arrays_to_plot():
     zg_arr_jt = np.delete(zg_arr_jt, common_indices_jt, axis=None)
     zspz_arr_jt = np.delete(zspz_arr_jt, common_indices_jt, axis=None)
 
-    # min chi2 values
-    zp_min_chi2_jt = np.delete(zp_min_chi2_jt, common_indices_jt, axis=None)
-    zg_min_chi2_jt = np.delete(zg_min_chi2_jt, common_indices_jt, axis=None)
-    zspz_min_chi2_jt = np.delete(zspz_min_chi2_jt, common_indices_jt, axis=None)
+    zp_low_bound_jt = np.delete(zp_low_bound_jt, common_indices_jt, axis=None)
+    zp_high_bound_jt = np.delete(zp_high_bound_jt, common_indices_jt, axis=None)
+    zg_low_bound_jt = np.delete(zg_low_bound_jt, common_indices_jt, axis=None)
+    zg_high_bound_jt = np.delete(zg_high_bound_jt, common_indices_jt, axis=None)
+    zspz_low_bound_jt = np.delete(zspz_low_bound_jt, common_indices_jt, axis=None)
+    zspz_high_bound_jt = np.delete(zspz_high_bound_jt, common_indices_jt, axis=None)
 
     # ---------------------------------------------------------------
     # Read in emission line catalogs (Pirzkal 2013 and Straughn 2009)
@@ -262,7 +245,6 @@ def get_arrays_to_plot():
     pirzkal2013_south_emline_ids = np.asarray(pirzkal2013_south_emline_ids, dtype=np.int)
 
     chuck_em_line_galaxies = False
-    # you will have to re-generate the all_d4000_arr.npy and all_netsig_arr.npy arrays every time this check is changed
 
     # ----- Get D4000 -----
     # Now loop over all galaxies to get D4000 and netsig
@@ -272,9 +254,6 @@ def get_arrays_to_plot():
     zp_list = []
     zg_list = []
     zspz_list = []
-    zp_chi2_list = []
-    zg_chi2_list = []
-    zspz_chi2_list = []
     all_d4000_list = []
     all_netsig_list = []
     imag_list = []
@@ -288,9 +267,12 @@ def get_arrays_to_plot():
     zg = np.concatenate((zg_arr_fl, zg_arr_jt))
     zspz = np.concatenate((zspz_arr_fl, zspz_arr_jt))
 
-    zp_chi2 = np.concatenate((zp_min_chi2_fl, zp_min_chi2_jt))
-    zg_chi2 = np.concatenate((zg_min_chi2_fl, zg_min_chi2_jt))
-    zspz_chi2 = np.concatenate((zspz_min_chi2_fl, zspz_min_chi2_jt))
+    zp_low_bound = np.concatenate((zp_low_bound_fl, zp_low_bound_jt))
+    zp_high_bound = np.concatenate((zp_high_bound_fl, zp_high_bound_jt))
+    zg_low_bound = np.concatenate((zg_low_bound_fl, zg_low_bound_jt))
+    zg_high_bound = np.concatenate((zg_high_bound_fl, zg_high_bound_jt))
+    zspz_low_bound = np.concatenate((zspz_low_bound_fl, zspz_low_bound_jt))
+    zspz_high_bound = np.concatenate((zspz_high_bound_fl, zspz_high_bound_jt))
 
     # Comment this print statement out if out don't want to actually print this list on paper
     print "ID        Field      zspec    zphot    zg     zspz    NetSig    D4000   res_zphot    res_zspz    iABmag"
@@ -354,53 +336,52 @@ def get_arrays_to_plot():
         zp_list.append(zp[i])
         zg_list.append(zg[i])
         zspz_list.append(zspz[i])
-        zp_chi2_list.append(zp_chi2[i])
-        zg_chi2_list.append(zg_chi2[i])
-        zspz_chi2_list.append(zspz_chi2[i])
         all_d4000_list.append(d4000)
         all_netsig_list.append(netsig_chosen)
         imag_list.append(current_imag)
 
-        if d4000 >= 1.1 and d4000 < 1.4:
-            # Some formatting stuff just to make it easier to read on the screen
-            current_id_to_print = str(current_id)
-            if len(current_id_to_print) == 5:
-                current_id_to_print += ' '
+        do_print = False
+        if do_print:
+            if d4000 >= 1.1 and d4000 < 1.4:
+                # Some formatting stuff just to make it easier to read on the screen
+                current_id_to_print = str(current_id)
+                if len(current_id_to_print) == 5:
+                    current_id_to_print += ' '
 
-            current_specz_to_print = str(current_specz)
-            if len(current_specz_to_print) == 4:
-                current_specz_to_print += '  '
-            elif len(current_specz_to_print) == 5:
-                current_specz_to_print += ' '
+                current_specz_to_print = str(current_specz)
+                if len(current_specz_to_print) == 4:
+                    current_specz_to_print += '  '
+                elif len(current_specz_to_print) == 5:
+                    current_specz_to_print += ' '
 
-            current_netsig_to_print = str("{:.2f}".format(netsig_chosen))
-            if len(current_netsig_to_print) == 5:
-                current_netsig_to_print += ' '
+                current_netsig_to_print = str("{:.2f}".format(netsig_chosen))
+                if len(current_netsig_to_print) == 5:
+                    current_netsig_to_print += ' '
 
-            current_res_zphot = (zp[i] - current_specz) / (1 + current_specz)
-            current_res_zspz = (zspz[i] - current_specz) / (1 + current_specz)
+                current_res_zphot = (zp[i] - current_specz) / (1 + current_specz)
+                current_res_zspz = (zspz[i] - current_specz) / (1 + current_specz)
 
-            current_res_zphot_to_print = str("{:.3f}".format(current_res_zphot))
-            if current_res_zphot_to_print[0] != '-':
-                current_res_zphot_to_print = '+' + current_res_zphot_to_print
-            current_res_zspz_to_print = str("{:.3f}".format(current_res_zspz))
-            if current_res_zspz_to_print[0] != '-':
-                current_res_zspz_to_print = '+' + current_res_zspz_to_print
+                current_res_zphot_to_print = str("{:.3f}".format(current_res_zphot))
+                if current_res_zphot_to_print[0] != '-':
+                    current_res_zphot_to_print = '+' + current_res_zphot_to_print
+                current_res_zspz_to_print = str("{:.3f}".format(current_res_zspz))
+                if current_res_zspz_to_print[0] != '-':
+                    current_res_zspz_to_print = '+' + current_res_zspz_to_print
 
-            print current_id_to_print, "  ",
-            print current_field, "  ",
-            print "{:.3f}".format(current_specz), "  ",
-            print "{:.2f}".format(zp[i]), "  ",
-            print "{:.2f}".format(zg[i]), "  ",
-            print "{:.2f}".format(zspz[i]), "  ",
-            print current_netsig_to_print, "  ",
-            print "{:.2f}".format(d4000), "  ",
-            print current_res_zphot_to_print, "     ",
-            print current_res_zspz_to_print, "    ",
-            print "{:.2f}".format(current_imag)
+                print current_id_to_print, "  ",
+                print current_field, "  ",
+                print "{:.3f}".format(current_specz), "  ",
+                print "{:.2f}".format(zp[i]), "  ",
+                print "{:.2f}".format(zg[i]), "  ",
+                print "{:.2f}".format(zspz[i]), "  ",
+                print current_netsig_to_print, "  ",
+                print "{:.2f}".format(d4000), "  ",
+                print current_res_zphot_to_print, "     ",
+                print current_res_zspz_to_print, "    ",
+                print "{:.2f}".format(current_imag)
 
     return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
-    np.array(all_d4000_list), np.array(all_netsig_list), np.array(zp_chi2_list), np.array(zg_chi2_list), np.array(zspz_chi2_list), np.array(imag_list)
+    np.array(all_d4000_list), np.array(all_netsig_list), np.array(imag_list)
 
 def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
     mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
@@ -422,14 +403,14 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax6 = fig.add_subplot(gs[7:, 20:])
 
     # Plot stuff
-    ax1.plot(zs_for_zp, zp, 'o', markersize=3, color='k', markeredgecolor='k')
-    ax2.plot(zs_for_zp, resid_zp, 'o', markersize=3, color='k', markeredgecolor='k')
+    ax1.plot(zs_for_zp, zp, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax2.plot(zs_for_zp, resid_zp, 'o', markersize=2, color='k', markeredgecolor='k')
 
-    ax3.plot(zs_for_zg, zg, 'o', markersize=3, color='k', markeredgecolor='k')
-    ax4.plot(zs_for_zg, resid_zg, 'o', markersize=3, color='k', markeredgecolor='k')
+    ax3.plot(zs_for_zg, zg, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax4.plot(zs_for_zg, resid_zg, 'o', markersize=2, color='k', markeredgecolor='k')
 
-    ax5.plot(zs_for_zspz, zspz, 'o', markersize=3, color='k', markeredgecolor='k')
-    ax6.plot(zs_for_zspz, resid_zspz, 'o', markersize=3, color='k', markeredgecolor='k')
+    ax5.plot(zs_for_zspz, zspz, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax6.plot(zs_for_zspz, resid_zspz, 'o', markersize=2, color='k', markeredgecolor='k')
 
     # Limits
     ax1.set_xlim(0.6, 1.24)
@@ -562,7 +543,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     return None
 
 def main():
-    ids, fields, zs, zp, zg, zspz, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, imag = get_arrays_to_plot()
+    ids, fields, zs, zp, zg, zspz, d4000, netsig, imag = get_arrays_to_plot()
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -573,37 +554,21 @@ def main():
     assert len(ids) == len(zspz)
     assert len(ids) == len(d4000)
     assert len(ids) == len(netsig)
-    assert len(ids) == len(zp_chi2)
-    assert len(ids) == len(zg_chi2)
-    assert len(ids) == len(zspz_chi2)
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.1
+    d4000_low = 1.6
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
     print "Galaxies within D4000 range:", len(d4000_idx)
 
-
-    low_d4000_idx = np.where(d4000 < 1.1)
-    print ids[low_d4000_idx]
-    print fields[low_d4000_idx]
-    print zs[low_d4000_idx]
-    print d4000[low_d4000_idx]
-
-    sys.exit(0)
-
     # Apply D4000 and magnitude indices
     zs = zs[d4000_idx]
     zp = zp[d4000_idx]
     zg = zg[d4000_idx]
     zspz = zspz[d4000_idx]
-    
-    zp_chi2 = zp_chi2[d4000_idx]
-    zg_chi2 = zg_chi2[d4000_idx]
-    zspz_chi2 = zspz_chi2[d4000_idx]
 
     netsig = netsig[d4000_idx]
 
