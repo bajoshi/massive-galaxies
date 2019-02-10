@@ -30,6 +30,7 @@ import check_single_galaxy_fitting_spz_photoz as chk
 from new_refine_grismz_gridsearch_parallel import get_data
 from fullfitting_grism_broadband_emlines import get_flam, get_flam_nonhst
 import dn4000_catalog as dc
+from spz_photoz_grismz_comparison import get_z_errors
 
 speed_of_light = 299792458e10  # angstroms per second
 
@@ -45,9 +46,23 @@ def get_arrays_for_plotting():
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
     zs_arr_fl = np.load(zp_results_dir + 'firstlight_zs_arr.npy')
 
+    # Length checks
+    assert len(id_arr_fl) == len(field_arr_fl)
+    assert len(id_arr_fl) == len(zs_arr_fl)
+
+    # Redshift and Error arrays
     zp_arr_fl = np.zeros(id_arr_fl.shape[0])
     zg_arr_fl = np.zeros(id_arr_fl.shape[0])
     zspz_arr_fl = np.zeros(id_arr_fl.shape[0])
+
+    zp_low_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zp_high_bound_fl = np.zeros(id_arr_fl.shape[0])
+
+    zg_low_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zg_high_bound_fl = np.zeros(id_arr_fl.shape[0])
+
+    zspz_low_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zspz_high_bound_fl = np.zeros(id_arr_fl.shape[0])
 
     # min chi2 values
     zp_min_chi2_fl = np.load(zp_results_dir + 'firstlight_zp_min_chi2_arr.npy')
@@ -68,6 +83,11 @@ def get_arrays_for_plotting():
         zg_zarr = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_z_arr.npy')
         zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
 
+        # Get errors and save them to a file
+        zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz)
+        zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz)
+        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
+
     # Best fit model idx and alpha
     ## --- Not including zg stuff here for now
     zp_model_idx_arr_fl = np.load(zp_results_dir + 'firstlight_zp_model_idx_arr.npy')
@@ -85,21 +105,28 @@ def get_arrays_for_plotting():
     zspz_tau_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_tau_arr.npy')
     zspz_av_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_av_arr.npy')
 
-    # --- Lower and Upper bounds
-    zp_low_bound_fl = np.load(zp_results_dir + 'firstlight_zp_low_bound.npy')
-    zp_high_bound_fl = np.load(zp_results_dir + 'firstlight_zp_high_bound.npy')
-
-    zspz_low_bound_fl = np.load(spz_results_dir + 'firstlight_zspz_low_bound.npy')
-    zspz_high_bound_fl = np.load(spz_results_dir + 'firstlight_zspz_high_bound.npy')
-
     # ----- Jet ----- 
     id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
     field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
     zs_arr_jt = np.load(zp_results_dir + 'jet_zs_arr.npy')
 
+    # Length checks
+    assert len(id_arr_jt) == len(field_arr_jt)
+    assert len(id_arr_jt) == len(zs_arr_jt)
+
+    # Redshift and Error arrays
     zp_arr_jt = np.zeros(id_arr_jt.shape[0])
     zg_arr_jt = np.zeros(id_arr_jt.shape[0])
     zspz_arr_jt = np.zeros(id_arr_jt.shape[0])
+
+    zp_low_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zp_high_bound_jt = np.zeros(id_arr_jt.shape[0])
+
+    zg_low_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zg_high_bound_jt = np.zeros(id_arr_jt.shape[0])
+
+    zspz_low_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zspz_high_bound_jt = np.zeros(id_arr_jt.shape[0])
 
     # min chi2 values
     zp_min_chi2_jt = np.load(zp_results_dir + 'jet_zp_min_chi2_arr.npy')
@@ -120,6 +147,11 @@ def get_arrays_for_plotting():
         zg_zarr = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_z_arr.npy')
         zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
 
+        # Get errors and save them to a file
+        zp_low_bound_jt[u], zp_high_bound_jt[u] = get_z_errors(zp_zarr, zp_pz)
+        zg_low_bound_jt[u], zg_high_bound_jt[u] = get_z_errors(zg_zarr, zg_pz)
+        zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
+
     # Best fit model idx and alpha
     ## --- Not including zg stuff here for now
     zp_model_idx_arr_jt = np.load(zp_results_dir + 'jet_zp_model_idx_arr.npy')
@@ -136,13 +168,6 @@ def get_arrays_for_plotting():
     zspz_age_arr_jt = np.load(spz_results_dir + 'jet_zspz_age_arr.npy')
     zspz_tau_arr_jt = np.load(spz_results_dir + 'jet_zspz_tau_arr.npy')
     zspz_av_arr_jt = np.load(spz_results_dir + 'jet_zspz_av_arr.npy')
-
-    # --- Lower and Upper bounds
-    zp_low_bound_jt = np.load(zp_results_dir + 'jet_zp_low_bound.npy')
-    zp_high_bound_jt = np.load(zp_results_dir + 'jet_zp_high_bound.npy')
-
-    zspz_low_bound_jt = np.load(spz_results_dir + 'jet_zspz_low_bound.npy')
-    zspz_high_bound_jt = np.load(spz_results_dir + 'jet_zspz_high_bound.npy')
 
     # ----- Concatenate -----
     # check for any accidental overlaps
