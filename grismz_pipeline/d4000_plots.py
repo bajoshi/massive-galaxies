@@ -212,6 +212,10 @@ def make_d4000_hist():
     print "Number of galaxies with D4000 >= 1.1:", len(d40001p1)
     print "Fraction of total galaxies with D4000 >= 1.1:", len(d40001p1) / len(d4000_pears_plot)
 
+    d4000_err_plot = d4000_err_arr[valid_idx]
+    print np.where(d4000_err_plot[d40001p1] < 0.1)
+    print "Total galaxies with errors < 0.1:", len(np.where(d4000_err_plot[d40001p1] < 0.1)[0])
+
     # save figure
     fig.savefig(massive_figures_dir + 'pears_d4000_hist.pdf', dpi=300, bbox_inches='tight')
 
