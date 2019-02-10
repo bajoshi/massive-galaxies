@@ -299,7 +299,10 @@ def get_arrays_for_plotting():
     zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
     zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr
 
-def plotfit(current_id, current_field):
+def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
+    zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
+    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+    zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr):
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
     final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
@@ -547,25 +550,6 @@ def plotfit(current_id, current_field):
     phot_lam = phot_lam[phot_fin_idx]
 
     # ------------------------------- Now get other info and plot  ------------------------------- #
-    # first get information arrays
-    ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
-    zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
-    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
-    zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr = get_arrays_for_plotting()
-
-    # Just making sure that all returned arrays have the same length.
-    # Essential since I'm doing "where" operations below.
-    assert len(ids) == len(fields)
-    assert len(ids) == len(zs_arr)
-    assert len(ids) == len(zp_arr)
-    assert len(ids) == len(zg_arr)
-    assert len(ids) == len(zspz_arr)
-    assert len(ids) == len(d4000)
-    assert len(ids) == len(netsig)
-    assert len(ids) == len(zp_chi2)
-    assert len(ids) == len(zg_chi2)
-    assert len(ids) == len(zspz_chi2)
-
     # find match
     match_idx = int(np.where((ids == current_id) & (fields == current_field))[0])
 
@@ -785,6 +769,25 @@ def main():
     #sort_and_save(galaxies_to_plot)
     #sys.exit()
 
+    # first get information arrays
+    ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
+    zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
+    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+    zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr = get_arrays_for_plotting()
+
+    # Just making sure that all returned arrays have the same length.
+    # Essential since I'm doing "where" operations below.
+    assert len(ids) == len(fields)
+    assert len(ids) == len(zs_arr)
+    assert len(ids) == len(zp_arr)
+    assert len(ids) == len(zg_arr)
+    assert len(ids) == len(zspz_arr)
+    assert len(ids) == len(d4000)
+    assert len(ids) == len(netsig)
+    assert len(ids) == len(zp_chi2)
+    assert len(ids) == len(zg_chi2)
+    assert len(ids) == len(zspz_chi2)
+
     # plotting all galaxies in above plot now
     # If the low and upper bound files dont exist you'll have to 
     # run spz_photoz_grismz_comparison.py to generate them.
@@ -799,7 +802,10 @@ def main():
 
         print "Plotting:", current_id, current_field
 
-        plotfit(current_id, current_field)
+        plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
+            zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
+            zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+            zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr)
 
     return None
 
