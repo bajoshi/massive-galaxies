@@ -756,11 +756,13 @@ def main():
     # ------------- Code basically copied from run_final_sample.py
     # and from single galaxy checking code.
     # --------------------------
-    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p4_to_1p6.txt', dtype=None, names=True, skip_header=1)
+    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p1_to_1p3.txt', dtype=None, names=True, skip_header=1)
     #sort_and_save(galaxies_to_plot)
     #sys.exit()
 
-    # plotting all 1.4 <= D4 < 1.6 galaxies now
+    # plotting all galaxies in above plot now
+    # If the low and upper bound files dont exist you'll have to 
+    # run spz_photoz_grismz_comparison.py to generate them.
     for k in range(len(galaxies_to_plot)):
 
         current_id = int(galaxies_to_plot['ID'][k])

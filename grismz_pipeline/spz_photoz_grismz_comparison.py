@@ -342,7 +342,7 @@ def get_arrays_to_plot():
 
         do_print = False
         if do_print:
-            if d4000 >= 1.1 and d4000 < 1.4:
+            if d4000 >= 1.1 and d4000 < 1.3:
                 # Some formatting stuff just to make it easier to read on the screen
                 current_id_to_print = str(current_id)
                 if len(current_id_to_print) == 5:
@@ -544,6 +544,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
 
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, netsig, imag = get_arrays_to_plot()
+    sys.exit(0)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -579,7 +580,7 @@ def main():
 
     # Estimate accurate fraction for paper
     # This is only to be done for the full D4000 range
-    do_frac = False
+    do_frac = True
     if do_frac:
         two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
         print len(two_percent_idx), len(resid_zspz)
