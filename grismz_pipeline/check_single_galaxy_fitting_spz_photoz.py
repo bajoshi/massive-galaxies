@@ -302,6 +302,131 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
 
     return None
 
+def plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
+    model_lam_grid, best_fit_model_fullres, best_fit_model_in_objlamgrid, bestalpha, \
+    obj_id, obj_field, specz, low_zp_lim, upper_zp_lim, zp, low_zg_lim, upper_zg_lim, zg, \
+    chi2, age, tau, av, netsig, d4000, savedir):
+
+    # Make figure and place on grid
+    fig, ax1, ax2 = makefig()
+
+    # ---------- plot data, model, and residual ---------- #
+    # plot full res model but you'll have to redshift it
+    ax1.plot(model_lam_grid * (1+zg), bestalpha*best_fit_model_fullres / (1+zg), color='dimgrey', alpha=0.2)
+
+    # ----- plot data
+    ax1.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2, lw=2, zorder=10)
+    ax1.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='gray', zorder=10)
+
+    # ----- plot best fit model
+    ax1.plot(grism_lam_obs, bestalpha*best_fit_model_in_objlamgrid, ls='-', lw=1.2, color='lightseagreen', zorder=20)
+
+    # ----- Residuals
+    # For the grism points
+    resid_fit_grism = (grism_flam_obs - bestalpha*best_fit_model_in_objlamgrid) / grism_ferr_obs
+
+    # Now plot
+    ax2.scatter(grism_lam_obs, resid_fit_grism, s=4, color='k')
+    ax2.axhline(y=0, ls='--', color='k')
+
+    # ---------- limits ---------- #
+    max_y_obs = np.max(grism_flam_obs)
+    min_y_obs = np.min(grism_flam_obs)
+
+    max_ylim = 1.25 * max_y_obs
+    min_ylim = 0.75 * min_y_obs
+
+    max_ylim = 1.25 * max_y_obs
+    min_ylim = 0.75 * min_y_obs
+
+    ax1.set_ylim(min_ylim, max_ylim)
+
+    ax1.set_xlim(5800, 9700)
+    ax2.set_xlim(5800, 9700)
+
+    # ---------- minor ticks ---------- #
+    ax1.minorticks_on()
+    ax2.minorticks_on()
+
+    # ---------- text for info ---------- #
+    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    #ax1.text(0.75, 0.4, r'$\mathrm{z_{SPZ}\, =\, }$' + "{:.4}".format(zg), \
+    #verticalalignment='top', horizontalalignment='left', \
+    #transform=ax1.transAxes, color='k', size=10)
+
+    low_zg_err = zg - low_zg_lim
+    high_zg_err = upper_zg_lim - zg
+
+    low_zp_err = zp - low_zp_lim
+    high_zp_err = upper_zp_lim - zp
+
+    ax1.text(0.75, 0.35, \
+    r'$\mathrm{z_{spz;best}\, =\, }$' + "{:.4}".format(zg) + \
+    r'$\substack{+$' + "{:.3}".format(high_zg_err) + r'$\\ -$' + "{:.3}".format(low_zg_err) + r'$}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.75, 0.22, \
+    r'$\mathrm{z_{p;best}\, =\, }$' + "{:.4}".format(zp) + \
+    r'$\substack{+$' + "{:.3}".format(high_zp_err) + r'$\\ -$' + "{:.3}".format(low_zp_err) + r'$}$', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spz})\, =\, }$' + "{:.3}".format(d4000), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=8)
+
+
+    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    if av < 0:
+        av = -99.0
+
+    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=10)
+
+    # ---------- Plot p(z) curve in an inset figure ---------- #
+    # Solution for inset came from SO:
+    # https://stackoverflow.com/questions/21001088/how-to-add-different-graphs-as-an-inset-in-another-python-graph
+    # These are in unitless percentages of the figure size. (0,0 is bottom left)
+    left, bottom, width, height = [0.62, 0.72, 0.3, 0.2]
+    ax3 = fig.add_axes([left, bottom, width, height])
+
+    # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
+    pz = np.load(savedir + obj_field + '_' + str(obj_id) + '_zg_pz.npy')
+    zarr = np.load(savedir + obj_field + '_' + str(obj_id) + '_zg_z_arr.npy')
+
+    ax3.plot(zarr, pz)
+    ax3.axvline(x=specz, ls='--', color='darkred')
+    ax3.minorticks_on()
+
+    # ---------- Save figure ---------- #
+    fig.savefig(savedir + obj_field + '_' + str(obj_id) + '_grismz_fit.pdf', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return None
+
 def get_best_fit_model_spz(resampling_lam_grid, resampling_lam_grid_length, model_lam_grid, model_comp_spec, \
     grism_lam_obs, redshift, model_idx, phot_fin_idx, all_model_flam, lsf, total_models):
 
@@ -324,7 +449,9 @@ def get_best_fit_model_spz(resampling_lam_grid, resampling_lam_grid_length, mode
     #lsf = lsf.astype(np.float64)
 
     # Will have to redo the model modifications at the new found redshift
-    model_comp_spec_modified = mm.redshift_and_resample_fast(model_comp_spec_lsfconv, redshift, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
+    model_comp_spec_modified = \
+    mm.redshift_and_resample_fast(model_comp_spec_lsfconv, redshift, total_models, \
+        model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
     print "Model mods done (only for plotting purposes) at the new SPZ:", redshift
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
@@ -336,6 +463,40 @@ def get_best_fit_model_spz(resampling_lam_grid, resampling_lam_grid_length, mode
     best_fit_model_fullres = model_comp_spec[model_idx]
 
     return best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, best_fit_model_fullres
+
+def get_best_fit_model_grismz(resampling_lam_grid, resampling_lam_grid_length, model_lam_grid, model_comp_spec, \
+    grism_lam_obs, redshift, model_idx, lsf, total_models):
+
+    # ------------ Get best fit model at grism resolution ------------ #
+    # First do the convolution with the LSF
+    model_comp_spec_lsfconv = np.zeros(model_comp_spec.shape)
+    for i in range(total_models):
+        model_comp_spec_lsfconv[i] = fftconvolve(model_comp_spec[i], lsf, mode = 'same')
+
+    # chop model to get the part within objects lam obs grid
+    model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - grism_lam_obs[0]))
+    model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - grism_lam_obs[-1]))
+
+    # force types before passing to cython code
+    #lam_obs = lam_obs.astype(np.float64)
+    #model_lam_grid = model_lam_grid.astype(np.float64)
+    #model_comp_spec = model_comp_spec.astype(np.float64)
+    #resampling_lam_grid = resampling_lam_grid.astype(np.float64)
+    #total_models = int(total_models)
+    #lsf = lsf.astype(np.float64)
+
+    # Will have to redo the model modifications at the new found redshift
+    model_comp_spec_modified = \
+    mm.redshift_and_resample_fast(model_comp_spec_lsfconv, redshift, total_models, \
+        model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
+    print "Model mods done (only for plotting purposes) at the new SPZ:", redshift
+
+    best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+
+    # ------------ Get best fit model at full resolution ------------ #
+    best_fit_model_fullres = model_comp_spec[model_idx]
+
+    return best_fit_model_in_objlamgrid, best_fit_model_fullres
 
 def get_photometry_best_fit_model(redshift, model_idx, phot_fin_idx, all_model_flam, total_models):
     # All you need from here is the photometry for the best fit model

@@ -89,9 +89,11 @@ def get_arrays_for_plotting():
         zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
 
     # Best fit model idx and alpha
-    ## --- Not including zg stuff here for now
     zp_model_idx_arr_fl = np.load(zp_results_dir + 'firstlight_zp_model_idx_arr.npy')
     zp_bestalpha_arr_fl = np.load(zp_results_dir + 'firstlight_zp_bestalpha_arr.npy')
+
+    zg_model_idx_arr_fl = np.load(zg_results_dir + 'firstlight_zg_model_idx_arr.npy')
+    zg_bestalpha_arr_fl = np.load(zg_results_dir + 'firstlight_zg_bestalpha_arr.npy')
 
     zspz_model_idx_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_model_idx_arr.npy')
     zspz_bestalpha_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_bestalpha_arr.npy')
@@ -100,6 +102,10 @@ def get_arrays_for_plotting():
     zp_age_arr_fl = np.load(zp_results_dir + 'firstlight_zp_age_arr.npy')
     zp_tau_arr_fl = np.load(zp_results_dir + 'firstlight_zp_tau_arr.npy')
     zp_av_arr_fl = np.load(zp_results_dir + 'firstlight_zp_av_arr.npy')
+
+    zg_age_arr_fl = np.load(zg_results_dir + 'firstlight_zg_age_arr.npy')
+    zg_tau_arr_fl = np.load(zg_results_dir + 'firstlight_zg_tau_arr.npy')
+    zg_av_arr_fl = np.load(zg_results_dir + 'firstlight_zg_av_arr.npy')
 
     zspz_age_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_age_arr.npy')
     zspz_tau_arr_fl = np.load(spz_results_dir + 'firstlight_zspz_tau_arr.npy')
@@ -153,9 +159,11 @@ def get_arrays_for_plotting():
         zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
 
     # Best fit model idx and alpha
-    ## --- Not including zg stuff here for now
     zp_model_idx_arr_jt = np.load(zp_results_dir + 'jet_zp_model_idx_arr.npy')
     zp_bestalpha_arr_jt = np.load(zp_results_dir + 'jet_zp_bestalpha_arr.npy')
+
+    zg_model_idx_arr_jt = np.load(zg_results_dir + 'jet_zg_model_idx_arr.npy')
+    zg_bestalpha_arr_jt = np.load(zg_results_dir + 'jet_zg_bestalpha_arr.npy')
 
     zspz_model_idx_arr_jt = np.load(spz_results_dir + 'jet_zspz_model_idx_arr.npy')
     zspz_bestalpha_arr_jt = np.load(spz_results_dir + 'jet_zspz_bestalpha_arr.npy')
@@ -164,6 +172,10 @@ def get_arrays_for_plotting():
     zp_age_arr_jt = np.load(zp_results_dir + 'jet_zp_age_arr.npy')
     zp_tau_arr_jt = np.load(zp_results_dir + 'jet_zp_tau_arr.npy')
     zp_av_arr_jt = np.load(zp_results_dir + 'jet_zp_av_arr.npy')
+
+    zg_age_arr_jt = np.load(zg_results_dir + 'jet_zg_age_arr.npy')
+    zg_tau_arr_jt = np.load(zg_results_dir + 'jet_zg_tau_arr.npy')
+    zg_av_arr_jt = np.load(zg_results_dir + 'jet_zg_av_arr.npy')
 
     zspz_age_arr_jt = np.load(spz_results_dir + 'jet_zspz_age_arr.npy')
     zspz_tau_arr_jt = np.load(spz_results_dir + 'jet_zspz_tau_arr.npy')
@@ -207,9 +219,11 @@ def get_arrays_for_plotting():
     zspz_min_chi2_jt = np.delete(zspz_min_chi2_jt, common_indices_jt, axis=None)
 
     # Best fit model idx and alpha
-    ## --- Not including zg stuff here for now
     zp_model_idx_arr_jt = np.delete(zp_model_idx_arr_jt, common_indices_jt, axis=None)
     zp_bestalpha_arr_jt = np.delete(zp_bestalpha_arr_jt, common_indices_jt, axis=None)
+
+    zg_model_idx_arr_jt = np.delete(zg_model_idx_arr_jt, common_indices_jt, axis=None)
+    zg_bestalpha_arr_jt = np.delete(zg_bestalpha_arr_jt, common_indices_jt, axis=None)
 
     zspz_model_idx_arr_jt = np.delete(zspz_model_idx_arr_jt, common_indices_jt, axis=None)
     zspz_bestalpha_arr_jt = np.delete(zspz_bestalpha_arr_jt, common_indices_jt, axis=None)
@@ -219,6 +233,10 @@ def get_arrays_for_plotting():
     zp_tau_arr_jt = np.delete(zp_tau_arr_jt, common_indices_jt, axis=None)
     zp_av_arr_jt = np.delete(zp_av_arr_jt, common_indices_jt, axis=None)
 
+    zg_age_arr_jt = np.delete(zg_age_arr_jt, common_indices_jt, axis=None)
+    zg_tau_arr_jt = np.delete(zg_tau_arr_jt, common_indices_jt, axis=None)
+    zg_av_arr_jt = np.delete(zg_av_arr_jt, common_indices_jt, axis=None)
+
     zspz_age_arr_jt = np.delete(zspz_age_arr_jt, common_indices_jt, axis=None)
     zspz_tau_arr_jt = np.delete(zspz_tau_arr_jt, common_indices_jt, axis=None)
     zspz_av_arr_jt = np.delete(zspz_av_arr_jt, common_indices_jt, axis=None)
@@ -226,6 +244,9 @@ def get_arrays_for_plotting():
     # --- Lower and Upper bounds
     zp_low_bound_jt = np.delete(zp_low_bound_jt, common_indices_jt, axis=None)
     zp_high_bound_jt = np.delete(zp_high_bound_jt, common_indices_jt, axis=None)
+
+    zg_low_bound_jt = np.delete(zg_low_bound_jt, common_indices_jt, axis=None)
+    zg_high_bound_jt = np.delete(zg_high_bound_jt, common_indices_jt, axis=None)
 
     zspz_low_bound_jt = np.delete(zspz_low_bound_jt, common_indices_jt, axis=None)
     zspz_high_bound_jt = np.delete(zspz_high_bound_jt, common_indices_jt, axis=None)
@@ -246,14 +267,20 @@ def get_arrays_for_plotting():
     zspz_chi2 = np.concatenate((zspz_min_chi2_fl, zspz_min_chi2_jt))
 
     zp_model_idx_arr = np.concatenate((zp_model_idx_arr_fl, zp_model_idx_arr_jt))
+    zg_model_idx_arr = np.concatenate((zg_model_idx_arr_fl, zg_model_idx_arr_jt))
     zspz_model_idx_arr = np.concatenate((zspz_model_idx_arr_fl, zspz_model_idx_arr_jt))
 
     zp_bestalpha_arr = np.concatenate((zp_bestalpha_arr_fl, zp_bestalpha_arr_jt))
+    zg_bestalpha_arr = np.concatenate((zg_bestalpha_arr_fl, zg_bestalpha_arr_jt))
     zspz_bestalpha_arr = np.concatenate((zspz_bestalpha_arr_fl, zspz_bestalpha_arr_jt))
 
     zp_age_arr = np.concatenate((zp_age_arr_fl, zp_age_arr_jt))
     zp_tau_arr = np.concatenate((zp_tau_arr_fl, zp_tau_arr_jt))
     zp_av_arr = np.concatenate((zp_av_arr_fl, zp_av_arr_jt))
+
+    zg_age_arr = np.concatenate((zg_age_arr_fl, zg_age_arr_jt))
+    zg_tau_arr = np.concatenate((zg_tau_arr_fl, zg_tau_arr_jt))
+    zg_av_arr = np.concatenate((zg_av_arr_fl, zg_av_arr_jt))
 
     zspz_age_arr = np.concatenate((zspz_age_arr_fl, zspz_age_arr_jt))
     zspz_tau_arr = np.concatenate((zspz_tau_arr_fl, zspz_tau_arr_jt))
@@ -261,6 +288,8 @@ def get_arrays_for_plotting():
 
     zp_low_bound_arr = np.concatenate((zp_low_bound_fl, zp_low_bound_jt))
     zp_high_bound_arr = np.concatenate((zp_high_bound_fl, zp_high_bound_jt))
+    zg_low_bound_arr = np.concatenate((zg_low_bound_fl, zg_low_bound_jt))
+    zg_high_bound_arr = np.concatenate((zg_high_bound_fl, zg_high_bound_jt))
     zspz_low_bound_arr = np.concatenate((zspz_low_bound_fl, zspz_low_bound_jt))
     zspz_high_bound_arr = np.concatenate((zspz_high_bound_fl, zspz_high_bound_jt))
 
@@ -295,14 +324,14 @@ def get_arrays_for_plotting():
     all_netsig = np.array(all_netsig_list)
 
     return all_ids, all_fields, zs, zp, zg, zspz, all_d4000, all_netsig, zp_chi2, zg_chi2, zspz_chi2, \
-    zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
-    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
-    zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr
+    zp_model_idx_arr, zg_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zg_bestalpha_arr, zspz_bestalpha_arr, \
+    zp_age_arr, zp_tau_arr, zp_av_arr, zg_age_arr, zg_tau_arr, zg_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+    zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr
 
 def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
-    zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
-    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
-    zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr):
+    zp_model_idx_arr, zg_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zg_bestalpha_arr, zspz_bestalpha_arr, \
+    zp_age_arr, zp_tau_arr, zp_av_arr, zg_age_arr, zg_tau_arr, zg_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+    zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr):
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
     final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
@@ -559,14 +588,17 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
     # Get other fitting results
     # --- Peak (i.e. min chi2) redshifts
     zp = zp_arr[match_idx]
+    zg = zg_arr[match_idx]
     zspz = zspz_arr[match_idx]
 
     # --- Model index for best model
     zp_model_idx = zp_model_idx_arr[match_idx]
+    zg_model_idx = zg_model_idx_arr[match_idx]
     zspz_model_idx = zspz_model_idx_arr[match_idx]
 
     # --- Alpha for best model
     zp_bestalpha = zp_bestalpha_arr[match_idx]
+    zg_bestalpha = zg_bestalpha_arr[match_idx]
     zspz_bestalpha = zspz_bestalpha_arr[match_idx]
 
     # --- Params
@@ -575,6 +607,11 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
     zp_tau = zp_tau_arr[match_idx]
     zp_av = zp_av_arr[match_idx]
     
+    zg_min_chi2 = zg_chi2[match_idx]
+    zg_age = zg_age_arr[match_idx]
+    zg_tau = zg_tau_arr[match_idx]
+    zg_av = zg_av_arr[match_idx]
+
     zspz_min_chi2 = zspz_chi2[match_idx]
     zspz_age = zspz_age_arr[match_idx]
     zspz_tau = zspz_tau_arr[match_idx]
@@ -583,6 +620,9 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
     # --- Lower and Upper bounds
     zp_zerr_low = zp_low_bound_arr[match_idx]
     zp_zerr_up = zp_high_bound_arr[match_idx]
+
+    zg_zerr_low = zg_low_bound_arr[match_idx]
+    zg_zerr_up = zg_high_bound_arr[match_idx]
 
     zspz_zerr_low = zspz_low_bound_arr[match_idx]
     zspz_zerr_up = zspz_high_bound_arr[match_idx]
@@ -602,6 +642,11 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
     zspz_best_fit_model_fullres = zspz_best_fit_model_fullres.ravel()
     zspz_best_fit_model_in_objlamgrid = zspz_best_fit_model_in_objlamgrid.ravel()
 
+    # ------------ Get best fit model for grism-z ------------ #
+    zg_best_fit_model_in_objlamgrid, zg_best_fit_model_fullres = \
+    chk.get_best_fit_model_grismz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines_mmap, \
+        model_comp_spec_withlines_mmap, grism_lam_obs, zg, zg_model_idx, lsf_to_use, total_models)
+
     # ---------------- Now actual plotting ---------------- #
     chk.plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines_mmap, \
     zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
@@ -613,6 +658,11 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
     zspz_all_filt_flam_bestmodel, zspz_bestalpha, current_id, current_field, current_specz, \
     zp_zerr_low, zp_zerr_up, zp, zspz_zerr_low, zspz_zerr_up, zspz, zspz_min_chi2, \
     zspz_age, zspz_tau, zspz_av, netsig_chosen, current_d4000, savedir_spz)
+
+    chk.plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
+    model_lam_grid_withlines_mmap, zg_best_fit_model_fullres, zg_best_fit_model_in_objlamgrid, \
+    zg_bestalpha, current_id, current_field, current_specz, zp_zerr_low, zp_zerr_up, zp, low_zg_lim, upper_zg_lim, zg, \
+    zg_min_chi2, zg_age, zg_tau, zg_av, netsig_chosen, current_d4000, savedir_grismz)
 
     return None
 
@@ -771,9 +821,10 @@ def main():
 
     # first get information arrays
     ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
-    zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
-    zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
-    zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr = get_arrays_for_plotting()
+    zp_model_idx_arr, zg_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zg_bestalpha_arr, zspz_bestalpha_arr, \
+    zp_age_arr, zp_tau_arr, zp_av_arr, zg_age_arr, zg_tau_arr, zg_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+    zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr = \
+    get_arrays_for_plotting()
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -803,9 +854,9 @@ def main():
         print "Plotting:", current_id, current_field
 
         plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
-            zp_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zspz_bestalpha_arr, \
-            zp_age_arr, zp_tau_arr, zp_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
-            zp_low_bound_arr, zp_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr)
+            zp_model_idx_arr, zg_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zg_bestalpha_arr, zspz_bestalpha_arr, \
+            zp_age_arr, zp_tau_arr, zp_av_arr, zg_age_arr, zg_tau_arr, zg_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
+            zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr)
 
     return None
 
