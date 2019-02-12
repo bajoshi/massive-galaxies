@@ -661,7 +661,7 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
 
     chk.plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     model_lam_grid_withlines_mmap, zg_best_fit_model_fullres, zg_best_fit_model_in_objlamgrid, \
-    zg_bestalpha, current_id, current_field, current_specz, zp_zerr_low, zp_zerr_up, zp, low_zg_lim, upper_zg_lim, zg, \
+    zg_bestalpha, current_id, current_field, current_specz, zp_zerr_low, zp_zerr_up, zp, zg_zerr_low, zg_zerr_up, zg, \
     zg_min_chi2, zg_age, zg_tau, zg_av, netsig_chosen, current_d4000, savedir_grismz)
 
     return None
@@ -815,7 +815,7 @@ def main():
     # ------------- Code basically copied from run_final_sample.py
     # and from single galaxy checking code.
     # --------------------------
-    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p1_to_1p3.txt', dtype=None, names=True, skip_header=1)
+    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p4_to_1p6.txt', dtype=None, names=True, skip_header=1)
     #sort_and_save(galaxies_to_plot)
     #sys.exit()
 
