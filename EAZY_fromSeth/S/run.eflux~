@@ -1,0 +1,4 @@
+magcat2fluxcat,'ugrism.cat',outname='goods_s_eazy_ubgrism.cat',parfile='ugrism.param'
+
+
+end

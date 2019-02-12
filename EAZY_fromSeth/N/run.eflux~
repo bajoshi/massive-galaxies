@@ -1,0 +1,12 @@
+magcat2fluxcat,'GOODSERS_bvyjh.cat',outname='goods_s_eazy_bvyjh.cat',parfile='wfc3asu_bvyjh.param'
+Stop
+magcat2fluxcat,'GOODSERS_vyjh.cat',outname='goods_s_eazy_vyjh.cat',parfile='wfc3asu_vyjh.param'
+;magcat2fluxcat,'GOODSERS_u1u2u3bvizyjh.cat',outname='goods_s_eazy.cat',parfile='wfc3asu.param'
+;magcat2fluxcat,'GOODSERS_noU_bvizyjh.cat',outname='goods_s_eazy_noU.cat',parfile='wfc3asu_nou.param'
+;magcat2fluxcat,'GOODSERS_noU_bvizyjh.cat',outname='goods_s_eazy_noU.cat',parfile='wfc3asu_nou.param'
+restore,'../SED/tweaks_specz.idl'
+tweak=-2.5*alog10(beta)
+magcat2fluxcat,'GOODSERS_u1u2u3bvizyjh.cat',outname='goods_s_eazy_tw.cat',parfile='wfc3asu.param',tweakzp=tweak
+magcat2fluxcat,'GOODSERS_noU_bvizyjh.cat',outname='goods_s_eazy_noU_tw.cat',parfile='wfc3asu_nou.param',tweakzp=tweak
+
+end

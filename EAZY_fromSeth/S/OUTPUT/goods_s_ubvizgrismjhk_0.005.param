@@ -1,0 +1,139 @@
+################   Run parameters (can feed this file back to EAZY)  ####################
+## Filters
+FILTERS_RES          grism_isaac3.res   # Filter transmission data
+FILTER_FORMAT        1                  # Format of FILTERS_RES file -- 0: energy-  1: photon-counting detector
+SMOOTH_FILTERS       0                  # Smooth filter curves with Gaussian
+SMOOTH_SIGMA         100.00             # Gaussian sigma (in Angstroms) to smooth filters
+
+## Templates
+TEMPLATES_FILE       /Users/shc/src/eazy-1.00/templates/eazy_v1.0.spectra.param # Template definition file
+TEMPLATE_COMBOS      -2                 # Template combination options: 
+NMF_TOLERANCE        1.00e-04           # Tolerance for non-negative combinations (TEMPLATE_COMBOS=a)
+WAVELENGTH_FILE      /Users/shc/src/eazy-1.00/templates/lambda.def # Wavelength grid definition file
+TEMP_ERR_FILE        /Users/shc/src/eazy-1.00/templates/TEMPLATE_ERROR.eazy_v1.0 # Template error definition file
+TEMP_ERR_A2          1.000              # Template error amplitude
+SYS_ERR              0.000              # Systematic flux error (% of flux)
+APPLY_IGM            1                  # Apply Madau 1995 IGM absorption
+
+DUMP_TEMPLATE_CACHE  0                  # Write binary template cache
+USE_TEMPLATE_CACHE   0                  # Load in template cache
+CACHE_FILE           tempfilt.dat       # Template cache file (in OUTPUT_DIRECTORY)
+
+## Input Files
+CATALOG_FILE         goods_s_eazy_ubgrismjhk.cat # Catalog data file
+NOT_OBS_THRESHOLD    -90.000            # Ignore flux point if <NOT_OBS_THRESH
+N_MIN_COLORS         3                  # Require N_MIN_COLORS to fit
+
+## Output Files
+OUTPUT_DIRECTORY     OUTPUT             # Directory to put output files in
+MAIN_OUTPUT_FILE     goods_s_ubvizgrismjhk_0.005 # Main output file, .zout
+PRINT_ERRORS         1                  # Print 68, 95 and 99% confidence intervals
+CHI2_SCALE           1.000              # Scale ML Chi-squared values to improve confidence intervals
+VERBOSE_LOG          1                  # Dump information from the run into [MAIN_OUTPUT_FILE].param
+OBS_SED_FILE         0                  # Write out observed SED/object, .obs_sed
+TEMP_SED_FILE        0                  # Write out best template fit/object, .temp_sed
+POFZ_FILE            0                  # Write out Pofz/object, .pz
+BINARY_OUTPUT        0                  # Save OBS_SED, TEMP_SED, PZ in binary format to read with e.g IDL
+
+## Redshift / Mag prior
+APPLY_PRIOR          1                  # Apply apparent magnitude prior
+PRIOR_FILE           prior_R_zmax7.dat  # File containing prior grid
+PRIOR_FILTER         4                  # Filter from FILTER_RES corresponding to the columns in PRIOR_FILE
+PRIOR_ABZP           23.900             # AB zeropoint of fluxes in catalog.  Needed for calculating apparent mags!
+
+## Redshift Grid
+FIX_ZSPEC            0                  # Fix redshift to catalog zspec
+Z_MIN                0.010              # Minimum redshift
+Z_MAX                7.000              # Maximum redshift
+Z_STEP               0.005              # Redshift step size
+Z_STEP_TYPE          0                  #  0 = ZSTEP, 1 = Z_STEP*(1+z)
+
+## Zeropoint Offsets
+GET_ZP_OFFSETS       0                  # Look for zphot.zeropoint file and compute zeropoint offsets
+ZP_OFFSET_TOL        1.000e-04          # Tolerance for iterative fit for zeropoint offsets
+
+## Cosmology
+H0                   70.000             #  Hubble constant
+OMEGA_M              0.300              # Omega_matter
+OMEGA_L              0.700              # Omega_lambda
+#
+####################################
+#
+#  Filter #1, RES#1: U - lambda_c=3506.360341
+#       [flux col: 1, error col.: 30]
+#  Filter #2, RES#2: ACS - lambda_c=4326.195424
+#       [flux col: 2, error col.: 31]
+#  Filter #3, RES#3: ACS - lambda_c=5962.126259
+#       [flux col: 3, error col.: 32]
+#  Filter #4, RES#4: ACS - lambda_c=7706.436363
+#       [flux col: 4, error col.: 33]
+#  Filter #5, RES#5: ACS - lambda_c=9044.247460
+#       [flux col: 5, error col.: 34]
+#  Filter #6, RES#6: 5925.00-6075.00 - lambda_c=6000.000000
+#       [flux col: 6, error col.: 35]
+#  Filter #7, RES#7: 6075.00-6225.00 - lambda_c=6150.000000
+#       [flux col: 7, error col.: 36]
+#  Filter #8, RES#8: 6225.00-6375.00 - lambda_c=6300.000000
+#       [flux col: 8, error col.: 37]
+#  Filter #9, RES#9: 6375.00-6525.00 - lambda_c=6450.000000
+#       [flux col: 9, error col.: 38]
+#  Filter #10, RES#10: 6525.00-6675.00 - lambda_c=6600.000000
+#       [flux col: 10, error col.: 39]
+#  Filter #11, RES#11: 6675.00-6825.00 - lambda_c=6750.000000
+#       [flux col: 11, error col.: 40]
+#  Filter #12, RES#12: 6825.00-6975.00 - lambda_c=6900.000000
+#       [flux col: 12, error col.: 41]
+#  Filter #13, RES#13: 6975.00-7125.00 - lambda_c=7050.000000
+#       [flux col: 13, error col.: 42]
+#  Filter #14, RES#14: 7125.00-7275.00 - lambda_c=7200.000000
+#       [flux col: 14, error col.: 43]
+#  Filter #15, RES#15: 7275.00-7425.00 - lambda_c=7350.000000
+#       [flux col: 15, error col.: 44]
+#  Filter #16, RES#16: 7425.00-7575.00 - lambda_c=7500.000000
+#       [flux col: 16, error col.: 45]
+#  Filter #17, RES#17: 7575.00-7725.00 - lambda_c=7650.000000
+#       [flux col: 17, error col.: 46]
+#  Filter #18, RES#18: 7725.00-7875.00 - lambda_c=7800.000000
+#       [flux col: 18, error col.: 47]
+#  Filter #19, RES#19: 7875.00-8025.00 - lambda_c=7950.000000
+#       [flux col: 19, error col.: 48]
+#  Filter #20, RES#20: 8025.00-8175.00 - lambda_c=8100.000000
+#       [flux col: 20, error col.: 49]
+#  Filter #21, RES#21: 8175.00-8325.00 - lambda_c=8250.000000
+#       [flux col: 21, error col.: 50]
+#  Filter #22, RES#22: 8325.00-8475.00 - lambda_c=8400.000000
+#       [flux col: 22, error col.: 51]
+#  Filter #23, RES#23: 8475.00-8625.00 - lambda_c=8550.000000
+#       [flux col: 23, error col.: 52]
+#  Filter #24, RES#24: 8625.00-8775.00 - lambda_c=8700.000000
+#       [flux col: 24, error col.: 53]
+#  Filter #25, RES#25: 8775.00-8925.00 - lambda_c=8850.000000
+#       [flux col: 25, error col.: 54]
+#  Filter #26, RES#26: 8925.00-9075.00 - lambda_c=9000.000000
+#       [flux col: 26, error col.: 55]
+#  Filter #27, RES#27: J - lambda_c=12535.544614
+#       [flux col: 27, error col.: 56]
+#  Filter #28, RES#28: H - lambda_c=16514.642044
+#       [flux col: 28, error col.: 57]
+#  Filter #29, RES#29: Ks - lambda_c=21612.490238
+#       [flux col: 29, error col.: 58]
+#  Template 1: templates/EAZY_v1.0/eazy_v1.0_sed1.dat
+#     1.000000   0.000000   1.000000
+#     combines with _ALL_ other templates
+#  Template 2: templates/EAZY_v1.0/eazy_v1.0_sed2.dat
+#     1.000000   0.000000   1.000000
+#     combines with _ALL_ other templates
+#  Template 3: templates/EAZY_v1.0/eazy_v1.0_sed3.dat
+#     1.000000   0.000000   1.000000
+#     combines with _ALL_ other templates
+#  Template 4: templates/EAZY_v1.0/eazy_v1.0_sed4.dat
+#     1.000000   0.000000   1.000000
+#     combines with _ALL_ other templates
+#  Template 5: templates/EAZY_v1.0/eazy_v1.0_sed5.dat
+#     1.000000   0.000000   1.000000
+#     combines with _ALL_ other templates
+#  Template 6: templates/EAZY_v1.0/eazy_v1.0_sed6.dat
+#     1.000000   0.000000   1.000000
+#     combines with _ALL_ other templates
+# EAZY v1.00 (July 9, 2008)
+# Took 143 seconds.
