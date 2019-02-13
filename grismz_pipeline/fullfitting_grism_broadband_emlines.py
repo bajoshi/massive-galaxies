@@ -44,6 +44,7 @@ import model_mods as mm
 import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 import mocksim_results as mr
+import fast_chi2_jackknife as fcj
 
 speed_of_light = 299792458e10  # angsroms per second
 
@@ -1228,7 +1229,7 @@ if __name__ == '__main__':
     # ------------------------------ Add emission lines to models ------------------------------ #
     # read in entire model set
     bc03_all_spec_hdulist = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
-    total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
+    total_models = 37761 # fcj.get_total_extensions(bc03_all_spec_hdulist)
 
     # arrange the model spectra to be compared in a properly shaped numpy array for faster computation
     example_filename_lamgrid = "bc2003_hr_m62_tauV0_csp_tau100_salp.fits"
@@ -1238,6 +1239,13 @@ if __name__ == '__main__':
     model_lam_grid = example_lamgrid_hdu[1].data
     model_lam_grid = model_lam_grid.astype(np.float64)
     example_lamgrid_hdu.close()
+
+    np.save(figs_data_dir + 'model_lam_grid_noemlines.npy', model_lam_grid)
+    model_comp_spec = np.zeros((total_models, len(model_lam_grid)), dtype=np.float64)
+    for q in range(total_models):
+        model_comp_spec[q] = bc03_all_spec_hdulist[q+1].data
+    np.save(figs_data_dir + 'model_comp_spec_noemlines.npy', model_comp_spec)
+    sys.exit(0)
 
     total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
     model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)

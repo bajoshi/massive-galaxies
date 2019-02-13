@@ -21,7 +21,9 @@ lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 threedhst_datadir = home + "/Desktop/3dhst_data/"
 massive_figures_dir = figs_dir + 'massive-galaxies-figures/'
-savedir = massive_figures_dir + 'single_galaxy_comparison/'  # Required to save p(z) curve
+savedir_spz = massive_figures_dir + 'spz_run_jan2019/'
+savedir_photoz = massive_figures_dir + 'photoz_run_jan2019/'
+savedir_grismz = massive_figures_dir + 'grismz_run_jan2019/'
 
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
@@ -33,6 +35,7 @@ import new_refine_grismz_gridsearch_parallel as ngp
 import model_mods as mm
 import dn4000_catalog as dc
 import mocksim_results as mr
+import spz_photoz_grismz_comparison as comp
 
 speed_of_light = 299792458e10  # angstroms per second
 
@@ -169,7 +172,8 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
 
 def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, phot_flam_obs, phot_ferr_obs, \
     model_lam_grid, best_fit_model_fullres, best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, bestalpha, \
-    obj_id, obj_field, specz, low_zp_lim, upper_zp_lim, zp, low_zspz_lim, upper_zspz_lim, zspz, chi2, age, tau, av, netsig, d4000, savedir):
+    obj_id, obj_field, specz, low_zp_lim, upper_zp_lim, zp, low_zspz_lim, upper_zspz_lim, zspz, \
+    chi2, age, tau, av, netsig, d4000, savedir):
 
     # Make figure and place on grid
     fig, ax1, ax2 = makefig()
@@ -521,6 +525,24 @@ def get_photometry_best_fit_model(redshift, model_idx, phot_fin_idx, all_model_f
 
     return all_filt_flam_bestmodel
 
+def get_zpeak(obj_id, obj_field, redshift_type):
+
+    if redshift_type == 'photo-z':
+        results_dir = savedir_photoz
+        redshift_str = 'photoz'
+    elif redshift_type == 'grism-z':
+        results_dir = savedir_grismz
+        redshift_str = 'zg'
+    elif redshift_type == 'spz':
+        results_dir = savedir_spz
+        redshift_str = 'spz'
+
+    pz = np.load(results_dir + str(obj_field) + '_' + str(obj_id) + '_' + redshift_str + '_pz.npy')    
+    zarr = np.load(results_dir + str(obj_field) + '_' + str(obj_id) + '_' + redshift_str + '_z_arr.npy')
+    z_peak = zarr[np.argmax(pz)]
+
+    return z_peak
+
 def main():
     # Start time
     start = time.time()
@@ -530,7 +552,7 @@ def main():
     # ------------------------------- Give galaxy data here ------------------------------- #
     # Only needs the ID and the field
     # And flag to modify LSF
-    current_id = 103146
+    current_id = 17495
     current_field = 'GOODS-S'
     modify_lsf = True
 
@@ -549,56 +571,39 @@ def main():
             sys.exit(0)
 
     # ------------------------------ Get models ------------------------------ #
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+
+    # ------------------------------ Get models ------------------------------ #
     # read in entire model set
-    bc03_all_spec_hdulist = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits')
+    # To see how these arrays were created check the code:
+    # $HOME/Desktop/test-codes/shared_memory_multiprocessing/shmem_parallel_proc.py
+    # This part will fail if the arrays dont already exist.
     total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
 
-    # Read in models with emission lines adn put in numpy array
-    bc03_all_spec_hdulist_withlines = fits.open(figs_data_dir + 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample_withlines.fits')
-    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy')
-    model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid_withlines)), dtype=np.float64)
-    for q in range(total_models):
-        model_comp_spec_withlines[q] = bc03_all_spec_hdulist_withlines[q+1].data
+    log_age_arr = np.load(figs_data_dir + 'log_age_arr.npy', mmap_mode='r')
+    metal_arr = np.load(figs_data_dir + 'metal_arr.npy', mmap_mode='r')
+    nlyc_arr = np.load(figs_data_dir + 'nlyc_arr.npy', mmap_mode='r')
+    tau_gyr_arr = np.load(figs_data_dir + 'tau_gyr_arr.npy', mmap_mode='r')
+    tauv_arr = np.load(figs_data_dir + 'tauv_arr.npy', mmap_mode='r')
+    ub_col_arr = np.load(figs_data_dir + 'ub_col_arr.npy', mmap_mode='r')
+    bv_col_arr = np.load(figs_data_dir + 'bv_col_arr.npy', mmap_mode='r')
+    vj_col_arr = np.load(figs_data_dir + 'vj_col_arr.npy', mmap_mode='r')
+    ms_arr = np.load(figs_data_dir + 'ms_arr.npy', mmap_mode='r')
+    mgal_arr = np.load(figs_data_dir + 'mgal_arr.npy', mmap_mode='r')
 
-    bc03_all_spec_hdulist_withlines.close()
-    del bc03_all_spec_hdulist_withlines
+    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_noemlines.npy', mmap_mode='r')
+    model_comp_spec_withlines = np.load(figs_data_dir + 'model_comp_spec_noemlines.npy', mmap_mode='r')
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
 
     # ---------------------------------- Read in look-up tables for model mags ------------------------------------- #
     # Using the look-up table now since it should be much faster
-    # First get them all into an appropriate shape
-    u = np.load(figs_data_dir + 'all_model_mags_par_u.npy')
-    f435w = np.load(figs_data_dir + 'all_model_mags_par_f435w.npy')
-    f606w = np.load(figs_data_dir + 'all_model_mags_par_f606w.npy')
-    f775w = np.load(figs_data_dir + 'all_model_mags_par_f775w.npy')
-    f850lp = np.load(figs_data_dir + 'all_model_mags_par_f850lp.npy')
-    f125w = np.load(figs_data_dir + 'all_model_mags_par_f125w.npy')
-    f140w = np.load(figs_data_dir + 'all_model_mags_par_f140w.npy')
-    f160w = np.load(figs_data_dir + 'all_model_mags_par_f160w.npy')
-    irac1 = np.load(figs_data_dir + 'all_model_mags_par_irac1.npy')
-    irac2 = np.load(figs_data_dir + 'all_model_mags_par_irac2.npy')
-    irac3 = np.load(figs_data_dir + 'all_model_mags_par_irac3.npy')
-    irac4 = np.load(figs_data_dir + 'all_model_mags_par_irac4.npy')
-
-    # put them in a list since I need to iterate over it
-    all_model_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
-
-    # cnovert to numpy array
-    all_model_flam = np.asarray(all_model_flam)
-
-    # ----------------------------------------- Read in matched catalogs ----------------------------------------- #
-    # Only reading this in to be able to loop over all matched galaxies
-    # read in matched files to get photo-z
-    matched_cat_n = np.genfromtxt(massive_galaxies_dir + 'pears_north_matched_3d.txt', \
-        dtype=None, names=True, skip_header=1)
-    matched_cat_s = np.genfromtxt(massive_galaxies_dir + 'pears_south_matched_santini_3d.txt', \
-        dtype=None, names=True, skip_header=1)
-
-    # Read in Specz comparison catalogs
-    specz_goodsn = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-N.txt', dtype=None, names=True)
-    specz_goodss = np.genfromtxt(massive_galaxies_dir + 'specz_comparison_sample_GOODS-S.txt', dtype=None, names=True)
+    # Again check the code --
+    # $HOME/Desktop/test-codes/shared_memory_multiprocessing/shmem_parallel_proc.py
+    # to see how this was created
+    # This part will fail if the array does not already exist.
+    all_model_flam = np.load(figs_data_dir + 'all_model_flam.npy', mmap_mode='r')
 
     # ------------------------------- Read in photometry catalogs ------------------------------- #
     # GOODS-N from 3DHST
@@ -627,41 +632,33 @@ def main():
     # ------------------------------- Prep for getting photometry ------------------------------- #
     # Assign catalogs 
     if current_field == 'GOODS-N':
-        cat = matched_cat_n
-        spec_cat = specz_goodsn
         phot_cat_3dhst = goodsn_phot_cat_3dhst
     elif current_field == 'GOODS-S':
-        cat = matched_cat_s
-        spec_cat = specz_goodss
         phot_cat_3dhst = goodss_phot_cat_3dhst
 
-    # Get specz if it exists as initial guess, otherwise get photoz
-    specz_idx = np.where(spec_cat['pearsid'] == current_id)[0]
+    final_sample_idx = int(np.where((final_sample['pearsid'] == current_id) & (final_sample['field'] == current_field))[0])
+    current_specz = final_sample['zspec'][final_sample_idx]
 
-    # Since Im' only running this code on a single galaxy with a known ground based spec-z this check should never be trigerred
-    if len(specz_idx) != 1:
-        print "Match not found in specz catalog for ID", current_id, "in", current_field, "... Exiting."
-        sys.exit(0)
-
-    current_specz = float(spec_cat['specz'][specz_idx])
+    # Get RA, DEC
+    current_ra = final_sample['ra'][final_sample_idx]
+    current_dec = final_sample['dec'][final_sample_idx]
 
     print "At ID", current_id, "in", current_field, "with specz:", current_specz
 
     # ------------------------------- Get grism data and then match with photometry ------------------------------- #
     grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
 
-    # find grism obj ra,dec
-    cat_idx = np.where(cat['pearsid'] == current_id)[0]
-    if cat_idx.size:
-        current_ra = float(cat['pearsra'][cat_idx])
-        current_dec = float(cat['pearsdec'][cat_idx])
+    if return_code == 0:
+        print current_id, current_field
+        print "Return code should not have been 0. Exiting."
+        sys.exit(0)
 
     threed_ra = phot_cat_3dhst['ra']
     threed_dec = phot_cat_3dhst['dec']
 
     # Now match
-    ra_lim = 0.5/3600  # arcseconds in degrees
-    dec_lim = 0.5/3600
+    ra_lim = 0.3/3600  # arcseconds in degrees
+    dec_lim = 0.3/3600
     threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
         (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
 
@@ -833,27 +830,53 @@ def main():
     phot_lam = phot_lam[phot_fin_idx]
 
     # ------------- Call fitting function for photo-z ------------- #
-    print "\n", "Computing photo-z now."
-
+    print "\n", "Computing Photo-z now."
+    
     zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
     photoz.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir)
-
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start,\
+        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
+    
     # ------------- Call fitting function for SPZ ------------- #
-    print "\n", "Moving on to SPZ computation now."
-
-    zg_minchi2, zspz, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
+    print "\n", "Photo-z done. Moving on to SPZ computation now."
+    
+    zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
     ff.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, bc03_all_spec_hdulist, start,\
-        current_id, current_field, current_specz, zp, use_broadband=True, single_galaxy=True)
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+        use_broadband=True, single_galaxy=False, for_loop_method='parallel')
+    
+    # ------------- Call fitting function for grism-z ------------- #
+    # Essentially just calls the same function as above but switches off broadband for the fit
+    print "\n", "SPZ done. Moving on to Grism-z computation now."
+        
+    zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
+    ff.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, \
+        lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
+        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+        use_broadband=False, single_galaxy=False, for_loop_method='parallel')
 
-    print "\n", "Results from both codes:"
+    #comp.get_z_errors()
+    print zp, zp_zerr_low, zp_zerr_up
+    print zspz, zspz_zerr_low, zspz_zerr_up
+    print zg, zg_zerr_low, zg_zerr_up
+
+    print "\n", "Results:"
     print "Ground-based spectroscopic redshift:", current_specz
-    print "Photometric redshift from min chi2:", "{:.3f}".format(zp_minchi2)
+
+    print "\n", "Photometric redshift from min chi2:", "{:.3f}".format(zp_minchi2)
+    print "Photometric redshift from peak of p(z) curve:", get_zpeak(current_id, current_field, redshift_type='photo-z')
     print "Weighted photometric redshift:", "{:.3f}".format(zp)
-    print "SPZ from min chi2:", "{:.3f}".format(zg_minchi2)
+
+    print "\n", "Grism redshift from min chi2:", "{:.3f}".format(zg_minchi2)
+    print "Grism redshift from peak of p(z) curve:", get_zpeak(current_id, current_field, redshift_type='grism-z')
+    print "Weighted Grism redshift:", "{:.3f}".format(zg)
+
+    print "\n", "SPZ from min chi2:", "{:.3f}".format(zspz_minchi2)
+    print "SPZ from peak of p(z) curve:", get_zpeak(current_id, current_field, redshift_type='spz')
     print "Weighted SPZ:", "{:.3f}".format(zspz)
 
     print "\n", "Time taken up to now--", str("{:.2f}".format(time.time() - start)), "seconds."
@@ -874,18 +897,30 @@ def main():
     zp_all_filt_flam_bestmodel = get_photometry_best_fit_model(zp, zp_model_idx, phot_fin_idx, all_model_flam, total_models)
 
     # ------------ Get best fit model for SPZ ------------ #
-    zg_best_fit_model_in_objlamgrid, zg_all_filt_flam_bestmodel, zg_best_fit_model_fullres = \
+    zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_best_fit_model_fullres = \
     get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
-        grism_lam_obs, zspz, zg_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
+        grism_lam_obs, zspz, zspz_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
+
+    # ------------ Get best fit model for grism-z ------------ #
+    zg_best_fit_model_in_objlamgrid, zg_best_fit_model_fullres = \
+    get_best_fit_model_grismz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
+        grism_lam_obs, zg, zg_model_idx, lsf_to_use, total_models)
 
     # ------------------------------- Plotting based on results from the above two codes ------------------------------- #
     plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines, \
     zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
-    current_id, current_field, current_specz, zp, zp_minchi2, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av, netsig_chosen, d4000, savedir)
+    current_id, current_field, current_specz, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, \
+    zp_age, zp_tau, zp_av, netsig_chosen, d4000, savedir_photoz)
 
     plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
-    model_lam_grid_withlines, zg_best_fit_model_fullres, zg_best_fit_model_in_objlamgrid, zg_all_filt_flam_bestmodel, zg_bestalpha, \
-    current_id, current_field, current_specz, zp, zg_minchi2, zg_zerr_low, zg_zerr_up, zspz, zg_min_chi2, zg_age, zg_tau, zg_av, netsig_chosen, d4000, savedir)
+    model_lam_grid_withlines, zspz_best_fit_model_fullres, zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_bestalpha, \
+    current_id, current_field, current_specz, zp_zerr_low, zp_zerr_up, zp, zspz_zerr_low, zspz_zerr_up, zspz, \
+    zspz_min_chi2, zspz_age, zspz_tau, zspz_av, netsig_chosen, d4000, savedir_spz)
+
+    plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
+    model_lam_grid_withlines, zg_best_fit_model_fullres, zg_best_fit_model_in_objlamgrid, zg_bestalpha, \
+    current_id, current_field, current_specz, zp_zerr_low, zp_zerr_up, zp, zg_zerr_low, zg_zerr_up, zg, \
+    zg_min_chi2, zg_age, zg_tau, zg_av, netsig_chosen, d4000, savedir_grismz)
 
     # Total time taken
     print "\n", "All done."

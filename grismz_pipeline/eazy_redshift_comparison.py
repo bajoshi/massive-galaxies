@@ -231,6 +231,7 @@ def main():
     print "\n", "Outlier fraction for EAZY-z:", outlier_frac_eazy
     print "Outlier fraction for SPZ:", outlier_frac_spz
 
+    plot_eazy_spz_comparison()
 
     return None
 
