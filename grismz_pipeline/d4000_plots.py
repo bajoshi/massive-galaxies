@@ -109,9 +109,17 @@ def make_d4000_vs_redshift_plot():
     d4000_pears_plot = d4000_arr
     d4000_err_pears_plot = d4000_err_arr
 
+    # First chuck the really high D4000 errors 
+    # Since I found out after making the D4000 error histogram
+    # that only 8 galaxies have an error > 0.5.
+    valid_err_idx = np.where(d4000_err_pears_plot < 0.5)[0]
+    redshift_pears_plot = redshift_pears_plot[valid_err_idx]
+    d4000_pears_plot = d4000_pears_plot[valid_err_idx]
+    d4000_err_pears_plot = d4000_err_pears_plot[valid_err_idx]
+
     # ------------------------------- Actual plotting ------------------------------- #
     # d4000 vs redshift 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(6, 5))
     
     gs = gridspec.GridSpec(10,1)
     gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.0, hspace=0.1)
@@ -128,19 +136,21 @@ def make_d4000_vs_redshift_plot():
     ax_res.plot(redshift_pears_plot, d4000_resid, 'o', markersize=2, color='k', markeredgecolor='k')
 
     ax1.axhline(y=1, linewidth=2, linestyle='--', color='g', zorder=10)
-    ax1.axhline(y=1.3, linewidth=2, linestyle='-.', color='g', zorder=10)
     ax_res.axhline(y=0.0, linewidth=2, linestyle='--', color='g')
 
     # Plot average error bar for points below D4000 = 1.3
     d4000_1p3_idx = np.where(d4000_pears_plot < 1.3)[0]
-    avg_1p3_err = np.mean(abs(d4000_err_pears_plot))
+    avg_1p3_err = np.mean(abs(d4000_err_pears_plot[d4000_1p3_idx]))
 
+    ax1.axhline(y=1.0 + 3*avg_1p3_err, linewidth=2, linestyle='-.', color='g', zorder=10)
     ax1.errorbar(1.26, 1.1, yerr=avg_1p3_err, fmt='.', color='k', \
         markeredgecolor='k', capsize=0, markersize=6, elinewidth=0.5, ecolor='r')
 
-    print "Average error for points below D4000=1.3:", "{:.2f}".format(avg_1p3_err)
+    print "Mean error for points below D4000=1.3:", "{:.2f}".format(avg_1p3_err)
 
     d4000_1p6_idx = np.where(d4000_pears_plot >= 1.6)[0]
+    avg_1p6_err = np.mean(abs(d4000_err_pears_plot[d4000_1p6_idx]))
+    print "Mean error for points above D4000=1.6:", "{:.2f}".format(avg_1p6_err)
     ax_res.scatter(redshift_pears_plot[d4000_1p6_idx], d4000_resid[d4000_1p6_idx], s=40, facecolor='None', edgecolors='r')
 
     # labels and grid
@@ -193,6 +203,36 @@ def make_d4000_vs_redshift_plot():
 
     # save the figure
     fig.savefig(massive_figures_dir + 'd4000_redshift.pdf', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    # ------------------------------------------------------
+    # I'd also like to see the histogram of D4000 errors
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # get total bins and plot histogram
+    iqr = np.std(d4000_err_pears_plot, dtype=np.float64)
+    binsize = 2*iqr*np.power(len(d4000_err_pears_plot),-1/3)
+    totalbins = int(np.floor((max(d4000_err_pears_plot) - min(d4000_err_pears_plot))/binsize))
+
+    print min(d4000_err_pears_plot), max(d4000_err_pears_plot)
+
+    print "Total Bins:", totalbins
+    ax.hist(d4000_err_pears_plot, totalbins, histtype='step', range=[0, 0.5])
+
+    # Labels
+    ax.set_xlabel(r'$\mathrm{\sigma_{D4000}}$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
+
+    # Make tick labels larger
+    ax.set_xticklabels(ax.get_xticks().tolist(), size=10)
+    ax.set_yticklabels(ax.get_yticks().tolist(), size=10)
+
+    # save the figure
+    fig.savefig(massive_figures_dir + 'd4000_error_hist.pdf', dpi=300, bbox_inches='tight')
 
     return None
 
