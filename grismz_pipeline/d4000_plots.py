@@ -141,17 +141,20 @@ def make_d4000_vs_redshift_plot():
     # Plot average error bar for points below D4000 = 1.3
     d4000_1p3_idx = np.where(d4000_pears_plot < 1.3)[0]
     avg_1p3_err = np.mean(abs(d4000_err_pears_plot[d4000_1p3_idx]))
-
-    ax1.axhline(y=1.0 + 3*avg_1p3_err, linewidth=2, linestyle='-.', color='g', zorder=10)
-    ax1.errorbar(1.26, 1.1, yerr=avg_1p3_err, fmt='.', color='k', \
-        markeredgecolor='k', capsize=0, markersize=6, elinewidth=0.5, ecolor='r')
-
     print "Mean error for points below D4000=1.3:", "{:.2f}".format(avg_1p3_err)
 
     d4000_1p6_idx = np.where(d4000_pears_plot >= 1.6)[0]
     avg_1p6_err = np.mean(abs(d4000_err_pears_plot[d4000_1p6_idx]))
     print "Mean error for points above D4000=1.6:", "{:.2f}".format(avg_1p6_err)
+
+    ax1.axhline(y=1.0 + 3*avg_1p3_err, linewidth=2, linestyle='-.', color='g', zorder=10)
+    ax1.errorbar(1.26, 1.1, yerr=avg_1p3_err, fmt='.', color='k', \
+        markeredgecolor='k', capsize=0, markersize=6, elinewidth=0.5, ecolor='r')
+
     ax_res.scatter(redshift_pears_plot[d4000_1p6_idx], d4000_resid[d4000_1p6_idx], s=40, facecolor='None', edgecolors='r')
+
+    d4000_3sigma = np.where(d4000_resid >= 3.0)[0]
+    print len(d4000_3sigma), "out of", len(d4000_resid), "galaxies have D4000 measured at 3-sigma or better."
 
     # labels and grid
     ax1.set_ylabel(r'$\mathrm{D}4000$', fontsize=15)

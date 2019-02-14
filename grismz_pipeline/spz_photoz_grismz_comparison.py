@@ -255,6 +255,7 @@ def get_arrays_to_plot():
     zg_list = []
     zspz_list = []
     all_d4000_list = []
+    all_d4000_err_list = []
     all_netsig_list = []
     imag_list = []
 
@@ -337,6 +338,7 @@ def get_arrays_to_plot():
         zg_list.append(zg[i])
         zspz_list.append(zspz[i])
         all_d4000_list.append(d4000)
+        all_d4000_err_list.append(d4000_err)
         all_netsig_list.append(netsig_chosen)
         imag_list.append(current_imag)
 
@@ -381,7 +383,7 @@ def get_arrays_to_plot():
                 print "{:.2f}".format(current_imag)
 
     return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
-    np.array(all_d4000_list), np.array(all_netsig_list), np.array(imag_list)
+    np.array(all_d4000_list), np.array(all_d4000_err_list), np.array(all_netsig_list), np.array(imag_list)
 
 def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
     mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
@@ -552,7 +554,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     return None
 
 def main():
-    ids, fields, zs, zp, zg, zspz, d4000, netsig, imag = get_arrays_to_plot()
+    ids, fields, zs, zp, zg, zspz, d4000, d4000_err, netsig, imag = get_arrays_to_plot()
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -562,13 +564,14 @@ def main():
     assert len(ids) == len(zg)
     assert len(ids) == len(zspz)
     assert len(ids) == len(d4000)
+    assert len(ids) == len(d4000_err)
     assert len(ids) == len(netsig)
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.4
-    d4000_high = 1.6
-    d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
+    d4000_low = 1.6
+    d4000_high = 2.0
+    d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
     print "Galaxies within D4000 range:", len(d4000_idx)
@@ -579,7 +582,11 @@ def main():
     zg = zg[d4000_idx]
     zspz = zspz[d4000_idx]
 
+    d4000 = d4000[d4000_idx]
+    d4000_err = d4000_err[d4000_idx]
     netsig = netsig[d4000_idx]
+
+    d4000_resid = (d4000 - 1.0) / d4000_err
 
     # Get residuals 
     resid_zp = (zp - zs) / (1 + zs)
@@ -638,15 +645,13 @@ def main():
 
     # ---------
     """
-    d4000 = d4000[d4000_idx]
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    cax = ax.scatter(d4000[valid_idx_spz], resid_zspz, c=zs)
-    ax.axhline(y=0.0, ls='--')
+    ax.scatter(d4000_resid[valid_idx_zspz], resid_zspz, s=4, color='k')
 
+    ax.axhline(y=0.0, ls='--')
     ax.set_ylim(-0.1, 0.1)
-    fig.colorbar(cax)
 
     plt.show()
     sys.exit(0)
