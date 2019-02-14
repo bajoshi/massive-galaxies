@@ -98,6 +98,7 @@ def get_plotting_arrays():
     zs_list = []
     zspz_list = []
     all_d4000_list = []
+    all_d4000_err_list = []
     eazy_redshift_list = []
 
     # Read in EAZY catalogs
@@ -147,6 +148,7 @@ def get_plotting_arrays():
         zs_list.append(current_specz)
         zspz_list.append(zspz_array[i])
         all_d4000_list.append(d4000)
+        all_d4000_err_list.append(d4000_err)
 
     # Convert to numpy array
     all_ids = np.array(all_ids_list)
@@ -154,9 +156,10 @@ def get_plotting_arrays():
     zs = np.array(zs_list)
     zspz = np.array(zspz_list)
     all_d4000 = np.array(all_d4000_list)
+    all_d4000_err = np.array(all_d4000_err_list)
     eazy_redshift = np.array(eazy_redshift_list)
 
-    return all_ids, all_fields, zs, zspz, eazy_redshift, all_d4000
+    return all_ids, all_fields, zs, zspz, eazy_redshift, all_d4000, all_d4000_err
 
 def plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, zs_for_zspz, \
     mean_eazy, nmad_eazy, mean_zspz, nmad_zspz, d4000_low, d4000_high, outlier_frac_eazy, outlier_frac_spz):
@@ -293,7 +296,7 @@ def plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, 
 
 def main():
 
-    ids, fields, zs, zspz, eazy_z, d4000 = get_plotting_arrays()
+    ids, fields, zs, zspz, eazy_z, d4000, d4000_err = get_plotting_arrays()
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -301,11 +304,12 @@ def main():
     assert len(ids) == len(zs)
     assert len(ids) == len(eazy_z)
     assert len(ids) == len(d4000)
+    assert len(ids) == len(d4000_err)
 
     # Cut on D4000
-    d4000_low = 1.1
+    d4000_low = 1.6
     d4000_high = 2.0
-    d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
+    d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
     print "Galaxies within D4000 range:", len(d4000_idx)

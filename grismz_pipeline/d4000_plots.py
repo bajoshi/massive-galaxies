@@ -7,6 +7,8 @@ import os
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import matplotlib.cm as cm
 
 import astropy.units as u
 from astropy.cosmology import z_at_value
@@ -89,7 +91,11 @@ def get_all_arrays():
 
 def make_d4000_vs_redshift_plot():
 
-    redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
+    #redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
+
+    redshift_arr = np.load(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy')
+    d4000_arr = np.load(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy')
+    d4000_err_arr = np.load(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy')
 
     # Only consider finite elements
     # I don't seem to need this for the new final sample 
@@ -119,7 +125,7 @@ def make_d4000_vs_redshift_plot():
 
     # ------------------------------- Actual plotting ------------------------------- #
     # d4000 vs redshift 
-    fig = plt.figure(figsize=(6, 5))
+    fig = plt.figure(figsize=(6, 8))
     
     gs = gridspec.GridSpec(10,1)
     gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.0, hspace=0.1)
@@ -130,10 +136,10 @@ def make_d4000_vs_redshift_plot():
     print "Number of galaxies in D4000 vs redshift plot:", len(d4000_pears_plot)
 
     ax1.errorbar(redshift_pears_plot, d4000_pears_plot, yerr=d4000_err_pears_plot,\
-    fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=2, elinewidth=0.1)
+    fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=2.5, elinewidth=0.1)
 
     d4000_resid = (d4000_pears_plot - 1.0) / d4000_err_pears_plot
-    ax_res.plot(redshift_pears_plot, d4000_resid, 'o', markersize=2, color='k', markeredgecolor='k')
+    #ax_res.plot(redshift_pears_plot, d4000_resid, 'o', markersize=2, color='k', markeredgecolor='k')
 
     ax1.axhline(y=1, linewidth=2, linestyle='--', color='g', zorder=10)
     ax_res.axhline(y=0.0, linewidth=2, linestyle='--', color='g')
@@ -148,13 +154,29 @@ def make_d4000_vs_redshift_plot():
     print "Mean error for points above D4000=1.6:", "{:.2f}".format(avg_1p6_err)
 
     ax1.axhline(y=1.0 + 3*avg_1p3_err, linewidth=2, linestyle='-.', color='g', zorder=10)
-    ax1.errorbar(1.26, 1.1, yerr=avg_1p3_err, fmt='.', color='k', \
+    ax1.errorbar(1.31, 1.1, yerr=avg_1p3_err, fmt='.', color='k', \
         markeredgecolor='k', capsize=0, markersize=6, elinewidth=0.5, ecolor='r')
 
-    ax_res.scatter(redshift_pears_plot[d4000_1p6_idx], d4000_resid[d4000_1p6_idx], s=40, facecolor='None', edgecolors='r')
+    d4000_1p3_to_1p6_idx = np.where((d4000_pears_plot >= 1.3) & (d4000_pears_plot < 1.6))[0]
+
+    #ax_res.scatter(redshift_pears_plot[d4000_1p3_idx], d4000_resid[d4000_1p3_idx], s=40, facecolor='None', edgecolors='orange')
+    #ax_res.scatter(redshift_pears_plot[d4000_1p3_to_1p6_idx], d4000_resid[d4000_1p3_to_1p6_idx], s=30, facecolor='None', edgecolors='orange')
+    #ax_res.scatter(redshift_pears_plot[d4000_1p6_idx], d4000_resid[d4000_1p6_idx], s=30, facecolor='None', edgecolors='red')
+
+    vmin_level = 1.0
+    vmax_level = 1.8
+
+    c = ax_res.scatter(redshift_pears_plot, d4000_resid, s=20, facecolor='None', c=d4000_pears_plot, vmin=vmin_level, vmax=vmax_level, cmap='inferno')
+    # add colorbar inside figure
+    cbaxes = inset_axes(ax_res, width='3%', height='75%', loc=7, bbox_to_anchor=[-0.06, 0.05, 1, 1], bbox_transform=ax_res.transAxes)
+    cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
+    #cb.ax_res.get_children()[0].set_linewidths(10.0)
+    cb.ax.set_ylabel(r'$\mathrm{D4000}$', fontsize=14, labelpad=-9)
 
     d4000_3sigma = np.where(d4000_resid >= 3.0)[0]
     print len(d4000_3sigma), "out of", len(d4000_resid), "galaxies have D4000 measured at 3-sigma or better."
+    print "Mean \"sigma\" level for galaxies with D4000<1.3:", np.mean(abs(d4000_resid[d4000_1p3_idx]))
+    print "Mean \"sigma\" level for galaxies with D4000>=1.6:", np.mean(abs(d4000_resid[d4000_1p6_idx]))
 
     # labels and grid
     ax1.set_ylabel(r'$\mathrm{D}4000$', fontsize=15)
@@ -175,9 +197,12 @@ def make_d4000_vs_redshift_plot():
     ages_ticklabels = ['{:g}'.format(age) for age in ages.value]
     ax2.set_xticklabels(ages_ticklabels)
 
-    ax2.set_xlim(0.5, 1.3)
-    ax1.set_xlim(0.5, 1.3)
-    ax1.set_ylim(0.5, 2.5)
+    ax2.set_xlim(0.55, 1.35)
+    ax1.set_xlim(0.55, 1.35)
+    ax1.set_ylim(0.5, 2.05)
+
+    ax_res.set_ylim(-2, 15)
+    ax_res.set_xlim(0.55, 1.35)
 
     ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$', fontsize=15)
 
@@ -221,7 +246,7 @@ def make_d4000_vs_redshift_plot():
     binsize = 2*iqr*np.power(len(d4000_err_pears_plot),-1/3)
     totalbins = int(np.floor((max(d4000_err_pears_plot) - min(d4000_err_pears_plot))/binsize))
 
-    print min(d4000_err_pears_plot), max(d4000_err_pears_plot)
+    print "Min and Max D4000 error in histogram:", min(d4000_err_pears_plot), max(d4000_err_pears_plot)
 
     print "Total Bins:", totalbins
     ax.hist(d4000_err_pears_plot, totalbins, histtype='step', range=[0, 0.5])
@@ -242,13 +267,26 @@ def make_d4000_vs_redshift_plot():
 def make_d4000_hist():
 
     # get arrays
-    redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
+    #redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
+
+    redshift_arr = np.load(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy')
+    d4000_arr = np.load(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy')
+    d4000_err_arr = np.load(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy')
 
     print "Number of galaxies with D4000 measurements:", len(d4000_arr)
 
     # Only consider finite elements
     valid_idx = np.where(np.isfinite(d4000_arr))[0]
-    d4000_pears_plot = d4000_arr[valid_idx]
+
+    # Again chuck the really high D4000 errors 
+    # Since I found out after making the D4000 error histogram
+    # that only 8 galaxies have an error > 0.5.
+    valid_err_idx = np.where(d4000_err_arr < 0.5)[0]
+
+    comb_idx = reduce(np.intersect1d, (valid_idx, valid_err_idx))
+
+    d4000_pears_plot = d4000_arr[comb_idx]
+    d4000_err_plot = d4000_err_arr[comb_idx]
 
     # ----------------------- PLOT ----------------------- #
     # PEARS dn4000 histogram
@@ -261,9 +299,9 @@ def make_d4000_hist():
     totalbins = int(np.floor((max(d4000_pears_plot) - min(d4000_pears_plot))/binsize))
 
     print "Total Bins:", totalbins
-    print "Number of galaxies with valid D4000 measurements in plot:", len(d4000_pears_plot)
+    print "Number of galaxies with valid D4000 measurements in histogram:", len(d4000_pears_plot)
 
-    ncount, edges, patches = ax.hist(d4000_pears_plot, totalbins, range=[0.0,2.5], color='lightgray', align='mid', zorder=10)
+    ncount, edges, patches = ax.hist(d4000_pears_plot, 50, range=[0.0,2.5], color='lightgray', align='mid', zorder=10)
     ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
 
     # shade the selection region
@@ -285,8 +323,7 @@ def make_d4000_hist():
     print "Number of galaxies with D4000 >= 1.1:", len(d40001p1)
     print "Fraction of total galaxies with D4000 >= 1.1:", len(d40001p1) / len(d4000_pears_plot)
 
-    d4000_err_plot = d4000_err_arr[valid_idx]
-    print np.where(d4000_err_plot[d40001p1] < 0.1)
+    #print np.where(d4000_err_plot[d40001p1] < 0.1)
     print "Total galaxies with errors < 0.1:", len(np.where(d4000_err_plot[d40001p1] < 0.1)[0])
 
     # save figure
@@ -332,6 +369,14 @@ def make_redshift_hist():
     return None
 
 if __name__ == '__main__':
+
+    """
+    redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
+
+    np.save(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy', redshift_arr)
+    np.save(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy', d4000_arr)
+    np.save(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy', d4000_err_arr)
+    """
     
     make_d4000_vs_redshift_plot()
     #make_d4000_hist()
