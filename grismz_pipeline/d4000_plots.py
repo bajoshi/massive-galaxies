@@ -6,6 +6,7 @@ import sys
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 import astropy.units as u
 from astropy.cosmology import z_at_value
@@ -111,22 +112,48 @@ def make_d4000_vs_redshift_plot():
     # ------------------------------- Actual plotting ------------------------------- #
     # d4000 vs redshift 
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    
+    gs = gridspec.GridSpec(10,1)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.0, hspace=0.1)
 
-    ax.errorbar(redshift_pears_plot, d4000_pears_plot, yerr=d4000_err_pears_plot,\
+    ax1 = fig.add_subplot(gs[:7, :])
+    ax_res = fig.add_subplot(gs[7:, :])
+
+    print "Number of galaxies in D4000 vs redshift plot:", len(d4000_pears_plot)
+
+    ax1.errorbar(redshift_pears_plot, d4000_pears_plot, yerr=d4000_err_pears_plot,\
     fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=2, elinewidth=0.1)
 
-    ax.axhline(y=1, linewidth=1, linestyle='--', color='r', zorder=10)
+    d4000_resid = (d4000_pears_plot - 1.0) / d4000_err_pears_plot
+    ax_res.plot(redshift_pears_plot, d4000_resid, 'o', markersize=2, color='k', markeredgecolor='k')
+
+    ax1.axhline(y=1, linewidth=2, linestyle='--', color='g', zorder=10)
+    ax1.axhline(y=1.3, linewidth=2, linestyle='-.', color='g', zorder=10)
+    ax_res.axhline(y=0.0, linewidth=2, linestyle='--', color='g')
+
+    # Plot average error bar for points below D4000 = 1.3
+    d4000_1p3_idx = np.where(d4000_pears_plot < 1.3)[0]
+    avg_1p3_err = np.mean(abs(d4000_err_pears_plot))
+
+    ax1.errorbar(1.26, 1.1, yerr=avg_1p3_err, fmt='.', color='k', \
+        markeredgecolor='k', capsize=0, markersize=6, elinewidth=0.5, ecolor='r')
+
+    print "Average error for points below D4000=1.3:", "{:.2f}".format(avg_1p3_err)
+
+    d4000_1p6_idx = np.where(d4000_pears_plot >= 1.6)[0]
+    ax_res.scatter(redshift_pears_plot[d4000_1p6_idx], d4000_resid[d4000_1p6_idx], s=40, facecolor='None', edgecolors='r')
 
     # labels and grid
-    ax.set_xlabel(r'$\mathrm{Redshift}$', fontsize=15)
-    ax.set_ylabel(r'$\mathrm{D}4000$', fontsize=15)
-    ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
+    ax1.set_ylabel(r'$\mathrm{D}4000$', fontsize=15)
+    ax1.grid(True, color=mh.rgb_to_hex(240, 240, 240))
+
+    ax_res.set_xlabel(r'$\mathrm{Redshift}$', fontsize=15)
+    ax_res.set_ylabel(r'$\mathrm{\frac{D4000 - 1.0}{\sigma_{D4000}}}$', fontsize=15)
 
     # parallel x axis for age of the Universe
     # This solution came from 
     # http://www.astropy.org/astropy-tutorials/edshift_plot.html
-    ax2 = ax.twiny()
+    ax2 = ax1.twiny()
 
     ages = np.arange(3,9,0.5)*u.Gyr
     ageticks = [z_at_value(Planck15.age, age) for age in ages]
@@ -136,13 +163,16 @@ def make_d4000_vs_redshift_plot():
     ax2.set_xticklabels(ages_ticklabels)
 
     ax2.set_xlim(0.5, 1.3)
-    ax.set_xlim(0.5, 1.3)
-    ax.set_ylim(0.5, 2.5)
+    ax1.set_xlim(0.5, 1.3)
+    ax1.set_ylim(0.5, 2.5)
 
     ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$', fontsize=15)
 
+    # Turen off xaxis tick labels
+    ax1.set_xticklabels([])
+
     # Turn on minor ticks
-    ax.minorticks_on()  # Only ax and not ax2. See comment below.
+    ax1.minorticks_on()  # Only ax1 and not ax2. See comment below.
     ax2.minorticks_off()
 
     """
@@ -188,6 +218,7 @@ def make_d4000_hist():
     totalbins = int(np.floor((max(d4000_pears_plot) - min(d4000_pears_plot))/binsize))
 
     print "Total Bins:", totalbins
+    print "Number of galaxies with valid D4000 measurements in plot:", len(d4000_pears_plot)
 
     ncount, edges, patches = ax.hist(d4000_pears_plot, totalbins, range=[0.0,2.5], color='lightgray', align='mid', zorder=10)
     ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
@@ -208,7 +239,6 @@ def make_d4000_hist():
     ax.minorticks_on()
 
     d40001p1 = np.where(d4000_pears_plot >= 1.1)[0]
-    print "Number of galaxies with valid D4000 measurements in plot:", len(d4000_pears_plot)
     print "Number of galaxies with D4000 >= 1.1:", len(d40001p1)
     print "Fraction of total galaxies with D4000 >= 1.1:", len(d40001p1) / len(d4000_pears_plot)
 
@@ -260,8 +290,8 @@ def make_redshift_hist():
 
 if __name__ == '__main__':
     
-    #make_d4000_vs_redshift_plot()
-    make_d4000_hist()
+    make_d4000_vs_redshift_plot()
+    #make_d4000_hist()
     #make_redshift_hist()
 
     sys.exit(0)

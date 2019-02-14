@@ -16,7 +16,6 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 spz_results_dir = massive_figures_dir + 'spz_run_jan2019/'
 zp_results_dir = massive_figures_dir + 'photoz_run_jan2019/'
-zg_results_dir = massive_figures_dir + 'grismz_run_jan2019/'
 
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import mocksim_results as mr
@@ -159,6 +158,139 @@ def get_plotting_arrays():
 
     return all_ids, all_fields, zs, zspz, eazy_redshift, all_d4000
 
+def plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, zs_for_zspz, \
+    mean_eazy, nmad_eazy, mean_zspz, nmad_zspz, d4000_low, d4000_high, outlier_frac_eazy, outlier_frac_spz):
+
+    # Define figure
+    fig = plt.figure(figsize=(8, 4))
+    gs = gridspec.GridSpec(10,28)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.0, hspace=0.3)
+
+    # Put axes on grid
+    ax1 = fig.add_subplot(gs[:7, :12])
+    ax2 = fig.add_subplot(gs[7:, :12])
+
+    ax3 = fig.add_subplot(gs[:7, 16:])
+    ax4 = fig.add_subplot(gs[7:, 16:])
+
+    # Plot stuff
+    ax1.plot(zs_for_eazy, eazy_z, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax2.plot(zs_for_eazy, resid_eazy, 'o', markersize=2, color='k', markeredgecolor='k')
+
+    ax3.plot(zs_for_zspz, zspz, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax4.plot(zs_for_zspz, resid_zspz, 'o', markersize=2, color='k', markeredgecolor='k')
+
+    # Limits
+    ax1.set_xlim(0.6, 1.24)
+    ax1.set_ylim(0.6, 1.24)
+
+    ax2.set_xlim(0.6, 1.24)
+    ax2.set_ylim(-0.15, 0.15)
+
+    ax3.set_xlim(0.6, 1.24)
+    ax3.set_ylim(0.6, 1.24)
+
+    ax4.set_xlim(0.6, 1.24)
+    ax4.set_ylim(-0.15, 0.15)
+
+    # Other lines on plot
+    ax2.axhline(y=0.0, ls='--', color='gray')
+    ax4.axhline(y=0.0, ls='--', color='gray')
+
+    linearr = np.arange(0.5, 1.3, 0.001)
+    ax1.plot(linearr, linearr, ls='--', color='darkblue')
+    ax3.plot(linearr, linearr, ls='--', color='darkblue')
+
+    ax2.axhline(y=mean_eazy, ls='-', color='darkblue')
+    ax2.axhline(y=mean_eazy + nmad_eazy, ls='-', color='red')
+    ax2.axhline(y=mean_eazy - nmad_eazy, ls='-', color='red')
+
+    ax4.axhline(y=mean_zspz, ls='-', color='darkblue')
+    ax4.axhline(y=mean_zspz + nmad_zspz, ls='-', color='red')
+    ax4.axhline(y=mean_zspz - nmad_zspz, ls='-', color='red')
+
+    # Make tick labels larger
+    ax1.set_xticklabels(ax1.get_xticks().tolist(), size=10)
+    ax1.set_yticklabels(ax1.get_yticks().tolist(), size=10)
+
+    ax2.set_xticklabels(ax2.get_xticks().tolist(), size=10)
+    ax2.set_yticklabels(ax2.get_yticks().tolist(), size=10)
+
+    ax3.set_xticklabels(ax3.get_xticks().tolist(), size=10)
+    ax3.set_yticklabels(ax3.get_yticks().tolist(), size=10)
+
+    ax4.set_xticklabels(ax4.get_xticks().tolist(), size=10)
+    ax4.set_yticklabels(ax4.get_yticks().tolist(), size=10)
+
+    # Get rid of Xaxis tick labels on top subplot
+    ax1.set_xticklabels([])
+    ax3.set_xticklabels([])
+
+    # Minor ticks
+    ax1.minorticks_on()
+    ax2.minorticks_on()
+    ax3.minorticks_on()
+    ax4.minorticks_on()
+
+    # Axis labels
+    ax1.set_ylabel(r'$\mathrm{z_{eazy}}$', fontsize=13)
+    ax2.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=13)
+    ax2.set_ylabel(r'$\mathrm{(z_{eazy} - z_{s}) / (1+z_{s})}$', fontsize=13)
+
+    ax3.set_ylabel(r'$\mathrm{z_{spz}}$', fontsize=13)
+    ax4.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=13)
+    ax4.set_ylabel(r'$\mathrm{(z_{spz} - z_{s}) / (1+z_{s})}$', fontsize=13)
+
+    # Text on figures
+    """
+    ax1.text(0.00, 1.14, 'EAZY SPZ' + '\n' + 'GN: Grism+5-Phot' + r'$\ \ \ \ \ \ $' + 'GS: Grism+8-Phot', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=12)
+
+    ax3.text(0.00, 1.14, 'SPZ, this paper' + '\n' + 'GN+S: Grism+12-Phot', \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=12)
+    """
+
+    # print D4000 range
+    ax1.text(0.45, 0.11, "{:.1f}".format(d4000_low) + r"$\, \leq \mathrm{D4000} < \,$" + "{:.1f}".format(d4000_high), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=15)
+
+    # print N, mean, nmad, outlier frac
+    ax1.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_eazy)), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=12)
+    ax1.text(0.04, 0.89, r'${\left< \Delta \right>}_{\mathrm{EAZY-z}} = $' + mr.convert_to_sci_not(mean_eazy), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=12)
+    ax1.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{EAZY-z}} = $' + mr.convert_to_sci_not(nmad_eazy), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=12)
+    ax1.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_eazy)), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=12)
+
+    ax3.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_zspz)), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=12)
+    ax3.text(0.04, 0.89, r'${\left< \Delta \right>}_{\mathrm{SPZ}} = $' + mr.convert_to_sci_not(mean_zspz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=12)
+    ax3.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{SPZ}} = $' + mr.convert_to_sci_not(nmad_zspz), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=12)
+    ax3.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_spz)), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=12)
+
+    # save figure and close
+    fig.savefig(massive_figures_dir + 'eazy_spz_comp_' + \
+        str(d4000_low).replace('.','p') + 'to' + str(d4000_high).replace('.','p') + '.pdf', \
+        dpi=300, bbox_inches='tight')
+
+    return None
+
 def main():
 
     ids, fields, zs, zspz, eazy_z, d4000 = get_plotting_arrays()
@@ -171,7 +303,7 @@ def main():
     assert len(ids) == len(d4000)
 
     # Cut on D4000
-    d4000_low = 1.6
+    d4000_low = 1.1
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
@@ -231,7 +363,8 @@ def main():
     print "\n", "Outlier fraction for EAZY-z:", outlier_frac_eazy
     print "Outlier fraction for SPZ:", outlier_frac_spz
 
-    plot_eazy_spz_comparison()
+    plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, zs_for_zspz, \
+    mean_eazy, nmad_eazy, mean_zspz, nmad_zspz, d4000_low, d4000_high, outlier_frac_eazy, outlier_frac_spz)
 
     return None
 

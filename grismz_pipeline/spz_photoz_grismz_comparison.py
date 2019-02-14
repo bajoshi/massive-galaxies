@@ -385,7 +385,7 @@ def get_arrays_to_plot():
 
 def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
     mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
-    d4000_low, d4000_high):
+    d4000_low, d4000_high, outlier_frac_zp, outlier_frac_zg, outlier_frac_spz):
 
     # Define figure
     fig = plt.figure(figsize=(10, 4))
@@ -417,19 +417,19 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax1.set_ylim(0.6, 1.24)
 
     ax2.set_xlim(0.6, 1.24)
-    ax2.set_ylim(-0.2, 0.2)
+    ax2.set_ylim(-0.15, 0.15)
 
     ax3.set_xlim(0.6, 1.24)
     ax3.set_ylim(0.6, 1.24)
 
     ax4.set_xlim(0.6, 1.24)
-    ax4.set_ylim(-0.2, 0.2)
+    ax4.set_ylim(-0.15, 0.15)
 
     ax5.set_xlim(0.6, 1.24)
     ax5.set_ylim(0.6, 1.24)
 
     ax6.set_xlim(0.6, 1.24)
-    ax6.set_ylim(-0.2, 0.2)
+    ax6.set_ylim(-0.15, 0.15)
 
     # Other lines on plot
     ax2.axhline(y=0.0, ls='--', color='gray')
@@ -514,6 +514,9 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax1.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{Photo-z}} = $' + mr.convert_to_sci_not(nmad_zphot), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=12)
+    ax1.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_zp)), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax1.transAxes, color='k', size=12)
 
     ax3.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_zg)), \
     verticalalignment='top', horizontalalignment='left', \
@@ -522,6 +525,9 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     verticalalignment='top', horizontalalignment='left', \
     transform=ax3.transAxes, color='k', size=12)
     ax3.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{Grism-z}} = $' + mr.convert_to_sci_not(nmad_zgrism), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax3.transAxes, color='k', size=12)
+    ax3.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_zg)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax3.transAxes, color='k', size=12)
 
@@ -534,6 +540,9 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax5.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{SPZ}} = $' + mr.convert_to_sci_not(nmad_zspz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax5.transAxes, color='k', size=12)
+    ax5.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_spz)), \
+    verticalalignment='top', horizontalalignment='left', \
+    transform=ax5.transAxes, color='k', size=12)
 
     # save figure and close
     fig.savefig(massive_figures_dir + 'spz_comp_photoz_' + \
@@ -544,7 +553,6 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
 
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, netsig, imag = get_arrays_to_plot()
-    sys.exit(0)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -558,8 +566,8 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.1
-    d4000_high = 2.0
+    d4000_low = 1.4
+    d4000_high = 1.6
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
@@ -580,13 +588,12 @@ def main():
 
     # Estimate accurate fraction for paper
     # This is only to be done for the full D4000 range
-    do_frac = True
+    do_frac = False
     if do_frac:
         two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
         print len(two_percent_idx), len(resid_zspz)
         f_acc = len(two_percent_idx) / len(resid_zspz)
         print "Fraction of SPZ redshift galaxies with accuracy at 2% or better:", f_acc
-        sys.exit(0)
 
     # Make sure they are finite
     valid_idx1 = np.where(np.isfinite(resid_zp))[0]
@@ -670,7 +677,7 @@ def main():
 
     make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
         mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
-        d4000_low, d4000_high)
+        d4000_low, d4000_high, outlier_frac_zp, outlier_frac_zg, outlier_frac_spz)
 
     return None
 
