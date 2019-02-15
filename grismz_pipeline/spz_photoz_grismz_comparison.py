@@ -4,6 +4,7 @@ import numpy as np
 from astropy.stats import mad_std
 from scipy.integrate import simps
 from scipy.interpolate import griddata
+from scipy.optimize import curve_fit
 
 import os
 import sys
@@ -385,9 +386,13 @@ def get_arrays_to_plot():
     return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
     np.array(all_d4000_list), np.array(all_d4000_err_list), np.array(all_netsig_list), np.array(imag_list)
 
+def line_func(x, slope, intercept):
+    return slope*x + intercept
+
 def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
     mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
-    d4000_low, d4000_high, outlier_frac_zp, outlier_frac_zg, outlier_frac_spz):
+    d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
+    outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz):
 
     # Define figure
     fig = plt.figure(figsize=(10, 4))
@@ -406,13 +411,19 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
 
     # Plot stuff
     ax1.plot(zs_for_zp, zp, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax1.scatter(zs_for_zp[outlier_idx_zp], zp[outlier_idx_zp], s=20, facecolor='white', edgecolors='gray', zorder=5)
     ax2.plot(zs_for_zp, resid_zp, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax2.scatter(zs_for_zp[outlier_idx_zp], resid_zp[outlier_idx_zp], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     ax3.plot(zs_for_zg, zg, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax3.scatter(zs_for_zg[outlier_idx_zg], zg[outlier_idx_zg], s=20, facecolor='white', edgecolors='gray', zorder=5)
     ax4.plot(zs_for_zg, resid_zg, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax4.scatter(zs_for_zg[outlier_idx_zg], resid_zg[outlier_idx_zg], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     ax5.plot(zs_for_zspz, zspz, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax5.scatter(zs_for_zspz[outlier_idx_zspz], zspz[outlier_idx_zspz], s=20, facecolor='white', edgecolors='gray', zorder=5)
     ax6.plot(zs_for_zspz, resid_zspz, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax6.scatter(zs_for_zspz[outlier_idx_zspz], resid_zspz[outlier_idx_zspz], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     # Limits
     ax1.set_xlim(0.6, 1.24)
@@ -438,10 +449,32 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax4.axhline(y=0.0, ls='--', color='gray')
     ax6.axhline(y=0.0, ls='--', color='gray')
 
-    linearr = np.arange(0.5, 1.3, 0.001)
-    ax1.plot(linearr, linearr, ls='--', color='darkblue')
-    ax3.plot(linearr, linearr, ls='--', color='darkblue')
-    ax5.plot(linearr, linearr, ls='--', color='darkblue')
+    # do the fit with scipy
+    popt_zp, pcov_zp = curve_fit(line_func, zs_for_zp, zp, p0=[1.0, 0.6])
+    popt_zg, pcov_zg = curve_fit(line_func, zs_for_zg, zg, p0=[1.0, 0.6])
+    popt_zspz, pcov_zspz = curve_fit(line_func, zs_for_zspz, zspz, p0=[1.0, 0.6])
+
+    # plot line fit
+    x_plot = np.arange(0.2,1.5,0.01)
+
+    zp_mean_line = line_func(x_plot, popt_zp[0], popt_zp[1])
+    zg_mean_line = line_func(x_plot, popt_zg[0], popt_zg[1])
+    zspz_mean_line = line_func(x_plot, popt_zspz[0], popt_zspz[1])
+
+    ax1.plot(x_plot, x_plot, '-', color='g')
+    ax1.plot(x_plot, zp_mean_line, '--', color='darkblue')
+    ax1.plot(zs_for_zp, (1+nmad_zphot)*zs_for_zp + nmad_zphot, ls='--', color='red')
+    ax1.plot(zs_for_zp, (1-nmad_zphot)*zs_for_zp - nmad_zphot, ls='--', color='red')
+
+    ax3.plot(x_plot, x_plot, '-', color='g')
+    ax3.plot(x_plot, zg_mean_line, '--', color='darkblue')
+    ax3.plot(zs_for_zg, (1+nmad_zgrism)*zs_for_zg + nmad_zgrism, ls='--', color='red')
+    ax3.plot(zs_for_zg, (1-nmad_zgrism)*zs_for_zg - nmad_zgrism, ls='--', color='red')
+
+    ax5.plot(x_plot, x_plot, '-', color='g')
+    ax5.plot(x_plot, zspz_mean_line, '--', color='darkblue')
+    ax5.plot(zs_for_zspz, (1+nmad_zspz)*zs_for_zspz + nmad_zspz, ls='--', color='red')
+    ax5.plot(zs_for_zspz, (1-nmad_zspz)*zs_for_zspz - nmad_zspz, ls='--', color='red')
 
     ax2.axhline(y=mean_zphot, ls='-', color='darkblue')
     ax2.axhline(y=mean_zphot + nmad_zphot, ls='-', color='red')
@@ -542,7 +575,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax5.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{SPZ}} = $' + mr.convert_to_sci_not(nmad_zspz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax5.transAxes, color='k', size=12)
-    ax5.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_spz)), \
+    ax5.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_zspz)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax5.transAxes, color='k', size=12)
 
@@ -569,8 +602,8 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.6
-    d4000_high = 2.0
+    d4000_low = 1.1
+    d4000_high = 1.2
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
@@ -607,52 +640,38 @@ def main():
     valid_idx2 = np.where(np.isfinite(resid_zg))[0]
     valid_idx3 = np.where(np.isfinite(resid_zspz))[0]
 
-    # Remove catastrophic failures
-    # i.e. only choose the valid ones
-    catas_fail_thresh = 0.1
-    no_catas_fail1 = np.where(abs(resid_zp) <= catas_fail_thresh)[0]
-    no_catas_fail2 = np.where(abs(resid_zg) <= catas_fail_thresh)[0]
-    no_catas_fail3 = np.where(abs(resid_zspz) <= catas_fail_thresh)[0]
-
-    outlier_frac_zp = len(np.where(abs(resid_zp) > catas_fail_thresh)[0]) / len(valid_idx1)
-    outlier_frac_zg = len(np.where(abs(resid_zg) > catas_fail_thresh)[0]) / len(valid_idx2)
-    outlier_frac_spz = len(np.where(abs(resid_zspz) > catas_fail_thresh)[0]) / len(valid_idx3)
-
     # apply cut on netsig
     netsig_thresh = 10
     valid_idx_ns = np.where(netsig > netsig_thresh)[0]
     print len(valid_idx_ns), "out of", len(netsig), "galaxies pass NetSig cut of", netsig_thresh
 
     # Apply indices
-    valid_idx_zp = reduce(np.intersect1d, (valid_idx1, no_catas_fail1))
-    resid_zp = resid_zp[valid_idx_zp]
-    zp = zp[valid_idx_zp]
-    zs_for_zp = zs[valid_idx_zp]
+    #valid_idx_zp = reduce(np.intersect1d, (valid_idx1, no_catas_fail1))
+    resid_zp = resid_zp[valid_idx1]
+    zp = zp[valid_idx1]
+    zs_for_zp = zs[valid_idx1]
 
-    valid_idx_zg = reduce(np.intersect1d, (valid_idx2, no_catas_fail2))
-    resid_zg = resid_zg[valid_idx_zg]
-    zg = zg[valid_idx_zg]
-    zs_for_zg = zs[valid_idx_zg]
+    #valid_idx_zg = reduce(np.intersect1d, (valid_idx2, no_catas_fail2))
+    resid_zg = resid_zg[valid_idx2]
+    zg = zg[valid_idx2]
+    zs_for_zg = zs[valid_idx2]
 
-    valid_idx_zspz = reduce(np.intersect1d, (valid_idx3, no_catas_fail3))
-    resid_zspz = resid_zspz[valid_idx_zspz]
-    zspz = zspz[valid_idx_zspz]
-    zs_for_zspz = zs[valid_idx_zspz]
+    #valid_idx_zspz = reduce(np.intersect1d, (valid_idx3, no_catas_fail3))
+    resid_zspz = resid_zspz[valid_idx3]
+    zspz = zspz[valid_idx3]
+    zs_for_zspz = zs[valid_idx3]
 
-    print "Number of galaxies in photo-z plot:", len(valid_idx_zp)
-    print "Number of galaxies in grism-z plot:", len(valid_idx_zg)
-    print "Number of galaxies in SPZ plot:", len(valid_idx_zspz)
+    print "Number of galaxies in photo-z plot:", len(valid_idx1)
+    print "Number of galaxies in grism-z plot:", len(valid_idx2)
+    print "Number of galaxies in SPZ plot:", len(valid_idx3)
 
     # ---------
     """
     fig = plt.figure()
     ax = fig.add_subplot(111)
-
-    ax.scatter(d4000_resid[valid_idx_zspz], resid_zspz, s=4, color='k')
-
+    ax.scatter(d4000_resid[valid_idx3], resid_zspz, s=4, color='k')
     ax.axhline(y=0.0, ls='--')
     ax.set_ylim(-0.1, 0.1)
-
     plt.show()
     sys.exit(0)
     """
@@ -676,13 +695,26 @@ def main():
     "{:.3f}".format(mean_zgrism), "{:.3f}".format(std_zgrism), "{:.3f}".format(nmad_zgrism)
     print "Mean, std dev, and Sigma_NMAD for residuals for SPZs:", \
     "{:.3f}".format(mean_zspz), "{:.3f}".format(std_zspz), "{:.3f}".format(nmad_zspz)
+
+    # Compute catastrophic failures
+    # i.e., How many galaxies are outside +-3-sigma given the sigma above?
+    # Photo-z
+    outlier_idx_zp = np.where(abs(resid_zp) > 3*nmad_zphot)[0]
+    outlier_idx_zg = np.where(abs(resid_zg) > 3*nmad_zgrism)[0]
+    outlier_idx_zspz = np.where(abs(resid_zspz) > 3*nmad_zspz)[0]
+
+    outlier_frac_zp = len(outlier_idx_zp) / len(resid_zp)
+    outlier_frac_zg = len(outlier_idx_zg) / len(resid_zg)
+    outlier_frac_zspz = len(outlier_idx_zspz) / len(resid_zspz)
+
     print "Outlier fraction for Photo-z:", outlier_frac_zp
     print "Outlier fraction for Grism-z:", outlier_frac_zg
-    print "Outlier fraction for SPZ:", outlier_frac_spz
+    print "Outlier fraction for SPZ:", outlier_frac_zspz
 
     make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
         mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
-        d4000_low, d4000_high, outlier_frac_zp, outlier_frac_zg, outlier_frac_spz)
+        d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
+        outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz)
 
     return None
 

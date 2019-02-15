@@ -115,6 +115,10 @@ def make_d4000_vs_redshift_plot():
     d4000_pears_plot = d4000_arr
     d4000_err_pears_plot = d4000_err_arr
 
+    # Add a constant "calibration" error in quadrature to each D4000 error
+    #const_calib_err = 0.03
+    #d4000_err_pears_plot = np.sqrt(d4000_err_pears_plot**2 + const_calib_err**2)
+
     # First chuck the really high D4000 errors 
     # Since I found out after making the D4000 error histogram
     # that only 8 galaxies have an error > 0.5.
@@ -143,6 +147,7 @@ def make_d4000_vs_redshift_plot():
 
     ax1.axhline(y=1, linewidth=2, linestyle='--', color='g', zorder=10)
     ax_res.axhline(y=0.0, linewidth=2, linestyle='--', color='g')
+    ax_res.axhline(y=3.0, linewidth=2, linestyle='-.', color='g')
 
     # Plot average error bar for points below D4000 = 1.3
     d4000_1p3_idx = np.where(d4000_pears_plot < 1.3)[0]
@@ -168,7 +173,7 @@ def make_d4000_vs_redshift_plot():
 
     c = ax_res.scatter(redshift_pears_plot, d4000_resid, s=20, facecolor='None', c=d4000_pears_plot, vmin=vmin_level, vmax=vmax_level, cmap='inferno')
     # add colorbar inside figure
-    cbaxes = inset_axes(ax_res, width='3%', height='75%', loc=7, bbox_to_anchor=[-0.06, 0.05, 1, 1], bbox_transform=ax_res.transAxes)
+    cbaxes = inset_axes(ax_res, width='3%', height='75%', loc=7, bbox_to_anchor=[-0.06, 0.06, 1, 1], bbox_transform=ax_res.transAxes)
     cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
     #cb.ax_res.get_children()[0].set_linewidths(10.0)
     cb.ax.set_ylabel(r'$\mathrm{D4000}$', fontsize=14, labelpad=-9)
@@ -177,6 +182,9 @@ def make_d4000_vs_redshift_plot():
     print len(d4000_3sigma), "out of", len(d4000_resid), "galaxies have D4000 measured at 3-sigma or better."
     print "Mean \"sigma\" level for galaxies with D4000<1.3:", np.mean(abs(d4000_resid[d4000_1p3_idx]))
     print "Mean \"sigma\" level for galaxies with D4000>=1.6:", np.mean(abs(d4000_resid[d4000_1p6_idx]))
+
+    five_sig_idx = np.where(abs(d4000_resid >= 5.0))[0]
+    print "Mean D4000 value for galaxies which have D4000 measurement at 5sigma or higher:", np.mean(d4000_pears_plot[five_sig_idx])
 
     # labels and grid
     ax1.set_ylabel(r'$\mathrm{D}4000$', fontsize=15)
@@ -202,6 +210,7 @@ def make_d4000_vs_redshift_plot():
     ax1.set_ylim(0.5, 2.05)
 
     ax_res.set_ylim(-2, 15)
+    ax_res.set_yticks(np.arange(-2, 16, 2))
     ax_res.set_xlim(0.55, 1.35)
 
     ax2.set_xlabel(r'$\mathrm{Time\ since\ Big\ Bang\ (Gyr)}$', fontsize=15)
