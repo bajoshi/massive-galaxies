@@ -445,9 +445,9 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax6.set_ylim(-0.15, 0.15)
 
     # Other lines on plot
-    ax2.axhline(y=0.0, ls='--', color='gray')
-    ax4.axhline(y=0.0, ls='--', color='gray')
-    ax6.axhline(y=0.0, ls='--', color='gray')
+    ax2.axhline(y=0.0, ls='-', color='gray')
+    ax4.axhline(y=0.0, ls='-', color='gray')
+    ax6.axhline(y=0.0, ls='-', color='gray')
 
     # do the fit with scipy
     popt_zp, pcov_zp = curve_fit(line_func, zs_for_zp, zp, p0=[1.0, 0.6])
@@ -461,32 +461,32 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     zg_mean_line = line_func(x_plot, popt_zg[0], popt_zg[1])
     zspz_mean_line = line_func(x_plot, popt_zspz[0], popt_zspz[1])
 
-    ax1.plot(x_plot, x_plot, '-', color='g')
-    ax1.plot(x_plot, zp_mean_line, '--', color='darkblue')
-    ax1.plot(zs_for_zp, (1+nmad_zphot)*zs_for_zp + nmad_zphot, ls='--', color='red')
-    ax1.plot(zs_for_zp, (1-nmad_zphot)*zs_for_zp - nmad_zphot, ls='--', color='red')
+    ax1.plot(x_plot, x_plot, '-', color='gray')
+    ax1.plot(x_plot, zp_mean_line, '--', color='darkblue', lw=1)
+    ax1.plot(x_plot, (1+nmad_zphot)*popt_zp[0]*x_plot + nmad_zphot + popt_zp[1], ls='--', color='red', lw=1)
+    ax1.plot(x_plot, (1-nmad_zphot)*popt_zp[0]*x_plot - nmad_zphot + popt_zp[1], ls='--', color='red', lw=1)
 
-    ax3.plot(x_plot, x_plot, '-', color='g')
-    ax3.plot(x_plot, zg_mean_line, '--', color='darkblue')
-    ax3.plot(zs_for_zg, (1+nmad_zgrism)*zs_for_zg + nmad_zgrism, ls='--', color='red')
-    ax3.plot(zs_for_zg, (1-nmad_zgrism)*zs_for_zg - nmad_zgrism, ls='--', color='red')
+    ax3.plot(x_plot, x_plot, '-', color='gray')
+    ax3.plot(x_plot, zg_mean_line, '--', color='darkblue', lw=1)
+    ax3.plot(x_plot, (1+nmad_zgrism)*popt_zg[0]*x_plot + nmad_zgrism + popt_zg[1], ls='--', color='red', lw=1)
+    ax3.plot(x_plot, (1-nmad_zgrism)*popt_zg[0]*x_plot - nmad_zgrism + popt_zg[1], ls='--', color='red', lw=1)
 
-    ax5.plot(x_plot, x_plot, '-', color='g')
-    ax5.plot(x_plot, zspz_mean_line, '--', color='darkblue')
-    ax5.plot(zs_for_zspz, (1+nmad_zspz)*zs_for_zspz + nmad_zspz, ls='--', color='red')
-    ax5.plot(zs_for_zspz, (1-nmad_zspz)*zs_for_zspz - nmad_zspz, ls='--', color='red')
+    ax5.plot(x_plot, x_plot, '-', color='gray')
+    ax5.plot(x_plot, zspz_mean_line, '--', color='darkblue', lw=1)
+    ax5.plot(x_plot, (1+nmad_zspz)*popt_zspz[0]*x_plot + nmad_zspz + popt_zspz[1], ls='--', color='red', lw=1)
+    ax5.plot(x_plot, (1-nmad_zspz)*popt_zspz[0]*x_plot - nmad_zspz + popt_zspz[1], ls='--', color='red', lw=1)
 
-    ax2.axhline(y=mean_zphot, ls='-', color='darkblue')
-    ax2.axhline(y=mean_zphot + nmad_zphot, ls='-', color='red')
-    ax2.axhline(y=mean_zphot - nmad_zphot, ls='-', color='red')
+    ax2.axhline(y=mean_zphot, ls='--', color='darkblue', lw=1)
+    ax2.axhline(y=mean_zphot + nmad_zphot, ls='--', color='red', lw=1)
+    ax2.axhline(y=mean_zphot - nmad_zphot, ls='--', color='red', lw=1)
 
-    ax4.axhline(y=mean_zgrism, ls='-', color='darkblue')
-    ax4.axhline(y=mean_zgrism + nmad_zgrism, ls='-', color='red')
-    ax4.axhline(y=mean_zgrism - nmad_zgrism, ls='-', color='red')
+    ax4.axhline(y=mean_zgrism, ls='--', color='darkblue', lw=1)
+    ax4.axhline(y=mean_zgrism + nmad_zgrism, ls='--', color='red', lw=1)
+    ax4.axhline(y=mean_zgrism - nmad_zgrism, ls='--', color='red', lw=1)
 
-    ax6.axhline(y=mean_zspz, ls='-', color='darkblue')
-    ax6.axhline(y=mean_zspz + nmad_zspz, ls='-', color='red')
-    ax6.axhline(y=mean_zspz - nmad_zspz, ls='-', color='red')
+    ax6.axhline(y=mean_zspz, ls='--', color='darkblue', lw=1)
+    ax6.axhline(y=mean_zspz + nmad_zspz, ls='--', color='red', lw=1)
+    ax6.axhline(y=mean_zspz - nmad_zspz, ls='--', color='red', lw=1)
 
     # Make tick labels larger
     ax1.set_xticklabels(ax1.get_xticks().tolist(), size=10)
@@ -603,7 +603,7 @@ def main():
 
     # Cut on D4000
     d4000_low = 1.1
-    d4000_high = 1.2
+    d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
