@@ -426,23 +426,23 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax6.scatter(zs_for_zspz[outlier_idx_zspz], resid_zspz[outlier_idx_zspz], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     # Limits
-    ax1.set_xlim(0.6, 1.24)
-    ax1.set_ylim(0.6, 1.24)
+    #ax1.set_xlim(0.6, 1.24)
+    #ax1.set_ylim(0.6, 1.24)
 
-    ax2.set_xlim(0.6, 1.24)
-    ax2.set_ylim(-0.15, 0.15)
+    #ax2.set_xlim(0.6, 1.24)
+    #ax2.set_ylim(-0.15, 0.15)
 
-    ax3.set_xlim(0.6, 1.24)
-    ax3.set_ylim(0.6, 1.24)
+    #ax3.set_xlim(0.6, 1.24)
+    #ax3.set_ylim(0.6, 1.24)
 
-    ax4.set_xlim(0.6, 1.24)
-    ax4.set_ylim(-0.15, 0.15)
+    #ax4.set_xlim(0.6, 1.24)
+    #ax4.set_ylim(-0.15, 0.15)
 
-    ax5.set_xlim(0.6, 1.24)
-    ax5.set_ylim(0.6, 1.24)
+    #ax5.set_xlim(0.6, 1.24)
+    #ax5.set_ylim(0.6, 1.24)
 
-    ax6.set_xlim(0.6, 1.24)
-    ax6.set_ylim(-0.15, 0.15)
+    #ax6.set_xlim(0.6, 1.24)
+    #ax6.set_ylim(-0.15, 0.15)
 
     # Other lines on plot
     ax2.axhline(y=0.0, ls='-', color='gray')
