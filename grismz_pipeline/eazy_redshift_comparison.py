@@ -184,17 +184,17 @@ def plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, 
     ax4.plot(zs_for_zspz, resid_zspz, 'o', markersize=2, color='k', markeredgecolor='k')
 
     # Limits
-    ax1.set_xlim(0.6, 1.24)
-    ax1.set_ylim(0.6, 1.24)
+    #ax1.set_xlim(0.6, 1.24)
+    #ax1.set_ylim(0.6, 1.24)
 
-    ax2.set_xlim(0.6, 1.24)
-    ax2.set_ylim(-0.15, 0.15)
+    #ax2.set_xlim(0.6, 1.24)
+    #ax2.set_ylim(-0.15, 0.15)
 
-    ax3.set_xlim(0.6, 1.24)
-    ax3.set_ylim(0.6, 1.24)
+    #ax3.set_xlim(0.6, 1.24)
+    #ax3.set_ylim(0.6, 1.24)
 
-    ax4.set_xlim(0.6, 1.24)
-    ax4.set_ylim(-0.15, 0.15)
+    #ax4.set_xlim(0.6, 1.24)
+    #ax4.set_ylim(-0.15, 0.15)
 
     # Other lines on plot
     ax2.axhline(y=0.0, ls='--', color='gray')
@@ -307,7 +307,7 @@ def main():
     assert len(ids) == len(d4000_err)
 
     # Cut on D4000
-    d4000_low = 1.6
+    d4000_low = 1.1
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
