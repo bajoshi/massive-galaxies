@@ -4,6 +4,7 @@ import numpy as np
 from astropy.stats import mad_std
 from scipy.integrate import simps
 from scipy.interpolate import griddata
+from scipy.optimize import curve_fit
 
 import os
 import sys
@@ -161,8 +162,12 @@ def get_plotting_arrays():
 
     return all_ids, all_fields, zs, zspz, eazy_redshift, all_d4000, all_d4000_err
 
+def line_func(x, slope, intercept):
+    return slope*x + intercept
+
 def plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, zs_for_zspz, \
-    mean_eazy, nmad_eazy, mean_zspz, nmad_zspz, d4000_low, d4000_high, outlier_frac_eazy, outlier_frac_spz):
+    mean_eazy, nmad_eazy, mean_zspz, nmad_zspz, d4000_low, d4000_high, \
+    outlier_idx_eazy, outlier_idx_zspz, outlier_frac_eazy, outlier_frac_zspz):
 
     # Define figure
     fig = plt.figure(figsize=(8, 4))
@@ -178,10 +183,14 @@ def plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, 
 
     # Plot stuff
     ax1.plot(zs_for_eazy, eazy_z, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax1.scatter(zs_for_eazy[outlier_idx_eazy], eazy_z[outlier_idx_eazy], s=20, facecolor='white', edgecolors='gray', zorder=5)
     ax2.plot(zs_for_eazy, resid_eazy, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax2.scatter(zs_for_eazy[outlier_idx_eazy], resid_eazy[outlier_idx_eazy], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     ax3.plot(zs_for_zspz, zspz, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax3.scatter(zs_for_zspz[outlier_idx_zspz], zspz[outlier_idx_zspz], s=20, facecolor='white', edgecolors='gray', zorder=5)
     ax4.plot(zs_for_zspz, resid_zspz, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax4.scatter(zs_for_zspz[outlier_idx_zspz], resid_zspz[outlier_idx_zspz], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     # Limits
     #ax1.set_xlim(0.6, 1.24)
@@ -197,12 +206,28 @@ def plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, 
     #ax4.set_ylim(-0.15, 0.15)
 
     # Other lines on plot
-    ax2.axhline(y=0.0, ls='--', color='gray')
-    ax4.axhline(y=0.0, ls='--', color='gray')
+    ax2.axhline(y=0.0, ls='-', color='gray')
+    ax4.axhline(y=0.0, ls='-', color='gray')
 
-    linearr = np.arange(0.5, 1.3, 0.001)
-    ax1.plot(linearr, linearr, ls='--', color='darkblue')
-    ax3.plot(linearr, linearr, ls='--', color='darkblue')
+    # do the fit with scipy
+    popt_eazy, pcov_eazy = curve_fit(line_func, zs_for_eazy, eazy_z, p0=[1.0, 0.6])
+    popt_zspz, pcov_zspz = curve_fit(line_func, zs_for_zspz, zspz, p0=[1.0, 0.6])
+
+    # plot line fit
+    x_plot = np.arange(0.2,1.5,0.01)
+
+    eazy_mean_line = line_func(x_plot, popt_eazy[0], popt_eazy[1])
+    zspz_mean_line = line_func(x_plot, popt_zspz[0], popt_zspz[1])
+
+    ax1.plot(x_plot, x_plot, '-', color='gray')
+    ax1.plot(x_plot, eazy_mean_line, '--', color='darkblue', lw=1)
+    ax1.plot(x_plot, (1+nmad_eazy)*popt_eazy[0]*x_plot + nmad_eazy + popt_eazy[1], ls='--', color='red', lw=1)
+    ax1.plot(x_plot, (1-nmad_eazy)*popt_eazy[0]*x_plot - nmad_eazy + popt_eazy[1], ls='--', color='red', lw=1)
+
+    ax3.plot(x_plot, x_plot, '-', color='gray')
+    ax3.plot(x_plot, zspz_mean_line, '--', color='darkblue', lw=1)
+    ax3.plot(x_plot, (1+nmad_zspz)*popt_zspz[0]*x_plot + nmad_zspz + popt_zspz[1], ls='--', color='red', lw=1)
+    ax3.plot(x_plot, (1-nmad_zspz)*popt_zspz[0]*x_plot - nmad_zspz + popt_zspz[1], ls='--', color='red', lw=1)
 
     ax2.axhline(y=mean_eazy, ls='-', color='darkblue')
     ax2.axhline(y=mean_eazy + nmad_eazy, ls='-', color='red')
@@ -283,7 +308,7 @@ def plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, 
     ax3.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{SPZ}} = $' + mr.convert_to_sci_not(nmad_zspz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax3.transAxes, color='k', size=12)
-    ax3.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_spz)), \
+    ax3.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_zspz)), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax3.transAxes, color='k', size=12)
 
@@ -327,28 +352,17 @@ def main():
     valid_idx1 = np.where(np.isfinite(resid_eazy))[0]
     valid_idx3 = np.where(np.isfinite(resid_zspz))[0]
 
-    # Remove catastrophic failures
-    # i.e. only choose the valid ones
-    catas_fail_thresh = 0.1
-    no_catas_fail1 = np.where(abs(resid_eazy) <= catas_fail_thresh)[0]
-    no_catas_fail3 = np.where(abs(resid_zspz) <= catas_fail_thresh)[0]
-
-    outlier_frac_eazy = len(np.where(abs(resid_eazy) > catas_fail_thresh)[0]) / len(valid_idx1)
-    outlier_frac_spz = len(np.where(abs(resid_zspz) > catas_fail_thresh)[0]) / len(valid_idx3)
-
     # Apply indices
-    valid_idx_eazy = reduce(np.intersect1d, (valid_idx1, no_catas_fail1))
-    resid_eazy = resid_eazy[valid_idx_eazy]
-    eazy_z = eazy_z[valid_idx_eazy]
-    zs_for_eazy = zs[valid_idx_eazy]
+    resid_eazy = resid_eazy[valid_idx1]
+    eazy_z = eazy_z[valid_idx1]
+    zs_for_eazy = zs[valid_idx1]
 
-    valid_idx_zspz = reduce(np.intersect1d, (valid_idx3, no_catas_fail3))
-    resid_zspz = resid_zspz[valid_idx_zspz]
-    zspz = zspz[valid_idx_zspz]
-    zs_for_zspz = zs[valid_idx_zspz]
+    resid_zspz = resid_zspz[valid_idx3]
+    zspz = zspz[valid_idx3]
+    zs_for_zspz = zs[valid_idx3]
 
-    print "\n", "Number of galaxies in EAZY-z plot:", len(valid_idx_eazy)
-    print "Number of galaxies in SPZ plot:", len(valid_idx_zspz)
+    print "\n", "Number of galaxies in EAZY-z plot:", len(valid_idx1)
+    print "Number of galaxies in SPZ plot:", len(valid_idx3)
 
     # Print info
     mean_eazy = np.mean(resid_eazy)
@@ -364,11 +378,20 @@ def main():
     print "Mean, std dev, and Sigma_NMAD for residuals for SPZs:", \
     "{:.3f}".format(mean_zspz), "{:.3f}".format(std_zspz), "{:.3f}".format(nmad_zspz)
 
+    # Compute catastrophic failures
+    # i.e., How many galaxies are outside +-3-sigma given the sigma above?
+    outlier_idx_eazy = np.where(abs(resid_eazy) > 3*nmad_eazy)[0]
+    outlier_idx_zspz = np.where(abs(resid_zspz) > 3*nmad_zspz)[0]
+
+    outlier_frac_eazy = len(outlier_idx_eazy) / len(resid_eazy)
+    outlier_frac_zspz = len(outlier_idx_zspz) / len(resid_zspz)
+
     print "\n", "Outlier fraction for EAZY-z:", outlier_frac_eazy
-    print "Outlier fraction for SPZ:", outlier_frac_spz
+    print "Outlier fraction for SPZ:", outlier_frac_zspz
 
     plot_eazy_spz_comparison(resid_eazy, resid_zspz, eazy_z, zs_for_eazy, zspz, zs_for_zspz, \
-    mean_eazy, nmad_eazy, mean_zspz, nmad_zspz, d4000_low, d4000_high, outlier_frac_eazy, outlier_frac_spz)
+    mean_eazy, nmad_eazy, mean_zspz, nmad_zspz, d4000_low, d4000_high, \
+    outlier_idx_eazy, outlier_idx_zspz, outlier_frac_eazy, outlier_frac_zspz)
 
     return None
 

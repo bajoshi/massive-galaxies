@@ -271,6 +271,17 @@ def make_d4000_vs_redshift_plot():
     # save the figure
     fig.savefig(massive_figures_dir + 'd4000_error_hist.pdf', dpi=300, bbox_inches='tight')
 
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    # ------------------------------------------------------
+    # Also plot the D4000 significance vs D4000
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    
+
     return None
 
 def make_d4000_hist():
