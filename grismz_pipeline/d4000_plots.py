@@ -280,7 +280,12 @@ def make_d4000_vs_redshift_plot():
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    
+    ax.plot(d4000_pears_plot, d4000_resid, 'o', color='k', markeredgecolor='k', markersize=2.5)
+
+    # Lbaels
+
+    # save the figure
+    fig.savefig(massive_figures_dir + 'd4000_vs_significance.pdf', dpi=300, bbox_inches='tight')
 
     return None
 
