@@ -294,7 +294,7 @@ def make_d4000_vs_redshift_plot():
     # add colorbar inside figure
     cbaxes = inset_axes(ax, width='3%', height='55%', loc=2, bbox_to_anchor=[0.02, -0.03, 1, 1], bbox_transform=ax.transAxes)
     cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
-    cb.ax.set_ylabel(r'$\mathrm{\left( \frac{z_{spz} - z_s}{1 + z_s} \right)}$', fontsize=14, rotation=0)
+    cb.ax.set_ylabel(r'$\mathrm{\left| \frac{z_{spz} - z_s}{1 + z_s} \right|}$', fontsize=14, rotation=0)
     # Default rotation for the y label of a vertical colorbar is 90
     # So I have to force it to be 0 to see it upright
 
@@ -312,6 +312,39 @@ def make_d4000_vs_redshift_plot():
 
     # save the figure
     fig.savefig(massive_figures_dir + 'd4000_vs_significance.pdf', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    # ------------------------------------------------------
+    # Also plot the D4000 significance vs redshift accuracy
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    c = ax.scatter(d4000_resid, zspz_acc, s=7, color='k')
+    # add colorbar inside figure
+    #cbaxes = inset_axes(ax, width='3%', height='55%', loc=2, bbox_to_anchor=[0.02, -0.03, 1, 1], bbox_transform=ax.transAxes)
+    #cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
+    #cb.ax.set_ylabel(r'$\mathrm{\left| \frac{z_{spz} - z_s}{1 + z_s} \right|}$', fontsize=14, rotation=0)
+    # Default rotation for the y label of a vertical colorbar is 90
+    # So I have to force it to be 0 to see it upright
+
+    # Lbaels
+    ax.set_xlabel(r'$\mathrm{\frac{D4000 - 1.0}{\sigma_{D4000}}}$')
+    ax.set_ylabel(r'$\mathrm{\left| \frac{z_{spz} - z_s}{1 + z_s} \right|}$')
+
+    # Limits and ticks
+    ax.set_ylim(-0.15, 0.15)
+    ax.set_xlim(-2, 13)
+    ax.set_xticks(np.arange(-2, 15, 2))
+
+    # Horizontal and vertical lines
+    ax.axhline(y=0.0, ls='--', color='gray')
+    #ax.axvline(x=1.0, ls='--', color='gray')
+
+    # save the figure
+    fig.savefig(massive_figures_dir + 'z_acc_vs_significance.pdf', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()

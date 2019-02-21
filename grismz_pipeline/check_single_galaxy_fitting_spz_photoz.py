@@ -51,7 +51,7 @@ def makefig():
     # ---------- labels ---------- #
     ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA^{-1}]}$', fontsize=14)
     ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$', fontsize=15)
-    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - f^{mod}_\lambda}{f^{obs;err}_\lambda}}$', fontsize=14)
+    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - \alpha f^{mod}_\lambda}{f^{obs;err}_\lambda}}$', fontsize=14)
 
     return fig, ax1, ax2
 
@@ -368,7 +368,7 @@ def plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     high_zp_err = upper_zp_lim - zp
 
     ax1.text(0.75, 0.35, \
-    r'$\mathrm{z_{spz;best}\, =\, }$' + "{:.4}".format(zg) + \
+    r'$\mathrm{z_{grism;best}\, =\, }$' + "{:.4}".format(zg) + \
     r'$\substack{+$' + "{:.3}".format(high_zg_err) + r'$\\ -$' + "{:.3}".format(low_zg_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=10)
@@ -525,7 +525,7 @@ def get_photometry_best_fit_model(redshift, model_idx, phot_fin_idx, all_model_f
 
     return all_filt_flam_bestmodel
 
-def get_zpeak(obj_id, obj_field, redshift_type):
+def get_zpeak_and_err(obj_id, obj_field, redshift_type):
 
     if redshift_type == 'photo-z':
         results_dir = savedir_photoz
@@ -541,7 +541,10 @@ def get_zpeak(obj_id, obj_field, redshift_type):
     zarr = np.load(results_dir + str(obj_field) + '_' + str(obj_id) + '_' + redshift_str + '_z_arr.npy')
     z_peak = zarr[np.argmax(pz)]
 
-    return z_peak
+    # Get errors
+    zerr_low, zerr_high = comp.get_z_errors(zarr, pz)
+
+    return z_peak, zerr_low, zerr_high
 
 def main():
     # Start time
@@ -552,8 +555,8 @@ def main():
     # ------------------------------- Give galaxy data here ------------------------------- #
     # Only needs the ID and the field
     # And flag to modify LSF
-    current_id = 17495
-    current_field = 'GOODS-S'
+    current_id = 28271
+    current_field = 'GOODS-N'
     modify_lsf = True
 
     # ------------------------------- Get correct directories ------------------------------- #
@@ -857,26 +860,28 @@ def main():
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-        use_broadband=False, single_galaxy=False, for_loop_method='parallel')
+        use_broadband=False, single_galaxy=False, for_loop_method='sequential')
 
-    #comp.get_z_errors()
-    print zp, zp_zerr_low, zp_zerr_up
-    print zspz, zspz_zerr_low, zspz_zerr_up
-    print zg, zg_zerr_low, zg_zerr_up
+    # ------------- Get z and errors ------------- #
+    # Only works if you've used the full redshift grid i.e., np.arange(0.3, 1.5, 0.01)
+    #zp, zp_zerr_low, zp_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='photo-z')
+    #zg, zg_zerr_low, zg_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='grism-z')
+    #zspz, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='spz')
 
+    # ------------- Print results------------- #
     print "\n", "Results:"
     print "Ground-based spectroscopic redshift:", current_specz
 
     print "\n", "Photometric redshift from min chi2:", "{:.3f}".format(zp_minchi2)
-    print "Photometric redshift from peak of p(z) curve:", get_zpeak(current_id, current_field, redshift_type='photo-z')
+    print "Photometric redshift from peak of p(z) curve:", zp
     print "Weighted photometric redshift:", "{:.3f}".format(zp)
 
     print "\n", "Grism redshift from min chi2:", "{:.3f}".format(zg_minchi2)
-    print "Grism redshift from peak of p(z) curve:", get_zpeak(current_id, current_field, redshift_type='grism-z')
+    print "Grism redshift from peak of p(z) curve:", zg
     print "Weighted Grism redshift:", "{:.3f}".format(zg)
 
     print "\n", "SPZ from min chi2:", "{:.3f}".format(zspz_minchi2)
-    print "SPZ from peak of p(z) curve:", get_zpeak(current_id, current_field, redshift_type='spz')
+    print "SPZ from peak of p(z) curve:", zspz
     print "Weighted SPZ:", "{:.3f}".format(zspz)
 
     print "\n", "Time taken up to now--", str("{:.2f}".format(time.time() - start)), "seconds."

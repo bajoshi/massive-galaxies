@@ -550,6 +550,11 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
         print "Min chi2 for redshift:", min(chi2_)
 
+        print chi2_, chi2_.shape, min(chi2_)
+        alpha_idx = np.argmin(chi2_)
+        print alpha_, alpha_.shape, alpha_[alpha_idx]
+        print model_spec_in_objlamgrid.shape
+
     # This following block is useful for debugging.
     # Do not delete. Simply uncomment it if you don't need it.
     """
@@ -727,7 +732,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         savedir_grismz = massive_figures_dir + 'grismz_run_jan2019/'  # Required to save p(z) curve and z_arr
 
     # Set up redshift grid to check
-    z_arr_to_check = np.arange(0.3, 1.5, 0.01)
+    z_arr_to_check = np.arange(0.56, 0.66, 0.01) # np.arange(0.3, 1.5, 0.01)
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
@@ -787,6 +792,11 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
+    print "\n"
+    print chi2
+    print chi2.shape
+    print sortargs
+    print chi2.ravel()[sortargs[:10]]
 
     for k in range(len(chi2.ravel())):
 
@@ -835,7 +845,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
             # even if the loop is broken out of in the first iteration.
             break
 
-    print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
+    print "Minimum chi2 from sorted indices:", "{:.4}".format(chi2[min_idx_2d])
+    print "Minimum chi2 from np.min():", "{:.4}".format(np.min(chi2))
     z_grism = z_arr_to_check[min_idx_2d[0]]
 
     print "Current best fit log(age [yr]):", "{:.4}".format(age)
