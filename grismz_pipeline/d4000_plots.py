@@ -23,6 +23,7 @@ sys.path.append(massive_galaxies_dir + 'codes/')
 import mag_hist as mh
 import new_refine_grismz_gridsearch_parallel as ngp
 import dn4000_catalog as dc
+import spz_photoz_grismz_comparison as comp
 
 def get_all_arrays():
 
@@ -92,10 +93,12 @@ def get_all_arrays():
 def make_d4000_vs_redshift_plot():
 
     #redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
+    #ids, fields, redshift_arr, zp, zg, zspz, d4000_arr, d4000_err_arr, netsig, imag = comp.get_arrays_to_plot()
 
     redshift_arr = np.load(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy')
     d4000_arr = np.load(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy')
     d4000_err_arr = np.load(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy')
+    zspz = np.load(massive_figures_dir + 'zspz_for_d4000_plots.npy')
 
     # Only consider finite elements
     # I don't seem to need this for the new final sample 
@@ -115,6 +118,9 @@ def make_d4000_vs_redshift_plot():
     d4000_pears_plot = d4000_arr
     d4000_err_pears_plot = d4000_err_arr
 
+    d4000_resid = (d4000_pears_plot - 1.0) / d4000_err_pears_plot
+    zspz_acc = (zspz - redshift_pears_plot) / (1 + redshift_pears_plot)
+
     # Add a constant "calibration" error in quadrature to each D4000 error
     #const_calib_err = 0.03
     #d4000_err_pears_plot = np.sqrt(d4000_err_pears_plot**2 + const_calib_err**2)
@@ -126,6 +132,8 @@ def make_d4000_vs_redshift_plot():
     redshift_pears_plot = redshift_pears_plot[valid_err_idx]
     d4000_pears_plot = d4000_pears_plot[valid_err_idx]
     d4000_err_pears_plot = d4000_err_pears_plot[valid_err_idx]
+    d4000_resid = d4000_resid[valid_err_idx]
+    zspz_acc = zspz_acc[valid_err_idx]
 
     # ------------------------------- Actual plotting ------------------------------- #
     # d4000 vs redshift 
@@ -142,7 +150,6 @@ def make_d4000_vs_redshift_plot():
     ax1.errorbar(redshift_pears_plot, d4000_pears_plot, yerr=d4000_err_pears_plot,\
     fmt='.', color='k', markeredgecolor='k', capsize=0, markersize=2.5, elinewidth=0.1)
 
-    d4000_resid = (d4000_pears_plot - 1.0) / d4000_err_pears_plot
     #ax_res.plot(redshift_pears_plot, d4000_resid, 'o', markersize=2, color='k', markeredgecolor='k')
 
     ax1.axhline(y=1, linewidth=2, linestyle='--', color='g', zorder=10)
@@ -175,8 +182,8 @@ def make_d4000_vs_redshift_plot():
     # add colorbar inside figure
     cbaxes = inset_axes(ax_res, width='3%', height='75%', loc=7, bbox_to_anchor=[-0.06, 0.06, 1, 1], bbox_transform=ax_res.transAxes)
     cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
-    #cb.ax_res.get_children()[0].set_linewidths(10.0)
-    cb.ax.set_ylabel(r'$\mathrm{D4000}$', fontsize=14, labelpad=-9)
+    #cb.ax.get_children()[0].set_linewidths(10.0)
+    cb.ax.set_ylabel(r'$\mathrm{D4000}$', fontsize=14, labelpad=-9)  # This has to be cb.ax NOT cb.ax_res
 
     d4000_3sigma = np.where(d4000_resid >= 3.0)[0]
     print len(d4000_3sigma), "out of", len(d4000_resid), "galaxies have D4000 measured at 3-sigma or better."
@@ -280,12 +287,35 @@ def make_d4000_vs_redshift_plot():
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.plot(d4000_pears_plot, d4000_resid, 'o', color='k', markeredgecolor='k', markersize=2.5)
+    vmin_level = 0
+    vmax_level = 0.03
+
+    c = ax.scatter(d4000_pears_plot, d4000_resid, s=10, c=abs(zspz_acc), vmin=vmin_level, vmax=vmax_level, cmap='winter')
+    # add colorbar inside figure
+    cbaxes = inset_axes(ax, width='3%', height='55%', loc=2, bbox_to_anchor=[0.02, -0.03, 1, 1], bbox_transform=ax.transAxes)
+    cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
+    cb.ax.set_ylabel(r'$\mathrm{\left( \frac{z_{spz} - z_s}{1 + z_s} \right)}$', fontsize=14, rotation=0)
+    # Default rotation for the y label of a vertical colorbar is 90
+    # So I have to force it to be 0 to see it upright
 
     # Lbaels
+    ax.set_xlabel(r'$\mathrm{D4000}$')
+    ax.set_ylabel(r'$\mathrm{\frac{D4000 - 1.0}{\sigma_{D4000}}}$')
+
+    # Limits and ticks
+    ax.set_ylim(-2, 14)
+    ax.set_yticks(np.arange(-2, 15, 2))
+
+    # Horizontal and vertical lines
+    ax.axhline(y=0.0, ls='--', color='k')
+    ax.axvline(x=1.0, ls='--', color='k')
 
     # save the figure
     fig.savefig(massive_figures_dir + 'd4000_vs_significance.pdf', dpi=300, bbox_inches='tight')
+
+    plt.clf()
+    plt.cla()
+    plt.close()
 
     return None
 
@@ -396,11 +426,12 @@ def make_redshift_hist():
 if __name__ == '__main__':
 
     """
-    redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
+    ids, fields, redshift_arr, zp, zg, zspz, d4000_arr, d4000_err_arr, netsig, imag = comp.get_arrays_to_plot()
 
     np.save(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy', redshift_arr)
     np.save(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy', d4000_arr)
     np.save(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy', d4000_err_arr)
+    np.save(massive_figures_dir + 'zspz_for_d4000_plots.npy', zspz)
     """
     
     make_d4000_vs_redshift_plot()
