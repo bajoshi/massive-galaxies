@@ -337,6 +337,12 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
 
     # Get RA and DEC
     sample_idx = np.where((final_sample['pearsid'] == current_id) & (final_sample['field'] == current_field))[0]
+    if not sample_idx.size:
+    # Since it is possible that a match may not be found given that 
+    # I had included some galaxies originally which weren't supposed 
+    # to be in the final sample
+        return None
+
     current_ra = final_sample['ra'][sample_idx]
     current_dec = final_sample['dec'][sample_idx]
 
@@ -356,11 +362,6 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
 
     threed_ra = phot_cat_3dhst['ra']
     threed_dec = phot_cat_3dhst['dec']
-
-    print current_ra, current_dec
-    print threed_ra.shape, threed_dec.shape
-    print current_ra.shape, current_dec.shape
-    return
 
     # Now match
     ra_lim = 0.3/3600  # arcseconds in degrees

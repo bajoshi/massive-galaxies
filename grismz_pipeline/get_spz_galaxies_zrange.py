@@ -182,11 +182,15 @@ def get_sample_in_zrange():
             # You should be skipping any other redshifts from low-res grism data
             # There are some others that have G141 based redshifts but go by a 
             # different name in the specz catalog. I'm chucking those too.
+            reject_source_list = ['3D_HST', 'Morris_2015', 'PEARS_ETG', 'Pirzkal_2013', \
+            'GRAPES_HUDF', 'ePEARS_CDFS', 'ePEARS_HUDF', 'GRISM_HUDF']
+
             current_specz_source = spec_cat['catname'][spec_idx]
             if type(current_specz_source) is np.ndarray:
                 current_specz_source = current_specz_source[0]
-            if current_specz_source == '3D_HST' or current_specz_source == 'Morris_2015':
-                print "Grism based redshift in specz catalog. Skipping."
+
+            if current_specz_source in reject_source_list:
+                print "Not an emission line based redshift from the ground. Skipping."
                 continue
 
             current_specz_qual = spec_cat['z_qual'][spec_idx]
