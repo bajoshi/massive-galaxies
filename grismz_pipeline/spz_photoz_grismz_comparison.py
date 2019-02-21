@@ -276,9 +276,6 @@ def get_arrays_to_plot():
     zspz_low_bound = np.concatenate((zspz_low_bound_fl, zspz_low_bound_jt))
     zspz_high_bound = np.concatenate((zspz_high_bound_fl, zspz_high_bound_jt))
 
-    # Comment this print statement out if out don't want to actually print this list on paper
-    print "ID        Field      zspec    zphot    zg     zspz    NetSig    D4000   res_zphot    res_zspz    iABmag"
-
     # Read in master catalogs to get i-band mag
     # ------------------------------- Read PEARS cats ------------------------------- #
     pears_ncat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_north_master.cat', dtype=None,\
@@ -289,9 +286,16 @@ def get_arrays_to_plot():
     dec_offset_goodsn_v19 = 0.32/3600 # from GOODS ACS v2.0 readme
     pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
 
+    # Comment this print statement out if out don't want to actually print this list on paper
+    do_print = True
+    if do_print:
+        print "ID      Field      zspec    zphot    zg     zspz    NetSig    D4000   res_zphot    res_zgrism    res_zspz    iABmag"
+
     for i in range(len(all_ids)):
         current_id = all_ids[i]
         current_field = all_fields[i]
+
+        print current_id, current_field
 
         # check if it is an emission line galaxy. If it is then skip
         # Be carreful changing this check. I think it is correct as it is.
@@ -343,9 +347,8 @@ def get_arrays_to_plot():
         all_netsig_list.append(netsig_chosen)
         imag_list.append(current_imag)
 
-        do_print = False
         if do_print:
-            if d4000 >= 1.1 and d4000 < 1.3:
+            if zg[i]<=0.5:
                 # Some formatting stuff just to make it easier to read on the screen
                 current_id_to_print = str(current_id)
                 if len(current_id_to_print) == 5:
@@ -362,11 +365,15 @@ def get_arrays_to_plot():
                     current_netsig_to_print += ' '
 
                 current_res_zphot = (zp[i] - current_specz) / (1 + current_specz)
+                current_res_zgrism = (zg[i] - current_specz) / (1 + current_specz)
                 current_res_zspz = (zspz[i] - current_specz) / (1 + current_specz)
 
                 current_res_zphot_to_print = str("{:.3f}".format(current_res_zphot))
                 if current_res_zphot_to_print[0] != '-':
                     current_res_zphot_to_print = '+' + current_res_zphot_to_print
+                current_res_zgrism_to_print = str("{:.3f}".format(current_res_zgrism))
+                if current_res_zgrism_to_print[0] != '-':
+                    current_res_zgrism_to_print = '+' + current_res_zgrism_to_print
                 current_res_zspz_to_print = str("{:.3f}".format(current_res_zspz))
                 if current_res_zspz_to_print[0] != '-':
                     current_res_zspz_to_print = '+' + current_res_zspz_to_print
@@ -380,6 +387,7 @@ def get_arrays_to_plot():
                 print current_netsig_to_print, "  ",
                 print "{:.2f}".format(d4000), "  ",
                 print current_res_zphot_to_print, "     ",
+                print current_res_zgrism_to_print, "     ",
                 print current_res_zspz_to_print, "    ",
                 print "{:.2f}".format(current_imag)
 
@@ -588,6 +596,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
 
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, d4000_err, netsig, imag = get_arrays_to_plot()
+    sys.exit(0)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.

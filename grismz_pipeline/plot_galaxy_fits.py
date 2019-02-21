@@ -331,57 +331,14 @@ def get_arrays_for_plotting():
 def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
     zp_model_idx_arr, zg_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zg_bestalpha_arr, zspz_bestalpha_arr, \
     zp_age_arr, zp_tau_arr, zp_av_arr, zg_age_arr, zg_tau_arr, zg_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
-    zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr):
-
-    # ------------------------------- Get catalog for final sample ------------------------------- #
-    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+    zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr, \
+    final_sample, total_models, model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, \
+    goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega):
 
     # Get RA and DEC
     sample_idx = np.where((final_sample['pearsid'] == current_id) & (final_sample['field'] == current_field))[0]
     current_ra = final_sample['ra'][sample_idx]
     current_dec = final_sample['dec'][sample_idx]
-
-    # ------------------------------- Get correct directories ------------------------------- #
-    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
-    threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
-    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
-    # This is if working on the laptop. 
-    # Then you must be using the external hard drive where the models are saved.
-    if not os.path.isdir(figs_data_dir):
-        figs_data_dir = figs_dir  # this path only exists on firstlight
-        threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
-        cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
-        if not os.path.isdir(figs_data_dir):
-            print "Model files not found. Exiting..."
-            sys.exit(0)
-
-    # ------------------------------- Read in models ------------------------------- #
-    total_models = 37761
-    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
-    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
-
-    all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam.npy', mmap_mode='r')
-
-    # ------------------------------- Read in photometry catalogs ------------------------------- #
-    # GOODS-N from 3DHST
-    # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
-    # The combined grism+photometry fits, redshifts, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
-    photometry_names = ['id', 'ra', 'dec', 'f_F160W', 'e_F160W', 'f_F435W', 'e_F435W', 'f_F606W', 'e_F606W', \
-    'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W', \
-    'f_U', 'e_U', 'f_IRAC1', 'e_IRAC1', 'f_IRAC2', 'e_IRAC2', 'f_IRAC3', 'e_IRAC3', 'f_IRAC4', 'e_IRAC4', \
-    'IRAC1_contam', 'IRAC2_contam', 'IRAC3_contam', 'IRAC4_contam']
-    goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, \
-        usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), \
-        skip_header=3)
-    goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
-        dtype=None, names=photometry_names, \
-        usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), \
-        skip_header=3)
-
-    # Read in Vega spectrum and get it in the appropriate forms
-    vega = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/' + 'vega_reference.dat', dtype=None, \
-        names=['wav', 'flam'], skip_header=7)
 
     vega_lam = vega['wav']
     vega_spec_flam = vega['flam']
@@ -399,6 +356,11 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
 
     threed_ra = phot_cat_3dhst['ra']
     threed_dec = phot_cat_3dhst['dec']
+
+    print current_ra, current_dec
+    print threed_ra.shape, threed_dec.shape
+    print current_ra.shape, current_dec.shape
+    return
 
     # Now match
     ra_lim = 0.3/3600  # arcseconds in degrees
@@ -815,7 +777,7 @@ def main():
     # ------------- Code basically copied from run_final_sample.py
     # and from single galaxy checking code.
     # --------------------------
-    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p4_to_1p6.txt', dtype=None, names=True, skip_header=1)
+    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'galaxies_with_zg_lt_0p5.txt', dtype=None, names=True, skip_header=1)
     #sort_and_save(galaxies_to_plot)
     #sys.exit()
 
@@ -825,6 +787,51 @@ def main():
     zp_age_arr, zp_tau_arr, zp_av_arr, zg_age_arr, zg_tau_arr, zg_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
     zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr = \
     get_arrays_for_plotting()
+
+    # ------------------------------- Get catalog for final sample ------------------------------- #
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+
+    # ------------------------------- Get correct directories ------------------------------- #
+    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+    threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
+    # This is if working on the laptop. 
+    # Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(figs_data_dir):
+        figs_data_dir = figs_dir  # this path only exists on firstlight
+        threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+        cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
+        if not os.path.isdir(figs_data_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
+
+    # ------------------------------- Read in models ------------------------------- #
+    total_models = 37761
+    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
+    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
+
+    all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam.npy', mmap_mode='r')
+
+    # ------------------------------- Read in photometry catalogs ------------------------------- #
+    # GOODS-N from 3DHST
+    # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
+    # The combined grism+photometry fits, redshifts, and derived parameters are given in v4.1.5 (Momcheva et al. 2016)
+    photometry_names = ['id', 'ra', 'dec', 'f_F160W', 'e_F160W', 'f_F435W', 'e_F435W', 'f_F606W', 'e_F606W', \
+    'f_F775W', 'e_F775W', 'f_F850LP', 'e_F850LP', 'f_F125W', 'e_F125W', 'f_F140W', 'e_F140W', \
+    'f_U', 'e_U', 'f_IRAC1', 'e_IRAC1', 'f_IRAC2', 'e_IRAC2', 'f_IRAC3', 'e_IRAC3', 'f_IRAC4', 'e_IRAC4', \
+    'IRAC1_contam', 'IRAC2_contam', 'IRAC3_contam', 'IRAC4_contam']
+    goodsn_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodsn_3dhst.v4.1.cats/Catalog/goodsn_3dhst.v4.1.cat', \
+        dtype=None, names=photometry_names, \
+        usecols=(0,3,4, 9,10, 15,16, 27,28, 39,40, 45,46, 48,49, 54,55, 12,13, 63,64, 66,67, 69,70, 72,73, 90,91,92,93), \
+        skip_header=3)
+    goodss_phot_cat_3dhst = np.genfromtxt(threedhst_datadir + 'goodss_3dhst.v4.1.cats/Catalog/goodss_3dhst.v4.1.cat', \
+        dtype=None, names=photometry_names, \
+        usecols=(0,3,4, 9,10, 18,19, 30,31, 39,40, 48,49, 54,55, 63,64, 15,16, 75,76, 78,79, 81,82, 84,85, 130,131,132,133), \
+        skip_header=3)
+
+    # Read in Vega spectrum and get it in the appropriate forms
+    vega = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/' + 'vega_reference.dat', dtype=None, \
+        names=['wav', 'flam'], skip_header=7)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -856,7 +863,9 @@ def main():
         plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz_arr, d4000, netsig, zp_chi2, zg_chi2, zspz_chi2, \
             zp_model_idx_arr, zg_model_idx_arr, zspz_model_idx_arr, zp_bestalpha_arr, zg_bestalpha_arr, zspz_bestalpha_arr, \
             zp_age_arr, zp_tau_arr, zp_av_arr, zg_age_arr, zg_tau_arr, zg_av_arr, zspz_age_arr, zspz_tau_arr, zspz_av_arr, \
-            zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr)
+            zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr, \
+            final_sample, total_models, model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, \
+            goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega)
 
     return None
 
