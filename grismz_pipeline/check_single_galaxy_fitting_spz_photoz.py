@@ -55,6 +55,13 @@ def makefig():
 
     return fig, ax1, ax2
 
+def make_pz_labels(ax):
+
+    ax.set_xlabel('z', fontsize=12)
+    ax.set_ylabel('p(z)', fontsize=12)
+
+    return ax
+
 def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, \
     best_fit_model_fullres, all_filt_flam_bestmodel, bestalpha, \
     obj_id, obj_field, specz, zp, low_z_lim, upper_z_lim, chi2, age, tau, av, netsig, d4000, savedir):
@@ -156,6 +163,8 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
     pz = np.load(savedir + obj_field + '_' + str(obj_id) + '_photoz_pz.npy')
     zarr = np.load(savedir + obj_field + '_' + str(obj_id) + '_photoz_z_arr.npy')
+
+    ax3 = make_pz_labels(ax3)
 
     ax3.plot(zarr, pz)
     ax3.axvline(x=specz, ls='--', color='darkred')
@@ -293,6 +302,8 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     pz = np.load(savedir + obj_field + '_' + str(obj_id) + '_spz_pz.npy')
     zarr = np.load(savedir + obj_field + '_' + str(obj_id) + '_spz_z_arr.npy')
 
+    ax3 = make_pz_labels(ax3)
+
     ax3.plot(zarr, pz)
     ax3.axvline(x=specz, ls='--', color='darkred')
     ax3.minorticks_on()
@@ -417,6 +428,8 @@ def plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     # Read in p(z) curve. It should be in the same folder where all these figures are being saved.
     pz = np.load(savedir + obj_field + '_' + str(obj_id) + '_zg_pz.npy')
     zarr = np.load(savedir + obj_field + '_' + str(obj_id) + '_zg_z_arr.npy')
+
+    ax3 = make_pz_labels(ax3)
 
     ax3.plot(zarr, pz)
     ax3.axvline(x=specz, ls='--', color='darkred')
@@ -842,6 +855,7 @@ def main():
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
     
     # ------------- Call fitting function for SPZ ------------- #
+    """
     print "\n", "Photo-z done. Moving on to SPZ computation now."
     
     zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
@@ -850,6 +864,7 @@ def main():
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
         use_broadband=True, single_galaxy=False, for_loop_method='parallel')
+    """
     
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
@@ -864,24 +879,24 @@ def main():
 
     # ------------- Get z and errors ------------- #
     # Only works if you've used the full redshift grid i.e., np.arange(0.3, 1.5, 0.01)
-    #zp, zp_zerr_low, zp_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='photo-z')
-    #zg, zg_zerr_low, zg_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='grism-z')
-    #zspz, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='spz')
+    zp_peak, zp_zerr_low, zp_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='photo-z')
+    zg_peak, zg_zerr_low, zg_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='grism-z')
+    zspz_peak, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='spz')
 
     # ------------- Print results------------- #
     print "\n", "Results:"
     print "Ground-based spectroscopic redshift:", current_specz
 
     print "\n", "Photometric redshift from min chi2:", "{:.3f}".format(zp_minchi2)
-    print "Photometric redshift from peak of p(z) curve:", zp
+    print "Photometric redshift from peak of p(z) curve:", zp_peak
     print "Weighted photometric redshift:", "{:.3f}".format(zp)
 
     print "\n", "Grism redshift from min chi2:", "{:.3f}".format(zg_minchi2)
-    print "Grism redshift from peak of p(z) curve:", zg
+    print "Grism redshift from peak of p(z) curve:", zg_peak
     print "Weighted Grism redshift:", "{:.3f}".format(zg)
 
     print "\n", "SPZ from min chi2:", "{:.3f}".format(zspz_minchi2)
-    print "SPZ from peak of p(z) curve:", zspz
+    print "SPZ from peak of p(z) curve:", zspz_peak
     print "Weighted SPZ:", "{:.3f}".format(zspz)
 
     print "\n", "Time taken up to now--", str("{:.2f}".format(time.time() - start)), "seconds."

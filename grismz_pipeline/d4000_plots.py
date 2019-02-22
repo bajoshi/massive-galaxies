@@ -340,8 +340,8 @@ def make_d4000_vs_redshift_plot():
     ax.set_xticks(np.arange(-2, 15, 2))
 
     # Horizontal and vertical lines
-    ax.axhline(y=0.0, ls='--', color='gray')
-    #ax.axvline(x=1.0, ls='--', color='gray')
+    ax.axhline(y=0.0, ls='--', color='darkblue')
+    #ax.axvline(x=1.0, ls='--', color='darkblue')
 
     # save the figure
     fig.savefig(massive_figures_dir + 'z_acc_vs_significance.pdf', dpi=300, bbox_inches='tight')

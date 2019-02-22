@@ -102,9 +102,16 @@ def get_arrays_to_plot():
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
     zs_arr_fl = np.load(zp_results_dir + 'firstlight_zs_arr.npy')
 
+    zp_minchi2_fl = np.load(zp_results_dir + 'firstlight_zp_minchi2_arr.npy')
+    zg_minchi2_fl = np.load(zg_results_dir + 'firstlight_zg_minchi2_arr.npy')
+    zspz_minchi2_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
+
     # Length checks
     assert len(id_arr_fl) == len(field_arr_fl)
     assert len(id_arr_fl) == len(zs_arr_fl)
+    assert len(id_arr_fl) == len(zp_minchi2_fl)
+    assert len(id_arr_fl) == len(zg_minchi2_fl)
+    assert len(id_arr_fl) == len(zspz_minchi2_fl)
 
     # Redshift and Error arrays
     zp_arr_fl = np.zeros(id_arr_fl.shape[0])
@@ -124,15 +131,18 @@ def get_arrays_to_plot():
     for u in range(len(id_arr_fl)):
         zp_pz = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_pz.npy')
         zp_zarr = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_z_arr.npy')
-        zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
+        #zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
+        zp_arr_fl[u] = zp_minchi2_fl[u]
 
         zspz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
         zspz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
-        zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
+        #zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
+        zspz_arr_fl[u] = zspz_minchi2_fl[u]
 
         zg_pz = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_pz.npy')
         zg_zarr = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_z_arr.npy')
-        zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
+        #zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
+        zg_arr_fl[u] = zg_minchi2_fl[u]
 
         # Get errors and save them to a file
         zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz)
@@ -144,9 +154,16 @@ def get_arrays_to_plot():
     field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
     zs_arr_jt = np.load(zp_results_dir + 'jet_zs_arr.npy')
 
+    zp_minchi2_jt = np.load(zp_results_dir + 'jet_zp_minchi2_arr.npy')
+    zg_minchi2_jt = np.load(zg_results_dir + 'jet_zg_minchi2_arr.npy')
+    zspz_minchi2_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
+
     # Length checks
     assert len(id_arr_jt) == len(field_arr_jt)
     assert len(id_arr_jt) == len(zs_arr_jt)
+    assert len(id_arr_jt) == len(zp_minchi2_jt)
+    assert len(id_arr_jt) == len(zg_minchi2_jt)
+    assert len(id_arr_jt) == len(zspz_minchi2_jt)
 
     # Redshift and Error arrays
     zp_arr_jt = np.zeros(id_arr_jt.shape[0])
@@ -166,20 +183,23 @@ def get_arrays_to_plot():
     for v in range(len(id_arr_jt)):
         zp_pz = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_pz.npy')
         zp_zarr = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_z_arr.npy')
-        zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
+        #zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
+        zp_arr_jt[v] = zp_minchi2_jt[v]
 
         zspz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
         zspz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
-        zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
+        #zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
+        zspz_arr_jt[v] = zspz_minchi2_jt[v]
 
         zg_pz = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_pz.npy')
         zg_zarr = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_z_arr.npy')
-        zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
+        #zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
+        zg_arr_jt[v] = zg_minchi2_jt[v]
 
         # Get errors and save them to a file
-        zp_low_bound_jt[u], zp_high_bound_jt[u] = get_z_errors(zp_zarr, zp_pz)
-        zg_low_bound_jt[u], zg_high_bound_jt[u] = get_z_errors(zg_zarr, zg_pz)
-        zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
+        zp_low_bound_jt[v], zp_high_bound_jt[v] = get_z_errors(zp_zarr, zp_pz)
+        zg_low_bound_jt[v], zg_high_bound_jt[v] = get_z_errors(zg_zarr, zg_pz)
+        zspz_low_bound_jt[v], zspz_high_bound_jt[v] = get_z_errors(zspz_zarr, zspz_pz)
 
     # ----- Concatenate -----
     # check for any accidental overlaps
@@ -287,15 +307,13 @@ def get_arrays_to_plot():
     pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
 
     # Comment this print statement out if out don't want to actually print this list on paper
-    do_print = True
+    do_print = False
     if do_print:
         print "ID      Field      zspec    zphot    zg     zspz    NetSig    D4000   res_zphot    res_zgrism    res_zspz    iABmag"
 
     for i in range(len(all_ids)):
         current_id = all_ids[i]
         current_field = all_fields[i]
-
-        print current_id, current_field
 
         # check if it is an emission line galaxy. If it is then skip
         # Be carreful changing this check. I think it is correct as it is.
@@ -434,23 +452,23 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     ax6.scatter(zs_for_zspz[outlier_idx_zspz], resid_zspz[outlier_idx_zspz], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     # Limits
-    #ax1.set_xlim(0.6, 1.24)
-    #ax1.set_ylim(0.6, 1.24)
+    ax1.set_xlim(0.6, 1.24)
+    ax1.set_ylim(0.6, 1.24)
 
-    #ax2.set_xlim(0.6, 1.24)
-    #ax2.set_ylim(-0.15, 0.15)
+    ax2.set_xlim(0.6, 1.24)
+    ax2.set_ylim(-0.15, 0.15)
 
-    #ax3.set_xlim(0.6, 1.24)
-    #ax3.set_ylim(0.6, 1.24)
+    ax3.set_xlim(0.6, 1.24)
+    ax3.set_ylim(0.6, 1.24)
 
-    #ax4.set_xlim(0.6, 1.24)
-    #ax4.set_ylim(-0.15, 0.15)
+    ax4.set_xlim(0.6, 1.24)
+    ax4.set_ylim(-0.15, 0.15)
 
-    #ax5.set_xlim(0.6, 1.24)
-    #ax5.set_ylim(0.6, 1.24)
+    ax5.set_xlim(0.6, 1.24)
+    ax5.set_ylim(0.6, 1.24)
 
-    #ax6.set_xlim(0.6, 1.24)
-    #ax6.set_ylim(-0.15, 0.15)
+    ax6.set_xlim(0.6, 1.24)
+    ax6.set_ylim(-0.15, 0.15)
 
     # Other lines on plot
     ax2.axhline(y=0.0, ls='-', color='gray')
@@ -596,7 +614,6 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
 
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, d4000_err, netsig, imag = get_arrays_to_plot()
-    sys.exit(0)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -611,7 +628,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.1
+    d4000_low = 1.6
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
