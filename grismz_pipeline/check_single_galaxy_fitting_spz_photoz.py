@@ -911,6 +911,19 @@ def main():
     get_best_fit_model_grismz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
         grism_lam_obs, zg, zg_model_idx, lsf_to_use, total_models)
 
+    print zg_best_fit_model_fullres
+    print zg_bestalpha
+    print zg_best_fit_model_in_objlamgrid
+    print "Min Chi2 from fitting code:", zg_min_chi2
+
+    chi2_sum = 0
+    for i in range(len(grism_flam_obs)):
+        current_term = ((grism_flam_obs[i] - zg_bestalpha*zg_best_fit_model_in_objlamgrid[i]) / (grism_ferr_obs[i]))**2
+        print current_term
+        chi2_sum += current_term
+
+    print "Explicit chi2:", chi2_sum
+
     # ------------------------------- Plotting based on results from the above two codes ------------------------------- #
     plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines, \
     zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
