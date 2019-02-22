@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.cm as cm
+import matplotlib.colors as colors
 
 import astropy.units as u
 from astropy.cosmology import z_at_value
@@ -24,6 +25,14 @@ import mag_hist as mh
 import new_refine_grismz_gridsearch_parallel as ngp
 import dn4000_catalog as dc
 import spz_photoz_grismz_comparison as comp
+
+# SOlution to truncate colormap from stackoverflow:
+# https://stackoverflow.com/questions/18926031/how-to-extract-a-subset-of-a-colormap-as-a-new-colormap-in-matplotlib
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    new_cmap = colors.LinearSegmentedColormap.from_list(
+        'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
 
 def get_all_arrays():
 
@@ -290,7 +299,12 @@ def make_d4000_vs_redshift_plot():
     vmin_level = 0
     vmax_level = 0.03
 
-    c = ax.scatter(d4000_pears_plot, d4000_resid, s=10, c=abs(zspz_acc), vmin=vmin_level, vmax=vmax_level, cmap='winter')
+    cmap = plt.get_cmap('jet')
+    new_cmap = truncate_colormap(cmap, 0.15, 0.82)
+
+    nipy_spectral_cmap = plt.get_cmap('nipy_spectral')
+
+    c = ax.scatter(d4000_pears_plot, d4000_resid, s=10, c=abs(zspz_acc), vmin=vmin_level, vmax=vmax_level, cmap=new_cmap)
     # add colorbar inside figure
     cbaxes = inset_axes(ax, width='3%', height='55%', loc=2, bbox_to_anchor=[0.02, -0.03, 1, 1], bbox_transform=ax.transAxes)
     cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
@@ -305,6 +319,7 @@ def make_d4000_vs_redshift_plot():
     # Limits and ticks
     ax.set_ylim(-2, 14)
     ax.set_yticks(np.arange(-2, 15, 2))
+    ax.set_xlim(0.7, 2.05)
 
     # Horizontal and vertical lines
     ax.axhline(y=0.0, ls='--', color='k')
