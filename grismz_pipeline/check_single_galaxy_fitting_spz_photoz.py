@@ -864,9 +864,9 @@ def main():
 
     # ------------- Get z and errors ------------- #
     # Only works if you've used the full redshift grid i.e., np.arange(0.3, 1.5, 0.01)
-    zp, zp_zerr_low, zp_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='photo-z')
-    zg, zg_zerr_low, zg_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='grism-z')
-    zspz, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='spz')
+    #zp, zp_zerr_low, zp_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='photo-z')
+    #zg, zg_zerr_low, zg_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='grism-z')
+    #zspz, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='spz')
 
     # ------------- Print results------------- #
     print "\n", "Results:"
@@ -899,12 +899,12 @@ def main():
     # Will have to do this at the photo-z and SPZ separtely otherwise the plots will not look right
     # ------------ Get best fit model for photo-z ------------ #
     zp_best_fit_model_fullres = model_comp_spec_withlines[zp_model_idx]
-    zp_all_filt_flam_bestmodel = get_photometry_best_fit_model(zp, zp_model_idx, phot_fin_idx, all_model_flam, total_models)
+    zp_all_filt_flam_bestmodel = get_photometry_best_fit_model(zp_minchi2, zp_model_idx, phot_fin_idx, all_model_flam, total_models)
 
     # ------------ Get best fit model for SPZ ------------ #
     zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_best_fit_model_fullres = \
     get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
-        grism_lam_obs, zspz, zspz_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
+        grism_lam_obs, zspz_minchi2, zspz_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
 
     print "\n", "Chi2 checking for SPZ ---"
     print zspz_best_fit_model_fullres
@@ -915,12 +915,9 @@ def main():
     chi2_sum = 0
     for i in range(len(phot_lam)):
     	current_term = ((phot_fluxes_arr[i] - zspz_bestalpha*zp_all_filt_flam_bestmodel[i]) / phot_errors_arr[i])**2
-        print current_term
         chi2_sum += current_term
-
     for j in range(len(grism_flam_obs)):
     	current_term = ((grism_flam_obs[j] - zspz_bestalpha*zspz_best_fit_model_in_objlamgrid[j]) / grism_ferr_obs[j])**2
-        print current_term
         chi2_sum += current_term
 
     print "Explicit chi2:", chi2_sum
@@ -930,7 +927,7 @@ def main():
     # ------------ Get best fit model for grism-z ------------ #
     zg_best_fit_model_in_objlamgrid, zg_best_fit_model_fullres = \
     get_best_fit_model_grismz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
-        grism_lam_obs, zg, zg_model_idx, lsf_to_use, total_models)
+        grism_lam_obs, zg_minchi2, zg_model_idx, lsf_to_use, total_models)
 
     print "\n", "Chi2 checking for grism-z ---"
     print zg_best_fit_model_fullres
@@ -943,7 +940,6 @@ def main():
     chi2_sum = 0
     for i in range(len(grism_flam_obs)):
         current_term = ((grism_flam_obs[i] - zg_bestalpha*zg_best_fit_model_in_objlamgrid[i]) / (grism_ferr_obs[i]))**2
-        print current_term
         chi2_sum += current_term
 
     print "Explicit chi2:", chi2_sum
