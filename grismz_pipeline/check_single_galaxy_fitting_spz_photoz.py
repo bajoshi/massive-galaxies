@@ -493,7 +493,7 @@ def get_best_fit_model_grismz(resampling_lam_grid, resampling_lam_grid_length, m
     model_comp_spec_modified = \
     mm.redshift_and_resample_fast(model_comp_spec_lsfconv, redshift, total_models, \
         model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
-    print "Model mods done (only for plotting purposes) at the new SPZ:", redshift
+    print "Model mods done (only for plotting purposes) at the new grism-z:", redshift
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
@@ -907,9 +907,6 @@ def main():
         grism_lam_obs, zspz_minchi2, zspz_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
 
     print "\n", "Chi2 checking for SPZ ---"
-    print zspz_best_fit_model_fullres
-    print zspz_bestalpha
-    print zspz_best_fit_model_in_objlamgrid
     print "Min Chi2 from fitting code:", zspz_min_chi2
 
     chi2_sum = 0
@@ -930,11 +927,6 @@ def main():
         grism_lam_obs, zg_minchi2, zg_model_idx, lsf_to_use, total_models)
 
     print "\n", "Chi2 checking for grism-z ---"
-    print zg_best_fit_model_fullres
-    print zg_bestalpha
-    print grism_flam_obs
-    print grism_ferr_obs
-    print zg_best_fit_model_in_objlamgrid
     print "Min Chi2 from fitting code:", zg_min_chi2
 
     chi2_sum = 0
