@@ -906,13 +906,37 @@ def main():
     get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
         grism_lam_obs, zspz, zspz_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
 
+    print "\n", "Chi2 checking for SPZ ---"
+    print zspz_best_fit_model_fullres
+    print zspz_bestalpha
+    print zspz_best_fit_model_in_objlamgrid
+    print "Min Chi2 from fitting code:", zspz_min_chi2
+
+    chi2_sum = 0
+    for i in range(len(phot_lam)):
+    	current_term = ((phot_fluxes_arr[i] - zspz_bestalpha*zp_all_filt_flam_bestmodel[i]) / phot_errors_arr[i])**2
+        print current_term
+        chi2_sum += current_term
+
+    for j in range(len(grism_flam_obs)):
+    	current_term = ((grism_flam_obs[j] - zspz_bestalpha*zspz_best_fit_model_in_objlamgrid[j]) / grism_ferr_obs[j])**2
+        print current_term
+        chi2_sum += current_term
+
+    print "Explicit chi2:", chi2_sum
+    dof = len(grism_lam_obs) + len(phot_lam) - 1
+    print "Explicit reduced chi2:", chi2_sum / dof
+
     # ------------ Get best fit model for grism-z ------------ #
     zg_best_fit_model_in_objlamgrid, zg_best_fit_model_fullres = \
     get_best_fit_model_grismz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
         grism_lam_obs, zg, zg_model_idx, lsf_to_use, total_models)
 
+    print "\n", "Chi2 checking for grism-z ---"
     print zg_best_fit_model_fullres
     print zg_bestalpha
+    print grism_flam_obs
+    print grism_ferr_obs
     print zg_best_fit_model_in_objlamgrid
     print "Min Chi2 from fitting code:", zg_min_chi2
 
@@ -923,6 +947,8 @@ def main():
         chi2_sum += current_term
 
     print "Explicit chi2:", chi2_sum
+    dof = len(grism_lam_obs) - 1
+    print "Explicit reduced chi2:", chi2_sum / dof
 
     # ------------------------------- Plotting based on results from the above two codes ------------------------------- #
     plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines, \
