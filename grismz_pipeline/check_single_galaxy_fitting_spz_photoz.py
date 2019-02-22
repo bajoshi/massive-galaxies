@@ -127,7 +127,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spz})\, =\, }$' + "{:.3}".format(d4000), \
+    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spec})\, =\, }$' + "{:.3}".format(d4000), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
@@ -263,7 +263,7 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spz})\, =\, }$' + "{:.3}".format(d4000), \
+    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spec})\, =\, }$' + "{:.3}".format(d4000), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
@@ -388,7 +388,7 @@ def plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spz})\, =\, }$' + "{:.3}".format(d4000), \
+    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spec})\, =\, }$' + "{:.3}".format(d4000), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
@@ -594,8 +594,8 @@ def main():
     ms_arr = np.load(figs_data_dir + 'ms_arr.npy', mmap_mode='r')
     mgal_arr = np.load(figs_data_dir + 'mgal_arr.npy', mmap_mode='r')
 
-    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_noemlines.npy', mmap_mode='r')
-    model_comp_spec_withlines = np.load(figs_data_dir + 'model_comp_spec_noemlines.npy', mmap_mode='r')
+    model_lam_grid_withlines = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
+    model_comp_spec_withlines = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
@@ -860,13 +860,13 @@ def main():
         lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-        use_broadband=False, single_galaxy=False, for_loop_method='sequential')
+        use_broadband=False, single_galaxy=False, for_loop_method='parallel')
 
     # ------------- Get z and errors ------------- #
     # Only works if you've used the full redshift grid i.e., np.arange(0.3, 1.5, 0.01)
-    #zp, zp_zerr_low, zp_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='photo-z')
-    #zg, zg_zerr_low, zg_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='grism-z')
-    #zspz, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='spz')
+    zp, zp_zerr_low, zp_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='photo-z')
+    zg, zg_zerr_low, zg_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='grism-z')
+    zspz, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='spz')
 
     # ------------- Print results------------- #
     print "\n", "Results:"
@@ -889,9 +889,9 @@ def main():
 
     # ------------------------------- First get D4000. Only need to put D4000 info on plot. ------------------------------- # 
     # Get d4000 at SPZ
-    lam_em = grism_lam_obs / (1 + zspz)
-    flam_em = grism_flam_obs * (1 + zspz)
-    ferr_em = grism_ferr_obs * (1 + zspz)
+    lam_em = grism_lam_obs / (1 + current_specz)
+    flam_em = grism_flam_obs * (1 + current_specz)
+    ferr_em = grism_ferr_obs * (1 + current_specz)
 
     d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 

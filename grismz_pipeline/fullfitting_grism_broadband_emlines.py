@@ -732,7 +732,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         savedir_grismz = massive_figures_dir + 'grismz_run_jan2019/'  # Required to save p(z) curve and z_arr
 
     # Set up redshift grid to check
-    z_arr_to_check = np.arange(0.56, 0.66, 0.01) # np.arange(0.3, 1.5, 0.01)
+    z_arr_to_check = np.arange(0.3, 1.5, 0.01)
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
@@ -792,11 +792,6 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
-    print "\n"
-    print chi2
-    print chi2.shape
-    print sortargs
-    print chi2.ravel()[sortargs[:10]]
 
     for k in range(len(chi2.ravel())):
 
@@ -822,6 +817,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         tau = tau_gyr_arr[model_idx]
         tauv = tauv_arr[model_idx]
 
+        print "Current z, model age, Universe age, chi2:", current_z, age, np.log10(age_at_z), chi2[min_idx_2d]
+
         """
         # now check if the best fit model is an ssp or csp 
         # only the csp models have tau and tauV parameters
@@ -837,7 +834,10 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         """
 
         # now check if the age is meaningful
-        if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.1)):
+        # This condition is essentially saying that the model age has to be at least 
+        # 100 Myr younger than the age of the Universe at the given redshift and at 
+        # the same time it needs to be at least 10 Myr in absolute terms
+        if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.01)):
             # If the age is meaningful then you don't need to do anything
             # more. Just break out of the loop. the best fit parameters have
             # already been assigned to variables. This assignment is done before 
@@ -845,7 +845,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
             # even if the loop is broken out of in the first iteration.
             break
 
-    print "Minimum chi2 from sorted indices:", "{:.4}".format(chi2[min_idx_2d])
+    print "Minimum chi2 from sorted indices which also agrees with the age of the Universe:", "{:.4}".format(chi2[min_idx_2d])
     print "Minimum chi2 from np.min():", "{:.4}".format(np.min(chi2))
     z_grism = z_arr_to_check[min_idx_2d[0]]
 

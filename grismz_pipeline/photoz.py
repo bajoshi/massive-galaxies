@@ -220,7 +220,10 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         """
 
         # now check if the age is meaningful
-        if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.1)):
+        # This condition is essentially saying that the model age has to be at least 
+        # 100 Myr younger than the age of the Universe at the given redshift and at 
+        # the same time it needs to be at least 10 Myr in absolute terms
+        if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.01)):
             # If the age is meaningful then you don't need to do anything
             # more. Just break out of the loop. the best fit parameters have
             # already been assigned to variables. This assignment is done before 
