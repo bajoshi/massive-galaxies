@@ -871,14 +871,11 @@ def main():
     # run spz_photoz_grismz_comparison.py to generate them.
     for k in range(len(galaxies_to_plot)):
 
-        #current_id = int(galaxies_to_plot['ID'][k])
-        #current_field = str(galaxies_to_plot['Field'][k])
-        #if os.path.isfile(savedir_spz + current_field + '_' + str(current_id) + '_spz_fit.pdf'):
-        #    print "At:", current_id, current_field, "   File exists. Skipping."
-        #    continue
-
-        current_id = 48189
-        current_field = 'GOODS-N'
+        current_id = int(galaxies_to_plot['ID'][k])
+        current_field = str(galaxies_to_plot['Field'][k])
+        if os.path.isfile(savedir_spz + current_field + '_' + str(current_id) + '_spz_fit.pdf'):
+            print "At:", current_id, current_field, "   File exists. Skipping."
+            continue
 
         print "Plotting:", current_id, current_field
 
@@ -888,8 +885,6 @@ def main():
             zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr, \
             final_sample, total_models, model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, \
             goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega)
-
-        sys.exit(0)
 
     return None
 
