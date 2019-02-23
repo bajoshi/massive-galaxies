@@ -46,9 +46,16 @@ def get_arrays_for_plotting():
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
     zs_arr_fl = np.load(zp_results_dir + 'firstlight_zs_arr.npy')
 
+    zp_minchi2_fl = np.load(zp_results_dir + 'firstlight_zp_minchi2_arr.npy')
+    zg_minchi2_fl = np.load(zg_results_dir + 'firstlight_zg_minchi2_arr.npy')
+    zspz_minchi2_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
+
     # Length checks
     assert len(id_arr_fl) == len(field_arr_fl)
     assert len(id_arr_fl) == len(zs_arr_fl)
+    assert len(id_arr_fl) == len(zp_minchi2_fl)
+    assert len(id_arr_fl) == len(zg_minchi2_fl)
+    assert len(id_arr_fl) == len(zspz_minchi2_fl)
 
     # Redshift and Error arrays
     zp_arr_fl = np.zeros(id_arr_fl.shape[0])
@@ -73,20 +80,23 @@ def get_arrays_for_plotting():
     for u in range(len(id_arr_fl)):
         zp_pz = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_pz.npy')
         zp_zarr = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_z_arr.npy')
-        zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
-
-        zspz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
-        zspz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
-        zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
+        #zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
+        zp_arr_fl[u] = zp_minchi2_fl[u]
 
         zg_pz = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_pz.npy')
         zg_zarr = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_z_arr.npy')
-        zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
+        #zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
+        zg_arr_fl[u] = zg_minchi2_fl[u]
+
+        zspz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
+        zspz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
+        #zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
+        zspz_arr_fl[u] = zspz_minchi2_fl[u]
 
         # Get errors and save them to a file
-        zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz)
-        zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz)
-        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
+        zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz, zp_minchi2_fl[u])
+        zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz, zg_minchi2_fl[u])
+        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_fl[u])
 
     # Best fit model idx and alpha
     zp_model_idx_arr_fl = np.load(zp_results_dir + 'firstlight_zp_model_idx_arr.npy')
@@ -116,9 +126,16 @@ def get_arrays_for_plotting():
     field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
     zs_arr_jt = np.load(zp_results_dir + 'jet_zs_arr.npy')
 
+    zp_minchi2_jt = np.load(zp_results_dir + 'jet_zp_minchi2_arr.npy')
+    zg_minchi2_jt = np.load(zg_results_dir + 'jet_zg_minchi2_arr.npy')
+    zspz_minchi2_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
+
     # Length checks
     assert len(id_arr_jt) == len(field_arr_jt)
     assert len(id_arr_jt) == len(zs_arr_jt)
+    assert len(id_arr_jt) == len(zp_minchi2_jt)
+    assert len(id_arr_jt) == len(zg_minchi2_jt)
+    assert len(id_arr_jt) == len(zspz_minchi2_jt)
 
     # Redshift and Error arrays
     zp_arr_jt = np.zeros(id_arr_jt.shape[0])
@@ -143,20 +160,23 @@ def get_arrays_for_plotting():
     for v in range(len(id_arr_jt)):
         zp_pz = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_pz.npy')
         zp_zarr = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_z_arr.npy')
-        zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
-
-        zspz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
-        zspz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
-        zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
+        #zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
+        zp_arr_jt[v] = zp_minchi2_jt[v]
 
         zg_pz = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_pz.npy')
         zg_zarr = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_z_arr.npy')
-        zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
+        #zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
+        zg_arr_jt[v] = zg_minchi2_jt[v]
+
+        zspz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
+        zspz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
+        #zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
+        zspz_arr_jt[v] = zspz_minchi2_jt[v]
 
         # Get errors and save them to a file
-        zp_low_bound_jt[u], zp_high_bound_jt[u] = get_z_errors(zp_zarr, zp_pz)
-        zg_low_bound_jt[u], zg_high_bound_jt[u] = get_z_errors(zg_zarr, zg_pz)
-        zspz_low_bound_jt[u], zspz_high_bound_jt[u] = get_z_errors(zspz_zarr, zspz_pz)
+        zp_low_bound_jt[v], zp_high_bound_jt[v] = get_z_errors(zp_zarr, zp_pz, zp_minchi2_jt[v])
+        zg_low_bound_jt[v], zg_high_bound_jt[v] = get_z_errors(zg_zarr, zg_pz, zg_minchi2_jt[v])
+        zspz_low_bound_jt[v], zspz_high_bound_jt[v] = get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_jt[v])
 
     # Best fit model idx and alpha
     zp_model_idx_arr_jt = np.load(zp_results_dir + 'jet_zp_model_idx_arr.npy')
@@ -592,12 +612,17 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
 
     # ------------------------------- Get best fit model for plotting ------------------------------- #
     # Will have to do this at the photo-z and SPZ separtely otherwise the plots will not look right
-    # ------------ Get best fit model for photo-z ------------ #
+    # ------------ Get best fit model for photo-z and plot ------------ #
     zp_best_fit_model_fullres = model_comp_spec_withlines_mmap[zp_model_idx]
     zp_best_fit_model_fullres = zp_best_fit_model_fullres.ravel()  # This is more of a consistency forcing condition 
     zp_all_filt_flam_bestmodel = chk.get_photometry_best_fit_model(zp, zp_model_idx, phot_fin_idx, all_model_flam_mmap, total_models)
 
-    # ------------ Get best fit model for SPZ ------------ #
+    chk.plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines_mmap, \
+    zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
+    current_id, current_field, current_specz, zp, \
+    zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av, netsig_chosen, current_d4000, savedir_photoz)
+
+    # ------------ Get best fit model for SPZ and plot ------------ #
     zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_best_fit_model_fullres = \
     chk.get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines_mmap, \
         model_comp_spec_withlines_mmap, grism_lam_obs, zspz, zspz_model_idx, phot_fin_idx, all_model_flam_mmap, lsf_to_use, total_models)
@@ -605,22 +630,16 @@ def plotfit(current_id, current_field, ids, fields, zs_arr, zp_arr, zg_arr, zspz
     zspz_best_fit_model_fullres = zspz_best_fit_model_fullres.ravel()
     zspz_best_fit_model_in_objlamgrid = zspz_best_fit_model_in_objlamgrid.ravel()
 
-    # ------------ Get best fit model for grism-z ------------ #
-    zg_best_fit_model_in_objlamgrid, zg_best_fit_model_fullres = \
-    chk.get_best_fit_model_grismz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines_mmap, \
-        model_comp_spec_withlines_mmap, grism_lam_obs, zg, zg_model_idx, lsf_to_use, total_models)
-
-    # ---------------- Now actual plotting ---------------- #
-    chk.plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines_mmap, \
-    zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
-    current_id, current_field, current_specz, zp, \
-    zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_age, zp_tau, zp_av, netsig_chosen, current_d4000, savedir_photoz)
-
     chk.plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
     model_lam_grid_withlines_mmap, zspz_best_fit_model_fullres, zspz_best_fit_model_in_objlamgrid, \
     zspz_all_filt_flam_bestmodel, zspz_bestalpha, current_id, current_field, current_specz, \
     zp_zerr_low, zp_zerr_up, zp, zspz_zerr_low, zspz_zerr_up, zspz, zspz_min_chi2, \
     zspz_age, zspz_tau, zspz_av, netsig_chosen, current_d4000, savedir_spz)
+
+    # ------------ Get best fit model for grism-z and plot ------------ #
+    zg_best_fit_model_in_objlamgrid, zg_best_fit_model_fullres = \
+    chk.get_best_fit_model_grismz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines_mmap, \
+        model_comp_spec_withlines_mmap, grism_lam_obs, zg, zg_model_idx, lsf_to_use, total_models)
 
     chk.plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     model_lam_grid_withlines_mmap, zg_best_fit_model_fullres, zg_best_fit_model_in_objlamgrid, \
@@ -852,12 +871,14 @@ def main():
     # run spz_photoz_grismz_comparison.py to generate them.
     for k in range(len(galaxies_to_plot)):
 
-        current_id = int(galaxies_to_plot['ID'][k])
-        current_field = str(galaxies_to_plot['Field'][k])
+        #current_id = int(galaxies_to_plot['ID'][k])
+        #current_field = str(galaxies_to_plot['Field'][k])
+        #if os.path.isfile(savedir_spz + current_field + '_' + str(current_id) + '_spz_fit.pdf'):
+        #    print "At:", current_id, current_field, "   File exists. Skipping."
+        #    continue
 
-        if os.path.isfile(savedir_spz + current_field + '_' + str(current_id) + '_spz_fit.pdf'):
-            print "At:", current_id, current_field, "   File exists. Skipping."
-            continue
+        current_id = 48189
+        current_field = 'GOODS-N'
 
         print "Plotting:", current_id, current_field
 
@@ -867,6 +888,8 @@ def main():
             zp_low_bound_arr, zp_high_bound_arr, zg_low_bound_arr, zg_high_bound_arr, zspz_low_bound_arr, zspz_high_bound_arr, \
             final_sample, total_models, model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, \
             goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega)
+
+        sys.exit(0)
 
     return None
 

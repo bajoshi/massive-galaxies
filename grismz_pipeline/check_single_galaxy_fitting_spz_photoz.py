@@ -13,6 +13,7 @@ import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib
 
 home = os.getenv('HOME')
 pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
@@ -60,6 +61,8 @@ def make_pz_labels(ax):
     ax.set_xlabel('z', fontsize=12)
     ax.set_ylabel('p(z)', fontsize=12)
 
+    ax.xaxis.set_label_coords(0.8,-0.05)
+
     return ax
 
 def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, \
@@ -90,68 +93,69 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
     min_y_obs = np.min(phot_flam_obs)
 
     max_ylim = 1.25 * max_y_obs
-    min_ylim = 0.75 * min_y_obs
-
-    max_ylim = 1.25 * max_y_obs
-    min_ylim = 0.75 * min_y_obs
+    min_ylim = 0.2 * min_y_obs
 
     ax1.set_ylim(min_ylim, max_ylim)
 
-    ax1.set_xlim(3000, 80000)
-    ax2.set_xlim(3000, 80000)
+    ax1.set_xlim(3000, 85000)
+    ax2.set_xlim(3000, 85000)
 
     ax1.set_xscale('log')
     ax2.set_xscale('log')
+
+    # ---------- tick labels for the logarithmic axis ---------- #
+    ax2.set_xticks([4000, 10000, 20000, 50000, 80000])
+    ax2.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
     # ---------- minor ticks ---------- #
     ax1.minorticks_on()
     ax2.minorticks_on()
 
     # ---------- text for info ---------- #
-    ax1.text(0.75, 0.35, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.71, 0.61, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     low_zerr = zp - low_z_lim
     high_zerr = upper_z_lim - zp
 
-    ax1.text(0.75, 0.27, \
-    r'$\mathrm{z_{p;best}\, =\, }$' + "{:.4}".format(zp) + \
+    ax1.text(0.71, 0.55, \
+    r'$\mathrm{z_{p;best} = }$' + "{:.4}".format(zp) + \
     r'$\substack{+$' + "{:.3}".format(high_zerr) + r'$\\ -$' + "{:.3}".format(low_zerr) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.22, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.71, 0.48, r'$\mathrm{z_{spec} = }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    #ax1.text(0.75, 0.22, r'$\mathrm{z_{p;wt}\, =\, }$' + "{:.4}".format(zp), \
+    transform=ax1.transAxes, color='k', size=13)
+    #ax1.text(0.71, 0.22, r'$\mathrm{z_{p;wt} = }$' + "{:.4}".format(zp), \
     #verticalalignment='top', horizontalalignment='left', \
-    #transform=ax1.transAxes, color='k', size=10)
+    #transform=ax1.transAxes, color='k', size=13)
 
-    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.71, 0.43, r'$\mathrm{\chi^2 = }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
-    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
+    ax1.text(0.71, 0.36, r'$\mathrm{NetSig = }$' + mr.convert_to_sci_not(netsig), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spec})\, =\, }$' + "{:.3}".format(d4000), \
+    ax1.text(0.71, 0.3, r'$\mathrm{D4000 = }$' + "{:.3}".format(d4000), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=8)
 
 
-    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    ax1.text(0.37, 0.18,'log(Age[yr]) = ' + "{:.4}".format(age), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.37, 0.12, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     if av < 0:
         av = -99.0
 
-    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    ax1.text(0.37, 0.06, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     # ---------- Plot p(z) curve in an inset figure ---------- #
     # Solution for inset came from SO:
@@ -219,31 +223,28 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     min_y_obs = np.min(np.concatenate((grism_flam_obs, phot_flam_obs)))
 
     max_ylim = 1.25 * max_y_obs
-    min_ylim = 0.75 * min_y_obs
-
-    max_ylim = 1.25 * max_y_obs
-    min_ylim = 0.75 * min_y_obs
+    min_ylim = 0.2 * min_y_obs
 
     ax1.set_ylim(min_ylim, max_ylim)
 
-    ax1.set_xlim(3000, 80000)
-    ax2.set_xlim(3000, 80000)
+    ax1.set_xlim(3000, 85000)
+    ax2.set_xlim(3000, 85000)
 
     ax1.set_xscale('log')
     ax2.set_xscale('log')
+
+    # ---------- tick labels for the logarithmic axis ---------- #
+    ax2.set_xticks([4000, 10000, 20000, 50000, 80000])
+    ax2.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
     # ---------- minor ticks ---------- #
     ax1.minorticks_on()
     ax2.minorticks_on()
 
     # ---------- text for info ---------- #
-    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.71, 0.61, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-
-    #ax1.text(0.75, 0.4, r'$\mathrm{z_{SPZ}\, =\, }$' + "{:.4}".format(zspz), \
-    #verticalalignment='top', horizontalalignment='left', \
-    #transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     low_zspz_err = zspz - low_zspz_lim
     high_zspz_err = upper_zspz_lim - zspz
@@ -251,45 +252,45 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     low_zp_err = zp - low_zp_lim
     high_zp_err = upper_zp_lim - zp
 
-    ax1.text(0.75, 0.35, \
-    r'$\mathrm{z_{spz;best}\, =\, }$' + "{:.4}".format(zspz) + \
+    ax1.text(0.71, 0.55, \
+    r'$\mathrm{z_{spz;best} = }$' + "{:.4}".format(zspz) + \
     r'$\substack{+$' + "{:.3}".format(high_zspz_err) + r'$\\ -$' + "{:.3}".format(low_zspz_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.71, 0.48, r'$\mathrm{z_{spec} = }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.22, \
-    r'$\mathrm{z_{p;best}\, =\, }$' + "{:.4}".format(zp) + \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.71, 0.43, \
+    r'$\mathrm{z_{p;best} = }$' + "{:.4}".format(zp) + \
     r'$\substack{+$' + "{:.3}".format(high_zp_err) + r'$\\ -$' + "{:.3}".format(low_zp_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
-    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.71, 0.36, r'$\mathrm{\chi^2 = }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
-    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
+    ax1.text(0.71, 0.3, r'$\mathrm{NetSig = }$' + mr.convert_to_sci_not(netsig), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spec})\, =\, }$' + "{:.3}".format(d4000), \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.71, 0.24, r'$\mathrm{D4000 = }$' + "{:.3}".format(d4000), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
+    transform=ax1.transAxes, color='k', size=13)
 
 
-    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    ax1.text(0.37, 0.18,'log(Age[yr]) = ' + "{:.4}".format(age), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.37, 0.12, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     if av < 0:
         av = -99.0
 
-    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    ax1.text(0.37, 0.06, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     # ---------- Plot p(z) curve in an inset figure ---------- #
     # Solution for inset came from SO:
@@ -349,10 +350,7 @@ def plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     min_y_obs = np.min(grism_flam_obs)
 
     max_ylim = 1.25 * max_y_obs
-    min_ylim = 0.75 * min_y_obs
-
-    max_ylim = 1.25 * max_y_obs
-    min_ylim = 0.75 * min_y_obs
+    min_ylim = 0.2 * min_y_obs
 
     ax1.set_ylim(min_ylim, max_ylim)
 
@@ -364,13 +362,9 @@ def plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     ax2.minorticks_on()
 
     # ---------- text for info ---------- #
-    ax1.text(0.75, 0.4, obj_field + ' ' + str(obj_id), \
+    ax1.text(0.71, 0.61, obj_field + ' ' + str(obj_id), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-
-    #ax1.text(0.75, 0.4, r'$\mathrm{z_{SPZ}\, =\, }$' + "{:.4}".format(zg), \
-    #verticalalignment='top', horizontalalignment='left', \
-    #transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     low_zg_err = zg - low_zg_lim
     high_zg_err = upper_zg_lim - zg
@@ -378,45 +372,45 @@ def plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     low_zp_err = zp - low_zp_lim
     high_zp_err = upper_zp_lim - zp
 
-    ax1.text(0.75, 0.35, \
-    r'$\mathrm{z_{grism;best}\, =\, }$' + "{:.4}".format(zg) + \
+    ax1.text(0.71, 0.55, \
+    r'$\mathrm{z_{grism;best} = }$' + "{:.4}".format(zg) + \
     r'$\substack{+$' + "{:.3}".format(high_zg_err) + r'$\\ -$' + "{:.3}".format(low_zg_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.27, r'$\mathrm{z_{spec}\, =\, }$' + "{:.4}".format(specz), \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.71, 0.48, r'$\mathrm{z_{spec} = }$' + "{:.4}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.75, 0.22, \
-    r'$\mathrm{z_{p;best}\, =\, }$' + "{:.4}".format(zp) + \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.71, 0.43, \
+    r'$\mathrm{z_{p;best} = }$' + "{:.4}".format(zp) + \
     r'$\substack{+$' + "{:.3}".format(high_zp_err) + r'$\\ -$' + "{:.3}".format(low_zp_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
-    ax1.text(0.75, 0.17, r'$\mathrm{\chi^2\, =\, }$' + "{:.3}".format(chi2), \
+    ax1.text(0.71, 0.36, r'$\mathrm{\chi^2 = }$' + "{:.3}".format(chi2), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
-    ax1.text(0.75, 0.12, r'$\mathrm{NetSig\, =\, }$' + mr.convert_to_sci_not(netsig), \
+    ax1.text(0.71, 0.3, r'$\mathrm{NetSig = }$' + mr.convert_to_sci_not(netsig), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
-    ax1.text(0.75, 0.07, r'$\mathrm{D4000(from\ z_{spec})\, =\, }$' + "{:.3}".format(d4000), \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.71, 0.24, r'$\mathrm{D4000 = }$' + "{:.3}".format(d4000), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=8)
+    transform=ax1.transAxes, color='k', size=13)
 
 
-    ax1.text(0.47, 0.3,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    ax1.text(0.37, 0.18,'log(Age[yr]) = ' + "{:.4}".format(age), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
-    ax1.text(0.47, 0.25, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    transform=ax1.transAxes, color='k', size=13)
+    ax1.text(0.37, 0.12, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     if av < 0:
         av = -99.0
 
-    ax1.text(0.47, 0.2, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    ax1.text(0.37, 0.06, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=10)
+    transform=ax1.transAxes, color='k', size=13)
 
     # ---------- Plot p(z) curve in an inset figure ---------- #
     # Solution for inset came from SO:
@@ -538,7 +532,7 @@ def get_photometry_best_fit_model(redshift, model_idx, phot_fin_idx, all_model_f
 
     return all_filt_flam_bestmodel
 
-def get_zpeak_and_err(obj_id, obj_field, redshift_type):
+def get_zpeak_and_zerr(obj_id, obj_field, z_minchi2, redshift_type):
 
     if redshift_type == 'photo-z':
         results_dir = savedir_photoz
@@ -555,7 +549,7 @@ def get_zpeak_and_err(obj_id, obj_field, redshift_type):
     z_peak = zarr[np.argmax(pz)]
 
     # Get errors
-    zerr_low, zerr_high = comp.get_z_errors(zarr, pz)
+    zerr_low, zerr_high = comp.get_z_errors(zarr, pz, z_minchi2)
 
     return z_peak, zerr_low, zerr_high
 
@@ -879,9 +873,12 @@ def main():
 
     # ------------- Get z and errors ------------- #
     # Only works if you've used the full redshift grid i.e., np.arange(0.3, 1.5, 0.01)
-    zp_peak, zp_zerr_low, zp_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='photo-z')
-    zg_peak, zg_zerr_low, zg_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='grism-z')
-    zspz_peak, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_err(current_id, current_field, redshift_type='spz')
+    # Make sure you do not confuse yourself with this function
+    # It returns the z at the peak of the p(z) curve but you should
+    # be using the z_minchi2 and the errors it returns are based on the z_minchi2
+    zp_peak, zp_zerr_low, zp_zerr_up = get_zpeak_and_zerr(current_id, current_field, zp_minchi2, redshift_type='photo-z')
+    zg_peak, zg_zerr_low, zg_zerr_up = get_zpeak_and_zerr(current_id, current_field, zg_minchi2, redshift_type='grism-z')
+    zspz_peak, zspz_zerr_low, zspz_zerr_up = get_zpeak_and_zerr(current_id, current_field, zspz_minchi2, redshift_type='spz')
 
     # ------------- Print results------------- #
     print "\n", "Results:"

@@ -24,7 +24,7 @@ import mocksim_results as mr
 from new_refine_grismz_gridsearch_parallel import get_data
 import dn4000_catalog as dc
 
-def get_z_errors(zarr, pz):
+def get_z_errors(zarr, pz, z_minchi2):
 
     # Since some p(z) curves have all nans in them
     if np.isnan(pz).any():
@@ -43,16 +43,16 @@ def get_z_errors(zarr, pz):
     # in both directions by 0.005
 
     # Get zpeak first
-    zpeak = zarray[np.argmax(pz_curve)]
+    # zpeak = zarray[np.argmax(pz_curve)]
 
     # zstep while iterating
     zstep = 0.005
     # Starting redshifts
-    zlow = zpeak - zstep
-    zhigh = zpeak + zstep
+    zlow = z_minchi2 - zstep
+    zhigh = z_minchi2 + zstep
 
     while True:
-        # Find indices and shorten the pz and z curves
+        # Find indices and broaden the pz and z curves
         low_idx = np.argmin(abs(zarray - zlow))
         high_idx = np.argmin(abs(zarray - zhigh))
 
@@ -134,20 +134,20 @@ def get_arrays_to_plot():
         #zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
         zp_arr_fl[u] = zp_minchi2_fl[u]
 
-        zspz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
-        zspz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
-        #zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
-        zspz_arr_fl[u] = zspz_minchi2_fl[u]
-
         zg_pz = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_pz.npy')
         zg_zarr = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_z_arr.npy')
         #zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
         zg_arr_fl[u] = zg_minchi2_fl[u]
 
+        zspz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
+        zspz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
+        #zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
+        zspz_arr_fl[u] = zspz_minchi2_fl[u]
+
         # Get errors and save them to a file
-        zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz)
-        zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz)
-        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz)
+        zp_low_bound_fl[u], zp_high_bound_fl[u] = get_z_errors(zp_zarr, zp_pz, zp_minchi2_fl[u])
+        zg_low_bound_fl[u], zg_high_bound_fl[u] = get_z_errors(zg_zarr, zg_pz, zg_minchi2_fl[u])
+        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_fl[u])
 
     # ------------- Jet -------------
     id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
@@ -186,20 +186,20 @@ def get_arrays_to_plot():
         #zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
         zp_arr_jt[v] = zp_minchi2_jt[v]
 
-        zspz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
-        zspz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
-        #zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
-        zspz_arr_jt[v] = zspz_minchi2_jt[v]
-
         zg_pz = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_pz.npy')
         zg_zarr = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_z_arr.npy')
         #zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
         zg_arr_jt[v] = zg_minchi2_jt[v]
 
+        zspz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
+        zspz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
+        #zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
+        zspz_arr_jt[v] = zspz_minchi2_jt[v]
+
         # Get errors and save them to a file
-        zp_low_bound_jt[v], zp_high_bound_jt[v] = get_z_errors(zp_zarr, zp_pz)
-        zg_low_bound_jt[v], zg_high_bound_jt[v] = get_z_errors(zg_zarr, zg_pz)
-        zspz_low_bound_jt[v], zspz_high_bound_jt[v] = get_z_errors(zspz_zarr, zspz_pz)
+        zp_low_bound_jt[v], zp_high_bound_jt[v] = get_z_errors(zp_zarr, zp_pz, zp_minchi2_jt[v])
+        zg_low_bound_jt[v], zg_high_bound_jt[v] = get_z_errors(zg_zarr, zg_pz, zg_minchi2_jt[v])
+        zspz_low_bound_jt[v], zspz_high_bound_jt[v] = get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_jt[v])
 
     # ----- Concatenate -----
     # check for any accidental overlaps
