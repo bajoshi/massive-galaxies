@@ -161,9 +161,9 @@ def make_d4000_vs_redshift_plot():
 
     #ax_res.plot(redshift_pears_plot, d4000_resid, 'o', markersize=2, color='k', markeredgecolor='k')
 
-    ax1.axhline(y=1, linewidth=2, linestyle='--', color='g', zorder=10)
-    ax_res.axhline(y=0.0, linewidth=2, linestyle='--', color='g')
-    ax_res.axhline(y=3.0, linewidth=2, linestyle='-.', color='g')
+    ax1.axhline(y=1, linewidth=2, linestyle='--', color='fuchsia', zorder=10)
+    ax_res.axhline(y=0.0, linewidth=2, linestyle='--', color='fuchsia')
+    ax_res.axhline(y=3.0, linewidth=2, linestyle='-.', color='fuchsia')
 
     # Plot average error bar for points below D4000 = 1.3
     d4000_1p3_idx = np.where(d4000_pears_plot < 1.3)[0]
@@ -174,7 +174,7 @@ def make_d4000_vs_redshift_plot():
     avg_1p6_err = np.mean(abs(d4000_err_pears_plot[d4000_1p6_idx]))
     print "Mean error for points above D4000=1.6:", "{:.2f}".format(avg_1p6_err)
 
-    ax1.axhline(y=1.0 + 3*avg_1p3_err, linewidth=2, linestyle='-.', color='g', zorder=10)
+    ax1.axhline(y=1.0 + 3*avg_1p3_err, linewidth=2, linestyle='-.', color='fuchsia', zorder=10)
     ax1.errorbar(1.31, 1.1, yerr=avg_1p3_err, fmt='.', color='k', \
         markeredgecolor='k', capsize=0, markersize=6, elinewidth=0.5, ecolor='r')
 
@@ -187,12 +187,18 @@ def make_d4000_vs_redshift_plot():
     vmin_level = 1.0
     vmax_level = 1.8
 
-    c = ax_res.scatter(redshift_pears_plot, d4000_resid, s=20, facecolor='None', c=d4000_pears_plot, vmin=vmin_level, vmax=vmax_level, cmap='inferno')
+    cmap = plt.get_cmap('jet')
+    new_cmap = truncate_colormap(cmap, 0.15, 0.82)
+
+    nipy_spectral_cmap = plt.get_cmap('nipy_spectral')
+    trunc_nipy_spec = truncate_colormap(nipy_spectral_cmap, 0.1, 0.9)
+
+    c = ax_res.scatter(redshift_pears_plot, d4000_resid, s=20, facecolor='None', c=d4000_pears_plot, vmin=vmin_level, vmax=vmax_level, cmap=trunc_nipy_spec)
     # add colorbar inside figure
-    cbaxes = inset_axes(ax_res, width='3%', height='75%', loc=7, bbox_to_anchor=[-0.06, 0.06, 1, 1], bbox_transform=ax_res.transAxes)
-    cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
+    cbaxes = inset_axes(ax_res, width='3%', height='75%', loc=7, bbox_to_anchor=[-0.05, 0.06, 1, 1], bbox_transform=ax_res.transAxes)
+    cb = fig.colorbar(c, cax=cbaxes, ticks=np.arange(1.0, 2.0, 0.2), orientation='vertical')
     #cb.ax.get_children()[0].set_linewidths(10.0)
-    cb.ax.set_ylabel(r'$\mathrm{D4000}$', fontsize=14, labelpad=-9)  # This has to be cb.ax NOT cb.ax_res
+    cb.ax.set_ylabel(r'$\mathrm{D4000}$', fontsize=14, labelpad=-42)  # This has to be cb.ax NOT cb.ax_res
 
     d4000_3sigma = np.where(d4000_resid >= 3.0)[0]
     print len(d4000_3sigma), "out of", len(d4000_resid), "galaxies have D4000 measured at 3-sigma or better."
@@ -299,15 +305,10 @@ def make_d4000_vs_redshift_plot():
     vmin_level = 0
     vmax_level = 0.03
 
-    cmap = plt.get_cmap('jet')
-    new_cmap = truncate_colormap(cmap, 0.15, 0.82)
-
-    nipy_spectral_cmap = plt.get_cmap('nipy_spectral')
-
-    c = ax.scatter(d4000_pears_plot, d4000_resid, s=10, c=abs(zspz_acc), vmin=vmin_level, vmax=vmax_level, cmap=new_cmap)
+    c = ax.scatter(d4000_pears_plot, d4000_resid, s=10, c=abs(zspz_acc), vmin=vmin_level, vmax=vmax_level, cmap=trunc_nipy_spec)
     # add colorbar inside figure
     cbaxes = inset_axes(ax, width='3%', height='55%', loc=2, bbox_to_anchor=[0.02, -0.03, 1, 1], bbox_transform=ax.transAxes)
-    cb = fig.colorbar(c, cax=cbaxes, ticks=[vmin_level, vmax_level], orientation='vertical')
+    cb = fig.colorbar(c, cax=cbaxes, ticks=np.arange(vmin_level, vmax_level + 0.01, 0.01), orientation='vertical')
     cb.ax.set_ylabel(r'$\mathrm{\left| \frac{z_{spz} - z_s}{1 + z_s} \right|}$', fontsize=14, rotation=0)
     # Default rotation for the y label of a vertical colorbar is 90
     # So I have to force it to be 0 to see it upright
