@@ -96,6 +96,10 @@ def get_arrays_to_plot():
     I checked this already. Seems like making a cut on the 
     reduced chi2 does not really affect the final results too much.
     """
+
+    # ------------------------------- Get catalog for final sample ------------------------------- #
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+
     # ------------- Firstlight -------------
     id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
@@ -313,6 +317,13 @@ def get_arrays_to_plot():
     for i in range(len(all_ids)):
         current_id = all_ids[i]
         current_field = all_fields[i]
+
+        sample_idx = np.where(final_sample['pearsid'] == current_id)[0]
+        if not sample_idx.size:
+            continue
+        if len(sample_idx) == 1:
+            if final_sample['field'][sample_idx] != current_field:
+                continue
 
         # check if it is an emission line galaxy. If it is then skip
         # Be carreful changing this check. I think it is correct as it is.
@@ -653,12 +664,14 @@ def main():
 
     # Estimate accurate fraction for paper
     # This is only to be done for the full D4000 range
-    do_frac = False
+    do_frac = True
     if do_frac:
         two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
         print len(two_percent_idx), len(resid_zspz)
         f_acc = len(two_percent_idx) / len(resid_zspz)
-        print "Fraction of SPZ redshift galaxies with accuracy at 2% or better:", f_acc
+        print len(two_percent_idx), "out of", len(resid_zspz), "galaxies have redshift accuracy at 2% or better."
+        print "Therefore, fraction of SPZ redshift galaxies with accuracy at 2% or better:", f_acc
+        sys.exit()
 
     # Make sure they are finite
     valid_idx1 = np.where(np.isfinite(resid_zp))[0]
