@@ -191,7 +191,7 @@ def main():
     pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
 
     # Comment this print statement out if out don't want to actually print this list
-    print "ID       RA    DEC       Field      zspec    zphot    zg     zspz    NetSig    D4000   iABmag"
+    print "ID       RA    DEC       Field      zspec    zphot    zg     zspz    NetSig    D4000    D4000_err    iABmag"
 
     total_galaxies = 0
 
@@ -276,6 +276,7 @@ def main():
             "$\substack{+" + str("{:.2f}".format(high_zspzerr)) + " \\\\ -" + str("{:.2f}".format(low_zspzerr)) + "}$", "  ",
             print current_netsig_to_print, "  ",
             print "{:.2f}".format(d4000), "  ",
+            print "{:.2f}".format(d4000_err), "  ",
             #print current_res_zphot_to_print, "     ",
             #print current_res_zspz_to_print, "    ",
             print "{:.2f}".format(current_imag)
