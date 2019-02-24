@@ -13,79 +13,115 @@ zp_results_dir = massive_figures_dir + 'photoz_run_jan2019/'
 zg_results_dir = massive_figures_dir + 'grismz_run_jan2019/'
 
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
-#import spz_photoz_grismz_comparison as comp
+import spz_photoz_grismz_comparison as comp
 from new_refine_grismz_gridsearch_parallel import get_data
 import dn4000_catalog as dc
 
 def main():
 
-    # Read in result files for all redshifts
-    # Read in arrays from Firstlight (fl) and Jet (jt) and combine them
-    # ----- Firstlight -----
+    # ------------- Firstlight -------------
     id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
     zs_arr_fl = np.load(zp_results_dir + 'firstlight_zs_arr.npy')
 
+    zp_minchi2_fl = np.load(zp_results_dir + 'firstlight_zp_minchi2_arr.npy')
+    zg_minchi2_fl = np.load(zg_results_dir + 'firstlight_zg_minchi2_arr.npy')
+    zspz_minchi2_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
+
+    # Length checks
+    assert len(id_arr_fl) == len(field_arr_fl)
+    assert len(id_arr_fl) == len(zs_arr_fl)
+    assert len(id_arr_fl) == len(zp_minchi2_fl)
+    assert len(id_arr_fl) == len(zg_minchi2_fl)
+    assert len(id_arr_fl) == len(zspz_minchi2_fl)
+
+    # Redshift and Error arrays
     zp_arr_fl = np.zeros(id_arr_fl.shape[0])
     zg_arr_fl = np.zeros(id_arr_fl.shape[0])
     zspz_arr_fl = np.zeros(id_arr_fl.shape[0])
 
-    # Empty error arrays
-    zp_low_bound_fl = np.load(zp_results_dir + 'firstlight_zp_low_bound.npy')
-    zp_high_bound_fl = np.load(zp_results_dir + 'firstlight_zp_high_bound.npy')
+    zp_low_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zp_high_bound_fl = np.zeros(id_arr_fl.shape[0])
 
-    zg_low_bound_fl = np.load(zg_results_dir + 'firstlight_zg_low_bound.npy')
-    zg_high_bound_fl = np.load(zg_results_dir + 'firstlight_zg_high_bound.npy')
+    zg_low_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zg_high_bound_fl = np.zeros(id_arr_fl.shape[0])
 
-    zspz_low_bound_fl = np.load(spz_results_dir + 'firstlight_zspz_low_bound.npy')
-    zspz_high_bound_fl = np.load(spz_results_dir + 'firstlight_zspz_high_bound.npy')
+    zspz_low_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zspz_high_bound_fl = np.zeros(id_arr_fl.shape[0])
 
     # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
     for u in range(len(id_arr_fl)):
         zp_pz = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_pz.npy')
         zp_zarr = np.load(zp_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_photoz_z_arr.npy')
-        zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
-
-        zspz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
-        zspz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
-        zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
+        #zp_arr_fl[u] = zp_zarr[np.argmax(zp_pz)]
+        zp_arr_fl[u] = zp_minchi2_fl[u]
 
         zg_pz = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_pz.npy')
         zg_zarr = np.load(zg_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_zg_z_arr.npy')
-        zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
+        #zg_arr_fl[u] = zg_zarr[np.argmax(zg_pz)]
+        zg_arr_fl[u] = zg_minchi2_fl[u]
 
-    # ----- Jet -----
+        zspz_pz = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_pz.npy')
+        zspz_zarr = np.load(spz_results_dir + str(field_arr_fl[u]) + '_' + str(id_arr_fl[u]) + '_spz_z_arr.npy')
+        #zspz_arr_fl[u] = zspz_zarr[np.argmax(zspz_pz)]
+        zspz_arr_fl[u] = zspz_minchi2_fl[u]
+
+        # Get errors and save them to a file
+        zp_low_bound_fl[u], zp_high_bound_fl[u] = comp.get_z_errors(zp_zarr, zp_pz, zp_minchi2_fl[u])
+        zg_low_bound_fl[u], zg_high_bound_fl[u] = comp.get_z_errors(zg_zarr, zg_pz, zg_minchi2_fl[u])
+        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = comp.get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_fl[u])
+
+    # ------------- Jet -------------
     id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
     field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
     zs_arr_jt = np.load(zp_results_dir + 'jet_zs_arr.npy')
 
+    zp_minchi2_jt = np.load(zp_results_dir + 'jet_zp_minchi2_arr.npy')
+    zg_minchi2_jt = np.load(zg_results_dir + 'jet_zg_minchi2_arr.npy')
+    zspz_minchi2_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
+
+    # Length checks
+    assert len(id_arr_jt) == len(field_arr_jt)
+    assert len(id_arr_jt) == len(zs_arr_jt)
+    assert len(id_arr_jt) == len(zp_minchi2_jt)
+    assert len(id_arr_jt) == len(zg_minchi2_jt)
+    assert len(id_arr_jt) == len(zspz_minchi2_jt)
+
+    # Redshift and Error arrays
     zp_arr_jt = np.zeros(id_arr_jt.shape[0])
     zg_arr_jt = np.zeros(id_arr_jt.shape[0])
     zspz_arr_jt = np.zeros(id_arr_jt.shape[0])
 
-    # Empty error arrays
-    zp_low_bound_jt = np.load(zp_results_dir + 'jet_zp_low_bound.npy')
-    zp_high_bound_jt = np.load(zp_results_dir + 'jet_zp_high_bound.npy')
+    zp_low_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zp_high_bound_jt = np.zeros(id_arr_jt.shape[0])
 
-    zg_low_bound_jt = np.load(zg_results_dir + 'jet_zg_low_bound.npy')
-    zg_high_bound_jt = np.load(zg_results_dir + 'jet_zg_high_bound.npy')
+    zg_low_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zg_high_bound_jt = np.zeros(id_arr_jt.shape[0])
 
-    zspz_low_bound_jt = np.load(spz_results_dir + 'jet_zspz_low_bound.npy')
-    zspz_high_bound_jt = np.load(spz_results_dir + 'jet_zspz_high_bound.npy')
+    zspz_low_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zspz_high_bound_jt = np.zeros(id_arr_jt.shape[0])
 
     # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
     for v in range(len(id_arr_jt)):
         zp_pz = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_pz.npy')
         zp_zarr = np.load(zp_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_photoz_z_arr.npy')
-        zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
-
-        zspz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
-        zspz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
-        zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
+        #zp_arr_jt[v] = zp_zarr[np.argmax(zp_pz)]
+        zp_arr_jt[v] = zp_minchi2_jt[v]
 
         zg_pz = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_pz.npy')
         zg_zarr = np.load(zg_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_zg_z_arr.npy')
-        zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
+        #zg_arr_jt[v] = zg_zarr[np.argmax(zg_pz)]
+        zg_arr_jt[v] = zg_minchi2_jt[v]
+
+        zspz_pz = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_pz.npy')
+        zspz_zarr = np.load(spz_results_dir + str(field_arr_jt[v]) + '_' + str(id_arr_jt[v]) + '_spz_z_arr.npy')
+        #zspz_arr_jt[v] = zspz_zarr[np.argmax(zspz_pz)]
+        zspz_arr_jt[v] = zspz_minchi2_jt[v]
+
+        # Get errors and save them to a file
+        zp_low_bound_jt[v], zp_high_bound_jt[v] = comp.get_z_errors(zp_zarr, zp_pz, zp_minchi2_jt[v])
+        zg_low_bound_jt[v], zg_high_bound_jt[v] = comp.get_z_errors(zg_zarr, zg_pz, zg_minchi2_jt[v])
+        zspz_low_bound_jt[v], zspz_high_bound_jt[v] = comp.get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_jt[v])
 
     # ----- Concatenate -----
     # check for any accidental overlaps
@@ -229,7 +265,7 @@ def main():
 
             print current_id_to_print, "  ",
             print current_field, "  ",
-            print "{:.6f}".format(current_ra), "  ",
+            print "{:.7f}".format(current_ra), "  ",
             print "{:.6f}".format(current_dec), "  ",
             print "{:.3f}".format(current_specz), "  ",
             print str("{:.2f}".format(zp[i])) + \

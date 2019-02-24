@@ -96,7 +96,6 @@ def get_arrays_to_plot():
     I checked this already. Seems like making a cut on the 
     reduced chi2 does not really affect the final results too much.
     """
-
     # ------------- Firstlight -------------
     id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
@@ -628,7 +627,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.6
+    d4000_low = 1.1
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 

@@ -303,13 +303,13 @@ def make_d4000_vs_redshift_plot():
     ax = fig.add_subplot(111)
 
     vmin_level = 0
-    vmax_level = 0.03
+    vmax_level = 0.046
 
-    c = ax.scatter(d4000_pears_plot, d4000_resid, s=10, c=abs(zspz_acc), vmin=vmin_level, vmax=vmax_level, cmap=trunc_nipy_spec)
+    c = ax.scatter(d4000_pears_plot, d4000_resid, s=10, c=abs(zspz_acc), vmin=vmin_level, vmax=vmax_level, cmap=new_cmap)
     # add colorbar inside figure
     cbaxes = inset_axes(ax, width='3%', height='55%', loc=2, bbox_to_anchor=[0.02, -0.03, 1, 1], bbox_transform=ax.transAxes)
     cb = fig.colorbar(c, cax=cbaxes, ticks=np.arange(vmin_level, vmax_level + 0.01, 0.01), orientation='vertical')
-    cb.ax.set_ylabel(r'$\mathrm{\left| \frac{z_{spz} - z_s}{1 + z_s} \right|}$', fontsize=14, rotation=0)
+    cb.ax.set_ylabel(r'$\mathrm{\left| \frac{z_{spz} - z_s}{1 + z_s} \right|}$', fontsize=14, rotation=0, labelpad=25)
     # Default rotation for the y label of a vertical colorbar is 90
     # So I have to force it to be 0 to see it upright
 
@@ -320,7 +320,7 @@ def make_d4000_vs_redshift_plot():
     # Limits and ticks
     ax.set_ylim(-2, 14)
     ax.set_yticks(np.arange(-2, 15, 2))
-    ax.set_xlim(0.7, 2.05)
+    ax.set_xlim(0.6, 2.05)
 
     # Horizontal and vertical lines
     ax.axhline(y=0.0, ls='--', color='k')
