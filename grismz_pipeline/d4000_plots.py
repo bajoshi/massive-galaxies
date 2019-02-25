@@ -56,7 +56,8 @@ def get_all_arrays():
         current_field = final_sample['field'][i]
         current_zspec = final_sample['specz'][i]
 
-        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_id, current_field)
+        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = \
+        ngp.get_data(current_id, current_field)
 
         if return_code == 0:
             print current_field, current_id,
@@ -519,6 +520,7 @@ def make_redshift_hist():
 
 if __name__ == '__main__':
 
+    """
     redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays()
 
     assert len(redshift_arr) == len(d4000_arr)
@@ -529,8 +531,7 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy', d4000_arr)
     np.save(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy', d4000_err_arr)
     np.save(massive_figures_dir + 'zspz_for_d4000_plots.npy', zspz_arr)
-
-    sys.exit(0)
+    """
     
     make_d4000_vs_redshift_plot()
     make_d4000_hist()
