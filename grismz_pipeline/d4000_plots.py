@@ -114,19 +114,18 @@ def get_all_arrays():
         # Now get the SPZ for those galaxies above D4000=1.1 for which we ran the fitting code
         # All galaxies below D4000=1.1 will be colored gray in the d4000 significance vs D4000 plot
         # Now match first with firstlight and then with JEt
-        #fl_idx = np.where((id_arr_fl == current_id) & (field_arr_fl == current_field))[0]
-        #if fl_idx.size:
-        #    assert len(fl_idx) == 1
-        #    zspz_list.append(zspz_minchi2_fl[fl_idx])
-        #elif not fl_idx.size:
-        #    jt_idx = np.where((id_arr_jt == current_id) & (field_arr_jt == current_field))[0]
-        #    if jt_idx.size:
-        #        assert len(jt_idx) == 1
-        #        zspz_list.append(zspz_minchi2_jt[jt_idx])
-        #    else:
-        #        zspz_list.append(-99.0)
-
-        zspz_list.append(0.0)
+        fl_idx = np.where((id_arr_fl == current_id) & (field_arr_fl == current_field))[0]
+        if fl_idx.size:
+            assert len(fl_idx) == 1
+            zspz_list.append(zspz_minchi2_fl[fl_idx])
+        elif not fl_idx.size:
+            jt_idx = np.where((id_arr_jt == current_id) & (field_arr_jt == current_field))[0]
+            if jt_idx.size:
+                assert len(jt_idx) == 1
+                zspz_list.append(zspz_minchi2_jt[jt_idx])
+            else:
+                zspz_list.append(-99.0)
+        
         redshift_list.append(current_zspec)
         d4000_list.append(d4000)
         d4000_err_list.append(d4000_err)
