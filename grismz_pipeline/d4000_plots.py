@@ -343,13 +343,19 @@ def make_d4000_vs_redshift_plot():
     vmin_level = 0
     vmax_level = 0.046
 
-    c = ax.scatter(d4000_pears_plot, d4000_resid, s=10, c=abs(zspz_acc), vmin=vmin_level, vmax=vmax_level, cmap=trunc_nipy_spec)
+    d4000_gtr1p1_idx = np.where(d4000_pears_plot >= 1.1)[0]
+    d4000_les1p1_idx = np.where(d4000_pears_plot < 1.1)[0]
+
+    c = ax.scatter(d4000_pears_plot[d4000_gtr1p1_idx], d4000_resid[d4000_gtr1p1_idx], s=10, c=abs(zspz_acc[d4000_gtr1p1_idx]), \
+        vmin=vmin_level, vmax=vmax_level, cmap=trunc_nipy_spec)
     # add colorbar inside figure
     cbaxes = inset_axes(ax, width='3%', height='55%', loc=2, bbox_to_anchor=[0.02, -0.03, 1, 1], bbox_transform=ax.transAxes)
     cb = fig.colorbar(c, cax=cbaxes, ticks=np.arange(vmin_level, vmax_level + 0.01, 0.01), orientation='vertical')
     cb.ax.set_ylabel(r'$\mathrm{\left| \frac{z_{spz} - z_s}{1 + z_s} \right|}$', fontsize=14, rotation=0, labelpad=25)
     # Default rotation for the y label of a vertical colorbar is 90
     # So I have to force it to be 0 to see it upright
+
+    ax.scatter(d4000_pears_plot[d4000_les1p1_idx], d4000_resid[d4000_les1p1_idx], s=10, color='gray')
 
     # Lbaels
     ax.set_xlabel(r'$\mathrm{D4000}$', fontsize=15)
