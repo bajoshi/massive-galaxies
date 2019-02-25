@@ -46,6 +46,7 @@ def get_all_arrays():
     redshift_list = []
     d4000_list = []
     d4000_err_list = []
+    zspz_list = []
 
     # Now loop over all galaxies and get their D4000
     for i in range(len(final_sample)):
@@ -90,7 +91,39 @@ def get_all_arrays():
 
         # Now get the SPZ for those galaxies above D4000=1.1 for which we ran the fitting code
         # All galaxies below D4000=1.1 will be colored gray in the d4000 significance vs D4000 plot
+        # Get ids and fields for matching
+        # ------------- Firstlight -------------
+        id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
+        field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
+        zspz_minchi2_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
 
+        # Length checks
+        assert len(id_arr_fl) == len(field_arr_fl)
+        assert len(id_arr_fl) == len(zs_arr_fl)
+        assert len(id_arr_fl) == len(zspz_minchi2_fl)
+
+        # ------------- Jet -------------
+        id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
+        field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
+        zspz_minchi2_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
+
+        # Length checks
+        assert len(id_arr_jt) == len(field_arr_jt)
+        assert len(id_arr_jt) == len(zs_arr_jt)
+        assert len(id_arr_jt) == len(zspz_minchi2_jt)
+
+        # Now match first with firstlight and then with JEt
+        fl_idx = np.where((id_arr_fl == current_id) & (field_arr_fl == current_field))[0]
+        if fl_idx.size:
+            assert len(fl_idx) == 1
+            zspz_list.append(zspz_minchi2_fl[fl_idx])
+        elif not fl_idx.size:
+            jt_idx = np.where((id_arr_jt == current_id) & (field_arr_jt == current_field))[0]
+            if jt_idx.size:
+                assert len(jt_idx) == 1
+                zspz_list.append(zspz_minchi2_jt[jt_idx])
+            else:
+                zspz_list.append(-99.0)
 
         redshift_list.append(current_zspec)
         d4000_list.append(d4000)
@@ -100,6 +133,7 @@ def get_all_arrays():
     redshift_arr = np.asarray(redshift_list)
     d4000_arr = np.asarray(d4000_list)
     d4000_err_arr = np.asarray(d4000_err_list)
+    zspz_arr = np.asarray(zspz_list)
 
     return redshift_arr, d4000_arr, d4000_err_arr, zspz_arr
 
@@ -378,7 +412,7 @@ def make_d4000_vs_redshift_plot():
 def make_d4000_hist():
 
     # get arrays
-    #redshift_arr, d4000_arr, d4000_err_arr = get_all_arrays()
+    #redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays()
 
     redshift_arr = np.load(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy')
     d4000_arr = np.load(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy')
@@ -487,10 +521,16 @@ if __name__ == '__main__':
 
     redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays()
 
+    assert len(redshift_arr) == len(d4000_arr)
+    assert len(redshift_arr) == len(d4000_err_arr)
+    assert len(redshift_arr) == len(zspz_arr)
+
     np.save(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy', redshift_arr)
     np.save(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy', d4000_arr)
     np.save(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy', d4000_err_arr)
     np.save(massive_figures_dir + 'zspz_for_d4000_plots.npy', zspz_arr)
+
+    sys.exit(0)
     
     make_d4000_vs_redshift_plot()
     make_d4000_hist()
