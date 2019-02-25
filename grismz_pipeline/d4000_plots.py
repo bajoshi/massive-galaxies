@@ -49,6 +49,25 @@ def get_all_arrays():
     d4000_list = []
     d4000_err_list = []
     zspz_list = []
+    
+    # Get ids, fields, and SPZs
+    # ------------- Firstlight -------------
+    id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
+    field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
+    zspz_minchi2_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
+
+    # Length checks
+    assert len(id_arr_fl) == len(field_arr_fl)
+    assert len(id_arr_fl) == len(zspz_minchi2_fl)
+
+    # ------------- Jet -------------
+    id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
+    field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
+    zspz_minchi2_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
+
+    # Length checks
+    assert len(id_arr_jt) == len(field_arr_jt)
+    assert len(id_arr_jt) == len(zspz_minchi2_jt)
 
     # Now loop over all galaxies and get their D4000
     for i in range(len(final_sample)):
@@ -94,25 +113,6 @@ def get_all_arrays():
 
         # Now get the SPZ for those galaxies above D4000=1.1 for which we ran the fitting code
         # All galaxies below D4000=1.1 will be colored gray in the d4000 significance vs D4000 plot
-        # Get ids and fields for matching
-        # ------------- Firstlight -------------
-        id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
-        field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
-        zspz_minchi2_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
-
-        # Length checks
-        assert len(id_arr_fl) == len(field_arr_fl)
-        assert len(id_arr_fl) == len(zspz_minchi2_fl)
-
-        # ------------- Jet -------------
-        id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
-        field_arr_jt = np.load(zp_results_dir + 'jet_field_arr.npy')
-        zspz_minchi2_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
-
-        # Length checks
-        assert len(id_arr_jt) == len(field_arr_jt)
-        assert len(id_arr_jt) == len(zspz_minchi2_jt)
-
         # Now match first with firstlight and then with JEt
         fl_idx = np.where((id_arr_fl == current_id) & (field_arr_fl == current_field))[0]
         if fl_idx.size:
@@ -176,6 +176,9 @@ def make_d4000_vs_redshift_plot():
     # Since I found out after making the D4000 error histogram
     # that only 8 galaxies have an error > 0.5.
     valid_err_idx = np.where(d4000_err_pears_plot < 0.5)[0]
+    #valid_ids = np.where(zspz != -99.0)[0]
+    #all_valid_idx = reduce(np.intersect1d, (valid_err_idx, valid_ids))
+
     redshift_pears_plot = redshift_pears_plot[valid_err_idx]
     d4000_pears_plot = d4000_pears_plot[valid_err_idx]
     d4000_err_pears_plot = d4000_err_pears_plot[valid_err_idx]
