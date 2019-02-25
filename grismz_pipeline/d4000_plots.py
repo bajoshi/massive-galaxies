@@ -18,6 +18,8 @@ from astropy.cosmology import Planck15
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
+spz_results_dir = massive_figures_dir + 'spz_run_jan2019/'
+zp_results_dir = massive_figures_dir + 'photoz_run_jan2019/'
 
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 sys.path.append(massive_galaxies_dir + 'codes/')
