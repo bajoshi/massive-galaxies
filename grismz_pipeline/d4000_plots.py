@@ -101,7 +101,6 @@ def get_all_arrays():
 
         # Length checks
         assert len(id_arr_fl) == len(field_arr_fl)
-        assert len(id_arr_fl) == len(zs_arr_fl)
         assert len(id_arr_fl) == len(zspz_minchi2_fl)
 
         # ------------- Jet -------------
@@ -111,7 +110,6 @@ def get_all_arrays():
 
         # Length checks
         assert len(id_arr_jt) == len(field_arr_jt)
-        assert len(id_arr_jt) == len(zs_arr_jt)
         assert len(id_arr_jt) == len(zspz_minchi2_jt)
 
         # Now match first with firstlight and then with JEt
