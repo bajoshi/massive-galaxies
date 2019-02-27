@@ -11,7 +11,7 @@ if __name__ == '__main__':
     n_cols_req = np.concatenate(([0], np.arange(6,27), np.arange(32,53)))
     ncat = np.genfromtxt('ugrism_n.cat', dtype=None, usecols=n_cols_req)
 
-    s_cols_req = np.concatenate(([0], np.arange(6,27), np.arange(35,55)))
+    s_cols_req = np.concatenate(([0], np.arange(6,27), np.arange(35,56)))
     scat = np.genfromtxt('ugrism_s.cat', dtype=None, usecols=s_cols_req)
 
     # ------------------------------- Resave ------------------------------- #

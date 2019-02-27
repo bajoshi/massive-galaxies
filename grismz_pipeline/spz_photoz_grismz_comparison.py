@@ -310,7 +310,7 @@ def get_arrays_to_plot():
     pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
 
     # Comment this print statement out if out don't want to actually print this list on paper
-    do_print = True
+    do_print = False
     if do_print:
         print "ID      Field      zspec    zphot    zg     zspz    NetSig    D4000   res_zphot    res_zgrism    res_zspz    iABmag"
 
@@ -324,6 +324,18 @@ def get_arrays_to_plot():
         if len(sample_idx) == 1:
             if final_sample['field'][sample_idx] != current_field:
                 continue
+
+        # Check z_spec quality
+        # Make sure to get the spec_z qual for the exact match
+        if len(sample_idx) == 2:
+            sample_idx_nested = int(np.where(final_sample['field'][sample_idx] == current_field)[0])
+            current_specz_qual = final_sample['zspec_qual'][sample_idx[sample_idx_nested]]
+        else:
+            current_specz_qual = final_sample['zspec_qual'][int(sample_idx)]
+
+        if current_specz_qual == '1' or current_specz_qual == 'C':
+            #print "Skipping", current_field, current_id, "due to spec-z quality:", current_specz_qual
+            continue
 
         # check if it is an emission line galaxy. If it is then skip
         # Be carreful changing this check. I think it is correct as it is.
@@ -624,7 +636,6 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
 
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, d4000_err, netsig, imag = get_arrays_to_plot()
-    sys.exit(0)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -639,7 +650,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.1
+    d4000_low = 1.6
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
@@ -665,7 +676,7 @@ def main():
 
     # Estimate accurate fraction for paper
     # This is only to be done for the full D4000 range
-    do_frac = True
+    do_frac = False
     if do_frac:
         two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
         print len(two_percent_idx), len(resid_zspz)
