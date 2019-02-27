@@ -310,7 +310,7 @@ def get_arrays_to_plot():
     pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
 
     # Comment this print statement out if out don't want to actually print this list on paper
-    do_print = False
+    do_print = True
     if do_print:
         print "ID      Field      zspec    zphot    zg     zspz    NetSig    D4000   res_zphot    res_zgrism    res_zspz    iABmag"
 
@@ -376,7 +376,7 @@ def get_arrays_to_plot():
         imag_list.append(current_imag)
 
         if do_print:
-            if zg[i]<=0.5:
+            if d4000 > 1.1 and d4000 < 1.2:
                 # Some formatting stuff just to make it easier to read on the screen
                 current_id_to_print = str(current_id)
                 if len(current_id_to_print) == 5:
@@ -624,6 +624,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
 
 def main():
     ids, fields, zs, zp, zg, zspz, d4000, d4000_err, netsig, imag = get_arrays_to_plot()
+    sys.exit(0)
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.

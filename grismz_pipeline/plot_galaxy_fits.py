@@ -797,7 +797,7 @@ def main():
     # ------------- Code basically copied from run_final_sample.py
     # and from single galaxy checking code.
     # --------------------------
-    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'galaxies_with_zg_lt_0p5.txt', dtype=None, names=True, skip_header=1)
+    galaxies_to_plot = np.genfromtxt(massive_galaxies_dir + 'd4000_1p1_to_1p2.txt', dtype=None, names=True, skip_header=1)
     #sort_and_save(galaxies_to_plot)
     #sys.exit()
 
