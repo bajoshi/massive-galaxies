@@ -749,9 +749,9 @@ def main():
     # Compute catastrophic failures
     # i.e., How many galaxies are outside +-3-sigma given the sigma above?
     # Photo-z
-    outlier_idx_zp = np.where(abs(resid_zp) > 3*nmad_zphot)[0]
-    outlier_idx_zg = np.where(abs(resid_zg) > 3*nmad_zgrism)[0]
-    outlier_idx_zspz = np.where(abs(resid_zspz) > 3*nmad_zspz)[0]
+    outlier_idx_zp = np.where(abs(resid_zp - mean_zphot) > 3*nmad_zphot)[0]
+    outlier_idx_zg = np.where(abs(resid_zg - mean_zgrism) > 3*nmad_zgrism)[0]
+    outlier_idx_zspz = np.where(abs(resid_zspz - mean_zspz) > 3*nmad_zspz)[0]
 
     outlier_frac_zp = len(outlier_idx_zp) / len(resid_zp)
     outlier_frac_zg = len(outlier_idx_zg) / len(resid_zg)

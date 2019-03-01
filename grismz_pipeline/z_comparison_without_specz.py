@@ -224,8 +224,8 @@ def main():
 
     # Compute catastrophic failures
     # i.e., How many galaxies are outside +-3-sigma given the sigma above?
-    outlier_idx_zpzg = np.where(abs(resid_zpzg) - mean_zpzg > 3*nmad_zpzg)[0]
-    outlier_idx_zpzspz = np.where(abs(resid_zpzspz) - mean_zpzspz > 3*nmad_zpzspz)[0]
+    outlier_idx_zpzg = np.where(abs(resid_zpzg - mean_zpzg) > 3*nmad_zpzg)[0]
+    outlier_idx_zpzspz = np.where(abs(resid_zpzspz - mean_zpzspz) > 3*nmad_zpzspz)[0]
 
     outlier_frac_zpzg = len(outlier_idx_zpzg) / len(resid_zpzg)
     outlier_frac_zpzspz = len(outlier_idx_zpzspz) / len(resid_zpzspz)

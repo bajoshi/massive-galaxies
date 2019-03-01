@@ -4,7 +4,9 @@ import numpy as np
 from astropy.stats import mad_std
 from scipy.integrate import simps
 from scipy.interpolate import griddata
-from scipy.optimize import curve_fit
+#from scipy.optimize import curve_fit
+from astropy.modeling import models, fitting
+from astropy.stats import sigma_clip
 
 import os
 import sys
@@ -223,23 +225,33 @@ def plot_eazy_grismz_comparison(resid_eazy, resid_zg, eazy_z, zs_for_eazy, zg, z
     ax2.axhline(y=0.0, ls='-', color='gray')
     ax4.axhline(y=0.0, ls='-', color='gray')
 
-    # do the fit with scipy
-    popt_eazy, pcov_eazy = curve_fit(line_func, zs_for_eazy, eazy_z, p0=[1.0, 0.6])
-    popt_zg, pcov_zg = curve_fit(line_func, zs_for_zg, zg, p0=[1.0, 0.6])
+    # do the fit with astropy with outlier removal
+    # These outliers are however shown on the plots
+    # Initialize model
+    l_init = models.Linear1D(slope=1.0, intercept=0.6)
+
+    # Initialize fitting
+    fit = fitting.LevMarLSQFitter()
+    or_fit = fitting.FittingWithOutlierRemoval(fit, sigma_clip, niter=3, sigma=3.0)
+
+    # Now do the fit
+    l_eazy_model, l_eazy_orfit_mask = or_fit(l_init, zs_for_eazy, eazy_z)
+    l_zg_model, l_zg_orfit_mask = or_fit(l_init, zs_for_zg, zg)
+
+    # Get params
+    eazy_best_slope = l_eazy_model.params[]
+    eazy_best_intcp = l_eazy_model.params[]
 
     # plot line fit
     x_plot = np.arange(0.2,1.5,0.01)
 
-    eazy_mean_line = line_func(x_plot, popt_eazy[0], popt_eazy[1])
-    zg_mean_line = line_func(x_plot, popt_zg[0], popt_zg[1])
-
     ax1.plot(x_plot, x_plot, '-', color='gray')
-    ax1.plot(x_plot, eazy_mean_line, '--', color='darkblue', lw=1)
+    ax1.plot(x_plot, l_eazy_model(x_plot), '--', color='darkblue', lw=1)
     ax1.plot(x_plot, (1+nmad_eazy)*popt_eazy[0]*x_plot + nmad_eazy + popt_eazy[1], ls='--', color='red', lw=1)
     ax1.plot(x_plot, (1-nmad_eazy)*popt_eazy[0]*x_plot - nmad_eazy + popt_eazy[1], ls='--', color='red', lw=1)
 
     ax3.plot(x_plot, x_plot, '-', color='gray')
-    ax3.plot(x_plot, zg_mean_line, '--', color='darkblue', lw=1)
+    ax3.plot(x_plot, l_zg_model(x_plot), '--', color='darkblue', lw=1)
     ax3.plot(x_plot, (1+nmad_zg)*popt_zg[0]*x_plot + nmad_zg + popt_zg[1], ls='--', color='red', lw=1)
     ax3.plot(x_plot, (1-nmad_zg)*popt_zg[0]*x_plot - nmad_zg + popt_zg[1], ls='--', color='red', lw=1)
 
