@@ -28,26 +28,40 @@ def main():
     zg_minchi2_fl = np.load(zg_results_dir + 'firstlight_zg_minchi2_arr.npy')
     zspz_minchi2_fl = np.load(spz_results_dir + 'firstlight_zspz_minchi2_arr.npy')
 
+    # Get errors from chi2 map
+    zp_low_bound_chi2_fl = np.load(zp_results_dir + 'firstlight_zp_zerr_low_arr.npy')
+    zp_high_bound_chi2_fl = np.load(zp_results_dir + 'firstlight_zp_zerr_up_arr.npy')
+    zg_low_bound_chi2_fl = np.load(zg_results_dir + 'firstlight_zg_zerr_low_arr.npy')
+    zg_high_bound_chi2_fl = np.load(zg_results_dir + 'firstlight_zg_zerr_up_arr.npy')
+    zspz_low_bound_chi2_fl = np.load(spz_results_dir + 'firstlight_zspz_zerr_low_arr.npy')
+    zspz_high_bound_chi2_fl = np.load(spz_results_dir + 'firstlight_zspz_zerr_up_arr.npy')
+
     # Length checks
     assert len(id_arr_fl) == len(field_arr_fl)
     assert len(id_arr_fl) == len(zs_arr_fl)
     assert len(id_arr_fl) == len(zp_minchi2_fl)
     assert len(id_arr_fl) == len(zg_minchi2_fl)
     assert len(id_arr_fl) == len(zspz_minchi2_fl)
+    assert len(id_arr_fl) == len(zp_low_bound_chi2_fl)
+    assert len(id_arr_fl) == len(zp_high_bound_chi2_fl)
+    assert len(id_arr_fl) == len(zg_low_bound_chi2_fl)
+    assert len(id_arr_fl) == len(zg_high_bound_chi2_fl)
+    assert len(id_arr_fl) == len(zspz_low_bound_chi2_fl)
+    assert len(id_arr_fl) == len(zspz_high_bound_chi2_fl)
 
     # Redshift and Error arrays
     zp_arr_fl = np.zeros(id_arr_fl.shape[0])
     zg_arr_fl = np.zeros(id_arr_fl.shape[0])
     zspz_arr_fl = np.zeros(id_arr_fl.shape[0])
 
-    zp_low_bound_fl = np.zeros(id_arr_fl.shape[0])
-    zp_high_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zp_low_bound_pz_fl = np.zeros(id_arr_fl.shape[0])
+    zp_high_bound_pz_fl = np.zeros(id_arr_fl.shape[0])
 
-    zg_low_bound_fl = np.zeros(id_arr_fl.shape[0])
-    zg_high_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zg_low_bound_pz_fl = np.zeros(id_arr_fl.shape[0])
+    zg_high_bound_pz_fl = np.zeros(id_arr_fl.shape[0])
 
-    zspz_low_bound_fl = np.zeros(id_arr_fl.shape[0])
-    zspz_high_bound_fl = np.zeros(id_arr_fl.shape[0])
+    zspz_low_bound_pz_fl = np.zeros(id_arr_fl.shape[0])
+    zspz_high_bound_pz_fl = np.zeros(id_arr_fl.shape[0])
 
     # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
     for u in range(len(id_arr_fl)):
@@ -67,9 +81,9 @@ def main():
         zspz_arr_fl[u] = zspz_minchi2_fl[u]
 
         # Get errors and save them to a file
-        zp_low_bound_fl[u], zp_high_bound_fl[u] = comp.get_z_errors(zp_zarr, zp_pz, zp_minchi2_fl[u])
-        zg_low_bound_fl[u], zg_high_bound_fl[u] = comp.get_z_errors(zg_zarr, zg_pz, zg_minchi2_fl[u])
-        zspz_low_bound_fl[u], zspz_high_bound_fl[u] = comp.get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_fl[u])
+        zp_low_bound_pz_fl[u], zp_high_bound_pz_fl[u] = comp.get_z_errors(zp_zarr, zp_pz, zp_minchi2_fl[u])
+        zg_low_bound_pz_fl[u], zg_high_bound_pz_fl[u] = comp.get_z_errors(zg_zarr, zg_pz, zg_minchi2_fl[u])
+        zspz_low_bound_pz_fl[u], zspz_high_bound_pz_fl[u] = comp.get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_fl[u])
 
     # ------------- Jet -------------
     id_arr_jt = np.load(zp_results_dir + 'jet_id_arr.npy')
@@ -80,26 +94,40 @@ def main():
     zg_minchi2_jt = np.load(zg_results_dir + 'jet_zg_minchi2_arr.npy')
     zspz_minchi2_jt = np.load(spz_results_dir + 'jet_zspz_minchi2_arr.npy')
 
+    # Get errors from chi2 map
+    zp_low_bound_chi2_jt = np.load(zp_results_dir + 'jet_zp_zerr_low_arr.npy')
+    zp_high_bound_chi2_jt = np.load(zp_results_dir + 'jet_zp_zerr_up_arr.npy')
+    zg_low_bound_chi2_jt = np.load(zg_results_dir + 'jet_zg_zerr_low_arr.npy')
+    zg_high_bound_chi2_jt = np.load(zg_results_dir + 'jet_zg_zerr_up_arr.npy')
+    zspz_low_bound_chi2_jt = np.load(spz_results_dir + 'jet_zspz_zerr_low_arr.npy')
+    zspz_high_bound_chi2_jt = np.load(spz_results_dir + 'jet_zspz_zerr_up_arr.npy')
+
     # Length checks
     assert len(id_arr_jt) == len(field_arr_jt)
     assert len(id_arr_jt) == len(zs_arr_jt)
     assert len(id_arr_jt) == len(zp_minchi2_jt)
     assert len(id_arr_jt) == len(zg_minchi2_jt)
     assert len(id_arr_jt) == len(zspz_minchi2_jt)
+    assert len(id_arr_jt) == len(zp_low_bound_chi2_jt)
+    assert len(id_arr_jt) == len(zp_high_bound_chi2_jt)
+    assert len(id_arr_jt) == len(zg_low_bound_chi2_jt)
+    assert len(id_arr_jt) == len(zg_high_bound_chi2_jt)
+    assert len(id_arr_jt) == len(zspz_low_bound_chi2_jt)
+    assert len(id_arr_jt) == len(zspz_high_bound_chi2_jt)
 
     # Redshift and Error arrays
     zp_arr_jt = np.zeros(id_arr_jt.shape[0])
     zg_arr_jt = np.zeros(id_arr_jt.shape[0])
     zspz_arr_jt = np.zeros(id_arr_jt.shape[0])
 
-    zp_low_bound_jt = np.zeros(id_arr_jt.shape[0])
-    zp_high_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zp_low_bound_pz_jt = np.zeros(id_arr_jt.shape[0])
+    zp_high_bound_pz_jt = np.zeros(id_arr_jt.shape[0])
 
-    zg_low_bound_jt = np.zeros(id_arr_jt.shape[0])
-    zg_high_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zg_low_bound_pz_jt = np.zeros(id_arr_jt.shape[0])
+    zg_high_bound_pz_jt = np.zeros(id_arr_jt.shape[0])
 
-    zspz_low_bound_jt = np.zeros(id_arr_jt.shape[0])
-    zspz_high_bound_jt = np.zeros(id_arr_jt.shape[0])
+    zspz_low_bound_pz_jt = np.zeros(id_arr_jt.shape[0])
+    zspz_high_bound_pz_jt = np.zeros(id_arr_jt.shape[0])
 
     # Make sure you're getting the exact redshift corresponding to the peak of the p(z) curve
     for v in range(len(id_arr_jt)):
@@ -119,9 +147,9 @@ def main():
         zspz_arr_jt[v] = zspz_minchi2_jt[v]
 
         # Get errors and save them to a file
-        zp_low_bound_jt[v], zp_high_bound_jt[v] = comp.get_z_errors(zp_zarr, zp_pz, zp_minchi2_jt[v])
-        zg_low_bound_jt[v], zg_high_bound_jt[v] = comp.get_z_errors(zg_zarr, zg_pz, zg_minchi2_jt[v])
-        zspz_low_bound_jt[v], zspz_high_bound_jt[v] = comp.get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_jt[v])
+        zp_low_bound_pz_jt[v], zp_high_bound_pz_jt[v] = comp.get_z_errors(zp_zarr, zp_pz, zp_minchi2_jt[v])
+        zg_low_bound_pz_jt[v], zg_high_bound_pz_jt[v] = comp.get_z_errors(zg_zarr, zg_pz, zg_minchi2_jt[v])
+        zspz_low_bound_pz_jt[v], zspz_high_bound_pz_jt[v] = comp.get_z_errors(zspz_zarr, zspz_pz, zspz_minchi2_jt[v])
 
     # ----- Concatenate -----
     # check for any accidental overlaps
@@ -155,12 +183,12 @@ def main():
     zg_arr_jt = np.delete(zg_arr_jt, common_indices_jt, axis=None)
     zspz_arr_jt = np.delete(zspz_arr_jt, common_indices_jt, axis=None)
 
-    zp_low_bound_jt = np.delete(zp_low_bound_jt, common_indices_jt, axis=None)
-    zp_high_bound_jt = np.delete(zp_high_bound_jt, common_indices_jt, axis=None)
-    zg_low_bound_jt = np.delete(zg_low_bound_jt, common_indices_jt, axis=None)
-    zg_high_bound_jt = np.delete(zg_high_bound_jt, common_indices_jt, axis=None)
-    zspz_low_bound_jt = np.delete(zspz_low_bound_jt, common_indices_jt, axis=None)
-    zspz_high_bound_jt = np.delete(zspz_high_bound_jt, common_indices_jt, axis=None)
+    zp_low_bound_chi2_jt = np.delete(zp_low_bound_chi2_jt, common_indices_jt, axis=None)
+    zp_high_bound_chi2_jt = np.delete(zp_high_bound_chi2_jt, common_indices_jt, axis=None)
+    zg_low_bound_chi2_jt = np.delete(zg_low_bound_chi2_jt, common_indices_jt, axis=None)
+    zg_high_bound_chi2_jt = np.delete(zg_high_bound_chi2_jt, common_indices_jt, axis=None)
+    zspz_low_bound_chi2_jt = np.delete(zspz_low_bound_chi2_jt, common_indices_jt, axis=None)
+    zspz_high_bound_chi2_jt = np.delete(zspz_high_bound_chi2_jt, common_indices_jt, axis=None)
 
     # I need to concatenate these arrays for hte purposes of looping
     all_ids = np.concatenate((id_arr_fl, id_arr_jt))
@@ -171,14 +199,14 @@ def main():
     zg = np.concatenate((zg_arr_fl, zg_arr_jt))
     zspz = np.concatenate((zspz_arr_fl, zspz_arr_jt))
 
-    zp_low_bound = np.concatenate((zp_low_bound_fl, zp_low_bound_jt))
-    zp_high_bound = np.concatenate((zp_high_bound_fl, zp_high_bound_jt))
+    zp_low_bound_chi2 = np.concatenate((zp_low_bound_chi2_fl, zp_low_bound_chi2_jt))
+    zp_high_bound_chi2 = np.concatenate((zp_high_bound_chi2_fl, zp_high_bound_chi2_jt))
 
-    zg_low_bound = np.concatenate((zg_low_bound_fl, zg_low_bound_jt))
-    zg_high_bound = np.concatenate((zg_high_bound_fl, zg_high_bound_jt))
+    zg_low_bound_chi2 = np.concatenate((zg_low_bound_chi2_fl, zg_low_bound_chi2_jt))
+    zg_high_bound_chi2 = np.concatenate((zg_high_bound_chi2_fl, zg_high_bound_chi2_jt))
 
-    zspz_low_bound = np.concatenate((zspz_low_bound_fl, zspz_low_bound_jt))
-    zspz_high_bound = np.concatenate((zspz_high_bound_fl, zspz_high_bound_jt))
+    zspz_low_bound_chi2 = np.concatenate((zspz_low_bound_chi2_fl, zspz_low_bound_chi2_jt))
+    zspz_high_bound_chi2 = np.concatenate((zspz_high_bound_chi2_fl, zspz_high_bound_chi2_jt))
 
     # Read in master catalogs to get i-band mag
     # ------------------------------- Read PEARS cats ------------------------------- #
@@ -228,14 +256,14 @@ def main():
             current_imag = pears_scat['imag'][master_cat_idx]
 
         # Get errors on redshifts 
-        high_zperr = zp_high_bound[i] - zp[i]
-        low_zperr  = zp[i] - zp_low_bound[i]
+        high_zperr = zp_high_bound_chi2[i] - zp[i]
+        low_zperr  = zp[i] - zp_low_bound_chi2[i]
 
-        high_zgerr = zg_high_bound[i] - zg[i]
-        low_zgerr  = zg[i] - zg_low_bound[i]
+        high_zgerr = zg_high_bound_chi2[i] - zg[i]
+        low_zgerr  = zg[i] - zg_low_bound_chi2[i]
 
-        high_zspzerr = zspz_high_bound[i] - zspz[i]
-        low_zspzerr  = zspz[i] - zspz_low_bound[i]
+        high_zspzerr = zspz_high_bound_chi2[i] - zspz[i]
+        low_zspzerr  = zspz[i] - zspz_low_bound_chi2[i]
 
         if d4000 >= 1.1 and d4000 < 2.0:
             # Some formatting stuff just to make it easier to read on the screen and the tex file
