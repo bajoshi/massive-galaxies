@@ -9,6 +9,7 @@ from astropy.cosmology import Planck15 as cosmo
 from joblib import Parallel, delayed
 from scipy.interpolate import griddata, interp1d
 from scipy.integrate import simps
+import pysynphot
 
 import os
 import sys
@@ -79,8 +80,8 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         # multiply model spectrum to filter curve
         for i in xrange(total_models):
 
-            num = np.sum(model_comp_spec_z[i] * filt_interp)
-            den = np.sum(filt_interp)
+            num = np.nansum(model_comp_spec_z[i] * filt_interp)
+            den = np.nansum(filt_interp)
 
             filt_flam_model = num / den
             all_filt_flam_model[filt_count,i] = filt_flam_model

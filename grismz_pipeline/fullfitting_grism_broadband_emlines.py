@@ -60,8 +60,8 @@ def check_spec_plot(obj_id, obj_field, grism_lam_obs, grism_flam_obs, grism_ferr
         fmt='.', color='firebrick', markeredgecolor='firebrick', \
         capsize=2, markersize=10.0, elinewidth=2.0)
 
-    # plt.show()
-    fig.savefig(massive_figures_dir + obj_field + '_' + str(obj_id) + '_' + 'obs_data.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    #fig.savefig(massive_figures_dir + obj_field + '_' + str(obj_id) + '_' + 'obs_data.png', dpi=300, bbox_inches='tight')
 
     return None
 

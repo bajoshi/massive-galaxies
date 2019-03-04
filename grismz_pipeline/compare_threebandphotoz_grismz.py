@@ -17,6 +17,7 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 zg_results_dir = massive_figures_dir + 'grismz_run_jan2019/'
 zp_results_dir = massive_figures_dir + 'photoz_run_jan2019/'
+three_band_photoz_dir = massive_figures_dir + "three_band_photoz/"
 
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import mocksim_results as mr
@@ -95,13 +96,20 @@ def get_plotting_arrays():
     zg_list = []
     all_d4000_list = []
     all_d4000_err_list = []
-    eazy_redshift_list = []
+    tb_redshift_list = []
 
-    # Read in EAZY Grism only catalogs # THese are in the Desktop folder on firstlight
-    eazy_ncat = np.genfromtxt(home + '/Desktop/EAZY_grism_only/N/OUTPUT/goods_n_grism_only_0.01.zout', dtype=None, names=True)
-    eazy_scat = np.genfromtxt(home + '/Desktop/EAZY_grism_only/S/OUTPUT/goods_s_grism_only_0.01.zout', dtype=None, names=True)
+    # Read in 3 band photoz catalogs
+    tb_id_list = np.load(three_band_photoz_dir + 'id_list.npy')
+    tb_field_list = np.load(three_band_photoz_dir + 'field_list.npy')
+    tb_zspec_list = np.load(three_band_photoz_dir + 'zspec_list.npy')
+    tb_chi2_list = np.load(three_band_photoz_dir + 'zp_min_chi2_list.npy')
+    tb_age_list = np.load(three_band_photoz_dir + 'zp_age_list.npy')
+    tb_tau_list = np.load(three_band_photoz_dir + 'zp_tau_list.npy')
+    tb_av_list = np.load(three_band_photoz_dir + 'zp_av_list.npy')
+    tb_my_photoz_wt_list = np.load(three_band_photoz_dir + 'zp_wt_list.npy')
+    tb_my_photoz_minchi2_list = np.load(three_band_photoz_dir + 'zp_minchi2_list.npy')
 
-    # Now get D4000 and EAZY redshift
+    # Now get D4000 and 3-band redshift
     for i in range(len(all_ids)):
         current_id = all_ids[i]
         current_field = all_fields[i]
@@ -141,21 +149,14 @@ def get_plotting_arrays():
 
         d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
-        # Match and get EAZY redshift
-        if current_field == 'GOODS-N':
-            id_idx = np.where(eazy_ncat['id'] == current_id)[0]
-            if len(id_idx) == 1:
-                id_idx = int(id_idx)
-                eazy_redshift_list.append(eazy_ncat['z_2'][id_idx])
-            elif len(id_idx) == 0:  # i.e., no match found
-                continue
-        elif current_field == 'GOODS-S':
-            id_idx = np.where(eazy_scat['id'] == current_id)[0]
-            if len(id_idx) == 1:
-                id_idx = int(id_idx)
-                eazy_redshift_list.append(eazy_scat['z_2'][id_idx])
-            elif len(id_idx) == 0:  # i.e., no match found
-                continue
+        # Try cut on D4000 significance
+        if ((d4000 - 1.0) / d4000_err) < 3.0:
+            continue
+
+        # Match and get 3-band photometric redshift
+        tb_idx = int(np.where((tb_id_list == current_id) & (tb_field_list == current_field))[0])
+        #print current_id, current_field, tb_id_list[tb_idx], tb_field_list[tb_idx], "Match idx:", tb_idx
+        tb_redshift_list.append(tb_my_photoz_minchi2_list[tb_idx])
 
         # Append all arrays
         all_ids_list.append(current_id)
@@ -172,16 +173,13 @@ def get_plotting_arrays():
     zg = np.array(zg_list)
     all_d4000 = np.array(all_d4000_list)
     all_d4000_err = np.array(all_d4000_err_list)
-    eazy_redshift = np.array(eazy_redshift_list)
+    tb_redshift = np.array(tb_redshift_list)
 
-    return all_ids, all_fields, zs, zg, eazy_redshift, all_d4000, all_d4000_err
+    return all_ids, all_fields, zs, zg, tb_redshift, all_d4000, all_d4000_err
 
-def line_func(x, slope, intercept):
-    return slope*x + intercept
-
-def plot_eazy_grismz_comparison(resid_eazy, resid_zg, eazy_z, zs_for_eazy, zg, zs_for_zg, \
-    mean_eazy, nmad_eazy, mean_zg, nmad_zg, d4000_low, d4000_high, \
-    outlier_idx_eazy, outlier_idx_zg, outlier_frac_eazy, outlier_frac_zg):
+def plot_tb_grismz_comparison(resid_tb, resid_zg, tb_z, zs_for_tb, zg, zs_for_zg, \
+    mean_tb, nmad_tb, mean_zg, nmad_zg, d4000_low, d4000_high, \
+    outlier_idx_tb, outlier_idx_zg, outlier_frac_tb, outlier_frac_zg):
 
     # Define figure
     fig = plt.figure(figsize=(8, 4))
@@ -196,10 +194,10 @@ def plot_eazy_grismz_comparison(resid_eazy, resid_zg, eazy_z, zs_for_eazy, zg, z
     ax4 = fig.add_subplot(gs[7:, 16:])
 
     # Plot stuff
-    ax1.plot(zs_for_eazy, eazy_z, 'o', markersize=2, color='k', markeredgecolor='k')
-    ax1.scatter(zs_for_eazy[outlier_idx_eazy], eazy_z[outlier_idx_eazy], s=20, facecolor='white', edgecolors='gray', zorder=5)
-    ax2.plot(zs_for_eazy, resid_eazy, 'o', markersize=2, color='k', markeredgecolor='k')
-    ax2.scatter(zs_for_eazy[outlier_idx_eazy], resid_eazy[outlier_idx_eazy], s=20, facecolor='white', edgecolors='gray', zorder=5)
+    ax1.plot(zs_for_tb, tb_z, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax1.scatter(zs_for_tb[outlier_idx_tb], tb_z[outlier_idx_tb], s=20, facecolor='white', edgecolors='gray', zorder=5)
+    ax2.plot(zs_for_tb, resid_tb, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax2.scatter(zs_for_tb[outlier_idx_tb], resid_tb[outlier_idx_tb], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     ax3.plot(zs_for_zg, zg, 'o', markersize=2, color='k', markeredgecolor='k')
     ax3.scatter(zs_for_zg[outlier_idx_zg], zg[outlier_idx_zg], s=20, facecolor='white', edgecolors='gray', zorder=5)
@@ -207,58 +205,48 @@ def plot_eazy_grismz_comparison(resid_eazy, resid_zg, eazy_z, zs_for_eazy, zg, z
     ax4.scatter(zs_for_zg[outlier_idx_zg], resid_zg[outlier_idx_zg], s=20, facecolor='white', edgecolors='gray', zorder=5)
 
     # Limits
-    #ax1.set_xlim(0.6, 1.24)
-    #ax1.set_ylim(0.6, 1.24)
+    ax1.set_xlim(0.2, 1.6)
+    ax1.set_ylim(0.2, 1.6)
 
-    #ax2.set_xlim(0.6, 1.24)
-    #ax2.set_ylim(-0.15, 0.15)
+    ax2.set_xlim(0.2, 1.6)
+    ax2.set_ylim(-0.25, 0.25)
 
-    #ax3.set_xlim(0.6, 1.24)
-    #ax3.set_ylim(0.6, 1.24)
+    ax3.set_xlim(0.2, 1.6)
+    ax3.set_ylim(0.2, 1.6)
 
-    #ax4.set_xlim(0.6, 1.24)
-    #ax4.set_ylim(-0.15, 0.15)
+    ax4.set_xlim(0.2, 1.6)
+    ax4.set_ylim(-0.25, 0.25)
 
     # Other lines on plot
     ax2.axhline(y=0.0, ls='-', color='gray')
     ax4.axhline(y=0.0, ls='-', color='gray')
 
-    # do the fit with outlier removal
-    # DO NOT use AstroPy's fitting.FittingWithOutlierRemoval
-    # It does not work (as of Mar 1, 2019)
-    # These outliers are however shown on the plots
-
-    # To compare to outlieer removed fitting params
-    popt_eazy, pcov_eazy = curve_fit(line_func, zs_for_eazy, eazy_z, p0=[1.0, 0.6])
-    print popt_eazy
-
-    # First get arrays with outliers removed iteratively
-
-    sys.exit(0)
-
     # plot line fit
-    x_plot = np.arange(0.2,1.5,0.01)
+    x_plot = np.arange(0.2,1.61,0.01)
+
+    popt_tb, pcov_tb = curve_fit(line_func, zs_for_tb, tb_z, p0=[1.0, 0.6])
+    popt_zg, pcov_zg = curve_fit(line_func, zs_for_zg, zg, p0=[1.0, 0.6])
+
+    tb_mean_line = line_func(x_plot, popt_tb[0], popt_tb[1])
+    zg_mean_line = line_func(x_plot, popt_zg[0], popt_zg[1])
 
     ax1.plot(x_plot, x_plot, '-', color='gray')
-    ax1.plot(x_plot, l_eazy_model(x_plot), '--', color='darkblue', lw=1)
-    ax1.plot(x_plot, (1+nmad_eazy)*eazy_best_slope*x_plot + nmad_eazy + eazy_best_intcp, ls='--', color='red', lw=1)
-    ax1.plot(x_plot, (1-nmad_eazy)*eazy_best_slope*x_plot - nmad_eazy + eazy_best_intcp, ls='--', color='red', lw=1)
-
-    filtered_data = np.ma.masked_array(eazy_z, mask=l_eazy_orfit_mask) 
-    ax1.plot(x_plot, filtered_data, 'r+')
+    ax1.plot(x_plot, tb_mean_line, '--', color='darkblue', lw=1)
+    ax1.plot(x_plot, (1+nmad_tb)*popt_tb[0]*x_plot + nmad_tb + popt_tb[1], ls='--', color='red', lw=1)
+    ax1.plot(x_plot, (1-nmad_tb)*popt_tb[0]*x_plot - nmad_tb + popt_tb[1], ls='--', color='red', lw=1)
 
     ax3.plot(x_plot, x_plot, '-', color='gray')
-    ax3.plot(x_plot, l_zg_model(x_plot), '--', color='darkblue', lw=1)
-    ax3.plot(x_plot, (1+nmad_zg)*zg_best_slope*x_plot + nmad_zg + zg_best_intcp, ls='--', color='red', lw=1)
-    ax3.plot(x_plot, (1-nmad_zg)*zg_best_slope*x_plot - nmad_zg + zg_best_intcp, ls='--', color='red', lw=1)
+    ax3.plot(x_plot, zg_mean_line, '--', color='darkblue', lw=1)
+    ax3.plot(x_plot, (1+nmad_zg)*popt_zg[0]*x_plot + nmad_zg + popt_zg[1], ls='--', color='red', lw=1)
+    ax3.plot(x_plot, (1-nmad_zg)*popt_zg[0]*x_plot - nmad_zg + popt_zg[1], ls='--', color='red', lw=1)
 
-    ax2.axhline(y=mean_eazy, ls='-', color='darkblue')
-    ax2.axhline(y=mean_eazy + nmad_eazy, ls='-', color='red')
-    ax2.axhline(y=mean_eazy - nmad_eazy, ls='-', color='red')
+    ax2.axhline(y=mean_tb, ls='--', color='darkblue')
+    ax2.axhline(y=mean_tb + nmad_tb, ls='--', color='red')
+    ax2.axhline(y=mean_tb - nmad_tb, ls='--', color='red')
 
-    ax4.axhline(y=mean_zg, ls='-', color='darkblue')
-    ax4.axhline(y=mean_zg + nmad_zg, ls='-', color='red')
-    ax4.axhline(y=mean_zg - nmad_zg, ls='-', color='red')
+    ax4.axhline(y=mean_zg, ls='--', color='darkblue')
+    ax4.axhline(y=mean_zg + nmad_zg, ls='--', color='red')
+    ax4.axhline(y=mean_zg - nmad_zg, ls='--', color='red')
 
     # Make tick labels larger
     ax1.set_xticklabels(ax1.get_xticks().tolist(), size=10)
@@ -284,9 +272,9 @@ def plot_eazy_grismz_comparison(resid_eazy, resid_zg, eazy_z, zs_for_eazy, zg, z
     ax4.minorticks_on()
 
     # Axis labels
-    ax1.set_ylabel(r'$\mathrm{z_{eazy}}$', fontsize=13)
+    ax1.set_ylabel(r'$\mathrm{z_{tb}}$', fontsize=13)
     ax2.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=13)
-    ax2.set_ylabel(r'$\mathrm{(z_{eazy} - z_{s}) / (1+z_{s})}$', fontsize=13)
+    ax2.set_ylabel(r'$\mathrm{(z_{tb} - z_{s}) / (1+z_{s})}$', fontsize=13)
 
     ax3.set_ylabel(r'$\mathrm{z_{g}}$', fontsize=13)
     ax4.set_xlabel(r'$\mathrm{z_{s}}$', fontsize=13)
@@ -295,52 +283,55 @@ def plot_eazy_grismz_comparison(resid_eazy, resid_zg, eazy_z, zs_for_eazy, zg, z
     # print D4000 range
     ax1.text(0.45, 0.11, "{:.1f}".format(d4000_low) + r"$\, \leq \mathrm{D4000} < \,$" + "{:.1f}".format(d4000_high), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=15)
+    transform=ax1.transAxes, color='k', size=15, zorder=10)
 
     # print N, mean, nmad, outlier frac
-    ax1.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_eazy)), \
+    ax1.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_tb)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=12)
-    ax1.text(0.04, 0.89, r'${\left< \Delta \right>}_{\mathrm{EAZY-z}} = $' + mr.convert_to_sci_not(mean_eazy), \
+    transform=ax1.transAxes, color='k', size=12, zorder=10)
+    ax1.text(0.04, 0.89, r'${\left< \Delta \right>}_{\mathrm{3-band-z}} = $' + mr.convert_to_sci_not(mean_tb), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=12)
-    ax1.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{EAZY-z}} = $' + mr.convert_to_sci_not(nmad_eazy), \
+    transform=ax1.transAxes, color='k', size=12, zorder=10)
+    ax1.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{3-band-z}} = $' + mr.convert_to_sci_not(nmad_tb), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=12)
-    ax1.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_eazy)), \
+    transform=ax1.transAxes, color='k', size=12, zorder=10)
+    ax1.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_tb)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax1.transAxes, color='k', size=12)
+    transform=ax1.transAxes, color='k', size=12, zorder=10)
 
     ax3.text(0.05, 0.97, r'$\mathrm{N = }$' + str(len(resid_zg)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax3.transAxes, color='k', size=12)
+    transform=ax3.transAxes, color='k', size=12, zorder=10)
     ax3.text(0.04, 0.89, r'${\left< \Delta \right>}_{\mathrm{Grism-z}} = $' + mr.convert_to_sci_not(mean_zg), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax3.transAxes, color='k', size=12)
+    transform=ax3.transAxes, color='k', size=12, zorder=10)
     ax3.text(0.05, 0.79, r'$\mathrm{\sigma^{NMAD}_{Grism-z}} = $' + mr.convert_to_sci_not(nmad_zg), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax3.transAxes, color='k', size=12)
+    transform=ax3.transAxes, color='k', size=12, zorder=10)
     ax3.text(0.05, 0.7, r'$\mathrm{Out\ frac\, =\, }$' + str("{:.2f}".format(outlier_frac_zg)), \
     verticalalignment='top', horizontalalignment='left', \
-    transform=ax3.transAxes, color='k', size=12)
+    transform=ax3.transAxes, color='k', size=12, zorder=10)
 
     # save figure and close
-    fig.savefig(massive_figures_dir + 'eazy_grismz_comp_' + \
+    fig.savefig(massive_figures_dir + 'tb_grismz_comp_' + \
         str(d4000_low).replace('.','p') + 'to' + str(d4000_high).replace('.','p') + '.pdf', \
         dpi=300, bbox_inches='tight')
 
     return None
 
+def line_func(x, slope, intercept):
+    return slope*x + intercept
+
 def main():
 
-    ids, fields, zs, zg, eazy_z, d4000, d4000_err = get_plotting_arrays()
+    ids, fields, zs, zg, tb_z, d4000, d4000_err = get_plotting_arrays()
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
     assert len(ids) == len(fields)
     assert len(ids) == len(zs)
     assert len(ids) == len(zg)
-    assert len(ids) == len(eazy_z)
+    assert len(ids) == len(tb_z)
     assert len(ids) == len(d4000)
     assert len(ids) == len(d4000_err)
 
@@ -355,56 +346,56 @@ def main():
     # Apply D4000 index
     zs = zs[d4000_idx]
     zg = zg[d4000_idx]
-    eazy_z = eazy_z[d4000_idx]
+    tb_z = tb_z[d4000_idx]
 
     # Residuals
     resid_zg = (zg - zs) / (1 + zs)
-    resid_eazy = (eazy_z - zs) / (1 + zs)
+    resid_tb = (tb_z - zs) / (1 + zs)
 
     # Make sure they are finite
-    valid_idx1 = np.where(np.isfinite(resid_eazy))[0]
+    valid_idx1 = np.where(np.isfinite(resid_tb))[0]
     valid_idx2 = np.where(np.isfinite(resid_zg))[0]
 
     # Apply indices
-    resid_eazy = resid_eazy[valid_idx1]
-    eazy_z = eazy_z[valid_idx1]
-    zs_for_eazy = zs[valid_idx1]
+    resid_tb = resid_tb[valid_idx1]
+    tb_z = tb_z[valid_idx1]
+    zs_for_tb = zs[valid_idx1]
 
     resid_zg = resid_zg[valid_idx2]
     zg = zg[valid_idx2]
     zs_for_zg = zs[valid_idx2]
 
-    print "\n", "Number of galaxies in EAZY-z plot:", len(valid_idx1)
+    print "\n", "Number of galaxies in 3-band-z plot:", len(valid_idx1)
     print "Number of galaxies in Grism-z plot:", len(valid_idx2)
 
     # Print info
-    mean_eazy = np.mean(resid_eazy)
-    std_eazy = np.std(resid_eazy)
-    nmad_eazy = mad_std(resid_eazy)
+    mean_tb = np.mean(resid_tb)
+    std_tb = np.std(resid_tb)
+    nmad_tb = mad_std(resid_tb)
 
     mean_zg = np.mean(resid_zg)
     std_zg = np.std(resid_zg)
     nmad_zg = mad_std(resid_zg)
 
-    print "\n", "Mean, std dev, and Sigma_NMAD for residuals for EAZY-z:", \
-    "{:.3f}".format(mean_eazy), "{:.3f}".format(std_eazy), "{:.3f}".format(nmad_eazy)
+    print "\n", "Mean, std dev, and Sigma_NMAD for residuals for 3-band-z:", \
+    "{:.3f}".format(mean_tb), "{:.3f}".format(std_tb), "{:.3f}".format(nmad_tb)
     print "Mean, std dev, and Sigma_NMAD for residuals for Grism-z:", \
     "{:.3f}".format(mean_zg), "{:.3f}".format(std_zg), "{:.3f}".format(nmad_zg)
 
     # Compute catastrophic failures
     # i.e., How many galaxies are outside +-3-sigma given the sigma above?
-    outlier_idx_eazy = np.where(abs(resid_eazy) > 3*nmad_eazy)[0]
+    outlier_idx_tb = np.where(abs(resid_tb) > 3*nmad_tb)[0]
     outlier_idx_zg = np.where(abs(resid_zg) > 3*nmad_zg)[0]
 
-    outlier_frac_eazy = len(outlier_idx_eazy) / len(resid_eazy)
+    outlier_frac_tb = len(outlier_idx_tb) / len(resid_tb)
     outlier_frac_zg = len(outlier_idx_zg) / len(resid_zg)
 
-    print "\n", "Outlier fraction for EAZY-z:", outlier_frac_eazy
+    print "\n", "Outlier fraction for 3-band-z:", outlier_frac_tb
     print "Outlier fraction for Grism-z:", outlier_frac_zg
 
-    plot_eazy_grismz_comparison(resid_eazy, resid_zg, eazy_z, zs_for_eazy, zg, zs_for_zg, \
-    mean_eazy, nmad_eazy, mean_zg, nmad_zg, d4000_low, d4000_high, \
-    outlier_idx_eazy, outlier_idx_zg, outlier_frac_eazy, outlier_frac_zg)
+    plot_tb_grismz_comparison(resid_tb, resid_zg, tb_z, zs_for_tb, zg, zs_for_zg, \
+    mean_tb, nmad_tb, mean_zg, nmad_zg, d4000_low, d4000_high, \
+    outlier_idx_tb, outlier_idx_zg, outlier_frac_tb, outlier_frac_zg)
 
     return None
 
