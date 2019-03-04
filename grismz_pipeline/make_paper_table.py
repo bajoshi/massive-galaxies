@@ -19,6 +19,9 @@ import dn4000_catalog as dc
 
 def main():
 
+    # ------------------------------- Get catalog for final sample ------------------------------- #
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+
     # ------------- Firstlight -------------
     id_arr_fl = np.load(zp_results_dir + 'firstlight_id_arr.npy')
     field_arr_fl = np.load(zp_results_dir + 'firstlight_field_arr.npy')
@@ -227,6 +230,25 @@ def main():
         current_id = all_ids[i]
         current_field = all_fields[i]
 
+        sample_idx = np.where(final_sample['pearsid'] == current_id)[0]
+        if not sample_idx.size:
+            continue
+        if len(sample_idx) == 1:
+            if final_sample['field'][sample_idx] != current_field:
+                continue
+
+        # Check z_spec quality
+        # Make sure to get the spec_z qual for the exact match
+        if len(sample_idx) == 2:
+            sample_idx_nested = int(np.where(final_sample['field'][sample_idx] == current_field)[0])
+            current_specz_qual = final_sample['zspec_qual'][sample_idx[sample_idx_nested]]
+        else:
+            current_specz_qual = final_sample['zspec_qual'][int(sample_idx)]
+
+        if current_specz_qual == '1' or current_specz_qual == 'C':
+            #print "Skipping", current_field, current_id, "due to spec-z quality:", current_specz_qual
+            continue
+
         # Get data
         grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
@@ -271,6 +293,11 @@ def main():
             if len(current_id_to_print) == 5:
                 current_id_to_print += ' '
 
+            if current_dec < 0:
+                current_dec_to_print = r"$-$" + str("{:.6f}".format(abs(current_dec)))
+            else:
+                current_dec_to_print = str("{:.6f}".format(current_dec))
+
             current_specz_to_print = str(current_specz)
             if len(current_specz_to_print) == 4:
                 current_specz_to_print += '  '
@@ -294,7 +321,7 @@ def main():
             print current_id_to_print, "  ",
             print current_field, "  ",
             print "{:.7f}".format(current_ra), "  ",
-            print "{:.6f}".format(current_dec), "  ",
+            print current_dec_to_print, "  ",
             print "{:.3f}".format(current_specz), "  ",
             print str("{:.2f}".format(zp[i])) + \
             "$\substack{+" + str("{:.2f}".format(high_zperr)) + " \\\\ -" + str("{:.2f}".format(low_zperr)) + "}$", "  ",
