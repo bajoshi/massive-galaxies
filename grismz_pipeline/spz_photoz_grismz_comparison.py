@@ -437,6 +437,59 @@ def get_arrays_to_plot():
 def line_func(x, slope, intercept):
     return slope*x + intercept
 
+def make_d4000_sig_vs_imag_plot(d4000_sig, imag):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.set_xlabel(r'$i_\mathrm{AB}$', fontsize=15)
+    ax.set_ylabel(r'$\mathrm{\frac{D4000 - 1.0}{\sigma_{D4000}}}$', fontsize=15)
+
+    ax.scatter(imag, d4000_sig, s=5, color='k', zorder=2)
+    
+    #ax.axhline(y=0.0, ls='--', color='k', zorder=2)
+    ax.axhline(y=3.0, ls='--', color='k', zorder=2)
+
+    # Now figure out at what magnitude are there more galaxies
+    # with D4000_sig < 3.0 than at D4000_sig >= 3.0.
+    # i.e. fainter than this magnitude you will get crappier 
+    # D4000 measurements.
+    imag_check_list = np.arange(18.5, 26.5, 0.1)
+    for i in range(len(imag_check_list)):
+        # Get magnitude to check
+        imag_to_check = imag_check_list[i]
+
+        # Get all galaxies fainter than the magnitude you're checking
+        faint_idx = np.where(imag > imag_to_check)[0]
+
+        # Of all the galaxies chosen above
+        # how many have significant D4000 measurements
+        # compared to how many that don't.
+        high_sig_idx = np.where(d4000_sig[faint_idx] >= 3.0)[0]
+        low_sig_idx = np.where(d4000_sig[faint_idx] < 3.0)[0]
+
+        if len(low_sig_idx) / len(high_sig_idx) > 1.1:  # i.e., 10% more galaxies in the lower significance bin
+            print "Magnitude cut off:", imag_to_check
+            break
+
+    # Shade region fainter than mag cut off
+    xmin, xmax = ax.get_xlim()
+    ax.axvspan(imag_to_check, xmax, color='gray', alpha=0.5)
+    ax.set_xlim(xmin, xmax)
+
+    ax.set_xticklabels(ax.get_xticks().tolist(), size=12)
+    ax.set_yticklabels(ax.get_yticks().tolist(), size=12)
+
+    fig.savefig(massive_figures_dir + 'd4000_sig_vs_imag.pdf', dpi=300, bbox_inches='tight')
+
+    return imag_to_check
+
+def make_residual_vs_imag_plots(resid_zp, resid_zg, resid_zspz, imag):
+
+    
+
+    return None
+
 def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
     mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
     d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
@@ -650,7 +703,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.6
+    d4000_low = 1.1
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
@@ -666,8 +719,12 @@ def main():
     d4000 = d4000[d4000_idx]
     d4000_err = d4000_err[d4000_idx]
     netsig = netsig[d4000_idx]
+    imag = imag[d4000_idx]
 
     d4000_resid = (d4000 - 1.0) / d4000_err
+
+    mag_cutoff = make_d4000_sig_vs_imag_plot(d4000_resid, imag)
+    sys.exit()
 
     # Get residuals 
     resid_zp = (zp - zs) / (1 + zs)
