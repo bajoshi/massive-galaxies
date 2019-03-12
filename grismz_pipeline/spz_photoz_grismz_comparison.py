@@ -474,7 +474,7 @@ def make_d4000_sig_vs_imag_plot(d4000_sig, imag):
 
     # Shade region fainter than mag cut off
     xmin, xmax = ax.get_xlim()
-    ax.axvspan(imag_to_check, xmax, color='gray', alpha=0.5)
+    #ax.axvspan(imag_to_check, xmax, color='gray', alpha=0.5)
     ax.set_xlim(xmin, xmax)
 
     ax.set_xticklabels(ax.get_xticks().tolist(), size=12)
@@ -484,9 +484,61 @@ def make_d4000_sig_vs_imag_plot(d4000_sig, imag):
 
     return imag_to_check
 
-def make_residual_vs_imag_plots(resid_zp, resid_zg, resid_zspz, imag):
-
+def make_residual_vs_imag_plots(resid_zp, resid_zg, resid_zspz, imag_for_zp, imag_for_zg, imag_for_zspz, \
+    d4000_low, d4000_high):
     
+    # Define figure
+    fig = plt.figure(figsize=(10, 2.5))
+    gs = gridspec.GridSpec(10,28)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.0, hspace=0.25)
+
+    # Put axes on grid
+    ax1 = fig.add_subplot(gs[:, :8])
+    ax2 = fig.add_subplot(gs[:, 10:18])
+    ax3 = fig.add_subplot(gs[:, 20:])
+
+    # Plot
+    ax1.plot(imag_for_zp, resid_zp, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax2.plot(imag_for_zg, resid_zg, 'o', markersize=2, color='k', markeredgecolor='k')
+    ax3.plot(imag_for_zspz, resid_zspz, 'o', markersize=2, color='k', markeredgecolor='k')
+
+    # Lines
+    ax1.axhline(y=0.0, ls='--', color='gray')
+    ax2.axhline(y=0.0, ls='--', color='gray')
+    ax3.axhline(y=0.0, ls='--', color='gray')
+
+    # Limits
+    ax1.set_xlim(19.5, 25.5)
+    ax2.set_xlim(19.5, 25.5)
+    ax3.set_xlim(19.5, 25.5)
+
+    ax1.set_ylim(-0.35, 0.35)
+    ax2.set_ylim(-0.35, 0.35)
+    ax3.set_ylim(-0.35, 0.35)
+
+    # Axis labels
+    ax1.set_xlabel(r'$i_\mathrm{AB}$', fontsize=13)
+    ax2.set_xlabel(r'$i_\mathrm{AB}$', fontsize=13)
+    ax3.set_xlabel(r'$i_\mathrm{AB}$', fontsize=13)
+
+    ax1.set_ylabel(r'$\mathrm{(z_{p} - z_{s}) / (1+z_{s})}$', fontsize=13)
+    ax2.set_ylabel(r'$\mathrm{(z_{g} - z_{s}) / (1+z_{s})}$', fontsize=13)
+    ax3.set_ylabel(r'$\mathrm{(z_{spz} - z_{s}) / (1+z_{s})}$', fontsize=13)
+
+    # Tick Labels
+    ax1.set_xticklabels(ax1.get_xticks().tolist(), size=10)
+    ax1.set_yticklabels(ax1.get_yticks().tolist(), size=10)
+
+    ax2.set_xticklabels(ax2.get_xticks().tolist(), size=10)
+    ax2.set_yticklabels(ax2.get_yticks().tolist(), size=10)
+
+    ax3.set_xticklabels(ax3.get_xticks().tolist(), size=10)
+    ax3.set_yticklabels(ax3.get_yticks().tolist(), size=10)
+
+    # Save figure
+    fig.savefig(massive_figures_dir + 'residuals_vs_mag' + \
+        str(d4000_low).replace('.','p') + 'to' + str(d4000_high).replace('.','p') + '.pdf', \
+        dpi=300, bbox_inches='tight')
 
     return None
 
@@ -818,10 +870,18 @@ def main():
     print "Outlier fraction for Grism-z:", outlier_frac_zg
     print "Outlier fraction for SPZ:", outlier_frac_zspz
 
-    make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
-        mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
-        d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
-        outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz)
+    #make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
+    #    mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
+    #    d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
+    #    outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz)
+
+    # Now create the residual vs mag plots
+    imag_for_zp = imag[valid_idx1]
+    imag_for_zg = imag[valid_idx2]
+    imag_for_zspz = imag[valid_idx3]
+
+    make_residual_vs_imag_plots(resid_zp, resid_zg, resid_zspz, imag_for_zp, imag_for_zg, imag_for_zspz,\
+        d4000_low, d4000_high)
 
     return None
 
