@@ -762,6 +762,12 @@ def main():
     print "\n", "D4000 range:   ", d4000_low, "<= D4000 <", d4000_high, "\n"
     print "Galaxies within D4000 range:", len(d4000_idx)
 
+    # Cut on magnitude
+    # PUt the limit at 26.0 to include the entire sample with no mag cut
+    mag_idx = np.where(imag <= 24.0)[0]
+    print "Galaxies that are brighter than 24 mag:", len(mag_idx)
+    d4000_idx = reduce(np.intersect1d, (d4000_idx, mag_idx))
+
     # Apply D4000 and magnitude indices
     zs = zs[d4000_idx]
     zp = zp[d4000_idx]
@@ -775,8 +781,8 @@ def main():
 
     d4000_resid = (d4000 - 1.0) / d4000_err
 
-    mag_cutoff = make_d4000_sig_vs_imag_plot(d4000_resid, imag)
-    sys.exit()
+    #mag_cutoff = make_d4000_sig_vs_imag_plot(d4000_resid, imag)
+    #sys.exit()
 
     # Get residuals 
     resid_zp = (zp - zs) / (1 + zs)
@@ -785,7 +791,7 @@ def main():
 
     # Estimate accurate fraction for paper
     # This is only to be done for the full D4000 range
-    do_frac = False
+    do_frac = True
     if do_frac:
         two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
         print len(two_percent_idx), len(resid_zspz)
@@ -869,6 +875,8 @@ def main():
     print "Outlier fraction for Photo-z:", outlier_frac_zp
     print "Outlier fraction for Grism-z:", outlier_frac_zg
     print "Outlier fraction for SPZ:", outlier_frac_zspz
+
+    sys.exit(0)
 
     #make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
     #    mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \

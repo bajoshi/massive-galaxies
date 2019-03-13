@@ -469,7 +469,7 @@ def make_d4000_hist():
         plt.setp(p, 'facecolor', c)
 
     ax.set_xlabel(r'$\mathrm{D}4000$', fontsize=15)
-    ax.set_ylabel(r'$\mathrm{N}$', fontsize=15)
+    ax.set_ylabel(r'\#objects', fontsize=15)
 
     ax.set_xlim(0.0, 2.5)
     ax.minorticks_on()
@@ -529,6 +529,7 @@ def make_redshift_hist():
 
 if __name__ == '__main__':
 
+    """
     redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays()
 
     assert len(redshift_arr) == len(d4000_arr)
@@ -539,8 +540,9 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy', d4000_arr)
     np.save(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy', d4000_err_arr)
     np.save(massive_figures_dir + 'zspz_for_d4000_plots.npy', zspz_arr)
-    
-    make_d4000_vs_redshift_plot()
+    """
+
+    #make_d4000_vs_redshift_plot()
     make_d4000_hist()
     #make_redshift_hist()
 

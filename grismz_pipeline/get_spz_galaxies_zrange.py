@@ -77,6 +77,7 @@ def get_sample_in_zrange():
     specz = []
     specz_source = []
     specz_qual = []
+    imag = []
 
     catcount = 0
     match_count = 0
@@ -197,6 +198,9 @@ def get_sample_in_zrange():
             if type(current_specz_qual) is np.ndarray:
                 current_specz_qual = current_specz_qual[0]
 
+            # Get current i-band magnitude
+            current_imag = float(cat['imag'][i])
+
             print "PEARS ID and Field:", current_id, current_field
 
             # Now append all
@@ -207,6 +211,7 @@ def get_sample_in_zrange():
             specz.append(float(spec_cat['z_spec'][spec_idx]))
             specz_source.append(str(current_specz_source))
             specz_qual.append(current_specz_qual)
+            imag.append(current_imag)
 
             match_count += 1
 
@@ -222,6 +227,7 @@ def get_sample_in_zrange():
     specz = np.asarray(specz)
     specz_source = np.asarray(specz_source)
     specz_qual = np.asarray(specz_qual)
+    imag = np.asarray(imag)
 
     # Now choose only those that are within the redshift range where you can see a 4000A break
     zrange_idx = np.where((specz >= 0.6) & (specz <= 1.235))[0]
@@ -234,14 +240,15 @@ def get_sample_in_zrange():
     specz = specz[zrange_idx]
     specz_source = specz_source[zrange_idx]
     specz_qual = specz_qual[zrange_idx]
+    imag = imag[zrange_idx]
 
     # Save to ASCII file
-    data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, specz, specz_source, specz_qual),\
+    data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, specz, specz_source, specz_qual, imag),\
         dtype=[('pears_id', int), ('pears_field', '|S7'), ('pears_ra', float), ('pears_dec', float), \
-        ('specz', float), ('specz_source', '|S10'), ('specz_qual', '|S1')])
+        ('specz', float), ('specz_source', '|S10'), ('specz_qual', '|S1'), ('imag', float)])
     np.savetxt(massive_galaxies_dir + 'spz_paper_sample_zrange.txt', data, \
-        fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%s'],\
-        delimiter=' ', header='pearsid field ra dec specz specz_source specz_qual')
+        fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%s', '%.2f'],\
+        delimiter=' ', header='pearsid field ra dec specz specz_source specz_qual imag')
 
     return None
 
@@ -271,6 +278,7 @@ def main():
     netsig_list = []
     d4000_list = []
     d4000_err_list = []
+    imag_list = []
     for j in range(len(samp_zrange)):
 
         # Get data
@@ -325,16 +333,32 @@ def main():
             print "Skipping due to low D4000:", d4000
             continue
 
+        # These are some additional checks here
+        # Both of these done in post processing for now
+        # I've computed SPZs regardless of the specz quality and D4000 err
+        current_specz_qual = samp_zrange['specz_qual'][j]
+        """
+        # Skip huge D4000 errors
+        if d4000_err > 0.5:  # doesn't matter if you have >= 0.5
+            continue
+
+        # Skip worst specz quality
+        if current_specz_qual == '1' or current_specz_qual == 'C':
+            #print "Skipping", current_field, current_id, "due to spec-z quality:", current_specz_qual
+            continue
+        """
+
         id_list.append(current_id)
         field_list.append(current_field)
         ra_list.append(samp_zrange['ra'][j])
         dec_list.append(samp_zrange['dec'][j])
         zspec_list.append(current_zspec)
         zspec_source_list.append(samp_zrange['specz_source'][j])
-        zspec_qual_list.append(samp_zrange['specz_qual'][j])
+        zspec_qual_list.append(current_specz_qual)
         netsig_list.append(netsig_chosen)
         d4000_list.append(d4000)
         d4000_err_list.append(d4000_err)
+        imag_list.append(samp_zrange['imag'][j])
 
         final_sample += 1
 
@@ -351,15 +375,16 @@ def main():
     netsig_arr = np.asarray(netsig_list)
     d4000_arr = np.asarray(d4000_list)
     d4000_err_arr = np.asarray(d4000_err_list)
+    imag_arr = np.asarray(imag_list)
 
     # Resave to ASCII file
-    data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, zspec, zspec_source, zspec_qual, netsig_arr, d4000_arr, d4000_err_arr),\
+    data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, zspec, zspec_source, zspec_qual, netsig_arr, d4000_arr, d4000_err_arr, imag_arr),\
         dtype=[('pears_id', int), ('pears_field', '|S7'), ('pears_ra', float), ('pears_dec', float), \
         ('zspec', float), ('zspec_source', '|S10'), ('zspec_qual', '|S1'), ('netsig_arr', float), \
-        ('d4000_arr', float), ('d4000_err_arr', float)])
+        ('d4000_arr', float), ('d4000_err_arr', float), ('imag_arr', float)])
     np.savetxt(massive_galaxies_dir + 'spz_paper_sample.txt', data, \
-        fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f', '%.2f'],\
-        delimiter=' ', header='pearsid field ra dec zspec zspec_source zspec_qual netsig d4000 d4000_err')
+        fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f', '%.2f', '%.2f'],\
+        delimiter=' ', header='pearsid field ra dec zspec zspec_source zspec_qual netsig d4000 d4000_err imag')
 
     return None
 

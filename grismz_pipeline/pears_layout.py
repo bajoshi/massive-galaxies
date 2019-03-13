@@ -130,7 +130,7 @@ def do_goods_layout(goods_fitsfile, fieldname):
     wcs_goods = WCS(goods_fitsfile[0].header)
 
     # plot image
-    fig = plt.figure(figsize=(6,6))
+    fig = plt.figure(figsize=(8,8))
     ax = fig.add_subplot(111, projection=wcs_goods)
 
     norm = ImageNormalize(goods_fitsfile[0].data, interval=ZScaleInterval(), stretch=LogStretch())
