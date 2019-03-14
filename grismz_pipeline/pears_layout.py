@@ -142,7 +142,7 @@ def do_goods_layout(goods_fitsfile, fieldname):
     goods_fitsfile[0].data[idx] = np.nan
     im = ax.imshow(goods_fitsfile[0].data, origin='lower', cmap=shifted_cmap, vmin=-0.005, vmax=0.3, norm=norm)
 
-    # Set tick labels on/off
+    # Set tick labels on/off and other param changes
     ax.set_autoscale_on(False)
 
     lon = ax.coords[0]
@@ -161,6 +161,9 @@ def do_goods_layout(goods_fitsfile, fieldname):
 
     lon.display_minor_ticks(True)
     lat.display_minor_ticks(True)
+
+    lon.set_ticklabel(size=15)
+    lat.set_ticklabel(size=15)
 
     ax.coords.frame.set_color('k')
 
@@ -268,8 +271,8 @@ def do_goods_layout(goods_fitsfile, fieldname):
                     new_fovpoints.append([new_ra, new_dec])
 
                 # Now plot new FoV polygon
-                pnew = Polygon(np.array(new_fovpoints), facecolor='red', closed=True, \
-                    transform=ax.get_transform('icrs'), alpha=0.02, edgecolor='red', linewidth=1.5)
+                pnew = Polygon(np.array(new_fovpoints), facecolor='darkred', closed=True, \
+                    transform=ax.get_transform('icrs'), alpha=0.02, edgecolor='darkred', linewidth=1.5)
                 ax.add_patch(pnew)
 
     # Add text for field name
@@ -283,8 +286,7 @@ def do_goods_layout(goods_fitsfile, fieldname):
         transform=ax.transAxes, color='k', size=17, zorder=10)
     
     # Save figure
-    fig.savefig(massive_figures_dir + 'pears_goods' + fieldname + '_layout.png', dpi=450, bbox_inches='tight')
-    # this has to be a PNG since I'm using an alpha channel for each pointing
+    fig.savefig(massive_figures_dir + 'pears_goods' + fieldname + '_layout.pdf', dpi=300, bbox_inches='tight')
 
     plt.cla()
     plt.clf()
@@ -295,10 +297,10 @@ def do_goods_layout(goods_fitsfile, fieldname):
 if __name__ == '__main__':
     
     # read in goods images which will have the pointings overlaid on them
-    goodsn = fits.open(figs_dir + 'goodsn_3dhst_v4.0_f606w/goodsn_3dhst.v4.0.F606w_orig_sci.fits')
-    goodss = fits.open(figs_dir + 'goodss_3dhst_v4.0_f606w/goodss_3dhst.v4.0.F606w_orig_sci.fits')
-
+    goodsn = fits.open(figs_dir + 'goodsn_3dhst.v4.0.F606w_orig_sci.fits')
     do_goods_layout(goodsn, 'n')
+
+    goodss = fits.open(figs_dir + 'goodss_3dhst.v4.0.F606w_orig_sci.fits')
     do_goods_layout(goodss, 's')
 
     # Close files
