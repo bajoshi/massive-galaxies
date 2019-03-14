@@ -443,6 +443,8 @@ def make_d4000_hist():
     d4000_pears_plot = d4000_arr[comb_idx]
     d4000_err_plot = d4000_err_arr[comb_idx]
 
+    d4000_resid = (d4000_pears_plot - 1.0) / d4000_err_plot
+
     # ----------------------- PLOT ----------------------- #
     # PEARS dn4000 histogram
     fig = plt.figure()
@@ -458,6 +460,11 @@ def make_d4000_hist():
 
     ncount, edges, patches = ax.hist(d4000_pears_plot, 50, range=[0.0,2.5], color='lightgray', align='mid', zorder=10)
     ax.grid(True, color=mh.rgb_to_hex(240, 240, 240))
+
+    # Overlay histogram for galaxies with D4000 significance >= 3.0
+    d4000_highsigma = np.where(d4000_resid >= 3.0)[0]
+    # This has to have the same number of bins and range to overlap properly with the previous histogram
+    ax.hist(d4000_pears_plot[d4000_highsigma], 50, range=[0.0,2.5], histtype='step', color='blue', align='mid', zorder=10)
 
     # shade the selection region
     edges_plot = np.where(edges >= 1.1)[0]
