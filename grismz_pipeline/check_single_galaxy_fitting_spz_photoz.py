@@ -186,7 +186,7 @@ def plot_photoz_fit(phot_lam_obs, phot_flam_obs, phot_ferr_obs, model_lam_grid, 
 def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, phot_flam_obs, phot_ferr_obs, \
     model_lam_grid, best_fit_model_fullres, best_fit_model_in_objlamgrid, all_filt_flam_bestmodel, bestalpha, \
     obj_id, obj_field, specz, low_zp_lim, upper_zp_lim, zp, low_zspz_lim, upper_zspz_lim, zspz, \
-    chi2, age, tau, av, netsig, d4000, savedir):
+    low_zg_lim, upper_zg_lim, zg, chi2, age, tau, av, netsig, d4000, savedir):
 
     # Make figure and place on grid
     fig, ax1, ax2 = makefig()
@@ -226,6 +226,7 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     min_ylim = 0.2 * min_y_obs
 
     ax1.set_ylim(min_ylim, max_ylim)
+    #ax2.set_ylim(-14, 14)
 
     ax1.set_xlim(3000, 85000)
     ax2.set_xlim(3000, 85000)
@@ -251,6 +252,9 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
 
     low_zp_err = zp - low_zp_lim
     high_zp_err = upper_zp_lim - zp
+
+    low_zg_err = zg - low_zg_lim
+    high_zg_err = upper_zg_lim - zg
 
     ax1.text(0.71, 0.55, \
     r'$\mathrm{z_{spz;best} = }$' + "{:.4}".format(zspz) + \
@@ -278,17 +282,17 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     transform=ax1.transAxes, color='k', size=13)
 
 
-    ax1.text(0.37, 0.18,'log(Age[yr]) = ' + "{:.4}".format(age), \
+    ax1.text(0.17, 0.18,'log(Age[yr]) = ' + "{:.4}".format(age), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=13)
-    ax1.text(0.37, 0.12, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
+    ax1.text(0.17, 0.12, r'$\tau$' + '[Gyr] = ' + "{:.3}".format(tau), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=13)
 
     if av < 0:
         av = -99.0
 
-    ax1.text(0.37, 0.06, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
+    ax1.text(0.17, 0.06, r'$\mathrm{A_V}$' + ' = ' + "{:.3}".format(av), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=13)
 
