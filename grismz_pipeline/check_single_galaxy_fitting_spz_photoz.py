@@ -52,7 +52,7 @@ def makefig():
     # ---------- labels ---------- #
     ax1.set_ylabel(r'$\mathrm{f_\lambda\ [erg\,s^{-1}\,cm^{-2}\,\AA^{-1}]}$', fontsize=14)
     ax2.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$', fontsize=15)
-    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - \alpha f^{mod}_\lambda}{f^{obs;err}_\lambda}}$', fontsize=14)
+    ax2.set_ylabel(r'$\mathrm{\frac{f^{obs}_\lambda\ - \alpha f^{mod}_\lambda}{\sigma_{f_{\lambda}^{\rm obs}}}}$', fontsize=17)
 
     return fig, ax1, ax2
 
@@ -226,7 +226,7 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     min_ylim = 0.2 * min_y_obs
 
     ax1.set_ylim(min_ylim, max_ylim)
-    #ax2.set_ylim(-14, 14)
+    ax2.set_ylim(-14, 14)
 
     ax1.set_xlim(3000, 85000)
     ax2.set_xlim(3000, 85000)
@@ -257,16 +257,16 @@ def plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam_obs, ph
     high_zg_err = upper_zg_lim - zg
 
     ax1.text(0.71, 0.55, \
-    r'$\mathrm{z_{spz;best} = }$' + "{:.4}".format(zspz) + \
-    r'$\substack{+$' + "{:.3}".format(high_zspz_err) + r'$\\ -$' + "{:.3}".format(low_zspz_err) + r'$}$', \
+    r'$\mathrm{z_{spz;best} = }$' + "{:.3}".format(zspz) + \
+    r'$\substack{+$' + "{:.2f}".format(high_zspz_err) + r'$\\ -$' + "{:.2f}".format(low_zspz_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=13)
-    ax1.text(0.71, 0.48, r'$\mathrm{z_{spec} = }$' + "{:.4}".format(specz), \
+    ax1.text(0.71, 0.48, r'$\mathrm{z_{spec} = }$' + "{:.3f}".format(specz), \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=13)
-    ax1.text(0.71, 0.43, \
-    r'$\mathrm{z_{p;best} = }$' + "{:.4}".format(zp) + \
-    r'$\substack{+$' + "{:.3}".format(high_zp_err) + r'$\\ -$' + "{:.3}".format(low_zp_err) + r'$}$', \
+    ax1.text(0.71, 0.42, \
+    r'$\mathrm{z_{p;best} = }$' + "{:.3}".format(zp) + \
+    r'$\substack{+$' + "{:.2f}".format(high_zp_err) + r'$\\ -$' + "{:.2f}".format(low_zp_err) + r'$}$', \
     verticalalignment='top', horizontalalignment='left', \
     transform=ax1.transAxes, color='k', size=13)
 
