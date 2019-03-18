@@ -277,7 +277,11 @@ def main():
             current_dec = pears_scat['pearsdec'][master_cat_idx]
             current_imag = pears_scat['imag'][master_cat_idx]
 
-        # Get errors on redshifts 
+        # Cut on imag # ONLY for the table that goes into the paper!!
+        #if current_imag > 23.5:
+        #    continue
+
+        # Get errors on redshifts   # from chi2 map NOT p(z) curve
         high_zperr = zp_high_bound_chi2[i] - zp[i]
         low_zperr  = zp[i] - zp_low_bound_chi2[i]
 
@@ -318,23 +322,23 @@ def main():
             if current_res_zspz_to_print[0] != '-':
                 current_res_zspz_to_print = '+' + current_res_zspz_to_print
 
-            print current_id_to_print, "  ",
-            print current_field, "  ",
-            print "{:.7f}".format(current_ra), "  ",
-            print current_dec_to_print, "  ",
-            print "{:.3f}".format(current_specz), "  ",
+            print current_id_to_print, "  &",
+            print current_field, "  &",
+            print "{:.7f}".format(current_ra), "  &",
+            print current_dec_to_print, "  &",
+            print "{:.3f}".format(current_specz), "  &",
             print str("{:.2f}".format(zp[i])) + \
-            "$\substack{+" + str("{:.2f}".format(high_zperr)) + " \\\\ -" + str("{:.2f}".format(low_zperr)) + "}$", "  ",
+            "$\substack{+" + str("{:.2f}".format(high_zperr)) + " \\\\ -" + str("{:.2f}".format(low_zperr)) + "}$", "  &",
             print str("{:.2f}".format(zg[i])) + \
-            "$\substack{+" + str("{:.2f}".format(high_zgerr)) + " \\\\ -" + str("{:.2f}".format(low_zgerr)) + "}$", "  ",
+            "$\substack{+" + str("{:.2f}".format(high_zgerr)) + " \\\\ -" + str("{:.2f}".format(low_zgerr)) + "}$", "  &",
             print str("{:.2f}".format(zspz[i])) + \
-            "$\substack{+" + str("{:.2f}".format(high_zspzerr)) + " \\\\ -" + str("{:.2f}".format(low_zspzerr)) + "}$", "  ",
-            print current_netsig_to_print, "  ",
-            print "{:.2f}".format(d4000), "  ",
-            print "{:.2f}".format(d4000_err), "  ",
+            "$\substack{+" + str("{:.2f}".format(high_zspzerr)) + " \\\\ -" + str("{:.2f}".format(low_zspzerr)) + "}$", "  &",
+            print current_netsig_to_print, "  &",
+            print "{:.2f}".format(d4000), "  &",
+            print "{:.2f}".format(d4000_err), "  &",
             #print current_res_zphot_to_print, "     ",
             #print current_res_zspz_to_print, "    ",
-            print "{:.2f}".format(current_imag)
+            print "{:.2f}".format(current_imag), "\\\\"
 
             total_galaxies += 1
 
