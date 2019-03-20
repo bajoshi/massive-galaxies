@@ -222,9 +222,15 @@ def main():
     pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
 
     # Comment this print statement out if out don't want to actually print this list
-    print "ID       RA    DEC       Field      zspec    zphot    zg     zspz    NetSig    D4000    D4000_err    iABmag"
+    print_tex_format = False  # toggle this on/off for printing tex/ascii table
+    if print_tex_format:
+        print "ID    Field     RA    DEC        zspec    zphot    zgrism     zspz    NetSig    D4000    D4000_err    iABmag"
+    else:
+        print "ID    Field     RA    DEC        zspec    zphot    low_zphot_err    high_zphot_err    zg    low_zgrism_err    high_zgrism_err",
+        print "    zspz    low_zspz_err    high_zspz_err    NetSig    D4000    D4000_err    iABmag"
 
     total_galaxies = 0
+    large_d4000_err_count = 0
 
     for i in range(len(all_ids)):
         current_id = all_ids[i]
@@ -264,6 +270,11 @@ def main():
         ferr_em = grism_ferr_obs * (1 + current_specz)
 
         d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+
+        # Cut on large D4000 error
+        if d4000_err > 0.5:
+            large_d4000_err_count += 1
+            continue
 
         # Get ra, dec, i_mag
         if current_field == 'GOODS-N':
@@ -322,27 +333,51 @@ def main():
             if current_res_zspz_to_print[0] != '-':
                 current_res_zspz_to_print = '+' + current_res_zspz_to_print
 
-            print current_id_to_print, "  &",
-            print current_field, "  &",
-            print "{:.7f}".format(current_ra), "  &",
-            print current_dec_to_print, "  &",
-            print "{:.3f}".format(current_specz), "  &",
-            print str("{:.2f}".format(zp[i])) + \
-            "$\substack{+" + str("{:.2f}".format(high_zperr)) + " \\\\ -" + str("{:.2f}".format(low_zperr)) + "}$", "  &",
-            print str("{:.2f}".format(zg[i])) + \
-            "$\substack{+" + str("{:.2f}".format(high_zgerr)) + " \\\\ -" + str("{:.2f}".format(low_zgerr)) + "}$", "  &",
-            print str("{:.2f}".format(zspz[i])) + \
-            "$\substack{+" + str("{:.2f}".format(high_zspzerr)) + " \\\\ -" + str("{:.2f}".format(low_zspzerr)) + "}$", "  &",
-            print current_netsig_to_print, "  &",
-            print "{:.2f}".format(d4000), "  &",
-            print "{:.2f}".format(d4000_err), "  &",
-            #print current_res_zphot_to_print, "     ",
-            #print current_res_zspz_to_print, "    ",
-            print "{:.2f}".format(current_imag), "\\\\"
+            if print_tex_format:
+                print current_id_to_print, "  &",
+                print current_field, "  &",
+                print "{:.7f}".format(current_ra), "  &",
+                print current_dec_to_print, "  &",
+                print "{:.3f}".format(current_specz), "  &",
+                print str("{:.2f}".format(zp[i])) + \
+                "$\substack{+" + str("{:.2f}".format(high_zperr)) + " \\\\ -" + str("{:.2f}".format(low_zperr)) + "}$", "  &",
+                print str("{:.2f}".format(zg[i])) + \
+                "$\substack{+" + str("{:.2f}".format(high_zgerr)) + " \\\\ -" + str("{:.2f}".format(low_zgerr)) + "}$", "  &",
+                print str("{:.2f}".format(zspz[i])) + \
+                "$\substack{+" + str("{:.2f}".format(high_zspzerr)) + " \\\\ -" + str("{:.2f}".format(low_zspzerr)) + "}$", "  &",
+                print current_netsig_to_print, "  &",
+                print "{:.2f}".format(d4000), "  &",
+                print "{:.2f}".format(d4000_err), "  &",
+                #print current_res_zphot_to_print, "     ",
+                #print current_res_zspz_to_print, "    ",
+                print "{:.2f}".format(current_imag), "\\\\"
+
+            else:  # print the ascii table which can just be copy pasted into a text file
+                print current_id_to_print, "  ",
+                print current_field, "  ",
+                print "{:.7f}".format(current_ra), "  ",
+                print "{:.6f}".format(current_dec), "  ",
+                print "{:.3f}".format(current_specz), "  ",
+                print "{:.2f}".format(zp[i]), "  ",
+                print "{:.2f}".format(low_zperr), "  ",
+                print "{:.2f}".format(high_zperr), "  ",
+                print "{:.2f}".format(zg[i]), "  ",
+                print "{:.2f}".format(low_zgerr), "  ",
+                print "{:.2f}".format(high_zgerr), "  ",
+                print "{:.2f}".format(zspz[i]), "  ",
+                print "{:.2f}".format(low_zspzerr), "  ",
+                print "{:.2f}".format(high_zspzerr), "  ",
+                print current_netsig_to_print, "  ",
+                print "{:.2f}".format(d4000), "  ",
+                print "{:.2f}".format(d4000_err), "  ",
+                #print current_res_zphot_to_print, "     ",
+                #print current_res_zspz_to_print, "    ",
+                print "{:.2f}".format(current_imag)
 
             total_galaxies += 1
 
     print "Total galaxies:", total_galaxies
+    print "Galaxies with large D4000 errors (>0.5):", large_d4000_err_count
 
     return None
 
