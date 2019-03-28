@@ -105,19 +105,19 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     ax.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$', fontsize=15)
 
     # plot template
-    ax.plot(model['wav'], model['flam_norm'], color='lightgray')
+    ax.plot(model['wav'], model['flam_norm'], color='k')
 
     # plot template photometry
     ax.plot(phot_lam, model_photometry, 'o', color='r', markersize=6, zorder=5)
 
     # Plot simulated grism spectrum
-    ax.plot(resampling_lam_grid, model_grism_spec, color='lightseagreen', lw=2, zorder=4)
+    ax.plot(resampling_lam_grid, model_grism_spec, color='lightseagreen', lw=2, zorder=6)
 
     # Plot all filters
     # need twinx first
     ax1 = ax.twinx()
     for filt in all_filters:
-        ax1.plot(filt['wav'], filt['trans'])
+        ax1.plot(filt['wav'], filt['trans'], zorder=2)
 
     # Twin axis related stuff
     ax1.set_ylabel(r'$\mathrm{Transmission}$', fontsize=15)
@@ -132,6 +132,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     ax.minorticks_on()
 
     # ---------- tick labels for the logarithmic axis ---------- #
+    # Must be done after setting the scale to log
     ax.set_xticks([4000, 10000, 20000, 50000, 80000])
     ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
@@ -222,6 +223,45 @@ def main():
 
     all_filters = [f435w, f606w, f814w, f140w, irac1, irac2, irac3, irac4]
     filter_names = ['F435W', 'F606W', 'F814W', 'F140W', 'IRAC_CH1', 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4']
+
+    # Scale the filter curves to look like the ones in the handbook:
+    # For ACS : http://www.stsci.edu/hst/acs/documents/handbooks/current/c10_ImagingReference01.html
+    # For WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/appendixA01.html
+    # For Spitzer: 
+    # For Herschel: 
+    # The numbers here were determined by eye. I simply looked at the curves
+    # in the handbook and made sure the peak transmission here matches that
+    # in the handbook.
+    # Get scaling factors  # the numerator here is my eyeballed peak transmission
+    # I eyeballed it for the HST filters. The Spitzer docmentation has the peak trans listed.
+    f435w_scalefac = 0.37 / max(f435w['trans'])
+    f606w_scalefac = 0.465 / max(f606w['trans'])
+    f814w_scalefac = 0.44 / max(f814w['trans'])
+    f140w_scalefac = 0.56 / max(f140w['trans'])
+    irac1_scalefac = 0.748 / max(irac1['trans'])
+    irac2_scalefac = 0.859 / max(irac2['trans'])
+    irac3_scalefac = 0.653 / max(irac3['trans'])
+    irac4_scalefac = 0.637 / max(irac4['trans'])
+
+    f435w['trans'] *= f435w_scalefac
+    f606w['trans'] *= f606w_scalefac
+    f814w['trans'] *= f814w_scalefac
+    f140w['trans'] *= f140w_scalefac
+    irac1['trans'] *= irac1_scalefac
+    irac2['trans'] *= irac2_scalefac
+    irac3['trans'] *= irac3_scalefac
+    irac4['trans'] *= irac4_scalefac
+
+    # PLot to check
+    # Do not delete. This is used to compare with the plots in the handbooks.
+    """
+    fig2 = plt.figure()
+    ax2 = fig2.add_subplot(111)
+    for filt in all_filters:
+        ax2.plot(filt['wav'], filt['trans'])
+    plt.show()
+    sys.exit(0)
+    """
 
     # Pivot wavelengths
     # From here --
