@@ -252,7 +252,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
 
     # Pivot wavelengths
     # From here --
-    # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/#keywords
+    # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/
     # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     # KPNO/MOSAIC U-band: https://www.noao.edu/kpno/mosaic/filters/k1001.html
     # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
