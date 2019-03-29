@@ -20,6 +20,28 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 sys.path.append(massive_galaxies_dir + 'codes/')
 import refine_redshifts_dn4000 as old_ref
 
+def get_klambda(wav):
+    # Calzetti law
+    # wavlength has to be in microns
+
+    rv = 4.05
+
+    if wav > 0.63:
+        klam = 2.659 * (-1.857 + 1.040/wav) + rv
+
+    elif wav < 0.63:
+        klam = 2.659 * (-2.156 + 1.509/wav - 0.198/wav**2 + 0.011/wav**3) + rv
+
+    elif wav == 0.63:
+        klam = 3.49
+        # Since the curves dont exactly meet at 0.63 micron, I've taken the average of the two.
+        # They're close though. One gives me klam=3.5 and the other klam=3.48
+
+    return klam
+
+def get_ebv(av):
+    return av / 4.05
+
 def get_model_photometry(template, filt):
 
     # Get template flux and wav grid
@@ -96,7 +118,24 @@ def chop_grism_spec(g141, resampling_lam_grid, grism_spec):
 
 def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_lam_grid, model_grism_spec, all_filters, filter_names):
 
-    # ---------
+    # If you're working with Mrk231 then also show the dust-attenuated SEDs
+    if model_name == 'mrk231':
+        # PUt in the assumed value of av here
+        av = 1.0
+        ebv = get_ebv(av)
+        
+        # Now loop over the dust-free SED and generate a new dust-attenuated SED
+        dust_atten_model_flux = np.zeros(len(model), dtype=np.float64)
+        for i in range(len(model)):
+
+            current_wav = model['wav'][i]
+
+            klam = get_klambda(current_wav)
+            alam = klam * ebv
+
+            dust_atten_model_flux[i] = model['flam_norm'] * 10**(0.4 * alam)
+
+    # --------- Plot --------- # 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -104,14 +143,16 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     ax.set_ylabel(r'$\mathrm{f_\lambda\ [Arbitrary\ scale]}$', fontsize=15)
     ax.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$', fontsize=15)
 
-    # plot template
+    # plot template (along with the dust attenuated one if required)
     ax.plot(model['wav'], model['flam_norm'], color='k')
+    if model_name == 'mrk231':
+        ax.plot(model['wav'], dust_atten_model_flux, color='maroon')
 
     # plot template photometry
-    ax.plot(phot_lam, model_photometry, 'o', color='r', markersize=6, zorder=5)
+    ax.plot(phot_lam, model_photometry, 'o', color='r', markersize=6, zorder=6)
 
     # Plot simulated grism spectrum
-    ax.plot(resampling_lam_grid, model_grism_spec, color='lightseagreen', lw=2, zorder=6)
+    ax.plot(resampling_lam_grid, model_grism_spec, 'o-', markersize=2, color='seagreen', lw=4, zorder=5)
 
     # Plot all filters
     # need twinx first
@@ -125,7 +166,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # Other formatting stuff
     ax.set_xlim(3000, 100000)
-    ax.set_ylim(0, 1.41)
+    ax.set_ylim(-0.05, 1.41)
 
     ax.set_xscale('log')
 
