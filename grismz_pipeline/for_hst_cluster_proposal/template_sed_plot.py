@@ -116,24 +116,29 @@ def chop_grism_spec(g141, resampling_lam_grid, grism_spec):
 
     return resampling_lam_grid, grism_spec
 
+def get_dust_atten_model(model, av):
+
+    ebv = get_ebv(av)
+        
+    # Now loop over the dust-free SED and generate a new dust-attenuated SED
+    dust_atten_model_flux = np.zeros(len(model), dtype=np.float64)
+    for i in range(len(model)):
+
+        current_wav = model['wav'][i] / 1e4  # because this has to be in microns
+
+        klam = get_klambda(current_wav)
+        alam = klam * ebv
+
+        dust_atten_model_flux[i] = model['flam_norm'][i] * 10**(-1 * 0.4 * alam)
+
+    return dust_atten_model_flux
+
 def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_lam_grid, model_grism_spec, all_filters, filter_names):
 
     # If you're working with Mrk231 then also show the dust-attenuated SEDs
-    if model_name == 'mrk231':
-        # PUt in the assumed value of av here
-        av = 1.0
-        ebv = get_ebv(av)
-        
-        # Now loop over the dust-free SED and generate a new dust-attenuated SED
-        dust_atten_model_flux = np.zeros(len(model), dtype=np.float64)
-        for i in range(len(model)):
-
-            current_wav = model['wav'][i]
-
-            klam = get_klambda(current_wav)
-            alam = klam * ebv
-
-            dust_atten_model_flux[i] = model['flam_norm'] * 10**(0.4 * alam)
+    if model_name == 'Mrk 231':
+        dust_atten_model_flux_av2 = get_dust_atten_model(model, 2.0)
+        dust_atten_model_flux_av5 = get_dust_atten_model(model, 5.0)
 
     # --------- Plot --------- # 
     fig = plt.figure()
@@ -145,8 +150,9 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # plot template (along with the dust attenuated one if required)
     ax.plot(model['wav'], model['flam_norm'], color='k')
-    if model_name == 'mrk231':
-        ax.plot(model['wav'], dust_atten_model_flux, color='maroon')
+    if model_name == 'Mrk 231':
+        ax.plot(model['wav'], dust_atten_model_flux_av2, color='orange')
+        ax.plot(model['wav'], dust_atten_model_flux_av5, color='maroon')
 
     # plot template photometry
     ax.plot(phot_lam, model_photometry, 'o', color='r', markersize=6, zorder=6)
@@ -165,7 +171,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     ax1.set_ylim(0, 1.01)
 
     # Other formatting stuff
-    ax.set_xlim(3000, 100000)
+    ax.set_xlim(0.3e4, 500e4)
     ax.set_ylim(-0.05, 1.41)
 
     ax.set_xscale('log')
@@ -184,6 +190,8 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     # Template name
     ax.text(0.75, 0.95, model_name, verticalalignment='top', horizontalalignment='left', \
     transform=ax.transAxes, color='k', size=18)
+
+    # Other info 
     
     # Filer names
     """
@@ -197,8 +205,10 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     transform=ax.transAxes, color='k', size=12, zorder=10)
     """
 
-    savename = 'sed_plot_' + model_name.replace(' ', '_') + '.pdf'
-    fig.savefig(savename, dpi=300, bbox_inches='tight')
+    #savename = 'sed_plot_' + model_name.replace(' ', '_') + '.pdf'
+    #fig.savefig(savename, dpi=300, bbox_inches='tight')
+
+    plt.show()
 
     return None
 
