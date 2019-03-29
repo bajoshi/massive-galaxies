@@ -184,7 +184,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     ax.plot(resampling_lam_grid, model_grism_spec, 'o-', markersize=2, color='seagreen', lw=4, zorder=5)
 
     # Other formatting stuff
-    ax.set_xlim(0.3e4, 200e4)
+    ax.set_xlim(0.3e4, 250e4)
     ax.set_ylim(-0.05, 1.41)
 
     ax.set_xscale('log')
@@ -193,8 +193,9 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # ---------- tick labels for the logarithmic axis ---------- #
     # Must be done after setting the scale to log
-    ax.set_xticks([4000, 10000, 20000, 50000, 80000])
+    ax.set_xticks([4000, 1e4, 2e4, 5e4, 8e4, 70e4, 160e4])
     ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
 
     # Horizontal line at 0
     #ax.axhline(y=0.0, ls='--', color='k')
@@ -206,12 +207,12 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # Other info 
     if model_name == 'Mrk 231':
-        ax.axhline(y=0.6, xmin=0.73, xmax=0.78, color='orange')
-        ax.text(0.79, 0.46, r'$A_V = 1.0$', verticalalignment='top', horizontalalignment='left', \
+        ax.axhline(y=1.0, xmin=0.73, xmax=0.78, color='orange')
+        ax.text(0.79, 0.74, r'$A_V = 1.0$', verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=15)
     
-        ax.axhline(y=0.515, xmin=0.73, xmax=0.78, color='maroon')
-        ax.text(0.79, 0.4, r'$A_V = 5.0$', verticalalignment='top', horizontalalignment='left', \
+        ax.axhline(y=0.915, xmin=0.73, xmax=0.78, color='maroon')
+        ax.text(0.79, 0.68, r'$A_V = 5.0$', verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=15)
 
     # Filer names
@@ -292,10 +293,12 @@ def main():
     irac4['wav'] *= 1e4
 
     # Herschel PACS filters
+    pacs_blue = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Herschel_pacs.blue.dat', dtype=None, names=['wav', 'trans'])
+    pacs_green = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Herschel_pacs.green.dat', dtype=None, names=['wav', 'trans'])
+    pacs_red = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Herschel_pacs.red.dat', dtype=None, names=['wav', 'trans'])
 
-
-    all_filters = [f435w, f606w, f814w, f140w, irac1, irac2, irac3, irac4]
-    filter_names = ['F435W', 'F606W', 'F814W', 'F140W', 'IRAC_CH1', 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4']
+    all_filters = [f435w, f606w, f814w, f140w, irac1, irac2, irac3, irac4, pacs_blue, pacs_green, pacs_red]
+    filter_names = ['F435W', 'F606W', 'F814W', 'F140W', 'IRAC_CH1', 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4', 'PACS_BLUE', 'PACS_GREEN', 'PACS_RED']
 
     # Scale the filter curves to look like the ones in the handbook:
     # For ACS : http://www.stsci.edu/hst/acs/documents/handbooks/current/c10_ImagingReference01.html
@@ -316,6 +319,10 @@ def main():
     irac3_scalefac = 0.653 / max(irac3['trans'])
     irac4_scalefac = 0.637 / max(irac4['trans'])
 
+    pacs_blue_scalefac = 0.51 / max(pacs_blue['trans'])
+    pacs_green_scalefac = 0.57 / max(pacs_green['trans'])
+    pacs_red_scalefac = 0.465 / max(pacs_red['trans'])
+
     f435w['trans'] *= f435w_scalefac
     f606w['trans'] *= f606w_scalefac
     f814w['trans'] *= f814w_scalefac
@@ -325,6 +332,10 @@ def main():
     irac3['trans'] *= irac3_scalefac
     irac4['trans'] *= irac4_scalefac
 
+    pacs_blue['trans'] *= pacs_blue_scalefac
+    pacs_green['trans'] *= pacs_green_scalefac
+    pacs_red['trans'] *= pacs_red_scalefac
+
     # PLot to check
     # Do not delete. This is used to compare with the plots in the handbooks.
     """
@@ -332,6 +343,7 @@ def main():
     ax2 = fig2.add_subplot(111)
     for filt in all_filters:
         ax2.plot(filt['wav'], filt['trans'])
+    ax2.set_xscale('log')
     plt.show()
     sys.exit(0)
     """
@@ -341,7 +353,8 @@ def main():
     # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/
     # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
-    phot_lam = np.array([4328.2, 5921.1, 8057.0, 13923.0, 35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
+    # Herschel PACS: http://herschel.esac.esa.int/Docs/PACS/html/ch03s02.html
+    phot_lam = np.array([4328.2, 5921.1, 8057.0, 13923.0, 35500.0, 44930.0, 57310.0, 78720.0, 700000.0, 1000000.0, 1600000.0])  # angstroms
 
     # ---------------------------------- Now get the templates ---------------------------------- #
     ell2gyr = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Ell2Gyr_template.tbl', \
