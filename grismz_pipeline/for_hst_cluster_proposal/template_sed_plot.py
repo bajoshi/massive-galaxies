@@ -116,29 +116,38 @@ def chop_grism_spec(g141, resampling_lam_grid, grism_spec):
 
     return resampling_lam_grid, grism_spec
 
-def get_dust_atten_model(model, av):
+def get_dust_atten_model(model_wav_arr, model_flux_arr, av):
+    """
+    This function will apply the Calzetti dust extinction law 
+    to the given model using the supplied value of Av.
+
+    It assumes that the model it is being given is dust-free.
+    It assumes that the model wavelengths it is given are in Angstroms.
+
+    It returns the dust-attenuated flux array at the same wavelengths as before.
+    """
 
     ebv = get_ebv(av)
         
     # Now loop over the dust-free SED and generate a new dust-attenuated SED
-    dust_atten_model_flux = np.zeros(len(model), dtype=np.float64)
-    for i in range(len(model)):
+    dust_atten_model_flux = np.zeros(len(model_wav_arr), dtype=np.float64)
+    for i in range(len(model_wav_arr)):
 
-        current_wav = model['wav'][i] / 1e4  # because this has to be in microns
+        current_wav = model_wav_arr[i] / 1e4  # because this has to be in microns
 
-        klam = get_klambda(current_wav)
-        alam = klam * ebv
+        # The calzetti law is only valid up to 2.2 micron so beyond 
+        # 2.2 micron this function just replaces the old values
+        if current_wav <= 2.2:
+            klam = get_klambda(current_wav)
+            alam = klam * ebv
 
-        dust_atten_model_flux[i] = model['flam_norm'][i] * 10**(-1 * 0.4 * alam)
+            dust_atten_model_flux[i] = model_flux_arr[i] * 10**(-1 * 0.4 * alam)
+        else:
+            dust_atten_model_flux[i] = model_flux_arr[i]
 
     return dust_atten_model_flux
 
 def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_lam_grid, model_grism_spec, all_filters, filter_names):
-
-    # If you're working with Mrk231 then also show the dust-attenuated SEDs
-    if model_name == 'Mrk 231':
-        dust_atten_model_flux_av2 = get_dust_atten_model(model, 2.0)
-        dust_atten_model_flux_av5 = get_dust_atten_model(model, 5.0)
 
     # --------- Plot --------- # 
     fig = plt.figure()
@@ -147,18 +156,6 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     # Labels
     ax.set_ylabel(r'$\mathrm{f_\lambda\ [Arbitrary\ scale]}$', fontsize=15)
     ax.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$', fontsize=15)
-
-    # plot template (along with the dust attenuated one if required)
-    ax.plot(model['wav'], model['flam_norm'], color='k')
-    if model_name == 'Mrk 231':
-        ax.plot(model['wav'], dust_atten_model_flux_av2, color='orange')
-        ax.plot(model['wav'], dust_atten_model_flux_av5, color='maroon')
-
-    # plot template photometry
-    ax.plot(phot_lam, model_photometry, 'o', color='r', markersize=6, zorder=6)
-
-    # Plot simulated grism spectrum
-    ax.plot(resampling_lam_grid, model_grism_spec, 'o-', markersize=2, color='seagreen', lw=4, zorder=5)
 
     # Plot all filters
     # need twinx first
@@ -170,8 +167,24 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     ax1.set_ylabel(r'$\mathrm{Transmission}$', fontsize=15)
     ax1.set_ylim(0, 1.01)
 
+    # plot template (along with the dust attenuated one if required)
+    ax.plot(model['wav'], model['flam_norm'], color='k', zorder=4)
+    # If you're working with Mrk231 then also show the dust-attenuated SEDs
+    if model_name == 'Mrk 231':
+        dust_atten_model_flux_av1 = get_dust_atten_model(model['wav'], model['flam_norm'], 1.0)
+        dust_atten_model_flux_av5 = get_dust_atten_model(model['wav'], model['flam_norm'], 5.0)
+
+        ax.plot(model['wav'], dust_atten_model_flux_av1, color='orange', zorder=4)
+        ax.plot(model['wav'], dust_atten_model_flux_av5, color='maroon', zorder=4)
+
+    # plot template photometry
+    ax.plot(phot_lam, model_photometry, 'o', color='r', markersize=6, zorder=6)
+
+    # Plot simulated grism spectrum
+    ax.plot(resampling_lam_grid, model_grism_spec, 'o-', markersize=2, color='seagreen', lw=4, zorder=5)
+
     # Other formatting stuff
-    ax.set_xlim(0.3e4, 500e4)
+    ax.set_xlim(0.3e4, 200e4)
     ax.set_ylim(-0.05, 1.41)
 
     ax.set_xscale('log')
@@ -192,7 +205,15 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     transform=ax.transAxes, color='k', size=18)
 
     # Other info 
+    if model_name == 'Mrk 231':
+        ax.axhline(y=0.6, xmin=0.73, xmax=0.78, color='orange')
+        ax.text(0.79, 0.46, r'$A_V = 1.0$', verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=15)
     
+        ax.axhline(y=0.515, xmin=0.73, xmax=0.78, color='maroon')
+        ax.text(0.79, 0.4, r'$A_V = 5.0$', verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=15)
+
     # Filer names
     """
     ax.text(0.024, 0.15, filter_names[0], verticalalignment='top', horizontalalignment='left', \
@@ -205,10 +226,8 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     transform=ax.transAxes, color='k', size=12, zorder=10)
     """
 
-    #savename = 'sed_plot_' + model_name.replace(' ', '_') + '.pdf'
-    #fig.savefig(savename, dpi=300, bbox_inches='tight')
-
-    plt.show()
+    savename = 'sed_plot_' + model_name.replace(' ', '_') + '.pdf'
+    fig.savefig(savename, dpi=300, bbox_inches='tight')
 
     return None
 
@@ -271,6 +290,9 @@ def main():
     irac2['wav'] *= 1e4
     irac3['wav'] *= 1e4
     irac4['wav'] *= 1e4
+
+    # Herschel PACS filters
+
 
     all_filters = [f435w, f606w, f814w, f140w, irac1, irac2, irac3, irac4]
     filter_names = ['F435W', 'F606W', 'F814W', 'F140W', 'IRAC_CH1', 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4']
