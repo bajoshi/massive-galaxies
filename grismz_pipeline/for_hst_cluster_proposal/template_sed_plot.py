@@ -165,7 +165,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # Twin axis related stuff
     ax1.set_ylabel(r'$\mathrm{Transmission}$', fontsize=15)
-    ax1.set_ylim(0, 1.01)
+    ax1.set_ylim(0, 1.05)
 
     # plot template (along with the dust attenuated one if required)
     ax.plot(model['wav'], model['flam_norm'], color='k', zorder=4)
@@ -174,8 +174,13 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
         dust_atten_model_flux_av1 = get_dust_atten_model(model['wav'], model['flam_norm'], 1.0)
         dust_atten_model_flux_av5 = get_dust_atten_model(model['wav'], model['flam_norm'], 5.0)
 
-        ax.plot(model['wav'], dust_atten_model_flux_av1, color='orange', zorder=4)
+        ax.plot(model['wav'], dust_atten_model_flux_av1, color='blue', zorder=4)
         ax.plot(model['wav'], dust_atten_model_flux_av5, color='maroon', zorder=4)
+
+        wav_arr_for_shading_idx = np.where(model['wav'] <= 2.2e4)[0]
+        ax.fill_between(model['wav'][wav_arr_for_shading_idx], \
+            model['flam_norm'][wav_arr_for_shading_idx], dust_atten_model_flux_av5[wav_arr_for_shading_idx], \
+            color='gray', alpha=0.25)
 
     # plot template photometry
     ax.plot(phot_lam, model_photometry, 'o', color='r', markersize=6, zorder=6)
@@ -183,9 +188,13 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     # Plot simulated grism spectrum
     ax.plot(resampling_lam_grid, model_grism_spec, 'o-', markersize=2, color='seagreen', lw=4, zorder=5)
 
+    # Fix all zorder
+    ax.set_zorder(ax1.get_zorder()+1) # put ax in front of ax1 
+    ax.patch.set_visible(False) # hide the 'canvas'
+
     # Other formatting stuff
-    ax.set_xlim(0.3e4, 250e4)
-    ax.set_ylim(-0.05, 1.41)
+    ax.set_xlim(0.3e4, 10e4)
+    ax.set_ylim(-0.05, 1.45)
 
     ax.set_xscale('log')
 
@@ -193,7 +202,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # ---------- tick labels for the logarithmic axis ---------- #
     # Must be done after setting the scale to log
-    ax.set_xticks([4000, 1e4, 2e4, 5e4, 8e4, 70e4, 160e4])
+    ax.set_xticks([4000, 1e4, 2e4, 5e4, 8e4])
     ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
 
@@ -202,17 +211,17 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # Text for info
     # Template name
-    ax.text(0.75, 0.95, model_name, verticalalignment='top', horizontalalignment='left', \
-    transform=ax.transAxes, color='k', size=18)
+    ax.text(0.5, 0.96, model_name, verticalalignment='top', horizontalalignment='left', \
+    transform=ax.transAxes, color='k', size=17)
 
     # Other info 
     if model_name == 'Mrk 231':
-        ax.axhline(y=1.0, xmin=0.73, xmax=0.78, color='orange')
-        ax.text(0.79, 0.74, r'$A_V = 1.0$', verticalalignment='top', horizontalalignment='left', \
+        ax.axhline(y=1.335, xmin=0.73, xmax=0.78, color='blue')
+        ax.text(0.79, 0.94, r'$A_V = 1.0$', verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=15)
     
-        ax.axhline(y=0.915, xmin=0.73, xmax=0.78, color='maroon')
-        ax.text(0.79, 0.68, r'$A_V = 5.0$', verticalalignment='top', horizontalalignment='left', \
+        ax.axhline(y=1.25, xmin=0.73, xmax=0.78, color='maroon')
+        ax.text(0.79, 0.88, r'$A_V = 5.0$', verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=15)
 
     # Filer names
