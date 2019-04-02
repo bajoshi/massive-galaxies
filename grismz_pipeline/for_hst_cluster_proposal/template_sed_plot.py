@@ -4,6 +4,7 @@ import numpy as np
 from astropy.io import fits
 from scipy.interpolate import griddata
 from numpy import nansum
+import pysynphot
 
 import os
 import sys
@@ -16,6 +17,7 @@ import matplotlib
 
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
+figs_dir = home + "/Desktop/FIGS/"
 
 sys.path.append(massive_galaxies_dir + 'codes/')
 import refine_redshifts_dn4000 as old_ref
@@ -271,7 +273,7 @@ def do_all_mods_plot(template, template_name, all_filters, filter_names, phot_la
 
     return None
 
-def main():
+def plot_for_pclusters():
 
     # ---------------------------------- Read in the filters from Seth ---------------------------------- #
     f435w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/F435W_ACS.res', \
@@ -381,6 +383,101 @@ def main():
         template = all_templates[count]
         template_name = all_template_names[count]
         do_all_mods_plot(template, template_name, all_filters, filter_names, phot_lam, g141)
+
+    return None
+
+def plot_for_g165():
+
+    # ---------------------------------- Read in the filters ---------------------------------- #
+    f435w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/F435W_ACS.res', \
+        dtype=None, names=['wav', 'trans'])
+    f606w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/F606W_ACS.res', \
+        dtype=None, names=['wav', 'trans'])
+    f814w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/F814W_ACS.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f105w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/wfc3_ir_filters/F105W_IR_throughput.csv', \
+        dtype=None, names=['wav', 'trans'], usecols=(1,2), delimiter=',')
+
+    # Read G102 throughput curve and save to ascii file
+    # This has to come from pysynphot # It should not need any scaling # Check with handbook
+    # This code block only needs to run once
+    """
+    g102_pysyn  = pysynphot.ObsBandpass('wfc3,ir,g102')
+    g102_wav = g102_pysyn.binset
+    g102_trans = g102_pysyn(g102_wav)
+    g102_dat = np.array(zip(g102_wav, g102_trans), dtype=[('g102_wav', np.float64), ('g102_trans', np.float64)])
+    np.savetxt(massive_galaxies_dir + 'grismz_pipeline/g102_filt_curve.txt', g102_dat, \
+        fmt=['%.6f', '%.6f'], header='wav trans')
+    """
+    # Now read it back from the ascii file to get it into a format consistent with all other curves
+    g102 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/g102_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+
+    # Spitzer/IRAC channels
+    irac1 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac2 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac3 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac4 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+
+    # IRAC wavelengths are in microns # convert to angstroms
+    irac1['wav'] *= 1e4
+    irac2['wav'] *= 1e4
+    irac3['wav'] *= 1e4
+    irac4['wav'] *= 1e4
+
+    # Multiply by scale factor to make the curves look like those in the handbook
+    # See the comments in the plot_for_pclusters() function above
+    f435w_scalefac = 0.37  / max(f435w['trans'])
+    f606w_scalefac = 0.465 / max(f606w['trans'])
+    f814w_scalefac = 0.44  / max(f814w['trans'])
+    f105w_scalefac = 0.515 / max(f105w['trans'])
+    irac1_scalefac = 0.748 / max(irac1['trans'])
+    irac2_scalefac = 0.859 / max(irac2['trans'])
+    irac3_scalefac = 0.653 / max(irac3['trans'])
+    irac4_scalefac = 0.637 / max(irac4['trans'])
+
+    f435w['trans'] *= f435w_scalefac
+    f606w['trans'] *= f606w_scalefac
+    f814w['trans'] *= f814w_scalefac
+    f105w['trans'] *= f105w_scalefac
+    irac1['trans'] *= irac1_scalefac
+    irac2['trans'] *= irac2_scalefac
+    irac3['trans'] *= irac3_scalefac
+    irac4['trans'] *= irac4_scalefac
+
+    # Pivot wavelengths
+    # From here --
+    # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/
+    # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
+    # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
+    phot_lam = np.array([4328.2, 5921.1, 8057.0, 10552.0, 35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
+
+    # ---------------------------------- Now get the BC03 templates ---------------------------------- #
+    """
+    1. Elliptical galaxy with modest H-alpha emission at z=0.35
+    I'm choosing a solar metallicity template with a 4 Gyr old population with no dust and a tau=2 Gyr.
+    2. Starforming galaxy at z=2
+    I'm choosing a solar metallicity template with a 50 Myr old population with no dust and a tau=0.5 Gyr.
+    """
+
+    template_metallicity = [0.02]
+    template_ages_gyr = [4.0, 0.05]
+    template_tau_gyr = [2, 0.5]
+
+    # Read in all models
+    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
+    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
+
+    return None
+
+def main():
+
+    #plot_for_pclusters()
+    plot_for_g165()
 
     return None
 
