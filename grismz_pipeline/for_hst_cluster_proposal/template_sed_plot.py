@@ -516,6 +516,16 @@ def plot_for_g165():
         dtype=None, names=['wav', 'trans'])
     f105w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/wfc3_ir_filters/F105W_IR_throughput.csv', \
         dtype=None, names=['wav', 'trans'], usecols=(1,2), delimiter=',', skip_header=1)
+    f110w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/wfc3_ir_filters/F110W_IR_throughput.csv', \
+        dtype=None, names=['wav', 'trans'], usecols=(1,2), delimiter=',', skip_header=1)
+    f160w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    lbt_luci_k = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/LBT_LUCIFER.K_ED059.dat', \
+        dtype=None, names=['wav', 'trans'])
+    mmirs_k = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/mmirs_k.dat', \
+        dtype=None, names=['wav', 'trans'], skip_header=1)
+    # I've been told (see Chris Willmer's email) that this is proper throughput 
+    # for the MMIRS K-band and shouldn't need scaling.
 
     # Read G102 throughput curve and save to ascii file
     # This has to come from pysynphot # It should not need any scaling # Check with handbook
@@ -548,8 +558,11 @@ def plot_for_g165():
     irac3['wav'] *= 1e4
     irac4['wav'] *= 1e4
 
-    all_filters = [f435w, f606w, f814w, f105w, irac1, irac2, irac3, irac4]
-    filter_names = ['F435W', 'F606W', 'F814W', 'F105W', 'IRAC_CH1', 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4']
+    # mmirs k also in microns
+    mmirs_k['wav'] *= 1e4
+
+    all_filters = [f435w, f606w, f814w, f105w, f110w, f160w, mmirs_k, irac1, irac2, irac3, irac4]
+    filter_names = ['F435W', 'F606W', 'F814W', 'F105W', 'F110W', 'F160W', 'K', 'IRAC_CH1', 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4']
 
     # Multiply by scale factor to make the curves look like those in the handbook
     # See the comments in the plot_for_pclusters() function above
@@ -557,6 +570,9 @@ def plot_for_g165():
     f606w_scalefac = 0.465 / max(f606w['trans'])
     f814w_scalefac = 0.44  / max(f814w['trans'])
     f105w_scalefac = 0.515 / max(f105w['trans'])
+    f110w_scalefac = 0.56 / max(f110w['trans'])
+    f160w_scalefac = 0.555 / max(f160w['trans'])
+    lucik_scalefac = 0.91 / max(lbt_luci_k['trans'])
     irac1_scalefac = 0.748 / max(irac1['trans'])
     irac2_scalefac = 0.859 / max(irac2['trans'])
     irac3_scalefac = 0.653 / max(irac3['trans'])
@@ -566,6 +582,9 @@ def plot_for_g165():
     f606w['trans'] *= f606w_scalefac
     f814w['trans'] *= f814w_scalefac
     f105w['trans'] *= f105w_scalefac
+    f110w['trans'] *= f110w_scalefac
+    f160w['trans'] *= f160w_scalefac
+    lbt_luci_k['trans'] *= lucik_scalefac
     irac1['trans'] *= irac1_scalefac
     irac2['trans'] *= irac2_scalefac
     irac3['trans'] *= irac3_scalefac
@@ -576,7 +595,9 @@ def plot_for_g165():
     # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/
     # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
-    phot_lam = np.array([4328.2, 5921.1, 8057.0, 10552.0, 35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
+    phot_lam = np.array([4328.2, 5921.1, 8057.0, 10552.0, 11534.0, 15369.0, 21860.85, 35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
+    # Using LBT LUCI K pivot wavelength for the MMIRS K filter
+    # Need to compute the pivot wav for the MMIRS filter properly.
 
     # ---------------------------------- Now get the BC03 templates ---------------------------------- #
     """
