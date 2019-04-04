@@ -180,7 +180,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     else:
         ax.plot(model['wav'], model['flam_norm'], color='k', zorder=2)
     # If you're working with Mrk231 then also show the dust-attenuated SEDs
-    if model_name == 'Mrk 231':
+    if model_name == 'AGN':
         dust_atten_model_flux_av1 = get_dust_atten_model(model['wav'], model['flam_norm'], 1.0)
         dust_atten_model_flux_av5 = get_dust_atten_model(model['wav'], model['flam_norm'], 5.0)
 
@@ -203,24 +203,26 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     ax.plot(resampling_lam_grid_nonan, model_grism_spec_nonan, 'o-', markersize=2, color='seagreen', lw=3.5, zorder=5)
 
     # Also show the grism only spectrum as an inset plot
-    ax_in = inset_axes(ax, width="35%", height="22%", loc=1)
-    ax_in.plot(resampling_lam_grid_nonan, model_grism_spec_nonan, 'o-', markersize=2, color='seagreen', lw=1.5, zorder=5)
-    ax_in.minorticks_on()
-    ax_in.set_yticklabels([])
+    if grism_name == 'G102':
+        ax_in = inset_axes(ax, width="35%", height="22%", loc=1)
+        ax_in.plot(resampling_lam_grid_nonan, model_grism_spec_nonan, 'o-', markersize=2, color='seagreen', lw=1.5, zorder=5)
+        ax_in.minorticks_on()
+        ax_in.set_yticklabels([])
 
     # Show labels for emission lnies
-    if 'Ell' in model_name:
-        ax_in.axvline(x=8860, ls='--', color='r', ymin=0.25, ymax=0.6)
-        ax_in.text(0.2, 0.23, r'H${\alpha}$', verticalalignment='top', horizontalalignment='left', \
-        transform=ax_in.transAxes, color='k', size=10)
-        ax_in.text(0.45, 0.95, 'G102 spectrum', verticalalignment='top', horizontalalignment='left', \
-        transform=ax_in.transAxes, color='k', size=10)
-    elif 'SF' in model_name:
-        ax_in.axvline(x=11181, ls='--', color='r', ymin=0.2, ymax=0.8)
-        ax_in.text(0.46, 0.53, r'${\rm [OII]}\lambda 3727$', verticalalignment='top', horizontalalignment='left', \
-        transform=ax_in.transAxes, color='k', size=10)
-        ax_in.text(0.05, 0.95, 'G102 spectrum', verticalalignment='top', horizontalalignment='left', \
-        transform=ax_in.transAxes, color='k', size=10)
+    if grism_name == 'G102':
+        if 'Ell' in model_name:
+            ax_in.axvline(x=8860, ls='--', color='r', ymin=0.25, ymax=0.6)
+            ax_in.text(0.2, 0.23, r'H${\alpha}$', verticalalignment='top', horizontalalignment='left', \
+            transform=ax_in.transAxes, color='k', size=10)
+            ax_in.text(0.45, 0.95, 'G102 spectrum', verticalalignment='top', horizontalalignment='left', \
+            transform=ax_in.transAxes, color='k', size=10)
+        elif 'SF' in model_name:
+            ax_in.axvline(x=11181, ls='--', color='r', ymin=0.2, ymax=0.8)
+            ax_in.text(0.46, 0.53, r'${\rm [OII]}\lambda 3727$', verticalalignment='top', horizontalalignment='left', \
+            transform=ax_in.transAxes, color='k', size=10)
+            ax_in.text(0.05, 0.95, 'G102 spectrum', verticalalignment='top', horizontalalignment='left', \
+            transform=ax_in.transAxes, color='k', size=10)
 
     # Fix all zorder
     if grism_name == 'G141':
@@ -228,10 +230,17 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
         ax.patch.set_visible(False) # hide the 'canvas'
 
     # Other formatting stuff
-    if grism_name == 'G141':
-        ax.set_ylim(-0.05, 1.45)
+    if model_name == 'AGN':
+        ax.set_ylim(-0.05, 6)
+    elif model_name == 'SFG':
+        ax.set_ylim(-0.05, 1.2)
+    elif model_name == 'SMG':
+        ax.set_ylim(-0.05, 1.6)
 
-    ax.set_xlim(0.3e4, 10e4)
+    if grism_name == 'G141':
+        ax.set_xlim(0.3e4, 6e4)
+    else:
+        ax.set_xlim(0.3e4, 10e4)
     ax.set_xscale('log')
 
     if (grism_name == 'G102') and ('SF' in model_name):
@@ -255,12 +264,12 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     transform=ax.transAxes, color='k', size=17)
 
     # Other info 
-    if model_name == 'Mrk 231':
-        ax.axhline(y=1.335, xmin=0.73, xmax=0.78, color='blue')
+    if model_name == 'AGN':
+        ax.axhline(y=5.6, xmin=0.73, xmax=0.78, color='blue')
         ax.text(0.79, 0.94, r'$A_V = 1.0$', verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=15)
     
-        ax.axhline(y=1.25, xmin=0.73, xmax=0.78, color='maroon')
+        ax.axhline(y=5.2, xmin=0.73, xmax=0.78, color='maroon')
         ax.text(0.79, 0.88, r'$A_V = 5.0$', verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=15)
 
@@ -427,8 +436,8 @@ def plot_for_pclusters():
     pacs_green = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Herschel_pacs.green.dat', dtype=None, names=['wav', 'trans'])
     pacs_red = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Herschel_pacs.red.dat', dtype=None, names=['wav', 'trans'])
 
-    all_filters = [f435w, f606w, f814w, f140w, irac1, irac2, irac3, irac4, pacs_blue, pacs_green, pacs_red]
-    filter_names = ['F435W', 'F606W', 'F814W', 'F140W', 'IRAC_CH1', 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4', 'PACS_BLUE', 'PACS_GREEN', 'PACS_RED']
+    all_filters = [f435w, f606w, f814w, f140w, irac1, irac2]  # irac3, irac4, pacs_blue, pacs_green, pacs_red]
+    filter_names = ['F435W', 'F606W', 'F814W', 'F140W', 'IRAC_CH1', 'IRAC_CH2']  # 'IRAC_CH3', 'IRAC_CH4', 'PACS_BLUE', 'PACS_GREEN', 'PACS_RED']
 
     # Scale the filter curves to look like the ones in the handbook:
     # For ACS : http://www.stsci.edu/hst/acs/documents/handbooks/current/c10_ImagingReference01.html
@@ -484,9 +493,12 @@ def plot_for_pclusters():
     # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
     # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
     # Herschel PACS: http://herschel.esac.esa.int/Docs/PACS/html/ch03s02.html
-    phot_lam = np.array([4328.2, 5921.1, 8057.0, 13923.0, 35500.0, 44930.0, 57310.0, 78720.0, 700000.0, 1000000.0, 1600000.0])  # angstroms
+    phot_lam = np.array([4328.2, 5921.1, 8057.0, 13923.0, 35500.0, 44930.0]) # 57310.0, 78720.0, 700000.0, 1000000.0, 1600000.0])  # angstroms
 
     # ---------------------------------- Now get the templates ---------------------------------- #
+    # Older templates from Brenda
+    # Use the newer ones from Maria Polletta
+    """
     ell2gyr = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Ell2Gyr_template.tbl', \
         dtype=None, names=['wav', 'flam_norm'], skip_header=2)
     mrk231 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Mrk231_template.tbl', \
@@ -496,6 +508,19 @@ def plot_for_pclusters():
 
     all_templates = [ell2gyr, mrk231, zless]
     all_template_names = ['Ell 2 Gyr', 'Mrk 231', 'z less']
+    """
+
+    # NEwer templates 
+    # AGN, SF galaxy, and sub-mm galaxy
+    agn_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/QSO1_template.sed', \
+        dtype=None, names=['wav', 'flam_norm'], skip_header=3)
+    sfg_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/M82_starburst_template.sed', \
+        dtype=None, names=['wav', 'flam_norm'], skip_header=3)
+    smg_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/aless_SMG_template.sed', \
+        dtype=None, names=['wav', 'flam_norm'], skip_header=3)
+
+    all_templates = [agn_template, sfg_template, smg_template]
+    all_template_names = ['AGN', 'SFG', 'SMG']
 
     # ---------------------------------- Convolve templates with filters ---------------------------------- #
     for count in range(len(all_templates)):
@@ -653,7 +678,7 @@ def plot_for_g165():
         # Now save
         template_dat = np.array(zip(template_wav, template_flux), dtype=[('template_wav', np.float64), ('template_flux', np.float64)])
         np.savetxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/' + template_names[i] + '.txt', \
-            template_dat, fmt=['%.2e', '%.4e'], header='wav flam_norm')
+            template_dat, fmt=['%.6e', '%.6e'], header='wav flam_norm')
     """
 
     # ---- Now read the templates back in from the ascii files
@@ -675,7 +700,7 @@ def plot_for_g165():
 
 def main():
 
-    #plot_for_pclusters()
+    plot_for_pclusters()
     plot_for_g165()
 
     return None
