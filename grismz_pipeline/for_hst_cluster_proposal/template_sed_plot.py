@@ -237,21 +237,23 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     elif model_name == 'SMG':
         ax.set_ylim(-0.05, 1.6)
 
-    if grism_name == 'G141':
-        ax.set_xlim(0.3e4, 6e4)
-    else:
-        ax.set_xlim(0.3e4, 10e4)
     ax.set_xscale('log')
 
     if (grism_name == 'G102') and ('SF' in model_name):
         ax.set_yscale('log')
         ax.set_ylim(0.01, 100)
 
-    ax.minorticks_on()
-
     # ---------- tick labels for the logarithmic axis ---------- #
+    ax.minorticks_on()
     # Must be done after setting the scale to log
-    ax.set_xticks([4000, 1e4, 2e4, 5e4, 8e4])
+
+    if grism_name == 'G141':
+        ax.set_xlim(0.3e4, 6e4)
+        ax.set_xticks([4000, 1e4, 2e4, 5e4])
+    else:
+        ax.set_xlim(0.3e4, 10e4)
+        ax.set_xticks([4000, 1e4, 2e4, 5e4, 8e4])
+
     ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
 
@@ -285,7 +287,6 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     transform=ax.transAxes, color='k', size=12, zorder=10)
     """
     
-    #plt.show()
     savename = 'sed_plot_' + model_name.replace(' ', '_') + '.pdf'
     fig.savefig(savename, dpi=300, bbox_inches='tight')
 
