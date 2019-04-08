@@ -169,7 +169,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # Twin axis related stuff
     ax1.set_ylabel(r'$\mathrm{Transmission}$', fontsize=15)
-    ax1.set_ylim(0, 1.15)
+    ax1.set_ylim(0, 1.2)
 
     # plot template (along with the dust attenuated one if required)
     if grism_name == 'G102':
@@ -203,11 +203,10 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     ax.plot(resampling_lam_grid_nonan, model_grism_spec_nonan, 'o-', markersize=2, color='seagreen', lw=3.5, zorder=5)
 
     # Also show the grism only spectrum as an inset plot
-    if grism_name == 'G102':
-        ax_in = inset_axes(ax, width="35%", height="22%", loc=1)
-        ax_in.plot(resampling_lam_grid_nonan, model_grism_spec_nonan, 'o-', markersize=2, color='seagreen', lw=1.5, zorder=5)
-        ax_in.minorticks_on()
-        ax_in.set_yticklabels([])
+    ax_in = inset_axes(ax, width="35%", height="22%", loc=1)
+    ax_in.plot(resampling_lam_grid_nonan, model_grism_spec_nonan, 'o-', markersize=2, color='seagreen', lw=1.5, zorder=5)
+    ax_in.minorticks_on()
+    ax_in.set_yticklabels([])
 
     # Show labels for emission lnies
     if grism_name == 'G102':
@@ -231,11 +230,13 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # Other formatting stuff
     if model_name == 'AGN':
-        ax.set_ylim(-0.05, 6)
+        ax.set_ylim(-0.05, 10.05)
     elif model_name == 'SFG':
-        ax.set_ylim(-0.05, 1.2)
+        ax.set_ylim(-0.05, 0.5)
     elif model_name == 'SMG':
-        ax.set_ylim(-0.05, 1.6)
+        ax.set_ylim(-0.05, 0.8)
+    elif 'Ell' in model_name:
+        ax.set_ylim(-0.05, 0.42)
 
     ax.set_xscale('log')
 
@@ -250,6 +251,8 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     if grism_name == 'G141':
         ax.set_xlim(0.3e4, 6e4)
         ax.set_xticks([4000, 1e4, 2e4, 5e4])
+        ax.text(0.485, 0.97, 'G141' + '\n' + 'spectrum', verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=13)
     else:
         ax.set_xlim(0.3e4, 10e4)
         ax.set_xticks([4000, 1e4, 2e4, 5e4, 8e4])
@@ -267,12 +270,12 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     # Other info 
     if model_name == 'AGN':
-        ax.axhline(y=5.6, xmin=0.73, xmax=0.78, color='blue')
-        ax.text(0.79, 0.94, r'$A_V = 1.0$', verticalalignment='top', horizontalalignment='left', \
+        ax.axhline(y=9.25, xmin=0.13, xmax=0.18, color='blue')
+        ax.text(0.19, 0.94, r'$A_V = 1.0$', verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=15)
     
-        ax.axhline(y=5.2, xmin=0.73, xmax=0.78, color='maroon')
-        ax.text(0.79, 0.88, r'$A_V = 5.0$', verticalalignment='top', horizontalalignment='left', \
+        ax.axhline(y=8.75, xmin=0.13, xmax=0.18, color='maroon')
+        ax.text(0.19, 0.88, r'$A_V = 5.0$', verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=15)
 
     # Filer names
@@ -287,6 +290,7 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
     transform=ax.transAxes, color='k', size=12, zorder=10)
     """
     
+    #plt.show()
     savename = 'sed_plot_' + model_name.replace(' ', '_') + '.pdf'
     fig.savefig(savename, dpi=300, bbox_inches='tight')
 
@@ -513,6 +517,8 @@ def plot_for_pclusters():
 
     # NEwer templates 
     # AGN, SF galaxy, and sub-mm galaxy
+    ell2gyr = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Ell2Gyr_template.tbl', \
+        dtype=None, names=['wav', 'flam_norm'], skip_header=2)
     agn_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/QSO1_template.sed', \
         dtype=None, names=['wav', 'flam_norm'], skip_header=3)
     sfg_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/M82_starburst_template.sed', \
@@ -520,13 +526,21 @@ def plot_for_pclusters():
     smg_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/aless_SMG_template.sed', \
         dtype=None, names=['wav', 'flam_norm'], skip_header=3)
 
-    all_templates = [agn_template, sfg_template, smg_template]
-    all_template_names = ['AGN', 'SFG', 'SMG']
+    all_templates = [ell2gyr, agn_template, sfg_template, smg_template]
+    all_template_names = ['Ell 2 Gyr', 'AGN', 'SFG', 'SMG']
+
+    # Define redshift for templates
+    z = 2.5
 
     # ---------------------------------- Convolve templates with filters ---------------------------------- #
     for count in range(len(all_templates)):
         template = all_templates[count]
         template_name = all_template_names[count]
+
+        # Redshift templates
+        template['wav'] *= (1+z)
+        template['flam_norm'] /= (1+z)
+
         do_all_mods_plot(template, template_name, all_filters, filter_names, phot_lam, g141, 'G141')
 
     return None
@@ -702,7 +716,7 @@ def plot_for_g165():
 def main():
 
     plot_for_pclusters()
-    plot_for_g165()
+    #plot_for_g165()
 
     return None
 
