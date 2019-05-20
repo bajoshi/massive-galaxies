@@ -127,7 +127,8 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
     if (current_id in id_arr_jt) and (current_field in field_arr_jt):
         print "At:", current_id, "in", current_field, "Skipping since this has been done by Jet."
         return None
-
+    
+    # ------------------------------- Set field ------------------------------- #
     print "\n", "Working on:", current_field, current_id, "at", current_specz
 
     modify_lsf = True
@@ -157,7 +158,7 @@ def get_all_redshifts(current_id, current_field, current_ra, current_dec, curren
 
     """
     If there are multiple matches with the photometry catalog 
-    within 0.5 arseconds then choose the closest one.
+    within 0.3 arseconds then choose the closest one.
     """
     if len(threed_phot_idx) > 1:
         print "Multiple matches found in Photmetry catalog. Choosing the closest one."

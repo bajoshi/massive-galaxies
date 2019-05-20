@@ -643,7 +643,8 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     # ------------ Get photomtery for model by convolving with filters ------------- #
     z_idx = np.where(z_model_arr == z)[0]
 
-    # and because for some reason it does not find matches 
+    # and because for some reason (in some cases probably 
+    # due to floating point roundoff) it does not find matches 
     # in the model redshift array, I need this check here.
     if not z_idx.size:
         z_idx = np.argmin(abs(z_model_arr - z))
