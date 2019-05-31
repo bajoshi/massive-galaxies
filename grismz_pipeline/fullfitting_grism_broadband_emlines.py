@@ -45,6 +45,7 @@ import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 import mocksim_results as mr
 import fast_chi2_jackknife as fcj
+from covmat_test import get_covmat
 
 speed_of_light = 299792458e10  # angsroms per second
 
@@ -538,7 +539,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
         # Get covariance matrix
-        #covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, silent=True)
+        covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, silent=True)
 
         # Now use the matrix computation to get chi2
         N = len(combined_flam_obs)
@@ -547,13 +548,13 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
         num_vec = np.sum(np.sum(out_prod * covmat[:, :, None], axis=0), axis=0)
         den_vec = np.zeros(total_models)
-        alpha_vec = np.zeros(total_models)
-        chi2_vec = np.zeros(total_models)
+        alpha_ = np.zeros(total_models)
+        chi2_ = np.zeros(total_models)
         for i in range(total_models):  # Get rid of this for loop as well, if you can
             den_vec[i] = np.sum(np.outer(model_spec_in_objlamgrid[i], model_spec_in_objlamgrid[i]) * covmat, axis=None)
-            alpha_vec[i] = num_vec[i]/den_vec[i]
-            col_vector = combined_flam_obs - alpha_vec[i] * model_spec_in_objlamgrid[i]
-            chi2_vec[i] = np.matmul(col_vector, np.matmul(covmat, col_vector))
+            alpha_[i] = num_vec[i]/den_vec[i]
+            col_vector = combined_flam_obs - alpha_[i] * model_spec_in_objlamgrid[i]
+            chi2_[i] = np.matmul(col_vector, np.matmul(covmat, col_vector))
 
         # compute alpha and chi2
         # --------- Previous way of doing calculation without including covariance matrices
@@ -645,7 +646,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         plt.show()
     """
 
-    return chi2_vec, alpha_vec
+    return chi2_, alpha_
 
 def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, covmat, \
     model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
@@ -708,12 +709,12 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     """
 
     # ------------- Now do the chi2 computation ------------- #
-    #if ub:
-    #    chi2_temp, alpha_temp = mm.cy_get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-    #        covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models)
-    #else:
-    chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-        covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=False)
+    if ub:
+        chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+            covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=True)
+    else:
+        chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+            covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=False)
 
     return chi2_temp, alpha_temp
 
