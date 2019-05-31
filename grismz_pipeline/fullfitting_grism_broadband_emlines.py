@@ -475,7 +475,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     return model_comp_spec_modified
 
 def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-    all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models, use_broadband=True):
+    covmat, all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models, use_broadband=True):
 
     # chop the model to be consistent with the objects lam grid
     model_lam_grid_indx_low = np.argmin(abs(model_resampling_lam_grid - grism_lam_obs[0]))
@@ -537,9 +537,28 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         # Not sure if the del works because I'm using the same name again. Also just not sure of how del exactly works.
         model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
+        # Get covariance matrix
+        #covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, silent=True)
+
+        # Now use the matrix computation to get chi2
+        N = len(combined_flam_obs)
+        out_prod = np.outer(combined_flam_obs, model_spec_in_objlamgrid.T.ravel())
+        out_prod = out_prod.reshape(N, N, total_models)
+
+        num_vec = np.sum(np.sum(out_prod * covmat[:, :, None], axis=0), axis=0)
+        den_vec = np.zeros(total_models)
+        alpha_vec = np.zeros(total_models)
+        chi2_vec = np.zeros(total_models)
+        for i in range(total_models):  # Get rid of this for loop as well, if you can
+            den_vec[i] = np.sum(np.outer(model_spec_in_objlamgrid[i], model_spec_in_objlamgrid[i]) * covmat, axis=None)
+            alpha_vec[i] = num_vec[i]/den_vec[i]
+            col_vector = combined_flam_obs - alpha_vec[i] * model_spec_in_objlamgrid[i]
+            chi2_vec[i] = np.matmul(col_vector, np.matmul(covmat, col_vector))
+
         # compute alpha and chi2
-        alpha_ = np.sum(combined_flam_obs * model_spec_in_objlamgrid / (combined_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / combined_ferr_obs**2, axis=1)
-        chi2_ = np.sum(((combined_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / combined_ferr_obs)**2, axis=1)
+        # --------- Previous way of doing calculation without including covariance matrices
+        #alpha_ = np.sum(combined_flam_obs * model_spec_in_objlamgrid / (combined_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / combined_ferr_obs**2, axis=1)
+        #chi2_ = np.sum(((combined_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / combined_ferr_obs)**2, axis=1)
 
         print "Min chi2 for redshift:", min(chi2_)
 
@@ -626,9 +645,9 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         plt.show()
     """
 
-    return chi2_, alpha_
+    return chi2_vec, alpha_vec
 
-def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, covmat, \
     model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
     resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, ub):
 
@@ -689,12 +708,12 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     """
 
     # ------------- Now do the chi2 computation ------------- #
-    if ub:
-        chi2_temp, alpha_temp = mm.cy_get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-            all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models)
-    else:
-        chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-            all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=False)
+    #if ub:
+    #    chi2_temp, alpha_temp = mm.cy_get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+    #        covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models)
+    #else:
+    chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
+        covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=False)
 
     return chi2_temp, alpha_temp
 
@@ -710,7 +729,7 @@ def get_chi2_alpha_at_z_wrapper(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs
 
     return chi2_temp, alpha_temp
 
-def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, covmat, \
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, start_time, obj_id, obj_field, specz, photoz, \
     log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
@@ -765,7 +784,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         elif 'jet' in uname[1]:
             num_cores = 4
         chi2_alpha_list = Parallel(n_jobs=num_cores)(delayed(get_chi2_alpha_at_z)(z, \
-        grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+        grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, covmat, \
         model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
         resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband) \
         for z in z_arr_to_check)
@@ -782,7 +801,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         count = 0
         for z in z_arr_to_check:
             chi2[count], alpha[count] = get_chi2_alpha_at_z(z, \
-                grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+                grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, covmat, \
                 model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
                 resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband)
 
