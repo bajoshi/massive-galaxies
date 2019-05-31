@@ -856,21 +856,21 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         # This condition is essentially saying that the model age has to be at least 
         # 100 Myr younger than the age of the Universe at the given redshift and at 
         # the same time it needs to be at least 10 Myr in absolute terms
-        #if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.01)):
-        #    # If the age is meaningful then you don't need to do anything
-        #    # more. Just break out of the loop. the best fit parameters have
-        #    # already been assigned to variables. This assignment is done before 
-        #    # the if statement to make sure that there are best fit parameters 
-        #    # even if the loop is broken out of in the first iteration.
-        #    break
-
         if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.01)):
-            print "Current z, model age, Universe age, chi2:", current_z, age, np.log10(age_at_z), chi2[min_idx_2d], "<------- AGE OK."
-        else:
-            print "Current z, model age, Universe age, chi2:", current_z, age, np.log10(age_at_z), chi2[min_idx_2d]
-
-        if k == 250:
+            # If the age is meaningful then you don't need to do anything
+            # more. Just break out of the loop. the best fit parameters have
+            # already been assigned to variables. This assignment is done before 
+            # the if statement to make sure that there are best fit parameters 
+            # even if the loop is broken out of in the first iteration.
             break
+
+        #if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.01)):
+        #    print "Current z, model age, Universe age, chi2:", current_z, age, np.log10(age_at_z), chi2[min_idx_2d], 
+        #    print "<------- AGE OK."
+        #else:
+        #    print "Current z, model age, Universe age, chi2:", current_z, age, np.log10(age_at_z), chi2[min_idx_2d]
+        #if k == 250:
+        #    break
 
     print "Minimum chi2 from sorted indices which also agrees with the age of the Universe:", "{:.4}".format(chi2[min_idx_2d])
     print "Minimum chi2 from np.min():", "{:.4}".format(np.min(chi2))
