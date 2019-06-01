@@ -11,6 +11,7 @@ from scipy.interpolate import griddata, interp1d
 from scipy.signal import fftconvolve
 import pysynphot
 from scipy.integrate import simps
+from numba import jit
 
 import os
 import sys
@@ -45,7 +46,6 @@ import dn4000_catalog as dc
 import new_refine_grismz_gridsearch_parallel as ngp
 import mocksim_results as mr
 import fast_chi2_jackknife as fcj
-from covmat_test import get_covmat
 
 speed_of_light = 299792458e10  # angsroms per second
 
@@ -475,12 +475,52 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
     return model_comp_spec_modified
 
+@jit(nopython=True)
+def get_covmat(spec_wav, spec_flux, spec_ferr, silent=True):
+
+    galaxy_len_fac = 20
+    # galaxy_len_fac includes the effect in correlation due to the 
+    # galaxy morphology, i.e., for larger galaxies, flux data points 
+    # need to be farther apart to be uncorrelated.
+    base_fac = 5
+    # base_fac includes the correlation effect due to the overlap 
+    # between flux observed at adjacent spectral elements.
+    # i.e., this amount of correlation in hte noise will 
+    # exist even for a point source
+    kern_len_fac = base_fac + galaxy_len_fac
+
+    # Get number of spectral elements and define covariance mat
+    N = len(spec_wav)
+    covmat = np.identity(N)
+
+    # Now populate the elements of the matrix
+    len_fac = -1 / (2 * kern_len_fac**2)
+    theta_0 = max(spec_ferr)**2
+    #print "Theta_0 is:", theta_0
+    for i in range(N):
+        for j in range(N):
+
+            if i == j:
+                covmat[i,j] = 1.0/spec_ferr[i]**2
+                #print "Exponential factor for element", i, j, "is:", 1.0
+            else:
+                #print "Exponential factor for element", i, j, "is:", 
+                #print np.exp(len_fac * (spec_wav[i] - spec_wav[j])**2)
+                covmat[i,j] = (1.0/theta_0) * np.exp(len_fac * (spec_wav[i] - spec_wav[j])**2)
+
+    # Set everything below a certain lower limit to exactly zero
+    inv_idx = np.where(covmat <= 1e-4 * theta_0)
+    covmat[inv_idx] = 0.0
+
+    return covmat
+
+@jit(nopython=True)
 def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     covmat, all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models, use_broadband=True):
 
     # chop the model to be consistent with the objects lam grid
-    model_lam_grid_indx_low = np.argmin(abs(model_resampling_lam_grid - grism_lam_obs[0]))
-    model_lam_grid_indx_high = np.argmin(abs(model_resampling_lam_grid - grism_lam_obs[-1]))
+    model_lam_grid_indx_low = np.argmin(np.absolute(model_resampling_lam_grid - grism_lam_obs[0]))
+    model_lam_grid_indx_high = np.argmin(np.absolute(model_resampling_lam_grid - grism_lam_obs[-1]))
     model_spec_in_objlamgrid = model_comp_spec_mod[:, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
     # make sure that the arrays are the same length
@@ -534,7 +574,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
             count += 1
 
         # Convert back to numpy array
-        del model_spec_in_objlamgrid  # Trying to free up the memory allocated to the object pointed by the older model_spec_in_objlamgrid
+        #del model_spec_in_objlamgrid  # Trying to free up the memory allocated to the object pointed by the older model_spec_in_objlamgrid
         # Not sure if the del works because I'm using the same name again. Also just not sure of how del exactly works.
         model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
