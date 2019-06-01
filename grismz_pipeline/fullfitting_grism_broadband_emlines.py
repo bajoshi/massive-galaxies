@@ -475,7 +475,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
     return model_comp_spec_modified
 
-@jit(nopython=True)
+@jit
 def get_covmat(spec_wav, spec_flux, spec_ferr, silent=True):
 
     galaxy_len_fac = 20
@@ -514,7 +514,6 @@ def get_covmat(spec_wav, spec_flux, spec_ferr, silent=True):
 
     return covmat
 
-@jit(nopython=True)
 def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     covmat, all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models, use_broadband=True):
 
