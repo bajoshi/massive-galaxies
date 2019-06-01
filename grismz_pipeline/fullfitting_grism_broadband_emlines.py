@@ -475,7 +475,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
     return model_comp_spec_modified
 
-@jit
+@jit(nopython=True)
 def get_covmat(spec_wav, spec_flux, spec_ferr, silent=True):
 
     galaxy_len_fac = 20
@@ -513,6 +513,26 @@ def get_covmat(spec_wav, spec_flux, spec_ferr, silent=True):
     covmat[inv_idx] = 0.0
 
     return covmat
+
+@jit(nopython=True)
+def get_alpha_chi2_covmat(total_models, flam_obs, model_spec_in_objlamgrid, covmat):
+
+    # Now use the matrix computation to get chi2
+    N = len(flam_obs)
+    out_prod = np.outer(flam_obs, model_spec_in_objlamgrid.T.ravel())
+    out_prod = out_prod.reshape(N, N, total_models)
+
+    num_vec = np.sum(np.sum(out_prod * covmat[:, :, None], axis=0), axis=0)
+    den_vec = np.zeros(total_models)
+    alpha_vec = np.zeros(total_models)
+    chi2_vec = np.zeros(total_models)
+    for i in range(total_models):  # Get rid of this for loop as well, if you can
+        den_vec[i] = np.sum(np.outer(model_spec_in_objlamgrid[i], model_spec_in_objlamgrid[i]) * covmat, axis=None)
+        alpha_vec[i] = num_vec[i]/den_vec[i]
+        col_vector = flam_obs - alpha_vec[i] * model_spec_in_objlamgrid[i]
+        chi2_vec[i] = np.matmul(col_vector, np.matmul(covmat, col_vector))
+
+    return alpha_vec, chi2_vec
 
 def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     covmat, all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models, use_broadband=True):
@@ -568,7 +588,8 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
             # For model
             for i in range(total_models):
-                model_spec_in_objlamgrid_list[i] = np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
+                model_spec_in_objlamgrid_list[i] = \
+                np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
 
             count += 1
 
@@ -580,20 +601,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         # Get covariance matrix
         covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, silent=True)
 
-        # Now use the matrix computation to get chi2
-        N = len(combined_flam_obs)
-        out_prod = np.outer(combined_flam_obs, model_spec_in_objlamgrid.T.ravel())
-        out_prod = out_prod.reshape(N, N, total_models)
-
-        num_vec = np.sum(np.sum(out_prod * covmat[:, :, None], axis=0), axis=0)
-        den_vec = np.zeros(total_models)
-        alpha_ = np.zeros(total_models)
-        chi2_ = np.zeros(total_models)
-        for i in range(total_models):  # Get rid of this for loop as well, if you can
-            den_vec[i] = np.sum(np.outer(model_spec_in_objlamgrid[i], model_spec_in_objlamgrid[i]) * covmat, axis=None)
-            alpha_[i] = num_vec[i]/den_vec[i]
-            col_vector = combined_flam_obs - alpha_[i] * model_spec_in_objlamgrid[i]
-            chi2_[i] = np.matmul(col_vector, np.matmul(covmat, col_vector))
+        alpha_, chi2_ = get_alpha_chi2_covmat(total_models, combined_flam_obs, model_spec_in_objlamgrid, covmat)
 
         # compute alpha and chi2
         # --------- Previous way of doing calculation without including covariance matrices
@@ -604,15 +612,19 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     else:
         # compute alpha and chi2 using only grism data even though this function can actually access photomtery data
-        alpha_ = np.sum(grism_flam_obs * model_spec_in_objlamgrid / (grism_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / grism_ferr_obs**2, axis=1)
-        chi2_ = np.sum(((grism_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / grism_ferr_obs)**2, axis=1)
+        #alpha_ = np.sum(grism_flam_obs * model_spec_in_objlamgrid / (grism_ferr_obs**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / grism_ferr_obs**2, axis=1)
+        #chi2_ = np.sum(((grism_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / grism_ferr_obs)**2, axis=1)
 
+        # Get covariance matrix
+        covmat = get_covmat(grism_lam_obs, grism_flam_obs, grism_ferr_obs, silent=True)
+
+        alpha_, chi2_ = get_alpha_chi2_covmat(total_models, grism_flam_obs, model_spec_in_objlamgrid, covmat)
         print "Min chi2 for redshift:", min(chi2_)
 
-        print chi2_, chi2_.shape, min(chi2_)
-        alpha_idx = np.argmin(chi2_)
-        print alpha_, alpha_.shape, alpha_[alpha_idx]
-        print model_spec_in_objlamgrid.shape
+        #print chi2_, chi2_.shape, min(chi2_)
+        #alpha_idx = np.argmin(chi2_)
+        #print alpha_, alpha_.shape, alpha_[alpha_idx]
+        #print model_spec_in_objlamgrid.shape
 
     # This following block is useful for debugging.
     # Do not delete. Simply uncomment it if you don't need it.
