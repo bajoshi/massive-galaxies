@@ -11,7 +11,6 @@ from scipy.interpolate import griddata, interp1d
 from scipy.signal import fftconvolve
 import pysynphot
 from scipy.integrate import simps
-from numba import jit
 
 import os
 import sys
@@ -475,7 +474,6 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
     return model_comp_spec_modified
 
-@jit(nopython=True)
 def get_covmat(spec_wav, spec_flux, spec_ferr, silent=True):
 
     galaxy_len_fac = 20
@@ -514,7 +512,6 @@ def get_covmat(spec_wav, spec_flux, spec_ferr, silent=True):
 
     return covmat
 
-@jit(nopython=True)
 def get_alpha_chi2_covmat(total_models, flam_obs, model_spec_in_objlamgrid, covmat):
 
     # Now use the matrix computation to get chi2
@@ -599,9 +596,9 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
         # Get covariance matrix
-        covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, silent=True)
+        covmat = mm.get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs)
 
-        alpha_, chi2_ = get_alpha_chi2_covmat(total_models, combined_flam_obs, model_spec_in_objlamgrid, covmat)
+        alpha_, chi2_ = mm.get_alpha_chi2_covmat(total_models, combined_flam_obs, model_spec_in_objlamgrid, covmat)
 
         # compute alpha and chi2
         # --------- Previous way of doing calculation without including covariance matrices
@@ -616,9 +613,9 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         #chi2_ = np.sum(((grism_flam_obs - (alpha_ * model_spec_in_objlamgrid.T).T) / grism_ferr_obs)**2, axis=1)
 
         # Get covariance matrix
-        covmat = get_covmat(grism_lam_obs, grism_flam_obs, grism_ferr_obs, silent=True)
+        covmat = mm.get_covmat(grism_lam_obs, grism_flam_obs, grism_ferr_obs)
 
-        alpha_, chi2_ = get_alpha_chi2_covmat(total_models, grism_flam_obs, model_spec_in_objlamgrid, covmat)
+        alpha_, chi2_ = mm.get_alpha_chi2_covmat(total_models, grism_flam_obs, model_spec_in_objlamgrid, covmat)
         print "Min chi2 for redshift:", min(chi2_)
 
         #print chi2_, chi2_.shape, min(chi2_)
