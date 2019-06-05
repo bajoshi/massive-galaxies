@@ -887,6 +887,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         tauv = tauv_arr[model_idx]
 
         """
+        ###### DONT need this now that I'm using predefined numpy arrays with stellar pop values
         # now check if the best fit model is an ssp or csp 
         # only the csp models have tau and tauV parameters
         # so if you try to get these keywords for the ssp fits files
@@ -941,10 +942,27 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # varying the other parameters - age, tau, av, metallicity, or 
     # z_grism - within a given model. Therefore, I can safely use the 
     # methods described in Andrae+ 2010 for linear models.
+
+    # Also now that we're using the covariance matrix approach
+    # we should use the correct dof since the effective degrees
+    # is freedom is smaller. 
+
+    # To get the covariance length, fit the LSF with a gaussian
+    # and then the cov length is simply the best fit std dev.
+    lsf_length = len(lsf)
+    gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
+    fit_gauss = fitting.LevMarLSQFitter()
+    x_arr = np.arange(lsf_length)
+    g = fit_gauss(gauss_init, x_arr, lsf)
+    # get fit std.dev.
+    lsf_std =  g.parameters[2]
+    grism_cov_len = lsf_std
+
+    grism_dof = len(grism_lam_obs) / grism_cov_len 
     if use_broadband:
-        dof = len(grism_lam_obs) + len(phot_lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+        dof = grism_dof + len(phot_lam_obs) - 1  # i.e., total effective independent data points minus the single fitting parameter
     else:
-        dof = len(grism_lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+        dof = grism_dof - 1  # i.e., total effective independent data points minus the single fitting parameter
 
     chi2_red = chi2 / dof
     chi2_red_error = np.sqrt(2/dof)

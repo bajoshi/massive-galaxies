@@ -9,7 +9,7 @@ import sys
 import time
 import datetime
 
-figs_data_dir = "/home/bajoshi/models/"
+figs_data_dir = "/home/bajoshi/models_and_photometry/"
 threedhst_datadir = figs_data_dir
 cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
 
