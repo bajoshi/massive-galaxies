@@ -6,10 +6,20 @@ from scipy.interpolate import griddata
 from scipy.integrate import simps
 
 import sys
+import time
 
-cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
-spz_outdir = "/home/bajoshi/spz_out/"
-lsfdir = "/home/bajoshi/pears_lsfs/"
+#figs_data_dir = "/home/bajoshi/models_and_photometry/"
+#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+#spz_outdir = "/home/bajoshi/spz_out/"
+#lsfdir = "/home/bajoshi/pears_lsfs/"
+
+# Only for testing with firstlight
+# Comment this out before copying code to Agave
+# Uncomment above directory paths which are correct for Agave
+figs_data_dir = '/Users/baj/Desktop/FIGS/'
+cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
+lsfdir = '/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
@@ -223,7 +233,9 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     # Get covariance matrix
     # Has to be ddone after tge step that could 
     # cut down the photometric data array.
-    covmat = cf.get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, silent=False)
+    #covmat = cf.get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, silent=False)
+    # Dummy covaraiance matrix used for now since we haven't yet gotten to combined_* arrays.
+    covmat = np.identity(len(grism_lam_obs) + len(phot_lam))
 
     # ------------- Call fitting function for photo-z ------------- #
     print "Computing photo-z now."
@@ -231,7 +243,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
     cf.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start,\
-        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, savedir_photoz, \
+        current_id, current_field, all_model_flam, phot_fin_idx, current_specz, spz_outdir, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
 
     # ------------- Call fitting function for SPZ ------------- #
@@ -257,7 +269,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         use_broadband=False, single_galaxy=False, for_loop_method='sequential')
 
     # ------------------------------ Save all fitting results to text file ------------------------------ #
-    with open(spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) '.txt', 'w') as fh:
+    with open(spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt', 'w') as fh:
 
         # Write header first
         hdr_line1 = "# All redshift fitting results from pipeline for galaxy: " + current_field + " " + str(current_id)
@@ -279,7 +291,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         str_to_write3 = "{:.2f}".format(zp) + "  " + "{:.2f}".format(zspz) + "  " + "{:.2f}".format(zg) + "  "
         str_to_write4 = "{:.2f}".format(zp_zerr_low) + "  " + "{:.2f}".format(zp_zerr_up) + "  " + \
         "{:.2f}".format(zspz_zerr_low) + "  " + "{:.2f}".format(zspz_zerr_up) + "  " + \
-        "{:.2f}".format(zg_zerr_low) + "  " + "{:.2f}".format(zg_zerr_up) + "  " + \
+        "{:.2f}".format(zg_zerr_low) + "  " + "{:.2f}".format(zg_zerr_up) + "  "
         str_to_write5 = "{:.2f}".format(zp_min_chi2) + "  " + "{:.2f}".format(zspz_min_chi2) + "  " + "{:.2f}".format(zg_min_chi2) + "  "
         str_to_write6 = "{:.2f}".format(zp_bestalpha) + "  " + "{:.2f}".format(zspz_bestalpha) + "  " + "{:.2f}".format(zg_bestalpha) + "  "
         str_to_write7 = str(int(zp_model_idx)) + "  " + str(int(zspz_model_idx)) + "  " + str(int(zg_model_idx)) + "  "

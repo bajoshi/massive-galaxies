@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+import numpy.ma as ma
 from scipy.signal import fftconvolve
 from astropy.io import fits
 from astropy.modeling import models, fitting
@@ -10,8 +11,18 @@ from scipy.interpolate import griddata, interp1d
 from scipy.signal import fftconvolve
 from scipy.integrate import simps
 
-pears_datadir = "/home/bajoshi/pears_spectra/"
-spz_outdir = "/home/bajoshi/spz_out/"
+import time
+
+#pears_datadir = "/home/bajoshi/pears_spectra/"
+#spz_outdir = "/home/bajoshi/spz_out/"
+
+# Only for testing with firstlight
+# Comment this out before copying code to Agave
+# Uncomment above directory paths which are correct for Agave
+spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
+pears_datadir = '/Users/baj/Documents/PEARS/data_spectra_only/'
+
+speed_of_light = 299792458e10  # angsroms per second
 
 def get_avg_dlam(lam):
 
@@ -661,4 +672,168 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     return z_grism, z_wt, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, model_idx, age, tau, (tauv/1.086)
 
+def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
+
+    all_filt_flam_model_t = all_filt_flam_model.T
+
+    # ------------------------------------ Now do the chi2 computation ------------------------------------ #
+    # compute alpha and chi2
+    alpha_ = np.sum(phot_flam_obs * all_filt_flam_model_t / (phot_ferr_obs**2), axis=1) / np.sum(all_filt_flam_model_t**2 / phot_ferr_obs**2, axis=1)
+    chi2_ = np.sum(((phot_flam_obs - (alpha_ * all_filt_flam_model).T) / phot_ferr_obs)**2, axis=1)
+
+    return chi2_, alpha_
+
+def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+    model_lam_grid, total_models, model_comp_spec, start_time,\
+    obj_id, obj_field, all_model_flam, phot_fin_idx, specz, savedir, \
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr):
+    """
+    All models are redshifted to each of the redshifts in the list defined below,
+    z_arr_to_check. Then the model modifications are done at that redshift.
+
+    For each iteration through the redshift list it computes a chi2 for each model.
+    """
+
+    # Set up redshift grid to check
+    z_arr_to_check = np.arange(0.3, 1.5, 0.01)
+
+    # The model mags were computed on a finer redshift grid
+    # So make sure to get the z_idx correct
+    z_model_arr = np.arange(0.0, 6.0, 0.005)
+
+    ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
+    # Loop over all redshifts to check
+    # set up chi2 and alpha arrays
+    chi2 = np.empty((len(z_arr_to_check), total_models))
+    alpha = np.empty((len(z_arr_to_check), total_models))
+
+    count = 0
+    for z in z_arr_to_check:
+
+        z_idx = np.where(z_model_arr == z)[0]
+
+        # and because for some reason it does not find matches 
+        # in the model redshift array, I need this check here.
+        if not z_idx.size:
+            z_idx = np.argmin(abs(z_model_arr - z))
+
+        all_filt_flam_model = all_model_flam[:, z_idx, :]
+        all_filt_flam_model = all_filt_flam_model[phot_fin_idx, :]
+        all_filt_flam_model = all_filt_flam_model.reshape(len(phot_fin_idx), total_models)
+
+        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs)
+
+        count += 1
+
+    # Check for all NaNs in chi2 array
+    # For now skipping all galaxies that have any NaNs in them.
+    if len(np.where(np.isfinite(chi2.ravel()))[0]) != len(chi2.ravel()):
+        print "Chi2 has NaNs. Skiiping galaxy for now."
+        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
+
+    ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
+    # Sort through the chi2 and make sure that the age is physically meaningful
+    sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
+
+    for k in xrange(len(chi2.ravel())):
+
+        # Find the minimum chi2
+        min_idx = sortargs[k]
+        min_idx_2d = np.unravel_index(min_idx, chi2.shape)
+
+        # Get the best fit model parameters
+        # first get the index for the best fit
+        model_idx = int(min_idx_2d[1])
+
+        age = log_age_arr[model_idx]
+
+        current_z = z_arr_to_check[min_idx_2d[0]]
+        age_at_z = cosmo.age(current_z).value * 1e9  # in yr
+
+        # Colors and stellar mass
+        ub_col = ub_col_arr[model_idx] 
+        bv_col = bv_col_arr[model_idx] 
+        vj_col = vj_col_arr[model_idx] 
+        template_ms = ms_arr[model_idx]
+
+        tau = tau_gyr_arr[model_idx]
+        tauv = tauv_arr[model_idx]
+
+        # now check if the age is meaningful
+        # This condition is essentially saying that the model age has to be at least 
+        # 100 Myr younger than the age of the Universe at the given redshift and at 
+        # the same time it needs to be at least 10 Myr in absolute terms
+        if (age < np.log10(age_at_z - 1e8)) and (age > 9 + np.log10(0.01)):
+            # If the age is meaningful then you don't need to do anything
+            # more. Just break out of the loop. the best fit parameters have
+            # already been assigned to variables. This assignment is done before 
+            # the if statement to make sure that there are best fit parameters 
+            # even if the loop is broken out of in the first iteration.
+            break
+
+    zp_minchi2 = z_arr_to_check[min_idx_2d[0]]
+
+    print "Current best fit log(age [yr]):", "{:.4}".format(age)
+    print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
+    print "Current best fit Tau_V:", tauv
+
+    ############# -------------------------- Errors on z and other derived params ----------------------------- #############
+    min_chi2 = chi2[min_idx_2d]
+    # See Andrae+ 2010;arXiv:1012.3754. The number of d.o.f. for non-linear models 
+    # is not well defined and reduced chi2 should really not be used.
+    # Seth's comment: My model is actually linear. Its just a factor 
+    # times a set of fixed points. And this is linear, because each
+    # model is simply a function of lambda, which is fixed for a given 
+    # model. So every model only has one single free parameter which is
+    # alpha i.e. the vertical scaling factor; that's true since alpha is 
+    # the only one I'm actually solving for to get a min chi2. I'm not 
+    # varying the other parameters - age, tau, av, metallicity, or 
+    # z - within a given model. Therefore, I can safely use the 
+    # methods described in Andrae+ 2010 for linear models.
+    dof = len(phot_lam_obs) - 1  # i.e. total data points minus the single fitting parameter
+
+    chi2_red = chi2 / dof
+    chi2_red_error = np.sqrt(2/dof)
+    min_chi2_red = min_chi2 / dof
+    chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
+    print "Minimum chi2 (reduced):", "{:.4}".format(min_chi2_red)
+
+    # use first dimension indices to get error on zphot
+    z_range = z_arr_to_check[chi2_red_2didx[0]]
+
+    low_z_lim = np.min(z_range)
+    upper_z_lim = np.max(z_range)
+    print "Min z within 1-sigma error:", low_z_lim
+    print "Max z within 1-sigma error:", upper_z_lim
+
+    # Save pz and z_arr 
+    np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_z_arr.npy', z_arr_to_check)
+    pz = get_pz(chi2/dof, z_arr_to_check)
+    # Save p(z)
+    np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_pz.npy', pz)
+
+    zp = np.sum(z_arr_to_check * pz)
+    print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
+    #print "Previous photometric redshift from 3DHST:", photoz
+    print "Photometric redshift from min chi2 from this code:", "{:.3f}".format(zp_minchi2)
+    print "Photometric redshift (weighted) from this code:", "{:.3f}".format(zp)
+
+    # Stellar mass
+    bestalpha = alpha[min_idx_2d]
+    print "Min idx 2d:", min_idx_2d
+    print "Alpha for best-fit model:", bestalpha
+
+    ms = template_ms / bestalpha
+    print "Template mass [normalized to 1 sol]:", template_ms
+    print "Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms)
+
+    # Rest frame f_lambda values
+    zbest_idx = np.argmin(abs(z_model_arr - zp))
+    print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]]
+    print "Rest-frame U-B color:", ub_col
+    print "Rest-frame B-V color:", bv_col
+    print "Rest-frame U-V color:", ub_col - bv_col
+    print "Rest-frame V-J color:", vj_col
+
+    return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, model_idx, age, tau, (tauv/1.086)
 
