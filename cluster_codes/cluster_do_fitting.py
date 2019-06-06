@@ -13,14 +13,14 @@ from scipy.integrate import simps
 
 import time
 
-#pears_datadir = "/home/bajoshi/pears_spectra/"
-#spz_outdir = "/home/bajoshi/spz_out/"
+pears_datadir = "/home/bajoshi/pears_spectra/"
+spz_outdir = "/home/bajoshi/spz_out/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
-pears_datadir = '/Users/baj/Documents/PEARS/data_spectra_only/'
+#spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
+#pears_datadir = '/Users/baj/Documents/PEARS/data_spectra_only/'
 
 speed_of_light = 299792458e10  # angsroms per second
 

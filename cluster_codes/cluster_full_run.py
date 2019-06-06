@@ -9,16 +9,16 @@ import sys
 import time
 import datetime
 
-#figs_data_dir = "/home/bajoshi/models_and_photometry/"
-#threedhst_datadir = figs_data_dir
-#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+figs_data_dir = "/home/bajoshi/models_and_photometry/"
+threedhst_datadir = figs_data_dir
+cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-figs_data_dir = '/Users/baj/Desktop/FIGS/'
-threedhst_datadir = '/Users/baj/Desktop/3dhst_data/'
-cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+#figs_data_dir = '/Users/baj/Desktop/FIGS/'
+#threedhst_datadir = '/Users/baj/Desktop/3dhst_data/'
+#cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
 
 sys.path.append(cluster_spz_scripts)
 from cluster_get_all_redshifts import get_all_redshifts_v2
@@ -95,7 +95,7 @@ def main():
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-        bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for j in xrange(2)]
+        bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for j in xrange(10)]
     for p in processes:
         p.start()
         print "Current process ID:", p.pid
