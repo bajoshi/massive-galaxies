@@ -88,19 +88,28 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
+    max_cores = 50
 
-    processes = [mp.Process(target=get_all_redshifts_v2, args=(final_sample['pearsid'][j], \
-        final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
-        final_sample['zspec'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
-        vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-        model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
-        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-        bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for j in xrange(10)]
-    for p in processes:
-        p.start()
-        print "Current process ID:", p.pid
-    for p in processes:
-        p.join()
+    for i in range(np.ciel(total_final_sample/max_cores)):
+
+        jmin = i*max_cores
+        jmax = (i+1)*max_cores
+
+        if jmax > total_final_sample:
+            jmax = total_final_sample
+
+        processes = [mp.Process(target=get_all_redshifts_v2, args=(final_sample['pearsid'][j], \
+            final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
+            final_sample['zspec'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
+            vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+            model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
+            log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
+            bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for j in xrange(jmin, jmax)]
+        for p in processes:
+            p.start()
+            print "Current process ID:", p.pid
+        for p in processes:
+            p.join()
 
     print "Done with all galaxies. Exiting."
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."

@@ -293,11 +293,11 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         "{:.2f}".format(zspz_zerr_low) + "  " + "{:.2f}".format(zspz_zerr_up) + "  " + \
         "{:.2f}".format(zg_zerr_low) + "  " + "{:.2f}".format(zg_zerr_up) + "  "
         str_to_write5 = "{:.2f}".format(zp_min_chi2) + "  " + "{:.2f}".format(zspz_min_chi2) + "  " + "{:.2f}".format(zg_min_chi2) + "  "
-        str_to_write6 = "{:.2f}".format(zp_bestalpha) + "  " + "{:.2f}".format(zspz_bestalpha) + "  " + "{:.2f}".format(zg_bestalpha) + "  "
+        str_to_write6 = "{:.2e}".format(zp_bestalpha) + "  " + "{:.2e}".format(zspz_bestalpha) + "  " + "{:.2e}".format(zg_bestalpha) + "  "
         str_to_write7 = str(int(zp_model_idx)) + "  " + str(int(zspz_model_idx)) + "  " + str(int(zg_model_idx)) + "  "
-        str_to_write8 = "{:.2f}".format(zp_age) + "  " + "{:.2f}".format(zp_tau) + "  " + "{:.2f}".format(zp_av) + "  "
-        str_to_write9 = "{:.2f}".format(zspz_age) + "  " + "{:.2f}".format(zspz_tau) + "  " + "{:.2f}".format(zspz_av) + "  "
-        str_to_write10 = "{:.2f}".format(zg_age) + "  " + "{:.2f}".format(zg_tau) + "  " + "{:.2f}".format(zg_av) + "  "
+        str_to_write8 = "{:.2e}".format(zp_age) + "  " + "{:.2e}".format(zp_tau) + "  " + "{:.2f}".format(zp_av) + "  "
+        str_to_write9 = "{:.2e}".format(zspz_age) + "  " + "{:.2e}".format(zspz_tau) + "  " + "{:.2f}".format(zspz_av) + "  "
+        str_to_write10 = "{:.2e}".format(zg_age) + "  " + "{:.2e}".format(zg_tau) + "  " + "{:.2f}".format(zg_av) + "  "
 
         # Combine hte above strings and write
         fh.write(str_to_write1 + str_to_write2 + str_to_write3 + str_to_write4 + str_to_write5 + \
