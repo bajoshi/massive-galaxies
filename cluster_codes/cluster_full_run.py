@@ -90,7 +90,7 @@ def main():
     total_final_sample = len(final_sample)
     max_cores = 50
 
-    for i in range(np.ciel(total_final_sample/max_cores)):
+    for i in range(int(np.ceil(total_final_sample/max_cores))):
 
         jmin = i*max_cores
         jmax = (i+1)*max_cores
