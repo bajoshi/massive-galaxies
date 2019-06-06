@@ -1,6 +1,6 @@
 #!/bin/bash
  
-#SBATCH -n 10                        # number of cores
+#SBATCH -n 50                        # number of cores
 #SBATCH --time=1-                    # Max time currently set to 1 day. Format is DD-HH:MM:SS
 #SBATCH -o slurm.spz.%j.out          # STDOUT (%j = JobId)
 #SBATCH -e slurm.spz.%j.err          # STDERR (%j = JobId)
