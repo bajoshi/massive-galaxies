@@ -268,6 +268,8 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
         use_broadband=False, single_galaxy=False, for_loop_method='sequential')
 
+    print "All redshifts computed for:", current_field, current_id, "    Will save results now."
+
     # ------------------------------ Save all fitting results to text file ------------------------------ #
     with open(spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt', 'w') as fh:
 
@@ -302,5 +304,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         # Combine hte above strings and write
         fh.write(str_to_write1 + str_to_write2 + str_to_write3 + str_to_write4 + str_to_write5 + \
             str_to_write6 + str_to_write7 + str_to_write8 + str_to_write9 + str_to_write10)
+
+    print "Results saved for:", current_field, current_id
 
     return None

@@ -1,7 +1,7 @@
 #!/bin/bash
  
-#SBATCH -n 270                        # number of cores
-#SBATCH --time=00-03:00:00                    # Max time currently set to 1 day. Format is DD-HH:MM:SS
+#SBATCH -n 25                        # number of cores
+#SBATCH --time=02-00:00:00           # Max time for task. Format is DD-HH:MM:SS
 #SBATCH -o slurm.spz.%j.out          # STDOUT (%j = JobId)
 #SBATCH -e slurm.spz.%j.err          # STDERR (%j = JobId)
 #SBATCH --mail-type=ALL              # Send a notification when the job starts, stops, or fails
