@@ -109,7 +109,7 @@ def main():
             p.start()
             print "Current process ID:", p.pid
         for p in processes:
-            p.join()
+            p.join(timeout=None)
 
     print "Done with all galaxies. Exiting."
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
