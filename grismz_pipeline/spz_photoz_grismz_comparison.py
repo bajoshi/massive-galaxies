@@ -8,6 +8,7 @@ from scipy.optimize import curve_fit
 
 import os
 import sys
+import glob
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -88,6 +89,133 @@ def get_z_errors(zarr, pz, z_minchi2):
             zhigh_bound = zhigh_prev
 
     return zlow_bound, zhigh_bound
+
+def get_arrays_to_plot_v2():
+
+    spz_outdir = massive_galaxies_dir + 'cluster_results/'
+
+    # ------------------------------- Get catalog for final sample ------------------------------- #
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+
+    # Read in master catalogs to get i-band mag
+    # ------------------------------- Read PEARS cats ------------------------------- #
+    pears_ncat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_north_master.cat', dtype=None,\
+                               names=['id', 'pearsra', 'pearsdec', 'imag'], usecols=(0,1,2,3))
+    pears_scat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_south_master.cat', dtype=None,\
+                               names=['id', 'pearsra', 'pearsdec', 'imag'], usecols=(0,1,2,3))
+    
+    dec_offset_goodsn_v19 = 0.32/3600 # from GOODS ACS v2.0 readme
+    pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
+
+    # Lists for storing results
+    all_ids = []
+    all_fields = []
+
+    zs = []
+    zp = []
+    zg = []
+    zspz = []
+
+    zp_low_bound = []
+    zp_high_bound = []
+    zg_low_bound = []
+    zg_high_bound = []
+    zspz_low_bound = []
+    zspz_high_bound = []
+
+    # Loop over all result files and save to the empty lists defined above
+    for fl in glob.glob(spz_outdir + 'redshift_fitting_results*.txt'):
+        current_result = np.genfromtxt(fl, dtype=None, names=True, skip_header=1)
+
+        all_ids.append(current_result['PearsID'])
+        all_fields.append(current_result['Field'])
+
+        zs.append(current_result['zspec'])
+        zp.append(current_result['zp_minchi2'])
+        zspz.append(current_result['zspz_minchi2'])
+        zg.append(current_result['zg_minchi2'])
+
+        zp_low_bound.append(current_result['zp_zerr_low'])
+        zp_high_bound.append(current_result['zp_zerr_up'])
+        zspz_low_bound.append(current_result['zspz_zerr_low'])
+        zspz_high_bound.append(current_result['zspz_zerr_up'])
+        zg_low_bound.append(current_result['zg_zerr_low'])
+        zg_high_bound.append(current_result['zg_zerr_up'])
+
+    # Create empty lists again and now get D4000 and netsig
+    # Loop again
+    all_ids_list = []
+    all_fields_list = []
+    zs_list = []
+    zp_list = []
+    zg_list = []
+    zspz_list = []
+    all_d4000_list = []
+    all_d4000_err_list = []
+    all_netsig_list = []
+    imag_list = []
+
+    for i in range(len(all_ids)):
+        current_id = all_ids[i]
+        current_field = all_fields[i]
+
+        sample_idx = np.where(final_sample['pearsid'] == current_id)[0]
+        if not sample_idx.size:
+            continue
+        if len(sample_idx) == 1:
+            if final_sample['field'][sample_idx] != current_field:
+                continue
+
+        # Check z_spec quality
+        # Make sure to get the spec_z qual for the exact match
+        if len(sample_idx) == 2:
+            sample_idx_nested = int(np.where(final_sample['field'][sample_idx] == current_field)[0])
+            current_specz_qual = final_sample['zspec_qual'][sample_idx[sample_idx_nested]]
+        else:
+            current_specz_qual = final_sample['zspec_qual'][int(sample_idx)]
+
+        if current_specz_qual == '1' or current_specz_qual == 'C':
+            #print "Skipping", current_field, current_id, "due to spec-z quality:", current_specz_qual
+            continue
+
+        # Get data
+        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
+
+        if return_code == 0:
+            print current_id, current_field
+            print "Return code should not have been 0. Exiting."
+            sys.exit(0)
+
+        # Get D4000 at specz
+        current_specz = zs[i]
+        lam_em = grism_lam_obs / (1 + current_specz)
+        flam_em = grism_flam_obs * (1 + current_specz)
+        ferr_em = grism_ferr_obs * (1 + current_specz)
+
+        d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+
+        # Get i_mag
+        if current_field == 'GOODS-N':
+            master_cat_idx = int(np.where(pears_ncat['id'] == current_id)[0])
+            current_imag = pears_ncat['imag'][master_cat_idx]
+        elif current_field == 'GOODS-S':
+            master_cat_idx = int(np.where(pears_scat['id'] == current_id)[0])
+            current_imag = pears_scat['imag'][master_cat_idx]
+
+        # Append all arrays 
+        all_ids_list.append(current_id)
+        all_fields_list.append(current_field)
+        zs_list.append(current_specz)
+        zp_list.append(zp[i])
+        zg_list.append(zg[i])
+        zspz_list.append(zspz[i])
+        all_d4000_list.append(d4000)
+        all_d4000_err_list.append(d4000_err)
+        all_netsig_list.append(netsig_chosen)
+        imag_list.append(current_imag)
+
+    return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
+    np.array(all_d4000_list), np.array(all_d4000_err_list), np.array(all_netsig_list), np.array(imag_list)
 
 def get_arrays_to_plot():
     # Read in arrays from Firstlight (fl) and Jet (jt) and combine them
@@ -733,14 +861,14 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     transform=ax5.transAxes, color='k', size=12)
 
     # save figure and close
-    fig.savefig(massive_figures_dir + 'spz_comp_photoz_' + \
+    fig.savefig(massive_figures_dir + 'spz_comp_photoz_revised_' + \
         str(d4000_low).replace('.','p') + 'to' + str(d4000_high).replace('.','p') + '.pdf', \
         dpi=300, bbox_inches='tight')
 
     return None
 
 def main():
-    ids, fields, zs, zp, zg, zspz, d4000, d4000_err, netsig, imag = get_arrays_to_plot()
+    ids, fields, zs, zp, zg, zspz, d4000, d4000_err, netsig, imag = get_arrays_to_plot_v2()
 
     # Just making sure that all returned arrays have the same length.
     # Essential since I'm doing "where" operations below.
@@ -791,7 +919,7 @@ def main():
 
     # Estimate accurate fraction for paper
     # This is only to be done for the full D4000 range
-    do_frac = True
+    do_frac = False
     if do_frac:
         two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
         print len(two_percent_idx), len(resid_zspz)
@@ -876,12 +1004,12 @@ def main():
     print "Outlier fraction for Grism-z:", outlier_frac_zg
     print "Outlier fraction for SPZ:", outlier_frac_zspz
 
-    sys.exit(0)
+    make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
+        mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
+        d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
+        outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz)
 
-    #make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
-    #    mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
-    #    d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
-    #    outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz)
+    sys.exit(0)
 
     # Now create the residual vs mag plots
     imag_for_zp = imag[valid_idx1]

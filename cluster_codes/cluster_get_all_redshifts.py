@@ -6,6 +6,7 @@ from scipy.interpolate import griddata
 from scipy.integrate import simps
 
 import sys
+import os
 import time
 
 figs_data_dir = "/home/bajoshi/models_and_photometry/"
@@ -29,11 +30,18 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start, \
     log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr):
 
-    # ------------------------------- Set field ------------------------------- #
     print "\n", "Working on:", current_field, current_id, "at", current_specz
+
+    # Check that analysis has not already been done.
+    # Move to next galaxy if the fitting result file already exists.
+    results_filename = spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt'
+    if os.path.isfile(results_filename):
+        print current_field, current_id, "already done. Moving to next galaxy."
+        return None
 
     modify_lsf = True
 
+    # ------------------------------- Set field ------------------------------- #
     # Assign catalogs 
     if current_field == 'GOODS-N':
         phot_cat_3dhst = goodsn_phot_cat_3dhst
