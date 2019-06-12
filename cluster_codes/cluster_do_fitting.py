@@ -300,9 +300,9 @@ def get_flam_nonhst(filtname, cat_flux, vega_spec_fnu, vega_spec_flam, vega_nu, 
 
     return flam
 
-def get_covmat(spec_wav, spec_flux, spec_ferr, silent=True):
+def get_covmat(spec_wav, spec_flux, spec_ferr, lsf_covar_len, silent=True):
 
-    galaxy_len_fac = 20
+    galaxy_len_fac = lsf_covar_len
     # galaxy_len_fac includes the effect in correlation due to the 
     # galaxy morphology, i.e., for larger galaxies, flux data points 
     # need to be farther apart to be uncorrelated.
@@ -382,7 +382,8 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     return model_comp_spec_modified
 
 def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
-    covmat, all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, total_models, use_broadband=True):
+    covmat, all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, \
+    total_models, lsf_covar_len, use_broadband=True):
 
     # chop the model to be consistent with the objects lam grid
     model_lam_grid_indx_low = np.argmin(np.absolute(model_resampling_lam_grid - grism_lam_obs[0]))
@@ -444,13 +445,13 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
         # Get covariance matrix
-        covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs)
+        covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, lsf_covar_len)
         alpha_, chi2_ = get_alpha_chi2_covmat(total_models, combined_flam_obs, model_spec_in_objlamgrid, covmat)
         print "Min chi2 for redshift:", min(chi2_)
 
     else:
         # Get covariance matrix
-        covmat = get_covmat(grism_lam_obs, grism_flam_obs, grism_ferr_obs)
+        covmat = get_covmat(grism_lam_obs, grism_flam_obs, grism_ferr_obs, lsf_covar_len)
         alpha_, chi2_ = get_alpha_chi2_covmat(total_models, grism_flam_obs, model_spec_in_objlamgrid, covmat)
         print "Min chi2 for redshift:", min(chi2_)
 
@@ -458,7 +459,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
 def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, covmat, \
     model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
-    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, ub):
+    resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, lsf_covar_len, ub):
 
     # ------------ Get photomtery for model by convolving with filters ------------- #
     z_idx = np.where(z_model_arr == z)[0]
@@ -485,10 +486,12 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     # ------------- Now do the chi2 computation ------------- #
     if ub:
         chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-            covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=True)
+            covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, \
+            total_models, lsf_covar_len, use_broadband=True)
     else:
         chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
-            covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, total_models, use_broadband=False)
+            covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, \
+            total_models, lsf_covar_len, use_broadband=False)
 
     return chi2_temp, alpha_temp
 
@@ -545,12 +548,26 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     print "Convolution done.",
     print "Total time taken up to now --", time.time() - start_time, "seconds."
 
+    # To get the covariance length, fit the LSF with a gaussian
+    # and then the cov length is simply the best fit std dev.
+    lsf_length = len(lsf)
+    gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
+    fit_gauss = fitting.LevMarLSQFitter()
+    x_arr = np.arange(lsf_length)
+    g = fit_gauss(gauss_init, x_arr, lsf)
+    # get fit std.dev.
+    lsf_std =  g.parameters[2]
+    lsf_covar_len = 3*lsf_std
+    print "Grism covariance length based on fitting Gaussian to LSF is:", lsf_covar_len
+    # i.e., if any pair of spectral elements are 3-sigma away
+    # from each other then their data is uncorrelated. 
+
     count = 0
     for z in z_arr_to_check:
         chi2[count], alpha[count] = get_chi2_alpha_at_z(z, \
             grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, covmat, \
             model_lam_grid, model_comp_spec_lsfconv, all_model_flam, z_model_arr, phot_fin_idx, \
-            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, use_broadband)
+            resampling_lam_grid, resampling_lam_grid_length, total_models, start_time, lsf_covar_len, use_broadband)
 
         count += 1
 
@@ -619,20 +636,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # Also now that we're using the covariance matrix approach
     # we should use the correct dof since the effective degrees
     # is freedom is smaller. 
-
-    # To get the covariance length, fit the LSF with a gaussian
-    # and then the cov length is simply the best fit std dev.
-    lsf_length = len(lsf)
-    gauss_init = models.Gaussian1D(amplitude=np.max(lsf), mean=lsf_length/2, stddev=lsf_length/4)
-    fit_gauss = fitting.LevMarLSQFitter()
-    x_arr = np.arange(lsf_length)
-    g = fit_gauss(gauss_init, x_arr, lsf)
-    # get fit std.dev.
-    lsf_std =  g.parameters[2]
-    grism_cov_len = lsf_std
-    print "Grism covariance length based on fitting Gaussian to LSF is:", grism_cov_len
-
-    grism_dof = len(grism_lam_obs) / grism_cov_len 
+    grism_dof = len(grism_lam_obs) / lsf_covar_len 
     if use_broadband:
         dof = grism_dof + len(phot_lam_obs) - 1  # i.e., total effective independent data points minus the single fitting parameter
     else:

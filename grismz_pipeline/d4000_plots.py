@@ -36,6 +36,10 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
+def get_all_arrays_v2():
+
+    return redshift_arr, d4000_arr, d4000_err_arr, zspz_arr
+
 def get_all_arrays():
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
@@ -140,7 +144,7 @@ def get_all_arrays():
 
 def make_d4000_vs_redshift_plot():
 
-    #redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays()
+    #redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays_v2()
 
     redshift_arr = np.load(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy')
     d4000_arr = np.load(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy')
@@ -422,7 +426,7 @@ def make_d4000_vs_redshift_plot():
 def make_d4000_hist():
 
     # get arrays
-    #redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays()
+    #redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays_v2()
 
     redshift_arr = np.load(massive_figures_dir + 'redshift_arr_for_d4000_plots.npy')
     d4000_arr = np.load(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy')
@@ -536,8 +540,7 @@ def make_redshift_hist():
 
 if __name__ == '__main__':
 
-    """
-    redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays()
+    redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays_v2()
 
     assert len(redshift_arr) == len(d4000_arr)
     assert len(redshift_arr) == len(d4000_err_arr)
@@ -547,10 +550,8 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy', d4000_arr)
     np.save(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy', d4000_err_arr)
     np.save(massive_figures_dir + 'zspz_for_d4000_plots.npy', zspz_arr)
-    """
 
-    #make_d4000_vs_redshift_plot()
+    make_d4000_vs_redshift_plot()
     make_d4000_hist()
-    #make_redshift_hist()
 
     sys.exit(0)

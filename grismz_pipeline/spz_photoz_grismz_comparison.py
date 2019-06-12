@@ -883,7 +883,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.1
+    d4000_low = 1.6
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
@@ -892,7 +892,7 @@ def main():
 
     # Cut on magnitude
     # PUt the limit at 26.0 to include the entire sample with no mag cut
-    mag_idx = np.where(imag <= 24.0)[0]
+    mag_idx = np.where(imag <= 26.0)[0]
     print "Galaxies that are brighter than 24 mag:", len(mag_idx)
     d4000_idx = reduce(np.intersect1d, (d4000_idx, mag_idx))
 
