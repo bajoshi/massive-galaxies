@@ -34,10 +34,12 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
 
     # Check that analysis has not already been done.
     # Move to next galaxy if the fitting result file already exists.
-    results_filename = spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt'
-    if os.path.isfile(results_filename):
-        print current_field, current_id, "already done. Moving to next galaxy."
-        return None
+    do_precheck = False
+    if do_precheck:
+        results_filename = spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt'
+        if os.path.isfile(results_filename):
+            print current_field, current_id, "already done. Moving to next galaxy."
+            return None
 
     modify_lsf = True
 
