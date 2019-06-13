@@ -1,3 +1,0 @@
-# All redshift fitting results from pipeline for galaxy: GOODS-N 95449
-#  PearsID  Field  RA  DEC  zspec  zp_minchi2  zspz_minchi2  zg_minchi2  zp  zspz  zg  zp_zerr_low  zp_zerr_up  zspz_zerr_low  zspz_zerr_up  zg_zerr_low  zg_zerr_up  zp_min_chi2  zspz_min_chi2  zg_min_chi2  zp_bestalpha  zspz_bestalpha  zg_bestalpha  zp_model_idx  zspz_model_idx  zg_model_idx  zp_age  zp_tau  zp_av  zspz_age  zspz_tau  zspz_av  zg_age  zg_tau  zg_av
-95449  GOODS-N  189.3288830  62.287190  0.935  0.88  0.89  0.36  0.89  0.92  0.42  0.82  0.95  0.89  0.89  0.35  0.36  1.36  8.76  7.82  1.07e-14  2.01e-13  2.59e-14  2411  8187  809  9.30e+00  2.51e+00  0.00  9.21e+00  6.31e+01  0.37  9.23e+00  -9.90e+01  -91.16  

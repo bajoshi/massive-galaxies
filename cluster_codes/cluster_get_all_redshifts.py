@@ -8,6 +8,7 @@ from scipy.integrate import simps
 import sys
 import os
 import time
+import datetime as dt
 
 figs_data_dir = "/home/bajoshi/models_and_photometry/"
 cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
@@ -34,12 +35,19 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
 
     # Check that analysis has not already been done.
     # Move to next galaxy if the fitting result file already exists.
-    do_precheck = False
+    do_precheck = True
     if do_precheck:
         results_filename = spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt'
-        if os.path.isfile(results_filename):
+
+        t = os.path.getmtime(fl)
+        ts = str(dt.datetime.fromtimestamp(t))
+        if "2019-06-12" in ts:
             print current_field, current_id, "already done. Moving to next galaxy."
             return None
+
+        #if os.path.isfile(results_filename):
+        #    print current_field, current_id, "already done. Moving to next galaxy."
+        #    return None
 
     modify_lsf = True
 

@@ -98,6 +98,8 @@ def main():
         if jmax > total_final_sample:
             jmax = total_final_sample
 
+        print "Batch:", i+1
+
         processes = [mp.Process(target=get_all_redshifts_v2, args=(final_sample['pearsid'][j], \
             final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
             final_sample['zspec'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
