@@ -1,6 +1,6 @@
 #!/bin/bash
  
-#SBATCH -n 100                        # number of cores
+#SBATCH -n 25                        # number of cores
 #SBATCH --time=02-00:00:00           # Max time for task. Format is DD-HH:MM:SS
 #SBATCH -o slurm.spz.%j.out          # STDOUT (%j = JobId)
 #SBATCH -e slurm.spz.%j.err          # STDERR (%j = JobId)
