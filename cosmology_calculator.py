@@ -38,15 +38,16 @@ def generate_redshift_age_lookup_table():
 def get_cosmology_params():
 
     # ========== CONSTANTS ========== # DO NOT CHANGE!
-    mpc = 1e6 * parsec/1e3 # Mpc to km conversion
+    # mpc = 1e6 * parsec/1e3 # Mpc to km conversion
     # Cosmological constants
-    # The 8.24e-5 value for relativistic matter density is from carroll and ostlie. They say its from WMAP but I need to find it.
+    # The 8.24e-5 value for relativistic matter density is from carroll and ostlie. 
+    # They say its from WMAP but I need to find it.
     H_0 = 69.6
     omega_m0 = 0.286
     omega_r0 = 8.24e-5
     omega_lam0 = 0.714
 
-    return mpc, H_0, omega_m0, omega_r0, omega_lam0, year
+    return H_0, omega_m0, omega_r0, omega_lam0
 
 # calculates age at a given scale factor based on FRW metric
 # needs to be multiplied by Mpc/(seconds_per_year) to convert to time to years

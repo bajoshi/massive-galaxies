@@ -38,6 +38,86 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
 
 def get_all_arrays_v2():
 
+    # Assign SPZ out directory
+    # Old run with fixed covariance len for now
+    spz_outdir = massive_figures_dir + 'cluster_results_covmat_with_fixed_lsflength_June2019/'
+
+    # ------------------------------- Get catalog for final sample ------------------------------- #
+    # Don't use the final catalog for which all 3 redshifts were estimated
+    # Use the catlaog from one step before it
+    # i.e. all the matched galaxies within our z range.
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample_zrange.txt', dtype=None, names=True)
+
+    # Assign lists
+    redshift_list = []
+    d4000_list = []
+    d4000_err_list = []
+    zspz_list = []
+
+    # Now loop over all galaxies and get their D4000
+    for i in range(len(final_sample)):
+        current_id = final_sample['pearsid'][i]
+        current_field = final_sample['field'][i]
+        current_zspec = final_sample['specz'][i]
+
+        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = \
+        ngp.get_data(current_id, current_field)
+
+        if return_code == 0:
+            print current_field, current_id,
+            print "Skipping due to an error with the obs data. See the error message just above this one.",
+            print "Moving to the next galaxy."
+            continue
+
+        if netsig_chosen < 10:
+            print current_field, current_id,
+            print "Skipping due to low NetSig:", netsig_chosen
+            continue
+
+        # Now get D4000 based on zspec
+        lam_em = grism_lam_obs / (1 + current_zspec)
+        flam_em = grism_flam_obs * (1 + current_zspec)
+        ferr_em = grism_ferr_obs * (1 + current_zspec)
+
+        # These two checks will only be trigerred if the galaxy in question is 
+        # at the correct zspec but our wavelngth data array is incomplete.
+        # So it should have been in the sample if we had all the data points
+        # i.e. in these cases len(lam_em) < 88
+        # I've pushed the checking limits a bit inward because I also don't 
+        # want the D4000 code extrapolating too much.
+        if lam_em[-1] < 4150:
+            print current_field, current_id,
+            print "Skipping due to incomplete wavelength array."
+            continue
+        if lam_em[0] > 3850:
+            print current_field, current_id,
+            print "Skipping due to incomplete wavelength array."
+            continue
+
+        d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
+
+        # Now get SPZ
+        # This file will only exist if the code was run on the given galaxy
+        # i.e., if it has D4000>=1.1
+        # otherwise assign zspz=-99.0
+        results_fname = spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt'
+
+        if os.path.isfile(results_fname):
+            current_result = np.genfromtxt(results_fname, dtype=None, names=True, skip_header=1)
+            zspz_list.append(current_result['zspz_minchi2'])
+        else:
+            zspz_list.append(-99.0)
+
+        redshift_list.append(current_zspec)
+        d4000_list.append(d4000)
+        d4000_err_list.append(d4000_err)
+
+    # Convert to numpy arrays and then proceed
+    redshift_arr = np.asarray(redshift_list)
+    d4000_arr = np.asarray(d4000_list)
+    d4000_err_arr = np.asarray(d4000_err_list)
+    zspz_arr = np.asarray(zspz_list)
+
     return redshift_arr, d4000_arr, d4000_err_arr, zspz_arr
 
 def get_all_arrays():
@@ -306,7 +386,7 @@ def make_d4000_vs_redshift_plot():
     """
 
     # save the figure
-    fig.savefig(massive_figures_dir + 'd4000_redshift.pdf', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'd4000_redshift_revised.pdf', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()
@@ -336,7 +416,7 @@ def make_d4000_vs_redshift_plot():
     ax.set_yticklabels(ax.get_yticks().tolist(), size=10)
 
     # save the figure
-    fig.savefig(massive_figures_dir + 'd4000_error_hist.pdf', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'd4000_error_hist_revised.pdf', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()
@@ -382,7 +462,7 @@ def make_d4000_vs_redshift_plot():
     ax.set_yticklabels(ax.get_yticks().tolist(), size=12)
 
     # save the figure
-    fig.savefig(massive_figures_dir + 'd4000_vs_significance.pdf', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'd4000_vs_significance_revised.pdf', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()
@@ -415,7 +495,7 @@ def make_d4000_vs_redshift_plot():
     #ax.axvline(x=1.0, ls='--', color='darkblue')
 
     # save the figure
-    fig.savefig(massive_figures_dir + 'z_acc_vs_significance.pdf', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'z_acc_vs_significance_revised.pdf', dpi=300, bbox_inches='tight')
 
     plt.clf()
     plt.cla()
@@ -497,7 +577,7 @@ def make_d4000_hist():
     ax.set_yticklabels(ax.get_yticks().tolist(), size=12)
 
     # save figure
-    fig.savefig(massive_figures_dir + 'pears_d4000_hist.pdf', dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + 'pears_d4000_hist_revised.pdf', dpi=300, bbox_inches='tight')
 
     return None
 
@@ -540,6 +620,7 @@ def make_redshift_hist():
 
 if __name__ == '__main__':
 
+    """
     redshift_arr, d4000_arr, d4000_err_arr, zspz_arr = get_all_arrays_v2()
 
     assert len(redshift_arr) == len(d4000_arr)
@@ -550,6 +631,8 @@ if __name__ == '__main__':
     np.save(massive_figures_dir + 'd4000_arr_for_d4000_plots.npy', d4000_arr)
     np.save(massive_figures_dir + 'd4000_err_arr_for_d4000_plots.npy', d4000_err_arr)
     np.save(massive_figures_dir + 'zspz_for_d4000_plots.npy', zspz_arr)
+    sys.exit(0)
+    """
 
     make_d4000_vs_redshift_plot()
     make_d4000_hist()

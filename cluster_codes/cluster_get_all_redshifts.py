@@ -41,7 +41,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
 
         t = os.path.getmtime(results_filename)
         ts = str(dt.datetime.fromtimestamp(t))
-        if ("2019-06-12" in ts) or ("2019-06-13" in ts):
+        if ("2019-06-12" in ts) or ("2019-06-13" in ts) or ("2019-06-14" in ts):
             print current_field, current_id, "already done. Moving to next galaxy."
             return None
 
