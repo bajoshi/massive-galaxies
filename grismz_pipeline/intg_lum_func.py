@@ -90,10 +90,7 @@ def schechter_lf(M_star, phi_star, alpha, M):
     lf = 0.4 * np.log(10) * phi_star * np.power(10, 0.4 * (alpha+1) * (M_star - M)) * expo
     return lf
 
-def run_test_case():
-
-    print "Running test case. Read comments in the test",
-    print "case function to understand what is being shown."
+def get_test_lf():
 
     # Test case for r-band in z range: 0.1 < z < 0.82
     # from Dahlen et al. 2005, ApJ, 631, 126
@@ -101,6 +98,15 @@ def run_test_case():
     M_star = -22.38
     alpha = -1.3
     phi_star = 28.2 * 1e-4  # in units of: (Mpc/h_{70})^{-3} mag^{-1}
+
+    return M_star, alpha, phi_star
+
+def run_test_case():
+
+    print "Running test case. Read comments in the test",
+    print "case function to understand what is being shown."
+
+    M_star, alpha, phi_star = get_test_lf()
 
     # Now construct the LF based on the above parameters
     mag_arr = np.arange(-25.0, -16.9, 0.1)
@@ -170,12 +176,24 @@ def run_test_case():
 
     return None
 
+def integrate_num_mag():
+
+    return nm
+
 def main():
 
-    run_test_case()
+    # To run the older test function
+    # run_test_case()
 
     # Define the luminosity function
     # This is dependent on the redshift range
+    M_star, alpha, phi_star = get_test_lf()
+
+    # Get cosmology
+    H_0, omega_m0, omega_r0, omega_lam0 = cc.get_cosmology_params()
+
+    # Beginning with equation 9 in Garner 1998, PASP, 110, 291
+
 
     return None
 

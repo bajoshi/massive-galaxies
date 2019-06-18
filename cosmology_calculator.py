@@ -41,7 +41,7 @@ def get_cosmology_params():
     # mpc = 1e6 * parsec/1e3 # Mpc to km conversion
     # Cosmological constants
     # The 8.24e-5 value for relativistic matter density is from carroll and ostlie. 
-    # They say its from WMAP but I need to find it.
+    # They say it's from WMAP but I need to find it.
     H_0 = 69.6
     omega_m0 = 0.286
     omega_r0 = 8.24e-5

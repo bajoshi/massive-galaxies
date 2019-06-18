@@ -1,0 +1,33 @@
+
+Here are the main codes I think. I used non-evolving LF and K_corr=0 for
+this work. You will need a kcorrection but you can just tabulate it using CWW
+eliptical. The main trick in all this is factors of 1+z.
+
+ncounter.pro - main code, calls nm.pro
+nm.pro - does numerical integration (qromo) of dnmdz2.pro
+dnmdz2.pro - uses abmag.pro and evaluates LF
+abmag.pro - computes absolute magnitude for given apparent mag,z and uses
+            kcorrection
+kcorr.pro - computes kcorr using bc03 models.
+
+==============
+Other routines
+
+appmag.pro
+b.pro
+deepcts.pro
+dnmdz.pro
+dvdz.pro
+fixhead.pro
+getcoef.pro
+gridcts.pro
+highz.pro
+imdisp.pro
+plotgrid.pro
+plotit.pro
+psi.pro
+recounter.pro
+rer.pro
+t.pro
+test.pro
+zselect.pro
