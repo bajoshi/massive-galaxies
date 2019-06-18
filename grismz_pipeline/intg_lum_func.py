@@ -15,6 +15,19 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 sys.path.append(massive_galaxies_dir)
 import cosmology_calculator as cc
 
+# Get cosmology and set speed of light
+# This needs to be visible to every function
+H0, omega_m0, omega_r0, omega_lam0 = cc.get_cosmology_params()
+print "Flat Universe assumed. Cosmology assumed is:"
+print "Hubble constant [km/s/Mpc]:", H0
+print "Omega Matter:", omega_m0
+print "Omega Lambda", omega_lam0
+print "Omega Radiation:", omega_r0
+speed_of_light_kms = 299792.458  # in km/s
+print "Speed of Light [km/s]:", speed_of_light_kms
+pears_coverage =   # in sq. arcmin
+solid_angle =   # in steradians
+
 def inc_gamma_integrand(x, alpha):
     integrand = np.power(x, alpha) * np.exp(-1 * x)
     return integrand
@@ -143,7 +156,6 @@ def run_test_case():
     # Set apparent magnitude limit and Hubble constant first
     app_mag_lim = 24.0
     H0 = 70.0  # this has to be in km/s/Mpc  # I set this to 70 because Dahlen et al. used this value
-    speed_of_light_kms = 3e5  # this has to be in km/s
 
     # Create redshift array # Careful! LF changes dependent on redshift
     redshift_arr = np.linspace(0.1, 0.82, 100)
@@ -176,7 +188,53 @@ def run_test_case():
 
     return None
 
-def integrate_num_mag():
+def get_lum_dist(redshift):
+    """
+    Returns luminosity distance in megaparsecs for a given redshift.
+    """
+
+    # Get the luminosity distance to the given redshift
+    # Get proper distance and multiply by (1+z)
+    scale_fac_to_z = 1 / (1+redshift)
+    dp = cc.proper_distance(H0, omega_m0, omega_r0, omega_lam0, scale_fac_to_z)[0]  # returns answer in Mpc/c
+    dl = dp * speed_of_light_kms * (1+redshift)  # dl now in Mpc
+
+    return dl
+
+def get_volume_element(redshift):
+
+    dl = get_lum_dist(redshift)  # returns answer in Mpc
+
+    # Get the volume element per redshift
+    dVdz_num = 4 * np.pi * speed_of_light_kms * dl**2
+    dVdz_den = 
+
+    dVdz = dVdz_num / dVdz_den
+
+    return dVdz
+
+def integrate_num_mag(z1, z2, M_star, alpha, phi_star):
+    """
+    """
+
+    # First get the volume element at redshift z
+    dVdz = get_volume_element(z)  # in Mpc^3
+
+    # Now get LF (i.e, number density at abs mag M) counts 
+    # dependent on the redshfit and the apparent magnitude limit.
+    # You need to convert the apparent mag to absolute before 
+    # passing the abs mag to the schechter_lf function.
+    # You will also need the K-correction
+    dl = get_lum_dist(z)  # in Mpc
+
+    # Now get the K-correction
+    kcorr = 
+
+    abs_mag = app_mag - kcorr - 5 * np.log10(dl/10)
+    lf_counts = schechter_lf(M_star, phi_star, alpha, abs_mag)
+
+    # Now put them together
+    nm = solid_angle * dVdz * lf_counts * dz / (4 * np.pi)
 
     return nm
 
@@ -189,10 +247,8 @@ def main():
     # This is dependent on the redshift range
     M_star, alpha, phi_star = get_test_lf()
 
-    # Get cosmology
-    H_0, omega_m0, omega_r0, omega_lam0 = cc.get_cosmology_params()
-
-    # Beginning with equation 9 in Garner 1998, PASP, 110, 291
+    # Now do the integral per magnitude bin
+    # Beginning with equation 9 in Gardner 1998, PASP, 110, 291
 
 
     return None
