@@ -31,8 +31,11 @@ print "Omega Lambda", omega_lam0
 print "Omega Radiation:", omega_r0
 speed_of_light_kms = 299792.458  # in km/s
 print "Speed of Light [km/s]:", speed_of_light_kms
-#pears_coverage =   # in sq. arcmin
-#solid_angle =   # in steradians
+
+pears_coverage = 119  # in sq. arcmin
+pears_coverage_sq_deg = pears_coverage / 3600
+onesqdeg_to_steradian = 3.05e-4
+solid_angle = pears_coverage_sq_deg * onesqdeg_to_steradian  # in steradians
 
 def inc_gamma_integrand(x, alpha):
     integrand = np.power(x, alpha) * np.exp(-1 * x)
@@ -255,11 +258,13 @@ def get_test_sed():
     closest_tauv = tauv_arr[closest_tauv_idx]
     closest_metallicity = metal_arr[closest_metal_idx]
 
+    """
     print "\n", "Returning test SED with the following parameters:"
     print "Age [Gyr]:", 10**closest_age / 1e9
     print "Tau [Gyr]:", closest_tau
     print "Tau_V:", closest_tauv
     print "Metallicity [total fraction of metals]:", closest_metallicity
+    """
 
     # Get the model index
     model_idx = np.where((log_age_arr == closest_age) & (tau_gyr_arr == closest_tau) & \
@@ -295,24 +300,37 @@ def get_kcorr(sed_llam, sed_lam, redshift, filt_curve):
 
     z_fac = 1 / (1+redshift)
 
+    # Redshift the spectrum
+    lam_obs = sed_lam * (1+redshift)
+    llam_obs = sed_llam / (1+redshift)
+
+    wav_filt_idx = np.where((sed_lam >= filt_curve['wav'][0]) & (sed_lam <= filt_curve['wav'][-1]))
+
     # Make sure the filter curve and the SED are 
     # on the same wavelength grid.
-    f775w_trans_interp = griddata(points=f775w_filt_curve['wav'], values=f775w_filt_curve['trans'], \
-        xi=grism_lam_obs, method='linear')
-
-    filt_curve_interp = 
-
-    # Redshift the spectrum
-    lam_obs = sed_lam * (1+z)
-    llam_obs = sed_llam / (1+z)
-
-    y_obs = llam_obs * lam_obs * filt_curve_interp
-
-    obs_intg = z_fac * integrate.simps()
-    em_intg = integrate.simps()
+    filt_curve_interp_obs = griddata(points=filt_curve['wav'], values=filt_curve['trans'], \
+        xi=lam_obs[wav_filt_idx], method='linear', fill_value=0.0)
+    filt_curve_interp_rf = griddata(points=filt_curve['wav'], values=filt_curve['trans'], \
+        xi=sed_lam[wav_filt_idx], method='linear', fill_value=0.0)
     
-    print obs_intg
-    print em_intg
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(filt_curve['wav'], filt_curve['trans'], color='k')
+    ax.plot(lam_obs[wav_filt_idx], filt_curve_interp_obs, color='b')
+    ax.plot(sed_lam[wav_filt_idx], filt_curve_interp_rf, color='r')
+    plt.show()
+    sys.exit(0)
+    """
+
+    # Define integrand for observed space integral
+    y_obs = llam_obs[wav_filt_idx] * lam_obs[wav_filt_idx] * filt_curve_interp_obs
+
+    # Define integrand for rest-frame space integral
+    y_rf = sed_llam[wav_filt_idx] * sed_lam[wav_filt_idx] * filt_curve_interp_rf
+
+    obs_intg = z_fac * integrate.simps(y=y_obs, x=lam_obs[wav_filt_idx])
+    em_intg = integrate.simps(y=y_rf, x=sed_lam[wav_filt_idx])
 
     kcorr = -2.5 * np.log10(obs_intg / em_intg)
 
@@ -324,7 +342,7 @@ def get_volume_element(redshift):
 
     # Get the volume element per redshift
     dVdz_num = 4 * np.pi * speed_of_light_kms * dl**2
-    #dVdz_den = 
+    dVdz_den = H0 * (1+redshift)**2
 
     dVdz = dVdz_num / dVdz_den
 
@@ -334,34 +352,62 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star):
     """
     """
 
-    # First get the volume element at redshift z
-    dVdz = get_volume_element(z)  # in Mpc^3
+    # Beginning with equation 9 in Gardner 1998, PASP, 110, 291
+    # and moving backwards.
+    app_mag = 24.0
+    # Generate redshift array to integrate over
+    total_samples = 1000
+    z_arr = np.linspace(z1, z2, total_samples)
+    nmz = np.zeros(total_samples)
+    abs_mag_arr = np.zeros(total_samples)
 
-    # Now get LF (i.e, number density at abs mag M) counts 
-    # dependent on the redshfit and the apparent magnitude limit.
-    # You need to convert the apparent mag to absolute before 
-    # passing the abs mag to the schechter_lf function.
-    # You will also need the K-correction
-    dl = get_lum_dist(z)  # in Mpc
+    dz = (z2 - z1) / total_samples
 
-    # Also get the SED 
-    sed_llam, sed_lam = get_test_sed()
+    for i in range(total_samples):
+        z = z_arr[i]
+        print "\n", "At z:", z
+    
+        # First get the volume element at redshift z
+        dVdz = get_volume_element(z)  # in Mpc^3
+        print "Volume element [Mpc^3]:", dVdz
+    
+        # Now get LF (i.e, number density at abs mag M) counts 
+        # dependent on the redshfit and the apparent magnitude limit.
+        # You need to convert the apparent mag to absolute before 
+        # passing the abs mag to the schechter_lf function.
+        # You will also need the K-correction
+        dl = get_lum_dist(z)  # in Mpc
+    
+        # Also get the SED 
+        sed_llam, sed_lam = get_test_sed()
+    
+        # Read in the i-band filter
+        f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
+            dtype=None, names=['wav', 'trans']) 
+    
+        # Now get the K-correction
+        # This function needs the SED, z, and the filter curve
+        kcorr = get_kcorr(sed_llam, sed_lam, z, f775w_filt_curve)
+        print "K-correction:", kcorr
+    
+        abs_mag = app_mag - kcorr - 5 * np.log10(dl * 1e6/10)
+        print "Absolute Magnitude:", abs_mag
+        abs_mag_arr[i] = abs_mag
+    
+        lf_value = schechter_lf(M_star, phi_star, alpha, abs_mag)
+        print "LF value []:", lf_value
+    
+        # Now put them together
+        nmz[i] = solid_angle * dVdz * lf_value * dz / (4 * np.pi)
+        print "Total number counts per steradian, i.e., N(<M,z)[sr^-1]:", nmz[i]
 
-    # Read in the i-band filter
-    f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
-        dtype=None, names=['wav', 'trans']) 
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(abs_mag_arr, nmz)
+    plt.show()
+    sys.exit(0)
 
-    # Now get the K-correction
-    # This function needs the SED, z, and the filter curve
-    kcorr = get_kcorr(sed_llam, sed_lam, z, f775w)
-
-    abs_mag = app_mag - kcorr - 5 * np.log10(dl * 1e6/10)
-    lf_counts = schechter_lf(M_star, phi_star, alpha, abs_mag)
-
-    # Now put them together
-    nm = solid_angle * dVdz * lf_counts * dz / (4 * np.pi)
-
-    return nm
+    return nmz
 
 def main():
 
@@ -373,8 +419,9 @@ def main():
     M_star, alpha, phi_star = get_test_lf()
 
     # Now do the integral per magnitude bin
-    # Beginning with equation 9 in Gardner 1998, PASP, 110, 291
-    
+    zlow = 0.6
+    zhigh = 1.2
+    integrate_num_mag(zlow, zhigh, M_star, alpha, phi_star)
 
     return None
 
