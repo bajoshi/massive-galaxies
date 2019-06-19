@@ -1,8 +1,14 @@
+"""
+This code is to be used for getting number counts 
+by integrating the luminosity function. The main
+function here is -- integrate_num_mag(...).
+"""
 from __future__ import division
 
 import numpy as np
 from scipy.special import gamma, gammaincc  # gamma and upper incomplete gamma functions
 import scipy.integrate as integrate
+from scipy.interpolate import griddata
 
 import os
 import sys
@@ -25,8 +31,8 @@ print "Omega Lambda", omega_lam0
 print "Omega Radiation:", omega_r0
 speed_of_light_kms = 299792.458  # in km/s
 print "Speed of Light [km/s]:", speed_of_light_kms
-pears_coverage =   # in sq. arcmin
-solid_angle =   # in steradians
+#pears_coverage =   # in sq. arcmin
+#solid_angle =   # in steradians
 
 def inc_gamma_integrand(x, alpha):
     integrand = np.power(x, alpha) * np.exp(-1 * x)
@@ -188,6 +194,83 @@ def run_test_case():
 
     return None
 
+def get_test_sed():
+    """
+    Will return an SED that is 2 Gyr old with tau=63 Gyr
+    and no dust and solar metallicity. Returned spectrum
+    is in L_lambda units.
+
+    You can change these SED parameters within the function.
+    """
+    # Set the required model here 
+    age = 4e9  # in years
+    tau = 0.1  # in Gyr
+    tauv = 0.0  # needs tau_v not A_v
+    metallicity = 0.02  # total metal fraction
+    
+    # ------------------------------- Get correct directories ------------------------------- #
+    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+    threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
+    # This is if working on the laptop. 
+    # Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(figs_data_dir):
+        figs_data_dir = figs_dir  # this path only exists on firstlight
+        threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+        cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
+        if not os.path.isdir(figs_data_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
+
+    # ------------------------------ Get models ------------------------------ #
+    # read in entire model set
+    # To see how these arrays were created check the code:
+    # $HOME/Desktop/test-codes/shared_memory_multiprocessing/shmem_parallel_proc.py
+    # This part will fail if the arrays dont already exist.
+    total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
+
+    log_age_arr = np.load(figs_data_dir + 'log_age_arr.npy', mmap_mode='r')
+    metal_arr = np.load(figs_data_dir + 'metal_arr.npy', mmap_mode='r')
+    nlyc_arr = np.load(figs_data_dir + 'nlyc_arr.npy', mmap_mode='r')
+    tau_gyr_arr = np.load(figs_data_dir + 'tau_gyr_arr.npy', mmap_mode='r')
+    tauv_arr = np.load(figs_data_dir + 'tauv_arr.npy', mmap_mode='r')
+    ub_col_arr = np.load(figs_data_dir + 'ub_col_arr.npy', mmap_mode='r')
+    bv_col_arr = np.load(figs_data_dir + 'bv_col_arr.npy', mmap_mode='r')
+    vj_col_arr = np.load(figs_data_dir + 'vj_col_arr.npy', mmap_mode='r')
+    ms_arr = np.load(figs_data_dir + 'ms_arr.npy', mmap_mode='r')
+    mgal_arr = np.load(figs_data_dir + 'mgal_arr.npy', mmap_mode='r')
+
+    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
+    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
+
+    # Now find the model you need
+    # First find the closest values to the user supplied values
+    closest_age_idx = np.argmin(abs(log_age_arr - np.log10(age)))
+    closest_tau_idx = np.argmin(abs(tau_gyr_arr - tau))
+    closest_tauv_idx = np.argmin(abs(tauv_arr - tauv))
+    closest_metal_idx = np.argmin(abs(metal_arr - metallicity))
+
+    closest_age = log_age_arr[closest_age_idx]
+    closest_tau = tau_gyr_arr[closest_tau_idx]
+    closest_tauv = tauv_arr[closest_tauv_idx]
+    closest_metallicity = metal_arr[closest_metal_idx]
+
+    print "\n", "Returning test SED with the following parameters:"
+    print "Age [Gyr]:", 10**closest_age / 1e9
+    print "Tau [Gyr]:", closest_tau
+    print "Tau_V:", closest_tauv
+    print "Metallicity [total fraction of metals]:", closest_metallicity
+
+    # Get the model index
+    model_idx = np.where((log_age_arr == closest_age) & (tau_gyr_arr == closest_tau) & \
+        (tauv_arr == closest_tauv) & (metal_arr == closest_metallicity))[0]
+    model_idx = int(model_idx)
+
+    # Now assign the llam array
+    llam = model_comp_spec_withlines_mmap[model_idx]
+
+    return llam, model_lam_grid_withlines_mmap
+
 def get_lum_dist(redshift):
     """
     Returns luminosity distance in megaparsecs for a given redshift.
@@ -201,13 +284,47 @@ def get_lum_dist(redshift):
 
     return dl
 
+def get_kcorr(sed_llam, sed_lam, redshift, filt_curve):
+    """
+    Returns the K-correction ONLY due to redshift,
+    i.e., within the same filter.
+    It needs to be supplied with the object SED
+    (l_lambda and lambda), redshift, and with the 
+    filter curve.
+    """
+
+    z_fac = 1 / (1+redshift)
+
+    # Make sure the filter curve and the SED are 
+    # on the same wavelength grid.
+    f775w_trans_interp = griddata(points=f775w_filt_curve['wav'], values=f775w_filt_curve['trans'], \
+        xi=grism_lam_obs, method='linear')
+
+    filt_curve_interp = 
+
+    # Redshift the spectrum
+    lam_obs = sed_lam * (1+z)
+    llam_obs = sed_llam / (1+z)
+
+    y_obs = llam_obs * lam_obs * filt_curve_interp
+
+    obs_intg = z_fac * integrate.simps()
+    em_intg = integrate.simps()
+    
+    print obs_intg
+    print em_intg
+
+    kcorr = -2.5 * np.log10(obs_intg / em_intg)
+
+    return kcorr
+
 def get_volume_element(redshift):
 
     dl = get_lum_dist(redshift)  # returns answer in Mpc
 
     # Get the volume element per redshift
     dVdz_num = 4 * np.pi * speed_of_light_kms * dl**2
-    dVdz_den = 
+    #dVdz_den = 
 
     dVdz = dVdz_num / dVdz_den
 
@@ -227,10 +344,18 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star):
     # You will also need the K-correction
     dl = get_lum_dist(z)  # in Mpc
 
-    # Now get the K-correction
-    kcorr = 
+    # Also get the SED 
+    sed_llam, sed_lam = get_test_sed()
 
-    abs_mag = app_mag - kcorr - 5 * np.log10(dl/10)
+    # Read in the i-band filter
+    f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans']) 
+
+    # Now get the K-correction
+    # This function needs the SED, z, and the filter curve
+    kcorr = get_kcorr(sed_llam, sed_lam, z, f775w)
+
+    abs_mag = app_mag - kcorr - 5 * np.log10(dl * 1e6/10)
     lf_counts = schechter_lf(M_star, phi_star, alpha, abs_mag)
 
     # Now put them together
@@ -249,7 +374,7 @@ def main():
 
     # Now do the integral per magnitude bin
     # Beginning with equation 9 in Gardner 1998, PASP, 110, 291
-
+    
 
     return None
 
