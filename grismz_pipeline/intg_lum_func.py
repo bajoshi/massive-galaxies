@@ -342,13 +342,14 @@ def get_volume_element(redshift):
 
     # Get the volume element per redshift
     dVdz_num = 4 * np.pi * speed_of_light_kms * dl**2
-    dVdz_den = H0 * (1+redshift)**2
+    Ez = np.sqrt(omega_lam0 + omega_m0 * (1+redshift)**3)
+    dVdz_den = H0 * (1+redshift)**2 * Ez
 
     dVdz = dVdz_num / dVdz_den
 
     return dVdz
 
-def integrate_num_mag(z1, z2, M_star, alpha, phi_star):
+def integrate_num_mag(z1, z2, M_star, alpha, phi_star, silent=True):
     """
     """
 
@@ -356,7 +357,7 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star):
     # and moving backwards.
     app_mag = 24.0
     # Generate redshift array to integrate over
-    total_samples = 1000
+    total_samples = 100  # should be some large number but your final integral should not change 
     z_arr = np.linspace(z1, z2, total_samples)
     nmz = np.zeros(total_samples)
     abs_mag_arr = np.zeros(total_samples)
@@ -383,7 +384,7 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star):
     
         # Read in the i-band filter
         f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
-            dtype=None, names=['wav', 'trans']) 
+            dtype=None, names=['wav', 'trans'])
     
         # Now get the K-correction
         # This function needs the SED, z, and the filter curve
@@ -400,6 +401,11 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star):
         # Now put them together
         nmz[i] = solid_angle * dVdz * lf_value * dz / (4 * np.pi)
         print "Total number counts per steradian, i.e., N(<M,z)[sr^-1]:", nmz[i]
+
+        #if i == 3:
+        #    sys.exit(0)
+
+    print "Total number over redshift range:", integrate.simps(y=nmz, x=z_arr)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
