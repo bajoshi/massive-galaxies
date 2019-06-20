@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
+massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 
 sys.path.append(massive_galaxies_dir)
 import cosmology_calculator as cc
@@ -349,13 +350,12 @@ def get_volume_element(redshift):
 
     return dVdz
 
-def integrate_num_mag(z1, z2, M_star, alpha, phi_star, silent=True):
+def integrate_num_mag(z1, z2, M_star, alpha, phi_star, app_mag, silent=True):
     """
     """
 
     # Beginning with equation 9 in Gardner 1998, PASP, 110, 291
     # and moving backwards.
-    app_mag = 24.0
     # Generate redshift array to integrate over
     total_samples = 100  # should be some large number but your final integral should not change 
     z_arr = np.linspace(z1, z2, total_samples)
@@ -366,11 +366,13 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star, silent=True):
 
     for i in range(total_samples):
         z = z_arr[i]
-        print "\n", "At z:", z
+        if not silent:
+            print "\n", "At z:", z
     
         # First get the volume element at redshift z
         dVdz = get_volume_element(z)  # in Mpc^3
-        print "Volume element [Mpc^3]:", dVdz
+        if not silent:
+            print "Volume element [Mpc^3]:", dVdz
     
         # Now get LF (i.e, number density at abs mag M) counts 
         # dependent on the redshfit and the apparent magnitude limit.
@@ -389,31 +391,40 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star, silent=True):
         # Now get the K-correction
         # This function needs the SED, z, and the filter curve
         kcorr = get_kcorr(sed_llam, sed_lam, z, f775w_filt_curve)
-        print "K-correction:", kcorr
+        if not silent:
+            print "K-correction:", kcorr
     
         abs_mag = app_mag - kcorr - 5 * np.log10(dl * 1e6/10)
-        print "Absolute Magnitude:", abs_mag
+        if not silent:
+            print "Absolute Magnitude:", abs_mag
         abs_mag_arr[i] = abs_mag
     
         lf_value = schechter_lf(M_star, phi_star, alpha, abs_mag)
-        print "LF value []:", lf_value
+        if not silent:
+            print "LF value [# per comoving Mpc^3 between M (abs mag) to M+dM]:", lf_value
     
         # Now put them together
-        nmz[i] = solid_angle * dVdz * lf_value * dz / (4 * np.pi)
-        print "Total number counts per steradian, i.e., N(<M,z)[sr^-1]:", nmz[i]
+        nmz[i] = onesqdeg_to_steradian * dVdz * lf_value / (4 * np.pi)
+        # since you want the number per square degree multiply the integral 
+        # by the solid angle corresponding to 1 sq. degree.
+        if not silent:
+            print "Total number counts per sq degree, i.e., N(<M,z)[deg^-2]:", nmz[i]
 
-        #if i == 3:
-        #    sys.exit(0)
+        #if i == 1:
+        #   sys.exit(0)
 
-    print "Total number over redshift range:", integrate.simps(y=nmz, x=z_arr)
+    total_num = integrate.simps(y=nmz, x=z_arr)
+    print app_mag, "                     ", total_num
 
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(abs_mag_arr, nmz)
     plt.show()
     sys.exit(0)
+    """
 
-    return nmz
+    return total_num
 
 def main():
 
@@ -427,7 +438,62 @@ def main():
     # Now do the integral per magnitude bin
     zlow = 0.6
     zhigh = 1.2
-    integrate_num_mag(zlow, zhigh, M_star, alpha, phi_star)
+
+    app_mag_lim_arr = np.arange(18.0, 28.5, 0.5)
+    print "Running over apparent magnitude limit array:"
+    print app_mag_lim_arr
+
+    print "Apparent magnitude limit", "             ", "Total number in redshift range:"
+    print "----------------------------------------------------------------------------"
+
+    total_num_dens_in_z_arr = np.zeros(len(app_mag_lim_arr))
+
+    for i in range(len(app_mag_lim_arr)):
+        app_mag_lim = app_mag_lim_arr[i]
+        total_num_dens_in_z_arr[i] = integrate_num_mag(zlow, zhigh, M_star, alpha, phi_star, app_mag_lim)
+
+    # Plot number counts
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.set_xlabel(r'$\rm m_{AB}$', fontsize=14)
+    ax.set_ylabel(r'$\rm N(<m)\ [deg^{-2}]$', fontsize=14)
+
+    ax.plot(app_mag_lim_arr, total_num_dens_in_z_arr, 'o', color='k', markersize=5, markeredgecolor='k')
+
+    ax.set_yscale('log')
+    ax.minorticks_on()
+
+    # Text on plot
+    ax.text(0.02, 0.98, "Predicted number counts" + "\n" + "for " + r"$0.6 \leq z \leq 1.2$", \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=13)
+    
+    ax.text(0.02, 0.83, "Assumed LF parameters:", \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=13)
+    ax.text(0.02, 0.77, r"$\rm M^* = -22.38$", \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=13)
+    ax.text(0.02, 0.71, r"$\rm \phi^*\, [(Mpc/h_{70})^{-3}\, mag^{-1}]$" + "\n" + r"$ = 28.2 \times 10^{-4}$", \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=13)
+    ax.text(0.02, 0.60, r"$\rm \alpha = -1.3$", \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=13)
+
+    # Limits
+    ax.set_xlim(16.0, 28.5)
+    ax.set_ylim(1e-9, 1e7)
+
+    # Add twin abs mag axis
+    #ax2 = ax.twiny()
+
+    # Convert apparent to absolute magnitudes
+    #abs_mag_lim_arr = 
+
+    fig.savefig(massive_figures_dir + "num_counts_pears.pdf", dpi=300, bbox_inches='tight')
+    plt.show()
 
     return None
 
