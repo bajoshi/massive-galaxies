@@ -400,7 +400,7 @@ def get_volume_element(redshift):
 
     return dVdz
 
-def integrate_num_mag(z1, z2, M_star, alpha, phi_star, app_mag, silent=True):
+def integrate_num_mag(z1, z2, M_star, alpha, phi_star, app_mag, lf_band, num_counts_band, silent=True):
     """
     """
 
@@ -414,14 +414,6 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star, app_mag, silent=True):
 
     # Also get the SED 
     sed_lnu, sed_nu = get_test_sed()
-
-    # Read in the two filter curves needed
-    # filter in which LF is measured
-    lf_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', \
-        dtype=None, names=['wav', 'trans'])
-    # filter in which number counts are being predicted
-    num_counts_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', \
-        dtype=None, names=['wav', 'trans'])
 
     for i in range(total_samples):
         z = z_arr[i]
@@ -481,12 +473,17 @@ def main():
     # run_test_case()
 
     # Define the luminosity function
-    # This is dependent on the redshift range
+    # This is assumed independent of the redshift range i.e, no LF evolution
     # From GAMA survey: Kelvin et al. 2014, MNRAS
+    # ------------ i-band ------------ # 
+    M_star_i = -22.28  # mag
+    alpha_i = -0.77
+    phi_star_i = 1.04e-3  # per mag per Mpc^3
+
     # ------------ j-band ------------ # 
-    M_star = -22.73  # mag
-    alpha = -0.77
-    phi_star = 0.91e-3  # per mag per Mpc^3
+    M_star_j = -22.73  # mag
+    alpha_j = -0.77
+    phi_star_j = 0.91e-3  # per mag per Mpc^3
 
     # ------------ h-band ------------ # 
 
@@ -516,22 +513,60 @@ def main():
     total_num_dens_in_z_arr_wfirst = np.zeros(len(app_mag_lim_arr))
     total_num_dens_in_z_arr_euclid = np.zeros(len(app_mag_lim_arr))
 
+    # ----------------------------- i band for PEARS ----------------------------- #
+    # Since the measured PEARS numbers are in i-band
+    # Read in the two filter curves needed
+    # filter in which LF is measured
+    lf_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    # filter in which number counts are being predicted
+    num_counts_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+
     for i in range(len(app_mag_lim_arr)):
         app_mag_lim = app_mag_lim_arr[i]
-        total_num_dens_in_z_arr_pears[i] = integrate_num_mag(zlow_pears, zhigh_pears, M_star, alpha, phi_star, app_mag_lim)
-        total_num_dens_in_z_arr_wfirst[i] = integrate_num_mag(zlow_wfirst, zhigh_wfirst, M_star, alpha, phi_star, app_mag_lim)
-        total_num_dens_in_z_arr_euclid[i] = integrate_num_mag(zlow_euclid, zhigh_euclid, M_star, alpha, phi_star, app_mag_lim)
+        total_num_dens_in_z_arr_pears[i] = integrate_num_mag(zlow_pears, zhigh_pears, M_star_i, alpha_i, phi_star_i, app_mag_lim, lf_band, num_counts_band)
 
     print "Cumulative number counts for PEARS:"
     cumulative_num_counts_pears = np.cumsum(total_num_dens_in_z_arr_pears)
     print cumulative_num_counts_pears
 
+    # Ratio of observed to predicted number counts for PEARS
+    #pears_num_gal_in_z_range = 790  # within z range of spz paper
+    # This includes ALL of PEARS i.e., even the incomplete magnitude bins
+    # What needs to be done is find the number of PEARS galaxies 
+    # out to 26 mag (because that is the completeness limit) 
+    # WITHOUT ANY OTHER cuts, and divide that by the predicted 
+    # number of galaxies out to 26 app mag.
+    pears_num_gal_in_z_range = 790  # within z range AND within 26 mag
+    idx26 = np.where(app_mag_lim_arr == 26.0)[0]
+    pears_pred_num_out_to_26 = float(cumulative_num_counts_pears[idx26])
+    r = (pears_num_gal_in_z_range / pears_pred_num_out_to_26) * 3600/pears_coverage  # make sure to also take the areal coverage into account
+    print "Total PEARS predicted number counts within 0.600 <= z <= 1.235 over 1 sq deg:", pears_pred_num_out_to_26 
+    print "Actual to predicted ratio:", r 
+
+    # ----------------------------- J, H, and K bands for WFIRST and Euclid ----------------------------- #
+    # Read in the two filter curves needed
+    # filter in which LF is measured
+    lf_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    # filter in which number counts are being predicted
+    num_counts_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+
+    for i in range(len(app_mag_lim_arr)):
+        app_mag_lim = app_mag_lim_arr[i]
+        total_num_dens_in_z_arr_wfirst[i] = integrate_num_mag(zlow_wfirst, zhigh_wfirst, M_star_j, alpha_j, phi_star_j, app_mag_lim, lf_band, num_counts_band)
+        total_num_dens_in_z_arr_euclid[i] = integrate_num_mag(zlow_euclid, zhigh_euclid, M_star_j, alpha_j, phi_star_j, app_mag_lim, lf_band, num_counts_band)
+
     print "Cumulative number counts for WFIRST:"
     cumulative_num_counts_wfirst = np.cumsum(total_num_dens_in_z_arr_wfirst)
+    cumulative_num_counts_wfirst *= r 
     print cumulative_num_counts_wfirst
 
     print "Cumulative number counts for Euclid:"
     cumulative_num_counts_euclid = np.cumsum(total_num_dens_in_z_arr_euclid)
+    cumulative_num_counts_euclid *= r
     print cumulative_num_counts_euclid
 
     # Plot number counts
@@ -541,39 +576,41 @@ def main():
     ax.set_xlabel(r'$\rm m_{AB}$', fontsize=14)
     ax.set_ylabel(r'$\rm N(<m)\ [deg^{-2}]$', fontsize=14)
 
-    ax.scatter(app_mag_lim_arr, cumulative_num_counts_wfirst, marker='o', color='k', s=20, facecolor='None')
-    ax.scatter(app_mag_lim_arr, cumulative_num_counts_euclid, marker='^', color='k', s=20, facecolor='None')
+    ax.scatter(app_mag_lim_arr, cumulative_num_counts_wfirst, marker='o', color='k', s=26, facecolor='None', label="WFIRST")
+    ax.scatter(app_mag_lim_arr, cumulative_num_counts_euclid, marker='^', color='k', s=26, facecolor='None', label="Euclid")
 
     ax.set_yscale('log')
     ax.minorticks_on()
 
+    ax.legend(loc=4, fontsize=13, frameon=False)
+
     # Text on plot
-    ax.text(0.02, 0.98, "Predicted number counts" + "\n" + "for " + \
+    ax.text(0.02, 0.98, "Predicted number counts " + "\n" + \
         str(zlow_wfirst) + r"$\,\leq z_{\rm WFIRST} \leq\,$" + str(zhigh_wfirst), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
     
-    ax.text(0.02, 0.95, str(zlow_euclid) + r"$\,\leq z_{\rm Euclid} \leq\,$" + str(zhigh_euclid), \
+    ax.text(0.02, 0.87, str(zlow_euclid) + r"$\,\leq z_{\rm Euclid} \leq\,$" + str(zhigh_euclid), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
 
-    ax.text(0.02, 0.77, "Assumed LF parameters:", \
+    ax.text(0.72, 0.76, "Assumed LF " + "\n" + "parameters:", \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
-    ax.text(0.02, 0.71, r"$\rm M^* = $" + r"$\,$" + str(M_star), \
+    ax.text(0.72, 0.65, r"$\rm M^* = $" + r"$\,$" + str(M_star_j), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
-    ax.text(0.02, 0.65, r"$\rm \phi^*\, [Mpc^{-3}\, mag^{-1}]$" + "\n" \
-        + r"$ = $" + r"$\,$" + mr.convert_to_sci_not(phi_star), \
+    ax.text(0.72, 0.59, r"$\rm \phi^*\, [Mpc^{-3}\, mag^{-1}]$" + "\n" \
+        + r"$ = $" + r"$\,$" + mr.convert_to_sci_not(phi_star_j), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
-    ax.text(0.02, 0.56, r"$\rm \alpha = $" + r"$\,$" + str(alpha), \
+    ax.text(0.72, 0.47, r"$\rm \alpha = $" + r"$\,$" + str(alpha_j), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
 
     # Limits
-    #ax.set_xlim(16.0, 28.5)
-    #ax.set_ylim(1e-7, 1e6)
+    ax.set_xlim(16.0, 28.5)
+    ax.set_ylim(1e-6, 1e6)
 
     # Add twin abs mag axis
     #ax2 = ax.twiny()
