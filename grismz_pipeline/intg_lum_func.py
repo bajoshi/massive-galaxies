@@ -20,7 +20,9 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 massive_figures_dir = home + "/Desktop/FIGS/massive-galaxies-figures/"
 
 sys.path.append(massive_galaxies_dir)
+sys.path.append(massive_galaxies_dir + "grismz_pipeline/")
 import cosmology_calculator as cc
+import mocksim_results as mr
 
 # Get cosmology and set speed of light
 # This needs to be visible to every function
@@ -32,6 +34,7 @@ print "Omega Lambda", omega_lam0
 print "Omega Radiation:", omega_r0
 speed_of_light_kms = 299792.458  # in km/s
 print "Speed of Light [km/s]:", speed_of_light_kms
+speed_of_light_ang = speed_of_light_kms * 1e3 * 1e10  # In angstroms per second
 
 pears_coverage = 119  # in sq. arcmin
 pears_coverage_sq_deg = pears_coverage / 3600
@@ -274,8 +277,24 @@ def get_test_sed():
 
     # Now assign the llam array
     llam = model_comp_spec_withlines_mmap[model_idx]
+    lam_km = model_lam_grid_withlines_mmap / 1e13  # was in angstroms, need it in kilometers to get to nu
 
-    return llam, model_lam_grid_withlines_mmap
+    # Convert to L_nu before returning
+    lnu = llam * model_lam_grid_withlines_mmap**2 / speed_of_light_ang
+    nu = speed_of_light_kms / lam_km  # in Hz
+    
+    """
+    # Plot test SED
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(model_lam_grid_withlines_mmap, lnu, color='k')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    #ax.invert_xaxis()
+    plt.show()
+    """
+
+    return lnu, nu
 
 def get_lum_dist(redshift):
     """
@@ -290,29 +309,57 @@ def get_lum_dist(redshift):
 
     return dl
 
-def get_kcorr(sed_llam, sed_lam, redshift, filt_curve):
+def get_kcorr(sed_lnu, sed_nu, redshift, filt_curve_Q, filt_curve_R):
     """
-    Returns the K-correction ONLY due to redshift,
-    i.e., within the same filter.
+    Returns the K-correction due to redshift and 
+    for going between two filters. 
     It needs to be supplied with the object SED
-    (l_lambda and lambda), redshift, and with the 
-    filter curve.
-    """
+    (L_nu and nu), redshift, and with the 
+    rest frame and obs filter curves. 
 
-    z_fac = 1 / (1+redshift)
+    This function uses the K-correction formula
+    given in eq 8 of Hogg et al. 2002.
+    """
 
     # Redshift the spectrum
-    lam_obs = sed_lam * (1+redshift)
-    llam_obs = sed_llam / (1+redshift)
+    nu_obs = sed_nu / (1+redshift)
+    lnu_obs = sed_lnu * (1+redshift)
 
-    wav_filt_idx = np.where((sed_lam >= filt_curve['wav'][0]) & (sed_lam <= filt_curve['wav'][-1]))
+    # Convert filter wavlengths to frequency
+    filt_curve_R_nu = speed_of_light_ang / filt_curve_R['wav']
+    filt_curve_Q_nu = speed_of_light_ang / filt_curve_Q['wav']
+
+    # Find indices where filter and spectra frequencies match
+    R_nu_filt_idx = np.where((nu_obs <= filt_curve_R_nu[0]) & (nu_obs >= filt_curve_R_nu[-1]))
+    Q_nu_filt_idx = np.where((sed_nu <= filt_curve_Q_nu[0]) & (sed_nu >= filt_curve_Q_nu[-1]))
 
     # Make sure the filter curve and the SED are 
     # on the same wavelength grid.
-    filt_curve_interp_obs = griddata(points=filt_curve['wav'], values=filt_curve['trans'], \
-        xi=lam_obs[wav_filt_idx], method='linear', fill_value=0.0)
-    filt_curve_interp_rf = griddata(points=filt_curve['wav'], values=filt_curve['trans'], \
-        xi=sed_lam[wav_filt_idx], method='linear', fill_value=0.0)
+    # Filter R is in obs frame
+    # Filter Q is in rest frame
+    filt_curve_R_interp_obs = griddata(points=filt_curve_R_nu, values=filt_curve_R['trans'], \
+        xi=nu_obs[R_nu_filt_idx], method='linear', fill_value=0.0)
+    filt_curve_Q_interp_rf = griddata(points=filt_curve_Q_nu, values=filt_curve_Q['trans'], \
+        xi=sed_nu[Q_nu_filt_idx], method='linear', fill_value=0.0)
+
+    # Define standard for AB magnitdues
+    # i.e., 3631 Janskys in L_nu units
+    standard = 3631 * 1e-23  # in erg/s/Hz
+
+    # Define integrands
+    y1 = lnu_obs[R_nu_filt_idx] * filt_curve_R_interp_obs / nu_obs[R_nu_filt_idx]
+    y2 = standard * filt_curve_Q_interp_rf / sed_nu[Q_nu_filt_idx]
+    y3 = standard * filt_curve_R_interp_obs / nu_obs[R_nu_filt_idx]
+    y4 = sed_lnu[Q_nu_filt_idx] * filt_curve_Q_interp_rf / sed_nu[Q_nu_filt_idx]
+
+    # Now get the integrals required within the K-correction formula
+    integral1 = integrate.simps(y=y1, x=nu_obs[R_nu_filt_idx])
+    integral2 = integrate.simps(y=y2, x=sed_nu[Q_nu_filt_idx])
+    integral3 = integrate.simps(y=y3, x=nu_obs[R_nu_filt_idx])
+    integral4 = integrate.simps(y=y4, x=sed_nu[Q_nu_filt_idx])
+
+    # Compute K-correction
+    kcorr_qr = -2.5 * np.log10((1+redshift) * integral1 * integral2 / (integral3 * integral4))
     
     """
     fig = plt.figure()
@@ -324,18 +371,21 @@ def get_kcorr(sed_llam, sed_lam, redshift, filt_curve):
     sys.exit(0)
     """
 
+    # Older equations for single filter 
+    # These wont work anymore. They are all in L_lambda units.
+    """
     # Define integrand for observed space integral
     y_obs = llam_obs[wav_filt_idx] * lam_obs[wav_filt_idx] * filt_curve_interp_obs
-
     # Define integrand for rest-frame space integral
     y_rf = sed_llam[wav_filt_idx] * sed_lam[wav_filt_idx] * filt_curve_interp_rf
 
-    obs_intg = z_fac * integrate.simps(y=y_obs, x=lam_obs[wav_filt_idx])
+    obs_intg = integrate.simps(y=y_obs, x=lam_obs[wav_filt_idx]) / (1+redshift)
     em_intg = integrate.simps(y=y_rf, x=sed_lam[wav_filt_idx])
 
     kcorr = -2.5 * np.log10(obs_intg / em_intg)
+    """
 
-    return kcorr
+    return kcorr_qr
 
 def get_volume_element(redshift):
 
@@ -357,12 +407,21 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star, app_mag, silent=True):
     # Beginning with equation 9 in Gardner 1998, PASP, 110, 291
     # and moving backwards.
     # Generate redshift array to integrate over
-    total_samples = 100  # should be some large number but your final integral should not change 
+    total_samples = 200  # should be some large number but your final integral should not change 
     z_arr = np.linspace(z1, z2, total_samples)
     nmz = np.zeros(total_samples)
     abs_mag_arr = np.zeros(total_samples)
 
-    dz = (z2 - z1) / total_samples
+    # Also get the SED 
+    sed_lnu, sed_nu = get_test_sed()
+
+    # Read in the two filter curves needed
+    # filter in which LF is measured
+    lf_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    # filter in which number counts are being predicted
+    num_counts_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
 
     for i in range(total_samples):
         z = z_arr[i]
@@ -381,16 +440,9 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star, app_mag, silent=True):
         # You will also need the K-correction
         dl = get_lum_dist(z)  # in Mpc
     
-        # Also get the SED 
-        sed_llam, sed_lam = get_test_sed()
-    
-        # Read in the i-band filter
-        f775w_filt_curve = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f775w_filt_curve.txt', \
-            dtype=None, names=['wav', 'trans'])
-    
         # Now get the K-correction
         # This function needs the SED, z, and the filter curve
-        kcorr = get_kcorr(sed_llam, sed_lam, z, f775w_filt_curve)
+        kcorr = get_kcorr(sed_lnu, sed_nu, z, lf_band, num_counts_band)
         if not silent:
             print "K-correction:", kcorr
     
@@ -410,11 +462,8 @@ def integrate_num_mag(z1, z2, M_star, alpha, phi_star, app_mag, silent=True):
         if not silent:
             print "Total number counts per sq degree, i.e., N(<M,z)[deg^-2]:", nmz[i]
 
-        #if i == 1:
-        #   sys.exit(0)
-
     total_num = integrate.simps(y=nmz, x=z_arr)
-    print app_mag, "                     ", total_num
+    print app_mag, "                       ", total_num
 
     """
     fig = plt.figure()
@@ -433,11 +482,28 @@ def main():
 
     # Define the luminosity function
     # This is dependent on the redshift range
-    M_star, alpha, phi_star = get_test_lf()
+    # From GAMA survey: Kelvin et al. 2014, MNRAS
+    # ------------ j-band ------------ # 
+    M_star = -22.73  # mag
+    alpha = -0.77
+    phi_star = 0.91e-3  # per mag per Mpc^3
+
+    # ------------ h-band ------------ # 
+
+    # ------------ k-band ------------ # 
 
     # Now do the integral per magnitude bin
-    zlow = 0.6
-    zhigh = 1.2
+    zlow_pears = 0.600
+    zhigh_pears = 1.235
+    print "Running over redshift range for PEARS:", zlow_pears, "to", zhigh_pears 
+
+    zlow_wfirst = 1.67
+    zhigh_wfirst = 3.45
+    print "Running over redshift range for WFIRST:", zlow_wfirst, "to", zhigh_wfirst 
+
+    zlow_euclid = 1.45
+    zhigh_euclid = 3.35
+    print "Running over redshift range for Euclid:", zlow_euclid, "to", zhigh_euclid 
 
     app_mag_lim_arr = np.arange(18.0, 28.5, 0.5)
     print "Running over apparent magnitude limit array:"
@@ -446,11 +512,27 @@ def main():
     print "Apparent magnitude limit", "             ", "Total number in redshift range:"
     print "----------------------------------------------------------------------------"
 
-    total_num_dens_in_z_arr = np.zeros(len(app_mag_lim_arr))
+    total_num_dens_in_z_arr_pears = np.zeros(len(app_mag_lim_arr))
+    total_num_dens_in_z_arr_wfirst = np.zeros(len(app_mag_lim_arr))
+    total_num_dens_in_z_arr_euclid = np.zeros(len(app_mag_lim_arr))
 
     for i in range(len(app_mag_lim_arr)):
         app_mag_lim = app_mag_lim_arr[i]
-        total_num_dens_in_z_arr[i] = integrate_num_mag(zlow, zhigh, M_star, alpha, phi_star, app_mag_lim)
+        total_num_dens_in_z_arr_pears[i] = integrate_num_mag(zlow_pears, zhigh_pears, M_star, alpha, phi_star, app_mag_lim)
+        total_num_dens_in_z_arr_wfirst[i] = integrate_num_mag(zlow_wfirst, zhigh_wfirst, M_star, alpha, phi_star, app_mag_lim)
+        total_num_dens_in_z_arr_euclid[i] = integrate_num_mag(zlow_euclid, zhigh_euclid, M_star, alpha, phi_star, app_mag_lim)
+
+    print "Cumulative number counts for PEARS:"
+    cumulative_num_counts_pears = np.cumsum(total_num_dens_in_z_arr_pears)
+    print cumulative_num_counts_pears
+
+    print "Cumulative number counts for WFIRST:"
+    cumulative_num_counts_wfirst = np.cumsum(total_num_dens_in_z_arr_wfirst)
+    print cumulative_num_counts_wfirst
+
+    print "Cumulative number counts for Euclid:"
+    cumulative_num_counts_euclid = np.cumsum(total_num_dens_in_z_arr_euclid)
+    print cumulative_num_counts_euclid
 
     # Plot number counts
     fig = plt.figure()
@@ -459,32 +541,39 @@ def main():
     ax.set_xlabel(r'$\rm m_{AB}$', fontsize=14)
     ax.set_ylabel(r'$\rm N(<m)\ [deg^{-2}]$', fontsize=14)
 
-    ax.plot(app_mag_lim_arr, total_num_dens_in_z_arr, 'o', color='k', markersize=5, markeredgecolor='k')
+    ax.scatter(app_mag_lim_arr, cumulative_num_counts_wfirst, marker='o', color='k', s=20, facecolor='None')
+    ax.scatter(app_mag_lim_arr, cumulative_num_counts_euclid, marker='^', color='k', s=20, facecolor='None')
 
     ax.set_yscale('log')
     ax.minorticks_on()
 
     # Text on plot
-    ax.text(0.02, 0.98, "Predicted number counts" + "\n" + "for " + r"$0.6 \leq z \leq 1.2$", \
+    ax.text(0.02, 0.98, "Predicted number counts" + "\n" + "for " + \
+        str(zlow_wfirst) + r"$\,\leq z_{\rm WFIRST} \leq\,$" + str(zhigh_wfirst), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
     
-    ax.text(0.02, 0.83, "Assumed LF parameters:", \
+    ax.text(0.02, 0.95, str(zlow_euclid) + r"$\,\leq z_{\rm Euclid} \leq\,$" + str(zhigh_euclid), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
-    ax.text(0.02, 0.77, r"$\rm M^* = -22.38$", \
+
+    ax.text(0.02, 0.77, "Assumed LF parameters:", \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
-    ax.text(0.02, 0.71, r"$\rm \phi^*\, [(Mpc/h_{70})^{-3}\, mag^{-1}]$" + "\n" + r"$ = 28.2 \times 10^{-4}$", \
+    ax.text(0.02, 0.71, r"$\rm M^* = $" + r"$\,$" + str(M_star), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
-    ax.text(0.02, 0.60, r"$\rm \alpha = -1.3$", \
+    ax.text(0.02, 0.65, r"$\rm \phi^*\, [Mpc^{-3}\, mag^{-1}]$" + "\n" \
+        + r"$ = $" + r"$\,$" + mr.convert_to_sci_not(phi_star), \
+        verticalalignment='top', horizontalalignment='left', \
+        transform=ax.transAxes, color='k', size=13)
+    ax.text(0.02, 0.56, r"$\rm \alpha = $" + r"$\,$" + str(alpha), \
         verticalalignment='top', horizontalalignment='left', \
         transform=ax.transAxes, color='k', size=13)
 
     # Limits
-    ax.set_xlim(16.0, 28.5)
-    ax.set_ylim(1e-9, 1e7)
+    #ax.set_xlim(16.0, 28.5)
+    #ax.set_ylim(1e-7, 1e6)
 
     # Add twin abs mag axis
     #ax2 = ax.twiny()
@@ -492,7 +581,8 @@ def main():
     # Convert apparent to absolute magnitudes
     #abs_mag_lim_arr = 
 
-    fig.savefig(massive_figures_dir + "num_counts_pears.pdf", dpi=300, bbox_inches='tight')
+    fig.savefig(massive_figures_dir + "predicted_num_counts_wfirst_euclid.pdf", \
+        dpi=300, bbox_inches='tight')
     plt.show()
 
     return None
