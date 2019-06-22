@@ -477,7 +477,7 @@ def main():
     # From GAMA survey: Kelvin et al. 2014, MNRAS
     # ------------ i-band ------------ # 
     M_star_i = -22.28  # mag
-    alpha_i = -0.77
+    alpha_i = 
     phi_star_i = 1.04e-3  # per mag per Mpc^3
 
     # ------------ j-band ------------ # 
@@ -486,22 +486,47 @@ def main():
     phi_star_j = 0.91e-3  # per mag per Mpc^3
 
     # ------------ h-band ------------ # 
+    M_star_j =   # mag
+    alpha_j = 
+    phi_star_j =   # per mag per Mpc^3
 
     # ------------ k-band ------------ # 
+    M_star_j =   # mag
+    alpha_j = 
+    phi_star_j =   # per mag per Mpc^3
 
-    # Now do the integral per magnitude bin
+    # Set up redshift ranges
     zlow_pears = 0.600
     zhigh_pears = 1.235
     print "Running over redshift range for PEARS:", zlow_pears, "to", zhigh_pears 
 
-    zlow_wfirst = 1.67
-    zhigh_wfirst = 3.45
-    print "Running over redshift range for WFIRST:", zlow_wfirst, "to", zhigh_wfirst 
+    # ------------------------ # 
+    zlow_wfirst_J = 1.67
+    zhigh_wfirst_J = 
+    print "Running over redshift range for WFIRST J-band:", zlow_wfirst_J, "to", zhigh_wfirst_J 
 
-    zlow_euclid = 1.45
-    zhigh_euclid = 3.35
-    print "Running over redshift range for Euclid:", zlow_euclid, "to", zhigh_euclid 
+    zlow_wfirst_H = 
+    zhigh_wfirst_H = 
+    print "Running over redshift range for WFIRST H-band:", zlow_wfirst_H, "to", zhigh_wfirst_H
 
+    zlow_wfirst_K = 
+    zhigh_wfirst_K = 3.45
+    print "Running over redshift range for WFIRST K-band:", zlow_wfirst_K, "to", zhigh_wfirst_K
+
+    # ------------------------ #
+    zlow_euclid_J = 1.45
+    zhigh_euclid_J = 
+    print "Running over redshift range for Euclid J-band:", zlow_euclid_J, "to", zhigh_euclid_J 
+
+    zlow_euclid_H = 
+    zhigh_euclid_H = 
+    print "Running over redshift range for Euclid H-band:", zlow_euclid_H, "to", zhigh_euclid_H 
+
+    zlow_euclid_K = 
+    zhigh_euclid_K = 3.35
+    print "Running over redshift range for Euclid K-band:", zlow_euclid_K, "to", zhigh_euclid_K 
+
+    # ------------ Now do the integral per magnitude bin ------------ #
     app_mag_lim_arr = np.arange(18.0, 28.5, 0.5)
     print "Running over apparent magnitude limit array:"
     print app_mag_lim_arr
@@ -510,8 +535,14 @@ def main():
     print "----------------------------------------------------------------------------"
 
     total_num_dens_in_z_arr_pears = np.zeros(len(app_mag_lim_arr))
-    total_num_dens_in_z_arr_wfirst = np.zeros(len(app_mag_lim_arr))
-    total_num_dens_in_z_arr_euclid = np.zeros(len(app_mag_lim_arr))
+
+    total_num_dens_in_z_arr_wfirst_J = np.zeros(len(app_mag_lim_arr))
+    total_num_dens_in_z_arr_wfirst_H = np.zeros(len(app_mag_lim_arr))
+    total_num_dens_in_z_arr_wfirst_K = np.zeros(len(app_mag_lim_arr))
+
+    total_num_dens_in_z_arr_euclid_J = np.zeros(len(app_mag_lim_arr))
+    total_num_dens_in_z_arr_euclid_H = np.zeros(len(app_mag_lim_arr))
+    total_num_dens_in_z_arr_euclid_K = np.zeros(len(app_mag_lim_arr))
 
     # ----------------------------- i band for PEARS ----------------------------- #
     # Since the measured PEARS numbers are in i-band
@@ -525,7 +556,8 @@ def main():
 
     for i in range(len(app_mag_lim_arr)):
         app_mag_lim = app_mag_lim_arr[i]
-        total_num_dens_in_z_arr_pears[i] = integrate_num_mag(zlow_pears, zhigh_pears, M_star_i, alpha_i, phi_star_i, app_mag_lim, lf_band, num_counts_band)
+        total_num_dens_in_z_arr_pears[i] = \
+        integrate_num_mag(zlow_pears, zhigh_pears, M_star_i, alpha_i, phi_star_i, app_mag_lim, lf_band, num_counts_band)
 
     print "Cumulative number counts for PEARS:"
     cumulative_num_counts_pears = np.cumsum(total_num_dens_in_z_arr_pears)
@@ -541,34 +573,77 @@ def main():
     pears_num_gal_in_z_range = 790  # within z range AND within 26 mag
     idx26 = np.where(app_mag_lim_arr == 26.0)[0]
     pears_pred_num_out_to_26 = float(cumulative_num_counts_pears[idx26])
-    r = (pears_num_gal_in_z_range / pears_pred_num_out_to_26) * 3600/pears_coverage  # make sure to also take the areal coverage into account
+    r = (pears_num_gal_in_z_range / pears_pred_num_out_to_26) * 3600/pears_coverage
+    # make sure to also take the areal coverage into account
     print "Total PEARS predicted number counts within 0.600 <= z <= 1.235 over 1 sq deg:", pears_pred_num_out_to_26 
     print "Actual to predicted ratio:", r 
 
     # ----------------------------- J, H, and K bands for WFIRST and Euclid ----------------------------- #
     # Read in the two filter curves needed
     # filter in which LF is measured
-    lf_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', \
-        dtype=None, names=['wav', 'trans'])
+    lf_band_J = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
     # filter in which number counts are being predicted
-    num_counts_band = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', \
-        dtype=None, names=['wav', 'trans'])
+    num_counts_band_J = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
+    # filter in which LF is measured
+    lf_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
+    # filter in which number counts are being predicted
+    num_counts_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
+    # filter in which LF is measured
+    lf_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/.txt', dtype=None, names=['wav', 'trans'])
+    # filter in which number counts are being predicted
+    num_counts_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/.txt', dtype=None, names=['wav', 'trans'])
 
     for i in range(len(app_mag_lim_arr)):
         app_mag_lim = app_mag_lim_arr[i]
-        total_num_dens_in_z_arr_wfirst[i] = integrate_num_mag(zlow_wfirst, zhigh_wfirst, M_star_j, alpha_j, phi_star_j, app_mag_lim, lf_band, num_counts_band)
-        total_num_dens_in_z_arr_euclid[i] = integrate_num_mag(zlow_euclid, zhigh_euclid, M_star_j, alpha_j, phi_star_j, app_mag_lim, lf_band, num_counts_band)
+        # ------------ J ------------ #
+        total_num_dens_in_z_arr_wfirst_J[i] = \
+        integrate_num_mag(zlow_wfirst_J, zhigh_wfirst_J, M_star_j, alpha_j, phi_star_j, app_mag_lim, lf_band_J, num_counts_band_J)
+        total_num_dens_in_z_arr_euclid_J[i] = \
+        integrate_num_mag(zlow_euclid_J, zhigh_euclid_J, M_star_j, alpha_j, phi_star_j, app_mag_lim, lf_band_J, num_counts_band_J)
+        # ------------ H ------------ #
+        total_num_dens_in_z_arr_wfirst_H[i] = \
+        integrate_num_mag(zlow_wfirst_H, zhigh_wfirst_H, M_star_h, alpha_h, phi_star_h, app_mag_lim, lf_band_H, num_counts_band_H)
+        total_num_dens_in_z_arr_euclid_H[i] = \
+        integrate_num_mag(zlow_euclid_H, zhigh_euclid_H, M_star_h, alpha_h, phi_star_h, app_mag_lim, lf_band_H, num_counts_band_H)
+        # ------------ K ------------ #
+        total_num_dens_in_z_arr_wfirst_K[i] = \
+        integrate_num_mag(zlow_wfirst_K, zhigh_wfirst_K, M_star_k, alpha_k, phi_star_k, app_mag_lim, lf_band_K, num_counts_band_K)
+        total_num_dens_in_z_arr_euclid_K[i] = \
+        integrate_num_mag(zlow_euclid_K, zhigh_euclid_K, M_star_k, alpha_k, phi_star_k, app_mag_lim, lf_band_K, num_counts_band_K)
 
-    print "Cumulative number counts for WFIRST:"
-    cumulative_num_counts_wfirst = np.cumsum(total_num_dens_in_z_arr_wfirst)
-    cumulative_num_counts_wfirst *= r 
-    print cumulative_num_counts_wfirst
+    # ------------ J ------------ #
+    print "Cumulative number counts for WFIRST J-band:"
+    cumulative_num_counts_wfirst_J = np.cumsum(total_num_dens_in_z_arr_wfirst_J)
+    cumulative_num_counts_wfirst_J *= r 
+    print cumulative_num_counts_wfirst_J
+    # ------------ H ------------ #
+    print "Cumulative number counts for WFIRST H-band:"
+    cumulative_num_counts_wfirst_H = np.cumsum(total_num_dens_in_z_arr_wfirst_H)
+    cumulative_num_counts_wfirst_H *= r 
+    print cumulative_num_counts_wfirst_H
+    # ------------ K ------------ #
+    print "Cumulative number counts for WFIRST K-band:"
+    cumulative_num_counts_wfirst_K = np.cumsum(total_num_dens_in_z_arr_wfirst_K)
+    cumulative_num_counts_wfirst_K *= r 
+    print cumulative_num_counts_wfirst_K
 
-    print "Cumulative number counts for Euclid:"
-    cumulative_num_counts_euclid = np.cumsum(total_num_dens_in_z_arr_euclid)
-    cumulative_num_counts_euclid *= r
-    print cumulative_num_counts_euclid
+    # ------------ J ------------ #
+    print "Cumulative number counts for Euclid J-band:"
+    cumulative_num_counts_euclid_J = np.cumsum(total_num_dens_in_z_arr_euclid_J)
+    cumulative_num_counts_euclid_J *= r
+    print cumulative_num_counts_euclid_J
+    # ------------ H ------------ #
+    print "Cumulative number counts for Euclid H-band:"
+    cumulative_num_counts_euclid_H = np.cumsum(total_num_dens_in_z_arr_euclid_H)
+    cumulative_num_counts_euclid_H *= r
+    print cumulative_num_counts_euclid_H
+    # ------------ K ------------ #
+    print "Cumulative number counts for Euclid K-band:"
+    cumulative_num_counts_euclid_K = np.cumsum(total_num_dens_in_z_arr_euclid_K)
+    cumulative_num_counts_euclid_K *= r
+    print cumulative_num_counts_euclid_K
 
+    # ------------------------------------ 3-panel plot ------------------------------------ #
     # Plot number counts
     fig = plt.figure()
     ax = fig.add_subplot(111)
