@@ -39,8 +39,7 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
 def get_all_arrays_v2():
 
     # Assign SPZ out directory
-    # Old run with fixed covariance len for now
-    spz_outdir = massive_figures_dir + 'cluster_results_covmat_with_fixed_lsflength_June2019/'
+    spz_outdir = massive_figures_dir + 'cluster_results_covmat_3lsfsigma_June2019/'
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
     # Don't use the final catalog for which all 3 redshifts were estimated
@@ -460,6 +459,9 @@ def make_d4000_vs_redshift_plot():
     # Larger tick labels
     ax.set_xticklabels(ax.get_xticks().tolist(), size=12)
     ax.set_yticklabels(ax.get_yticks().tolist(), size=12)
+
+    # Minor ticks
+    ax.minorticks_on()
 
     # save the figure
     fig.savefig(massive_figures_dir + 'd4000_vs_significance_revised.pdf', dpi=300, bbox_inches='tight')
