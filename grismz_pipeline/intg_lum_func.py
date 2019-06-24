@@ -14,6 +14,7 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 home = os.getenv('HOME')
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
@@ -477,7 +478,7 @@ def main():
     # From GAMA survey: Kelvin et al. 2014, MNRAS
     # ------------ i-band ------------ # 
     M_star_i = -22.28  # mag
-    alpha_i = 
+    alpha_i = -0.77
     phi_star_i = 1.04e-3  # per mag per Mpc^3
 
     # ------------ j-band ------------ # 
@@ -486,14 +487,14 @@ def main():
     phi_star_j = 0.91e-3  # per mag per Mpc^3
 
     # ------------ h-band ------------ # 
-    M_star_j =   # mag
-    alpha_j = 
-    phi_star_j =   # per mag per Mpc^3
+    M_star_h = -22.98  # mag
+    alpha_h = -0.80
+    phi_star_h = 0.91e-3  # per mag per Mpc^3
 
     # ------------ k-band ------------ # 
-    M_star_j =   # mag
-    alpha_j = 
-    phi_star_j =   # per mag per Mpc^3
+    M_star_k = -22.55  # mag
+    alpha_k = -0.70
+    phi_star_k = 1.05e-3  # per mag per Mpc^3
 
     # Set up redshift ranges
     zlow_pears = 0.600
@@ -502,27 +503,27 @@ def main():
 
     # ------------------------ # 
     zlow_wfirst_J = 1.67
-    zhigh_wfirst_J = 
+    zhigh_wfirst_J = 2.3
     print "Running over redshift range for WFIRST J-band:", zlow_wfirst_J, "to", zhigh_wfirst_J 
 
-    zlow_wfirst_H = 
-    zhigh_wfirst_H = 
+    zlow_wfirst_H = 2.3
+    zhigh_wfirst_H = 2.9
     print "Running over redshift range for WFIRST H-band:", zlow_wfirst_H, "to", zhigh_wfirst_H
 
-    zlow_wfirst_K = 
+    zlow_wfirst_K = 2.9
     zhigh_wfirst_K = 3.45
     print "Running over redshift range for WFIRST K-band:", zlow_wfirst_K, "to", zhigh_wfirst_K
 
     # ------------------------ #
     zlow_euclid_J = 1.45
-    zhigh_euclid_J = 
+    zhigh_euclid_J = 2.3
     print "Running over redshift range for Euclid J-band:", zlow_euclid_J, "to", zhigh_euclid_J 
 
-    zlow_euclid_H = 
-    zhigh_euclid_H = 
+    zlow_euclid_H = 2.3
+    zhigh_euclid_H = 2.9
     print "Running over redshift range for Euclid H-band:", zlow_euclid_H, "to", zhigh_euclid_H 
 
-    zlow_euclid_K = 
+    zlow_euclid_K = 2.9
     zhigh_euclid_K = 3.35
     print "Running over redshift range for Euclid K-band:", zlow_euclid_K, "to", zhigh_euclid_K 
 
@@ -585,13 +586,20 @@ def main():
     # filter in which number counts are being predicted
     num_counts_band_J = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
     # filter in which LF is measured
-    lf_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
+    lf_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F150w_nircam_throughput.txt', dtype=None, names=['wav', 'trans'])
     # filter in which number counts are being predicted
-    num_counts_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
+    num_counts_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F150w_nircam_throughput.txt', dtype=None, names=['wav', 'trans'])
     # filter in which LF is measured
-    lf_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/.txt', dtype=None, names=['wav', 'trans'])
+    lf_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F182m_nircam_throughput.txt', dtype=None, names=['wav', 'trans'])
     # filter in which number counts are being predicted
-    num_counts_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/.txt', dtype=None, names=['wav', 'trans'])
+    num_counts_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F182m_nircam_throughput.txt', dtype=None, names=['wav', 'trans'])
+
+    # Convert NIRCAM filter wavelength column from microns to angstroms 
+    # The k-correction code assumes filter wavelengths are in angstroms
+    lf_band_H['wav'] = lf_band_H['wav'] * 1e4
+    num_counts_band_H['wav'] = num_counts_band_H['wav'] * 1e4
+    lf_band_K['wav'] = lf_band_K['wav'] * 1e4
+    num_counts_band_K['wav'] = num_counts_band_K['wav'] * 1e4
 
     for i in range(len(app_mag_lim_arr)):
         app_mag_lim = app_mag_lim_arr[i]
@@ -645,47 +653,89 @@ def main():
 
     # ------------------------------------ 3-panel plot ------------------------------------ #
     # Plot number counts
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    fig = plt.figure(figsize=(10, 4))
+    gs = gridspec.GridSpec(10,28)
+    gs.update(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0, hspace=0)
 
-    ax.set_xlabel(r'$\rm m_{AB}$', fontsize=14)
-    ax.set_ylabel(r'$\rm N(<m)\ [deg^{-2}]$', fontsize=14)
+    # Put axes on grid
+    ax1 = fig.add_subplot(gs[:, :8])
+    ax2 = fig.add_subplot(gs[:, 10:18])
+    ax3 = fig.add_subplot(gs[:, 20:])
 
-    ax.scatter(app_mag_lim_arr, cumulative_num_counts_wfirst, marker='o', color='k', s=26, facecolor='None', label="WFIRST")
-    ax.scatter(app_mag_lim_arr, cumulative_num_counts_euclid, marker='^', color='k', s=26, facecolor='None', label="Euclid")
+    # Axes labels
+    ax1.set_xlabel(r'$\rm m^J_{AB}$', fontsize=14)
+    ax2.set_xlabel(r'$\rm m^H_{AB}$', fontsize=14)
+    ax3.set_xlabel(r'$\rm m^K_{AB}$', fontsize=14)
+    ax1.set_ylabel(r'$\rm N(<m)\ [deg^{-2}]$', fontsize=14)
 
-    ax.set_yscale('log')
-    ax.minorticks_on()
+    # Actual plotting
+    ax1.scatter(app_mag_lim_arr, cumulative_num_counts_wfirst_J, marker='o', color='k', s=26, facecolor='None', label="WFIRST")
+    ax1.scatter(app_mag_lim_arr, cumulative_num_counts_euclid_J, marker='^', color='k', s=26, facecolor='None', label="Euclid")
 
-    ax.legend(loc=4, fontsize=13, frameon=False)
+    ax2.scatter(app_mag_lim_arr, cumulative_num_counts_wfirst_H, marker='o', color='k', s=26, facecolor='None', label="WFIRST")
+    ax2.scatter(app_mag_lim_arr, cumulative_num_counts_euclid_H, marker='^', color='k', s=26, facecolor='None', label="Euclid")
 
-    # Text on plot
-    ax.text(0.02, 0.98, "Predicted number counts " + "\n" + \
-        str(zlow_wfirst) + r"$\,\leq z_{\rm WFIRST} \leq\,$" + str(zhigh_wfirst), \
-        verticalalignment='top', horizontalalignment='left', \
-        transform=ax.transAxes, color='k', size=13)
+    ax3.scatter(app_mag_lim_arr, cumulative_num_counts_wfirst_K, marker='o', color='k', s=26, facecolor='None', label="WFIRST")
+    ax3.scatter(app_mag_lim_arr, cumulative_num_counts_euclid_K, marker='^', color='k', s=26, facecolor='None', label="Euclid")
+
+    # Scale, ticks and other stuff
+    # First set up iterables
+    all_axes = [ax1, ax2, ax3]
     
-    ax.text(0.02, 0.87, str(zlow_euclid) + r"$\,\leq z_{\rm Euclid} \leq\,$" + str(zhigh_euclid), \
-        verticalalignment='top', horizontalalignment='left', \
-        transform=ax.transAxes, color='k', size=13)
+    zlow_wfirst_list = [zlow_wfirst_J, zlow_wfirst_H, zlow_wfirst_K]
+    zhigh_wfirst_list = [zhigh_wfirst_J, zhigh_wfirst_H, zhigh_wfirst_K]
 
-    ax.text(0.72, 0.76, "Assumed LF " + "\n" + "parameters:", \
-        verticalalignment='top', horizontalalignment='left', \
-        transform=ax.transAxes, color='k', size=13)
-    ax.text(0.72, 0.65, r"$\rm M^* = $" + r"$\,$" + str(M_star_j), \
-        verticalalignment='top', horizontalalignment='left', \
-        transform=ax.transAxes, color='k', size=13)
-    ax.text(0.72, 0.59, r"$\rm \phi^*\, [Mpc^{-3}\, mag^{-1}]$" + "\n" \
-        + r"$ = $" + r"$\,$" + mr.convert_to_sci_not(phi_star_j), \
-        verticalalignment='top', horizontalalignment='left', \
-        transform=ax.transAxes, color='k', size=13)
-    ax.text(0.72, 0.47, r"$\rm \alpha = $" + r"$\,$" + str(alpha_j), \
-        verticalalignment='top', horizontalalignment='left', \
-        transform=ax.transAxes, color='k', size=13)
+    zlow_euclid_list = [zlow_euclid_J, zlow_euclid_H, zlow_euclid_K]
+    zhigh_euclid_list = [zhigh_euclid_J, zhigh_euclid_H, zhigh_euclid_K]
 
-    # Limits
-    ax.set_xlim(16.0, 28.5)
-    ax.set_ylim(1e-6, 1e6)
+    M_star_list = [M_star_j, M_star_h, M_star_k]
+    phi_star_list = [phi_star_j, phi_star_h, phi_star_k]
+    alpha_list = [alpha_j, alpha_h, alpha_k]
+
+    for u in range(3):
+
+        ax = all_axes[u]
+
+        zlow_wfirst = zlow_wfirst_list[u]
+        zhigh_wfirst = zhigh_wfirst_list[u]
+        zlow_euclid = zlow_euclid_list[u]
+        zhigh_euclid = zhigh_euclid_list[u]
+
+        M_star = M_star_list[u]
+        phi_star = phi_star_list[u]
+        alpha = alpha_list[u]
+
+        ax.set_yscale('log')
+        ax.minorticks_on()
+        ax.legend(loc=4, fontsize=13, frameon=False)
+
+        # Text on plot
+        ax.text(0.02, 0.98, "Predicted number counts " + "\n" + \
+            str(zlow_wfirst) + r"$\,\leq z_{\rm WFIRST} \leq\,$" + str(zhigh_wfirst), \
+            verticalalignment='top', horizontalalignment='left', \
+            transform=ax.transAxes, color='k', size=13)
+    
+        ax.text(0.02, 0.87, str(zlow_euclid) + r"$\,\leq z_{\rm Euclid} \leq\,$" + str(zhigh_euclid), \
+            verticalalignment='top', horizontalalignment='left', \
+            transform=ax.transAxes, color='k', size=13)
+
+        ax.text(0.72, 0.76, "Assumed LF " + "\n" + "parameters:", \
+            verticalalignment='top', horizontalalignment='left', \
+            transform=ax.transAxes, color='k', size=13)
+        ax.text(0.72, 0.65, r"$\rm M^* = $" + r"$\,$" + str(M_star), \
+            verticalalignment='top', horizontalalignment='left', \
+            transform=ax.transAxes, color='k', size=13)
+        ax.text(0.72, 0.59, r"$\rm \phi^*\, [Mpc^{-3}\, mag^{-1}]$" + "\n" \
+            + r"$ = $" + r"$\,$" + mr.convert_to_sci_not(phi_star), \
+            verticalalignment='top', horizontalalignment='left', \
+            transform=ax.transAxes, color='k', size=13)
+        ax.text(0.72, 0.47, r"$\rm \alpha = $" + r"$\,$" + str(alpha), \
+            verticalalignment='top', horizontalalignment='left', \
+            transform=ax.transAxes, color='k', size=13)
+
+        # Limits
+        ax.set_xlim(16.0, 28.5)
+        ax.set_ylim(1e-6, 1e6)
 
     # Add twin abs mag axis
     #ax2 = ax.twiny()
