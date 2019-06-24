@@ -306,7 +306,7 @@ def get_covmat(spec_wav, spec_flux, spec_ferr, lsf_covar_len, silent=True):
     # galaxy_len_fac includes the effect in correlation due to the 
     # galaxy morphology, i.e., for larger galaxies, flux data points 
     # need to be farther apart to be uncorrelated.
-    base_fac = 5
+    base_fac = 0
     # base_fac includes the correlation effect due to the overlap 
     # between flux observed at adjacent spectral elements.
     # i.e., this amount of correlation in hte noise will 

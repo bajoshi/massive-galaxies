@@ -92,7 +92,8 @@ def get_z_errors(zarr, pz, z_minchi2):
 
 def get_arrays_to_plot_v2():
 
-    spz_outdir = massive_galaxies_dir + 'cluster_results/'
+    #spz_outdir = massive_figures_dir + 'cluster_results_covmat_with_fixed_lsflength_June2019/'
+    spz_outdir = massive_figures_dir + 'cluster_results_covmat_3lsfsigma_June2019/'
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
     final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
@@ -883,7 +884,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.1
+    d4000_low = 1.6
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
