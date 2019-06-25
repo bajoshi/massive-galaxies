@@ -10,6 +10,7 @@ from astropy.cosmology import Planck15 as cosmo
 from scipy.interpolate import griddata, interp1d
 from scipy.signal import fftconvolve
 from scipy.integrate import simps
+import scipy.integrate as spint
 
 import time
 
@@ -23,6 +24,34 @@ spz_outdir = "/home/bajoshi/spz_out/"
 #pears_datadir = '/Users/baj/Documents/PEARS/data_spectra_only/'
 
 speed_of_light = 299792458e10  # angsroms per second
+speed_of_light_kms = 299792.458  # km per s
+
+# -------- Define cosmology -------- # 
+H_0 = 69.6
+omega_m0 = 0.286
+omega_r0 = 8.24e-5
+omega_lam0 = 0.714
+
+def proper_distance(H_0, omega_m0, omega_r0, omega_lam0, ae):
+    """
+    This function will integrate 1/(a*a*H)
+    between scale factor at emission to scale factor of 1.0.
+    """
+    p = lambda a: 1/(a*a*H_0*np.sqrt((omega_m0/a**3) + (omega_r0/a**4) + omega_lam0 + ((1 - omega_m0 - omega_r0 - omega_lam0)/a**2)))
+    return spint.quadrature(p, ae, 1.0)
+
+def get_lum_dist(redshift):
+    """
+    Returns luminosity distance in megaparsecs for a given redshift.
+    """
+
+    # Get the luminosity distance to the given redshift
+    # Get proper distance and multiply by (1+z)
+    scale_fac_to_z = 1 / (1+redshift)
+    dp = proper_distance(H0, omega_m0, omega_r0, omega_lam0, scale_fac_to_z)[0]  # returns answer in Mpc/c
+    dl = dp * speed_of_light_kms * (1+redshift)  # dl now in Mpc
+
+    return dl
 
 def get_avg_dlam(lam):
 
@@ -358,7 +387,9 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     # --------------- Redshift model --------------- #
     redshift_factor = 1.0 + z
     model_lam_grid_z = model_lam_grid * redshift_factor
-    model_comp_spec_redshifted = model_comp_spec_lsfconv / redshift_factor
+    dl = get_lum_dist(z)  # in Mpc
+    dl = dl * 3.086e24  # convert Mpc to cm
+    model_comp_spec_redshifted = model_comp_spec_lsfconv / (4 * np.pi * dl * dl * redshift_factor)
 
     # --------------- Do resampling --------------- #
     # Define array to save modified models
