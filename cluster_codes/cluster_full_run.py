@@ -88,7 +88,7 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 28
+    max_cores = 10
 
     for i in range(int(np.ceil(total_final_sample/max_cores))):
 
