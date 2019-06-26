@@ -111,7 +111,7 @@ def main():
             p.start()
             print "Current process ID:", p.pid
         for p in processes:
-            p.join(timeout=None)
+            p.join()
 
         print "Finished with the following galaxies:"
         print final_sample['pearsid'][jmin:jmax], final_sample['field'][jmin:jmax]
