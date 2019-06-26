@@ -10,18 +10,18 @@ import os
 import time
 import datetime as dt
 
-figs_data_dir = "/home/bajoshi/models_and_photometry/"
-cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
-spz_outdir = "/home/bajoshi/spz_out/"
-lsfdir = "/home/bajoshi/pears_lsfs/"
+#figs_data_dir = "/home/bajoshi/models_and_photometry/"
+#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+#spz_outdir = "/home/bajoshi/spz_out/"
+#lsfdir = "/home/bajoshi/pears_lsfs/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-#figs_data_dir = '/Users/baj/Desktop/FIGS/'
-#cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
-#spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
-#lsfdir = '/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/'
+figs_data_dir = '/Users/baj/Desktop/FIGS/'
+cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
+lsfdir = '/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
