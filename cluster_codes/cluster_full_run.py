@@ -9,16 +9,16 @@ import sys
 import time
 import datetime
 
-#figs_data_dir = "/home/bajoshi/models_and_photometry/"
-#threedhst_datadir = figs_data_dir
-#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+figs_data_dir = "/home/bajoshi/models_and_photometry/"
+threedhst_datadir = figs_data_dir
+cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-figs_data_dir = '/Users/baj/Desktop/FIGS/'
-threedhst_datadir = '/Users/baj/Desktop/3dhst_data/'
-cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+#figs_data_dir = '/Users/baj/Desktop/FIGS/'
+#threedhst_datadir = '/Users/baj/Desktop/3dhst_data/'
+#cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
 
 sys.path.append(cluster_spz_scripts)
 from cluster_get_all_redshifts import get_all_redshifts_v2
@@ -88,7 +88,7 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 2
+    max_cores = 28
 
     for i in range(int(np.ceil(total_final_sample/max_cores))):
 
@@ -116,7 +116,7 @@ def main():
         print "Finished with the following galaxies:"
         print final_sample['pearsid'][jmin:jmax], final_sample['field'][jmin:jmax]
 
-        sys.exit(0)  # Only when testing on firstlight
+        #sys.exit(0)  # Only when testing on firstlight
 
     print "Done with all galaxies. Exiting."
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -N 1                         # number of computing nodes 
-#SBATCH -n 10                        # number of cores
+#SBATCH -n 28                        # number of cores
 #SBATCH --time=02-00:00:00           # Max time for task. Format is DD-HH:MM:SS
 #SBATCH -o slurm.spz.%j.out          # STDOUT (%j = JobId)
 #SBATCH -e slurm.spz.%j.err          # STDERR (%j = JobId)
