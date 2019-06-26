@@ -398,17 +398,17 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     ### Zeroth element
     lam_step = resampling_lam_grid[1] - resampling_lam_grid[0]
     idx = np.where((model_lam_grid_z >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_z < resampling_lam_grid[0] + lam_step))[0]
-    model_comp_spec_modified[:, 0] = np.sum(model_comp_spec_redshifted[:, idx], axis=1)
+    model_comp_spec_modified[:, 0] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
 
     ### all elements in between
     for i in range(1, resampling_lam_grid_length - 1):
         idx = np.where((model_lam_grid_z >= resampling_lam_grid[i-1]) & (model_lam_grid_z < resampling_lam_grid[i+1]))[0]
-        model_comp_spec_modified[:, i] = np.sum(model_comp_spec_redshifted[:, idx], axis=1)
+        model_comp_spec_modified[:, i] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
 
     ### Last element
     lam_step = resampling_lam_grid[-1] - resampling_lam_grid[-2]
     idx = np.where((model_lam_grid_z >= resampling_lam_grid[-1] - lam_step) & (model_lam_grid_z < resampling_lam_grid[-1] + lam_step))[0]
-    model_comp_spec_modified[:, -1] = np.sum(model_comp_spec_redshifted[:, idx], axis=1)
+    model_comp_spec_modified[:, -1] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
 
     # Do a quick check to confirm that flux is conserved
     check_conserve_flux = True
@@ -420,8 +420,8 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
 
         print "Integrating high-res model over [Angstroms]:", 
         print model_lam_grid_z[highres_x0], model_lam_grid_z[highres_xn]
-        highres_y = model_comp_spec_redshifted[highres_x0:highres_xn+1]
-        highres_x = model_lam_grid_z[:, highres_x0:highres_xn+1]
+        highres_y = model_comp_spec_redshifted[:, highres_x0:highres_xn+1]
+        highres_x = model_lam_grid_z[highres_x0:highres_xn+1]
         print "High-resolution integral result [erg/s/cm2]:", simps(y=highres_y, x=highres_x, axis=1)
 
         # ----------- Check for resampled model
