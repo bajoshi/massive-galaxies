@@ -27,17 +27,17 @@ speed_of_light = 299792458e10  # angsroms per second
 speed_of_light_kms = 299792.458  # km per s
 
 # -------- Define cosmology -------- # 
-H_0 = 69.6
+H0 = 69.6
 omega_m0 = 0.286
 omega_r0 = 8.24e-5
 omega_lam0 = 0.714
 
-def proper_distance(H_0, omega_m0, omega_r0, omega_lam0, ae):
+def proper_distance(H0, omega_m0, omega_r0, omega_lam0, ae):
     """
     This function will integrate 1/(a*a*H)
     between scale factor at emission to scale factor of 1.0.
     """
-    p = lambda a: 1/(a*a*H_0*np.sqrt((omega_m0/a**3) + (omega_r0/a**4) + omega_lam0 + ((1 - omega_m0 - omega_r0 - omega_lam0)/a**2)))
+    p = lambda a: 1/(a*a*H0*np.sqrt((omega_m0/a**3) + (omega_r0/a**4) + omega_lam0 + ((1 - omega_m0 - omega_r0 - omega_lam0)/a**2)))
     return spint.quadrature(p, ae, 1.0)
 
 def get_lum_dist(redshift):
