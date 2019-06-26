@@ -116,6 +116,8 @@ def main():
         print "Finished with the following galaxies:"
         print final_sample['pearsid'][jmin:jmax], final_sample['field'][jmin:jmax]
 
+        sys.exit(0)  # Only when testing on firstlight
+
     print "Done with all galaxies. Exiting."
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
 

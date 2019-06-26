@@ -421,13 +421,13 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
         print "Integrating high-res model over [Angstroms]:", 
         print model_lam_grid_z[highres_x0], model_lam_grid_z[highres_xn]
         highres_y = model_comp_spec_redshifted[highres_x0:highres_xn+1]
-        highres_x = model_lam_grid_z[highres_x0:highres_xn+1]
-        print "High-resolution integral result [erg/s/cm2]:", simps(y=highres_y, x=highres_x)
+        highres_x = model_lam_grid_z[:, highres_x0:highres_xn+1]
+        print "High-resolution integral result [erg/s/cm2]:", simps(y=highres_y, x=highres_x, axis=1)
 
         # ----------- Check for resampled model
         print "Integrating low-res model over [Angstroms]:", 
         print resampling_lam_grid[0], resampling_lam_grid[-1]
-        print "Low-resolution integral result [erg/s/cm2]:", simps(y=model_comp_spec_modified, x=resampling_lam_grid)
+        print "Low-resolution integral result [erg/s/cm2]:", simps(y=model_comp_spec_modified, x=resampling_lam_grid, axis=1)
 
     return model_comp_spec_modified
 
