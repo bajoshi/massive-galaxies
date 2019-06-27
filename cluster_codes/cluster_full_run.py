@@ -88,7 +88,7 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 28
+    max_cores = 25
 
     for i in range(int(np.ceil(total_final_sample/max_cores))):
 
@@ -112,6 +112,29 @@ def main():
             print "Current process ID:", p.pid
         for p in processes:
             p.join()
+
+        """
+        # Check that it actually did the fitting and saved the results
+        all_batch_ids = final_sample['pearsid'][jmin:jmax]
+        for w in range(len(all_batch_ids)):
+
+            current_id_notdone = all_batch_ids[w]
+            current_field_notdone = final_sample['field'][jmin:jmax][w]
+
+            current_ra_notdone = final_sample['ra'][jmin:jmax][w]
+            current_dec_notdone = final_sample['dec'][jmin:jmax][w]
+            current_zspec_notdone = final_sample['zspec'][jmin:jmax][w]
+
+            results_filename = spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt'
+            if not os.path.isfile(results_filename):
+                get_all_redshifts_v2(current_id_notdone, \
+                    current_field_notdone, current_ra_notdone, current_dec_notdone, 
+                    current_zspec_notdone, goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
+                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+                    model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
+                    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
+                    bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
+        """
 
         print "Finished with the following galaxies:"
         print final_sample['pearsid'][jmin:jmax], final_sample['field'][jmin:jmax]
