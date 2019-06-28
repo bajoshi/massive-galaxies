@@ -153,8 +153,8 @@ def do_goods_layout(goods_fitsfile, fieldname):
     lat.set_ticks_visible(True)
     lat.set_ticklabel_visible(True)
     
-    lon.set_axislabel('')
-    lat.set_axislabel('')
+    lon.set_axislabel('Right Ascension (J2000)', size=15)
+    lat.set_axislabel('Declination (J2000)', size=15)
 
     lon.set_ticklabel_position('all')
     lat.set_ticklabel_position('all')
@@ -299,12 +299,10 @@ if __name__ == '__main__':
     # read in goods images which will have the pointings overlaid on them
     goodsn = fits.open(figs_dir + 'goodsn_3dhst.v4.0.F606w_orig_sci.fits')
     do_goods_layout(goodsn, 'n')
+    goodsn.close()
 
     goodss = fits.open(figs_dir + 'goodss_3dhst.v4.0.F606w_orig_sci.fits')
     do_goods_layout(goodss, 's')
-
-    # Close files
-    goodsn.close()
     goodss.close()
 
     sys.exit(0)
