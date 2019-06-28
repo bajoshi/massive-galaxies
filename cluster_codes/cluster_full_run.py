@@ -88,8 +88,55 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 25
+    max_cores = 4
 
+    """
+    Use the following code block to run only on the 4 galaxies to be shown in
+    figure 3 of the paper. This should be run with 4 cores on Agave.
+    Make sure to change the number of cores in the bash script as well.
+    The results will be overwritten so make sure to save any old results 
+    that are needed.
+    Set max_cores=4.
+    Comment out the code block to be used for the full sample.
+    """
+
+    # First get the properties of galaxies in Figure 3
+    fig3_id_list = [82267, 48189, 100543, 126769]
+    fig3_field_list = ['GOODS-N', 'GOODS-N', 'GOODS-S', 'GOODS-S']
+    fig3_ra_list = []
+    fig3_dec_list = []
+    fig3_zspec_list = []
+
+    for i in range(len(fig3_id_list)):
+
+        c_id = fig3_id_list[i]
+        c_field = fig3_field_list[i]
+
+        id_idx = np.where((final_sample['pearsid'] == c_id) & (final_sample['field'] == c_field))[0]
+
+        fig3_ra_list.append(final_sample['ra'][id_idx])
+        fig3_dec_list.append(final_sample['dec'][id_idx])
+        fig3_zspec_list.append(final_sample['zspec'][id_idx])
+        
+    # Now run the pipeline for the example galaxies
+    processes = [mp.Process(target=get_all_redshifts_v2, args=(fig3_id_list[u], \
+        fig3_field_list[u], fig3_ra_list[u], fig3_dec_list[u], 
+        fig3_zspec[u]_list, goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
+        vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+        model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
+        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
+        bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for u in range(len(fig3_id_list))]
+
+    # Run all example galaxies
+    for p in processes:
+        p.start()
+        print "Current process ID:", p.pid
+    for p in processes:
+        p.join()
+
+
+    # Code block for full sample
+    """
     for i in range(int(np.ceil(total_final_sample/max_cores))):
 
         jmin = i*max_cores
@@ -113,33 +160,11 @@ def main():
         for p in processes:
             p.join()
 
-        """
-        # Check that it actually did the fitting and saved the results
-        all_batch_ids = final_sample['pearsid'][jmin:jmax]
-        for w in range(len(all_batch_ids)):
-
-            current_id_notdone = all_batch_ids[w]
-            current_field_notdone = final_sample['field'][jmin:jmax][w]
-
-            current_ra_notdone = final_sample['ra'][jmin:jmax][w]
-            current_dec_notdone = final_sample['dec'][jmin:jmax][w]
-            current_zspec_notdone = final_sample['zspec'][jmin:jmax][w]
-
-            results_filename = spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt'
-            if not os.path.isfile(results_filename):
-                get_all_redshifts_v2(current_id_notdone, \
-                    current_field_notdone, current_ra_notdone, current_dec_notdone, 
-                    current_zspec_notdone, goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
-                    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-                    model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
-                    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-                    bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
-        """
-
         print "Finished with the following galaxies:"
         print final_sample['pearsid'][jmin:jmax], final_sample['field'][jmin:jmax]
 
         #sys.exit(0)  # Only when testing on firstlight
+    """
 
     print "Done with all galaxies. Exiting."
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."

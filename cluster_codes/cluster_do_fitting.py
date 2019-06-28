@@ -387,9 +387,10 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     # --------------- Redshift model --------------- #
     redshift_factor = 1.0 + z
     model_lam_grid_z = model_lam_grid * redshift_factor
-    dl = get_lum_dist(z)  # in Mpc
-    dl = dl * 3.086e24  # convert Mpc to cm
-    model_comp_spec_redshifted = model_comp_spec_lsfconv / (4 * np.pi * dl * dl * redshift_factor)
+    #dl = get_lum_dist(z)  # in Mpc
+    #dl = dl * 3.086e24  # convert Mpc to cm
+    #model_comp_spec_redshifted = model_comp_spec_lsfconv / (4 * np.pi * dl * dl * redshift_factor)
+    model_comp_spec_redshifted = model_comp_spec_lsfconv / redshift_factor
 
     # --------------- Do resampling --------------- #
     # Define array to save modified models
