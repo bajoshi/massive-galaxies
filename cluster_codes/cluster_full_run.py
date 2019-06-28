@@ -121,7 +121,7 @@ def main():
     # Now run the pipeline for the example galaxies
     processes = [mp.Process(target=get_all_redshifts_v2, args=(fig3_id_list[u], \
         fig3_field_list[u], fig3_ra_list[u], fig3_dec_list[u], 
-        fig3_zspec[u]_list, goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
+        fig3_zspec_list[u], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
