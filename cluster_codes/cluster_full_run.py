@@ -88,7 +88,7 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 4
+    max_cores = 25
 
     """
     Use the following code block to run only on the 4 galaxies to be shown in
@@ -96,7 +96,7 @@ def main():
     Make sure to change the number of cores in the bash script as well.
     The results will be overwritten so make sure to save any old results 
     that are needed.
-    Set max_cores=4.
+    Don't need to change max cores at all.
     Comment out the code block to be used for the full sample.
     """
 
@@ -126,6 +126,8 @@ def main():
         model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
         bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for u in range(len(fig3_id_list))]
+
+    print processes
 
     # Run all example galaxies
     for p in processes:
