@@ -566,8 +566,8 @@ def main():
     # ------------------------------- Give galaxy data here ------------------------------- #
     # Only needs the ID and the field
     # And flag to modify LSF
-    current_id = 48189
-    current_field = 'GOODS-N'
+    current_id = 126769
+    current_field = 'GOODS-S'
     modify_lsf = True
 
     # ------------------------------- Get correct directories ------------------------------- #
