@@ -27,10 +27,11 @@ speed_of_light = 299792458e10  # angsroms per second
 speed_of_light_kms = 299792.458  # km per s
 
 # -------- Define cosmology -------- # 
-H0 = 69.6  # km/s/Mpc
-omega_m0 = 0.286
+# Planck 2018
+H0 = 67.4  # km/s/Mpc
+omega_m0 = 0.315
 omega_r0 = 8.24e-5
-omega_lam0 = 0.714
+omega_lam0 = 1.0 - omega_m0
 
 def proper_distance(H0, omega_m0, omega_r0, omega_lam0, ae):
     """
