@@ -884,7 +884,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.6
+    d4000_low = 1.1
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
@@ -920,13 +920,20 @@ def main():
 
     # Estimate accurate fraction for paper
     # This is only to be done for the full D4000 range
-    do_frac = False
+    do_frac = True
     if do_frac:
+        print "Based on SPZ:"
         two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
         print len(two_percent_idx), len(resid_zspz)
         f_acc = len(two_percent_idx) / len(resid_zspz)
-        print len(two_percent_idx), "out of", len(resid_zspz), "galaxies have redshift accuracy at 2% or better."
-        print "Therefore, fraction of SPZ redshift galaxies with accuracy at 2% or better:", f_acc
+        print len(two_percent_idx), "out of", len(resid_zspz), "galaxies have SPZ accuracy at 2% or better."
+        print "Therefore, fraction of SPZ galaxies with accuracy at 2% or better:", f_acc
+
+        print "Based only on grism-z:"
+        tp_idx_grism = np.where(abs(resid_zg) <= 0.02)[0]
+        f_acc_g = len(tp_idx_grism) / len(resid_zg)
+        print len(tp_idx_grism), "out of", len(resid_zg), "galaxies have grism-z accuracy at 2% or better."
+        print "Therefore, fraction of grism-z galaxies with accuracy at 2% or better:", f_acc_g
         sys.exit()
 
     # Make sure they are finite

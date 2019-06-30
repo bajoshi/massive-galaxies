@@ -625,7 +625,7 @@ def main():
 
     # define other fractions and multiply cumulative sums by them
     f_d4000 = 0.72
-    f_acc = 0.575
+    f_acc = 0.36
 
     # ------------ J ------------ #
     print "Cumulative number counts for WFIRST J-band out to 24 mag:"
