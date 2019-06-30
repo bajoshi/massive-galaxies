@@ -476,25 +476,28 @@ def main():
     # Define the luminosity function
     # This is assumed independent of the redshift range i.e, no LF evolution
     # From GAMA survey: Kelvin et al. 2014, MNRAS
+    # Although I say J, H, K here, these really are Y, J, and H.
+    # I took YJH LF params from the KElvin paper.
+    # From Table 5, LF for ellipticals.
     # ------------ i-band ------------ # 
     M_star_i = -22.28  # mag
     alpha_i = -0.77
     phi_star_i = 1.04e-3  # per mag per Mpc^3
 
-    # ------------ j-band ------------ # 
-    M_star_j = -22.73  # mag
-    alpha_j = -0.77
-    phi_star_j = 0.91e-3  # per mag per Mpc^3
+    # ------------ denoted j-band but this is Y from Kelvin2014 ------------ # 
+    M_star_j = -22.27  # mag
+    alpha_j = -0.82
+    phi_star_j = 0.86e-3  # per mag per Mpc^3
 
-    # ------------ h-band ------------ # 
-    M_star_h = -22.98  # mag
-    alpha_h = -0.80
+    # ------------ denoted h-band but this is J from Kelvin2014------------ # 
+    M_star_h = -22.73  # mag
+    alpha_h = -0.77
     phi_star_h = 0.91e-3  # per mag per Mpc^3
 
-    # ------------ k-band ------------ # 
-    M_star_k = -22.55  # mag
-    alpha_k = -0.70
-    phi_star_k = 1.05e-3  # per mag per Mpc^3
+    # ------------ denoted k-band but this is H from Kelvin2014 ------------ # 
+    M_star_k = -22.98  # mag
+    alpha_k = -0.80
+    phi_star_k = 0.91e-3  # per mag per Mpc^3
 
     # Set up redshift ranges
     zlow_pears = 0.600
@@ -582,24 +585,22 @@ def main():
     # ----------------------------- J, H, and K bands for WFIRST and Euclid ----------------------------- #
     # Read in the two filter curves needed
     # filter in which LF is measured
-    lf_band_J = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
+    lf_band_J = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/UKIRT_UKIDSS.Y.dat', dtype=None, names=['wav', 'trans'])
     # filter in which number counts are being predicted
-    num_counts_band_J = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f110w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
-    # filter in which LF is measured
-    lf_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F150w_nircam_throughput.txt', dtype=None, names=['wav', 'trans'])
-    # filter in which number counts are being predicted
-    num_counts_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F150w_nircam_throughput.txt', dtype=None, names=['wav', 'trans'])
-    # filter in which LF is measured
-    lf_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F182m_nircam_throughput.txt', dtype=None, names=['wav', 'trans'])
-    # filter in which number counts are being predicted
-    num_counts_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F182m_nircam_throughput.txt', dtype=None, names=['wav', 'trans'])
+    num_counts_band_J = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/F105W_IR_throughput.csv', delimiter=',', \
+        usecols=(1,2), dtype=[np.float, np.float], names=['wav', 'trans'], skip_header=1)
 
-    # Convert NIRCAM filter wavelength column from microns to angstroms 
+    lf_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/UKIRT_UKIDSS.J.dat', dtype=None, names=['wav', 'trans'])
+    num_counts_band_H = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
+
+    lf_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/UKIRT_UKIDSS.H.dat', dtype=None, names=['wav', 'trans'])
+    num_counts_band_K = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', dtype=None, names=['wav', 'trans'])
+
+    # Convert LF band wavelengths from microns to angstroms
     # The k-correction code assumes filter wavelengths are in angstroms
-    lf_band_H['wav'] = lf_band_H['wav'] * 1e4
-    num_counts_band_H['wav'] = num_counts_band_H['wav'] * 1e4
-    lf_band_K['wav'] = lf_band_K['wav'] * 1e4
-    num_counts_band_K['wav'] = num_counts_band_K['wav'] * 1e4
+    #lf_band_J['wav'] = lf_band_J['wav'] * 1e4
+    #lf_band_H['wav'] = lf_band_H['wav'] * 1e4
+    #lf_band_K['wav'] = lf_band_K['wav'] * 1e4
 
     for i in range(len(app_mag_lim_arr)):
         app_mag_lim = app_mag_lim_arr[i]
@@ -619,37 +620,44 @@ def main():
         total_num_dens_in_z_arr_euclid_K[i] = \
         integrate_num_mag(zlow_euclid_K, zhigh_euclid_K, M_star_k, alpha_k, phi_star_k, app_mag_lim, lf_band_K, num_counts_band_K)
 
-    # ------------ J ------------ #
-    print "Cumulative number counts for WFIRST J-band:"
-    cumulative_num_counts_wfirst_J = np.cumsum(total_num_dens_in_z_arr_wfirst_J)
-    cumulative_num_counts_wfirst_J *= r 
-    print cumulative_num_counts_wfirst_J
-    # ------------ H ------------ #
-    print "Cumulative number counts for WFIRST H-band:"
-    cumulative_num_counts_wfirst_H = np.cumsum(total_num_dens_in_z_arr_wfirst_H)
-    cumulative_num_counts_wfirst_H *= r 
-    print cumulative_num_counts_wfirst_H
-    # ------------ K ------------ #
-    print "Cumulative number counts for WFIRST K-band:"
-    cumulative_num_counts_wfirst_K = np.cumsum(total_num_dens_in_z_arr_wfirst_K)
-    cumulative_num_counts_wfirst_K *= r 
-    print cumulative_num_counts_wfirst_K
+    # Get index for app mag = 24.0
+    appmag24_idx = np.where(app_mag_lim_arr == 24.0)[0]
+
+    # define other fractions and multiply cumulative sums by them
+    f_d4000 = 0.72
+    f_acc = 0.575
 
     # ------------ J ------------ #
-    print "Cumulative number counts for Euclid J-band:"
-    cumulative_num_counts_euclid_J = np.cumsum(total_num_dens_in_z_arr_euclid_J)
-    cumulative_num_counts_euclid_J *= r
-    print cumulative_num_counts_euclid_J
+    print "Cumulative number counts for WFIRST J-band out to 24 mag:"
+    cumulative_num_counts_wfirst_J = np.cumsum(total_num_dens_in_z_arr_wfirst_J)
+    cumulative_num_counts_wfirst_J = cumulative_num_counts_wfirst_J * r * f_d4000 * f_acc
+    print cumulative_num_counts_wfirst_J[appmag24_idx]
     # ------------ H ------------ #
-    print "Cumulative number counts for Euclid H-band:"
-    cumulative_num_counts_euclid_H = np.cumsum(total_num_dens_in_z_arr_euclid_H)
-    cumulative_num_counts_euclid_H *= r
-    print cumulative_num_counts_euclid_H
+    print "Cumulative number counts for WFIRST H-band out to 24 mag:"
+    cumulative_num_counts_wfirst_H = np.cumsum(total_num_dens_in_z_arr_wfirst_H)
+    cumulative_num_counts_wfirst_H = cumulative_num_counts_wfirst_H * r * f_d4000 * f_acc
+    print cumulative_num_counts_wfirst_H[appmag24_idx]
     # ------------ K ------------ #
-    print "Cumulative number counts for Euclid K-band:"
+    print "Cumulative number counts for WFIRST K-band out to 24 mag:"
+    cumulative_num_counts_wfirst_K = np.cumsum(total_num_dens_in_z_arr_wfirst_K)
+    cumulative_num_counts_wfirst_K = cumulative_num_counts_wfirst_K * r * f_d4000 * f_acc
+    print cumulative_num_counts_wfirst_K[appmag24_idx]
+
+    # ------------ J ------------ #
+    print "Cumulative number counts for Euclid J-band out to 24 mag:"
+    cumulative_num_counts_euclid_J = np.cumsum(total_num_dens_in_z_arr_euclid_J)
+    cumulative_num_counts_euclid_J = cumulative_num_counts_euclid_J * r * f_d4000 * f_acc
+    print cumulative_num_counts_euclid_J[appmag24_idx]
+    # ------------ H ------------ #
+    print "Cumulative number counts for Euclid H-band out to 24 mag:"
+    cumulative_num_counts_euclid_H = np.cumsum(total_num_dens_in_z_arr_euclid_H)
+    cumulative_num_counts_euclid_H = cumulative_num_counts_euclid_H * r * f_d4000 * f_acc
+    print cumulative_num_counts_euclid_H[appmag24_idx]
+    # ------------ K ------------ #
+    print "Cumulative number counts for Euclid K-band out to 24 mag:"
     cumulative_num_counts_euclid_K = np.cumsum(total_num_dens_in_z_arr_euclid_K)
-    cumulative_num_counts_euclid_K *= r
-    print cumulative_num_counts_euclid_K
+    cumulative_num_counts_euclid_K = cumulative_num_counts_euclid_K * r * f_d4000 * f_acc
+    print cumulative_num_counts_euclid_K[appmag24_idx]
 
     # ------------------------------------ 3-panel plot ------------------------------------ #
     # Plot number counts
@@ -663,9 +671,9 @@ def main():
     ax3 = fig.add_subplot(gs[:, 20:])
 
     # Axes labels
-    ax1.set_xlabel(r'$\rm m^J_{AB}$', fontsize=14)
-    ax2.set_xlabel(r'$\rm m^H_{AB}$', fontsize=14)
-    ax3.set_xlabel(r'$\rm m^K_{AB}$', fontsize=14)
+    ax1.set_xlabel(r'$\rm m^{F105W}_{AB}$', fontsize=14)
+    ax2.set_xlabel(r'$\rm m^{F125W}_{AB}$', fontsize=14)
+    ax3.set_xlabel(r'$\rm m^{F160W}_{AB}$', fontsize=14)
     ax1.set_ylabel(r'$\rm N(<m)\ [deg^{-2}]$', fontsize=14)
 
     # Actual plotting
@@ -706,36 +714,36 @@ def main():
         alpha = alpha_list[u]
 
         ax.set_yscale('log')
-        ax.minorticks_on()
-        ax.legend(loc=4, fontsize=13, frameon=False)
+        #ax.minorticks_on()
+        ax.legend(loc=4, fontsize=13, frameon=False, handletextpad=-0.2)
 
         # Text on plot
         ax.text(0.02, 0.98, "Predicted number counts " + "\n" + \
             str(zlow_wfirst) + r"$\,\leq z_{\rm WFIRST} \leq\,$" + str(zhigh_wfirst), \
             verticalalignment='top', horizontalalignment='left', \
-            transform=ax.transAxes, color='k', size=13)
+            transform=ax.transAxes, color='k', size=12)
     
         ax.text(0.02, 0.87, str(zlow_euclid) + r"$\,\leq z_{\rm Euclid} \leq\,$" + str(zhigh_euclid), \
             verticalalignment='top', horizontalalignment='left', \
-            transform=ax.transAxes, color='k', size=13)
+            transform=ax.transAxes, color='k', size=12)
 
-        ax.text(0.72, 0.76, "Assumed LF " + "\n" + "parameters:", \
+        ax.text(0.52, 0.6, r"$\rm M^* = $" + r"$\,$" + str(M_star), \
             verticalalignment='top', horizontalalignment='left', \
-            transform=ax.transAxes, color='k', size=13)
-        ax.text(0.72, 0.65, r"$\rm M^* = $" + r"$\,$" + str(M_star), \
-            verticalalignment='top', horizontalalignment='left', \
-            transform=ax.transAxes, color='k', size=13)
-        ax.text(0.72, 0.59, r"$\rm \phi^*\, [Mpc^{-3}\, mag^{-1}]$" + "\n" \
+            transform=ax.transAxes, color='k', size=12)
+        ax.text(0.52, 0.54, r"$\rm \phi^*\, [Mpc^{-3}\, mag^{-1}]$" + "\n" \
             + r"$ = $" + r"$\,$" + mr.convert_to_sci_not(phi_star), \
             verticalalignment='top', horizontalalignment='left', \
-            transform=ax.transAxes, color='k', size=13)
-        ax.text(0.72, 0.47, r"$\rm \alpha = $" + r"$\,$" + str(alpha), \
+            transform=ax.transAxes, color='k', size=12)
+        ax.text(0.52, 0.42, r"$\rm \alpha = $" + r"$\,$" + str(alpha), \
             verticalalignment='top', horizontalalignment='left', \
-            transform=ax.transAxes, color='k', size=13)
+            transform=ax.transAxes, color='k', size=12)
 
         # Limits
         ax.set_xlim(16.0, 28.5)
         ax.set_ylim(1e-6, 1e6)
+
+        # Ticks at every 0.5
+        ax.xaxis.set_ticks(np.arange(16.0, 29.0, 0.5))
 
     # Add twin abs mag axis
     #ax2 = ax.twiny()
@@ -745,7 +753,7 @@ def main():
 
     fig.savefig(massive_figures_dir + "predicted_num_counts_wfirst_euclid.pdf", \
         dpi=300, bbox_inches='tight')
-    plt.show()
+    #plt.show()
 
     return None
 

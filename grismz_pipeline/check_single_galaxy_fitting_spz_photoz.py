@@ -566,7 +566,7 @@ def main():
     # ------------------------------- Give galaxy data here ------------------------------- #
     # Only needs the ID and the field
     # And flag to modify LSF
-    current_id = 28271
+    current_id = 48189
     current_field = 'GOODS-N'
     modify_lsf = True
 
@@ -843,6 +843,53 @@ def main():
     phot_errors_arr = phot_errors_arr[phot_fin_idx]
     phot_lam = phot_lam[phot_fin_idx]
 
+    # ------------------------------ Read in results from Agave ------------------------------ #
+    fitting_results_dir = home + '/Documents/Papers/spz_paper/example_fits_data/'
+
+    results_filename = fitting_results_dir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt'
+    res = np.genfromtxt(results_filename, dtype=None, names=True, skip_header=1)
+
+    # Get all results from the file
+    # ----------- Photometric redshift ----------- #
+    zp_minchi2 = float(res['zp_minchi2'])
+    zp = float(res['zp'])
+    zp_zerr_low = float(res['zp_zerr_low'])
+    zp_zerr_up = float(res['zp_zerr_up'])
+    zp_min_chi2 = float(res['zp_min_chi2'])
+    zp_bestalpha = float(res['zp_bestalpha'])
+    zp_model_idx = int(res['zp_model_idx'])
+    zp_age = float(res['zp_age'])
+    zp_tau = float(res['zp_tau'])
+    zp_av = float(res['zp_av'])
+
+    # ----------- SpectroPhotometric redshift ----------- #
+    zspz_minchi2 = float(res['zspz_minchi2'])
+    zspz = float(res['zspz'])
+    zspz_zerr_low = float(res['zspz_zerr_low'])
+    zspz_zerr_up = float(res['zspz_zerr_up'])
+    zspz_min_chi2 = float(res['zspz_min_chi2'])
+    zspz_bestalpha = float(res['zspz_bestalpha'])
+    zspz_model_idx = int(res['zspz_model_idx'])
+    zspz_age = float(res['zspz_age'])
+    zspz_tau = float(res['zspz_tau'])
+    zspz_av = float(res['zspz_av'])
+
+    # ----------- Grism redshift ----------- #
+    zg_minchi2 = float(res['zg_minchi2'])
+    zg = float(res['zg'])
+    zg_zerr_low = float(res['zg_zerr_low'])
+    zg_zerr_up = float(res['zg_zerr_up'])
+    zg_min_chi2 = float(res['zg_min_chi2'])
+    zg_bestalpha = float(res['zg_bestalpha'])
+    zg_model_idx = int(res['zg_model_idx'])
+    zg_age = float(res['zg_age'])
+    zg_tau = float(res['zg_tau'])
+    zg_av = float(res['zg_av'])
+
+    # Leave the following block commented out.
+    # This is what I used previously where it actually does all the 
+    # fitting again before doing the plot.
+    """
     # ------------- Call fitting function for photo-z ------------- #
     print "\n", "Computing Photo-z now."
     
@@ -853,7 +900,6 @@ def main():
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr)
     
     # ------------- Call fitting function for SPZ ------------- #
-    """
     print "\n", "Photo-z done. Moving on to SPZ computation now."
     
     zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
@@ -862,7 +908,6 @@ def main():
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
         use_broadband=True, single_galaxy=False, for_loop_method='parallel')
-    """
     
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
@@ -874,6 +919,7 @@ def main():
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
         use_broadband=False, single_galaxy=False, for_loop_method='parallel')
+    """
 
     # ------------- Get z and errors ------------- #
     # Only works if you've used the full redshift grid i.e., np.arange(0.3, 1.5, 0.01)
@@ -958,17 +1004,17 @@ def main():
     plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines, \
     zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
     current_id, current_field, current_specz, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, \
-    zp_age, zp_tau, zp_av, netsig_chosen, d4000, savedir_photoz)
+    zp_age, zp_tau, zp_av, netsig_chosen, d4000, fitting_results_dir)
 
     plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
     model_lam_grid_withlines, zspz_best_fit_model_fullres, zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_bestalpha, \
     current_id, current_field, current_specz, zp_zerr_low, zp_zerr_up, zp, zspz_zerr_low, zspz_zerr_up, zspz, \
-    zspz_min_chi2, zspz_age, zspz_tau, zspz_av, netsig_chosen, d4000, savedir_spz)
+    zspz_min_chi2, zspz_age, zspz_tau, zspz_av, netsig_chosen, d4000, fitting_results_dir)
 
     plot_grismz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, \
     model_lam_grid_withlines, zg_best_fit_model_fullres, zg_best_fit_model_in_objlamgrid, zg_bestalpha, \
     current_id, current_field, current_specz, zp_zerr_low, zp_zerr_up, zp, zg_zerr_low, zg_zerr_up, zg, \
-    zg_min_chi2, zg_age, zg_tau, zg_av, netsig_chosen, d4000, savedir_grismz)
+    zg_min_chi2, zg_age, zg_tau, zg_av, netsig_chosen, d4000, fitting_results_dir)
 
     # Total time taken
     print "\n", "All done."
