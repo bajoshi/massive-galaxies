@@ -157,7 +157,7 @@ def main():
 
     # Will use as many cores as filters
     processes = [mp.Process(target=compute_filter_flam, args=(all_filters[i], all_filter_names[i], start, \
-        model_comp_spec_withlines, model_lam_grid_withlines, total_models, zrange)) for i in len(all_filters)]
+        model_comp_spec_withlines, model_lam_grid_withlines, total_models, zrange)) for i in range(len(all_filters))]
     for p in processes:
         p.start()
         print "Current process ID:", p.pid
