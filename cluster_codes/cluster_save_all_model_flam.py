@@ -2,10 +2,7 @@ from __future__ import division
 
 import numpy as np
 from numpy import nansum
-import pysynphot
 from scipy.interpolate import griddata
-from astropy.io import fits
-from joblib import Parallel, delayed
 
 import os
 import sys
