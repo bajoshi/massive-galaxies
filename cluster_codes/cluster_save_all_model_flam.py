@@ -43,8 +43,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
             num = nansum(model_comp_spec_z[i] * filt_interp)
             den = nansum(filt_interp)
     
-            filt_flam_model = num / den
-            filt_flam_model[i] = filt_flam_model
+            filt_flam_model[i] = num / den
     
         # transverse array to make shape consistent with others
         # I did it this way so that in the above for loop each filter is looped over only once
