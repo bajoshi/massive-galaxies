@@ -1,3 +1,108 @@
+# coding: utf-8
+""" Help on redshift fitting module. 
+
+__author__ = "Bhavin Joshi"
+
+This is the code to run the redshift pipeline on all of PEARS
+OR 
+on the final sample for the SPZ paper.
+
+Inputs:
+    Needs the user to specify:
+    1. The sample to use. This is the first thing in main()
+    after it prints out the starting time.
+
+    Both of these samples (txt files) will have to be created
+    before this code can run. See procedure section below.
+
+    Needs access to:
+    1. PEARS master catalogs
+    2. PEARS spectra, i.e., wavelength, flux, and error arrays.
+    3. 3D-HST photometry of GOODS
+    4. Filter curves used for the photometry
+    5. Model stuff:
+        5a. BC03 templates (with/without emission lines added). 
+            i.e., Wavelength and flux arrays.
+        5b. Model parameter arrays (saved as .npy files).
+    6. Line spread functions for PEARS galaxies.
+
+Returns:
+    Returns the best fit SPZ and its errors.
+    Also returns the best fit model parameters.
+    Also returns the p(z) curve.
+    Also returns the min chi2 and its alpha value.
+
+Methodology:
+    What this code does, very briefly.
+    For ALL of PEARS -- 
+    Uses a redshift grid from z=0.0 to z=6.0 with a step size of 0.001,
+    i.e., np.arange(0.0, 6.001, 0.001), for fitting a grid of BC03 templates.
+    For SPZ paper -- 
+    Uses a redshift grid from z=0.3 to z=1.5 with a step size of 0.01.
+
+    1. First runs cluster_save_all_model_flam.py to compute and save photometry
+    for the templates. Makes sure that the redshift grid is consistent.
+
+    2. It will read in all required info.
+    Templates, model params, photometry, and lsfs.
+
+    3. Starts fitting:
+        For each galaxy -- 
+        3a. Begin with convolving the models with the LSF.
+        3b. Now for each redshift -- redshift and resample 
+        the model and get a chi2 and alpha value for each
+        model.
+        3c. Find the best fit model by using the min chi2 
+        while making sure that the age of the best fit 
+        model is consistent with the age of the Universe 
+        at that best fit z.
+
+Procedure to run this code:
+
+    1. Generate the txt file that contains the sample.
+
+    For SPZ paper:
+    >> python get_spz_galaxies_zrange.py
+
+    For full PEARS:
+    >> python create_full_pears_sample_file.py
+
+    Both codes in $HOME/Desktop/FIGS/massive-galaxies/grismz_pipeline/ folder.
+
+    2. 
+    **** 
+
+    ONLY RUN THE NEXT TWO STEPS ON AGAVE! 
+    This code is computationally very expensive.
+    This code assumes that you will run it on Agave.
+    
+    ****
+
+    You should only need to run the bash script on Agave.
+    For both steps, make sure that the cores and execution 
+    time are set correctly in the bash script.
+
+    Step 1.
+    After logging in to Agave:
+    >> interactive
+    >> sbatch run_model_flam.sh  # to get model photometry  # has to be done first
+    Needs >12 cores, tested with 14. 
+
+    Step 2.
+    After step 1 finishes (takes a long time ~days).
+
+    Again log into Agave:
+    >> interactive
+    >> sbatch run_full_pears_spz.sh  # to run code on the selected sample
+    Needs a LOT of cores, tested with 25. 
+    Will update it to be able to run with even more.
+
+    Check the number of cores in both scripts. It should be less than 28
+    to make sure it runs on a single compute node.
+    The bash script should know what to do after that.
+    
+"""
+
 from __future__ import division
 
 import numpy as np
