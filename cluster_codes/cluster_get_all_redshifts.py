@@ -29,7 +29,8 @@ import cluster_do_fitting as cf
 def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, current_specz,\
     goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
     model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start, \
-    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr):
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+    get_grismz):
 
     print "\n", "Working on:", current_field, current_id, "at", current_specz
 
@@ -277,14 +278,15 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
-    print "\n", "SPZ done. Moving on to grism-z computation now."
-        
-    zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
-    cf.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, covmat, \
-        lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
-        model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
-        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-        use_broadband=False, single_galaxy=False, for_loop_method='sequential')
+    if get_grismz:
+        print "\n", "SPZ done. Moving on to grism-z computation now."
+            
+        zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
+        cf.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, covmat, \
+            lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
+            model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
+            log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+            use_broadband=False, single_galaxy=False, for_loop_method='sequential')
 
     print "All redshifts computed for:", current_field, current_id, "    Will save results now."
 
@@ -306,18 +308,31 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         ra_to_write = "{:.7f}".format(current_ra)
         dec_to_write = "{:.6f}".format(current_dec)
         zspec_to_write = "{:.3f}".format(current_specz)
+
         str_to_write1 = str(current_id) + "  " + current_field + "  " + ra_to_write + "  " + dec_to_write + "  " + zspec_to_write + "  "
-        str_to_write2 = "{:.2f}".format(zp_minchi2) + "  " + "{:.2f}".format(zspz_minchi2) + "  " + "{:.2f}".format(zg_minchi2) + "  "
-        str_to_write3 = "{:.2f}".format(zp) + "  " + "{:.2f}".format(zspz) + "  " + "{:.2f}".format(zg) + "  "
-        str_to_write4 = "{:.2f}".format(zp_zerr_low) + "  " + "{:.2f}".format(zp_zerr_up) + "  " + \
-        "{:.2f}".format(zspz_zerr_low) + "  " + "{:.2f}".format(zspz_zerr_up) + "  " + \
-        "{:.2f}".format(zg_zerr_low) + "  " + "{:.2f}".format(zg_zerr_up) + "  "
-        str_to_write5 = "{:.2f}".format(zp_min_chi2) + "  " + "{:.2f}".format(zspz_min_chi2) + "  " + "{:.2f}".format(zg_min_chi2) + "  "
-        str_to_write6 = "{:.2e}".format(zp_bestalpha) + "  " + "{:.2e}".format(zspz_bestalpha) + "  " + "{:.2e}".format(zg_bestalpha) + "  "
-        str_to_write7 = str(int(zp_model_idx)) + "  " + str(int(zspz_model_idx)) + "  " + str(int(zg_model_idx)) + "  "
         str_to_write8 = "{:.2e}".format(zp_age) + "  " + "{:.2e}".format(zp_tau) + "  " + "{:.2f}".format(zp_av) + "  "
         str_to_write9 = "{:.2e}".format(zspz_age) + "  " + "{:.2e}".format(zspz_tau) + "  " + "{:.2f}".format(zspz_av) + "  "
-        str_to_write10 = "{:.2e}".format(zg_age) + "  " + "{:.2e}".format(zg_tau) + "  " + "{:.2f}".format(zg_av) + "  "
+
+        if get_grismz:
+            str_to_write2 = "{:.2f}".format(zp_minchi2) + "  " + "{:.2f}".format(zspz_minchi2) + "  " + "{:.2f}".format(zg_minchi2) + "  "
+            str_to_write3 = "{:.2f}".format(zp) + "  " + "{:.2f}".format(zspz) + "  " + "{:.2f}".format(zg) + "  "
+            str_to_write4 = "{:.2f}".format(zp_zerr_low) + "  " + "{:.2f}".format(zp_zerr_up) + "  " + \
+            "{:.2f}".format(zspz_zerr_low) + "  " + "{:.2f}".format(zspz_zerr_up) + "  " + \
+            "{:.2f}".format(zg_zerr_low) + "  " + "{:.2f}".format(zg_zerr_up) + "  "
+            str_to_write5 = "{:.2f}".format(zp_min_chi2) + "  " + "{:.2f}".format(zspz_min_chi2) + "  " + "{:.2f}".format(zg_min_chi2) + "  "
+            str_to_write6 = "{:.2e}".format(zp_bestalpha) + "  " + "{:.2e}".format(zspz_bestalpha) + "  " + "{:.2e}".format(zg_bestalpha) + "  "
+            str_to_write7 = str(int(zp_model_idx)) + "  " + str(int(zspz_model_idx)) + "  " + str(int(zg_model_idx)) + "  "
+            str_to_write10 = "{:.2e}".format(zg_age) + "  " + "{:.2e}".format(zg_tau) + "  " + "{:.2f}".format(zg_av) + "  "
+        else:
+            str_to_write2 = "{:.2f}".format(zp_minchi2) + "  " + "{:.2f}".format(zspz_minchi2) + "  " + "-99.0" + "  "
+            str_to_write3 = "{:.2f}".format(zp) + "  " + "{:.2f}".format(zspz) + "  " + "-99.0" + "  "
+            str_to_write4 = "{:.2f}".format(zp_zerr_low) + "  " + "{:.2f}".format(zp_zerr_up) + "  " + \
+            "{:.2f}".format(zspz_zerr_low) + "  " + "{:.2f}".format(zspz_zerr_up) + "  " + \
+            "-99.0" + "  " + "-99.0" + "  "
+            str_to_write5 = "{:.2f}".format(zp_min_chi2) + "  " + "{:.2f}".format(zspz_min_chi2) + "  " + "-99.0" + "  "
+            str_to_write6 = "{:.2e}".format(zp_bestalpha) + "  " + "{:.2e}".format(zspz_bestalpha) + "  " + "-99.0" + "  "
+            str_to_write7 = str(int(zp_model_idx)) + "  " + str(int(zspz_model_idx)) + "  " + str(-99.0) + "  "
+            str_to_write10 = "-99.0" + "  " + "-99.0" + "  " + "-99.0" + "  "
 
         # Combine hte above strings and write
         fh.write(str_to_write1 + str_to_write2 + str_to_write3 + str_to_write4 + str_to_write5 + \

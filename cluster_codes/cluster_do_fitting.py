@@ -584,7 +584,9 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
-    z_model_arr = np.arange(0.0, 6.0, 0.005)
+    z_model_arr = np.arange(0.001, 6.001, 0.001) 
+
+    check_model_flam_arr_shape()
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check

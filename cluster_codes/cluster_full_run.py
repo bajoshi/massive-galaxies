@@ -136,7 +136,12 @@ def main():
     print "Starting at --", dt.now()
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
-    final_sample = np.genfromtxt(figs_data_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+    if run_for_full_pears:
+        final_sample = 
+        get_grismz = False
+    else:
+        final_sample = np.genfromtxt(figs_data_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+        get_grismz = True
 
     # ------------------------------ Get models and photometry ------------------------------ #
     # read in entire model set
@@ -204,7 +209,7 @@ def main():
     Don't need to change max cores at all.
     Comment out the code block to be used for the full sample.
     """
-
+    """
     # First get the properties of galaxies in Figure 3
     fig3_id_list = [82267, 48189, 100543, 126769]
     fig3_field_list = ['GOODS-N', 'GOODS-N', 'GOODS-S', 'GOODS-S']
@@ -230,7 +235,7 @@ def main():
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-        bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for u in range(len(fig3_id_list))]
+        bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_grismz)) for u in range(len(fig3_id_list))]
 
     print processes
 
@@ -240,10 +245,9 @@ def main():
         print "Current process ID:", p.pid
     for p in processes:
         p.join()
-
+    """
 
     # Code block for full sample
-    """
     for i in range(int(np.ceil(total_final_sample/max_cores))):
 
         jmin = i*max_cores
@@ -260,7 +264,7 @@ def main():
             vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
             model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-            bv_col_arr, vj_col_arr, ms_arr, mgal_arr)) for j in xrange(jmin, jmax)]
+            bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_grismz)) for j in xrange(jmin, jmax)]
         for p in processes:
             p.start()
             print "Current process ID:", p.pid
@@ -271,7 +275,6 @@ def main():
         print final_sample['pearsid'][jmin:jmax], final_sample['field'][jmin:jmax]
 
         #sys.exit(0)  # Only when testing on firstlight
-    """
 
     print "Done with all galaxies. Exiting."
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
