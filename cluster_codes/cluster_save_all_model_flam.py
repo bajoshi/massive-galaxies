@@ -10,24 +10,30 @@ import sys
 import time
 import datetime
 
-figs_data_dir = "/home/bajoshi/models_and_photometry/"
-threedhst_datadir = figs_data_dir
-cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+#figs_data_dir = "/home/bajoshi/models_and_photometry/"
+#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+
+# Only when running on firstlight
+# Comment this out before copying code to Agave
+# Uncomment above directory paths which are correct for Agave
+figs_data_dir = '/Users/baj/Desktop/FIGS/'
+cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
 
 def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid, total_models, zrange):
 
-    print "Working on filter:", filtername
+    print "\n", "Working on filter:", filtername
 
-    for z in zrange:
+    filt_flam_model = np.zeros(shape=(len(zrange), total_models), dtype=np.float32)  # np.float32 to keep the size down
+
+    for j in range(len(zrange)):
     
+        z = zrange[j]
         #print "At z:", z
     
         # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
-        filt_flam_model = np.zeros(total_models, dtype=np.float64)
-    
         # Redshift the base models
         dl = cf.get_lum_dist(z)  # in Mpc
         dl = dl * 3.086e24  # convert Mpc to cm
@@ -43,7 +49,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
             num = nansum(model_comp_spec_z[i] * filt_interp)
             den = nansum(filt_interp)
     
-            filt_flam_model[i] = num / den
+            filt_flam_model[j, i] = num / den
     
         # transverse array to make shape consistent with others
         # I did it this way so that in the above for loop each filter is looped over only once
@@ -52,8 +58,10 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
 
     # save the model flux densities
     np.save(figs_data_dir + 'all_model_flam_' + filtername + '.npy', filt_flam_model)
-    print "Computation done and saved for:", filtername, "\n"
+    print "Computation done and saved for:", filtername,
     print "Total time taken:", time.time() - start
+
+    del filt_flam_model
 
     return None
 
@@ -114,29 +122,34 @@ def main():
     """
     #save_hst_filters_to_npy()
 
-    uband_curve = np.genfromtxt(figs_data_dir + 'filter_curves/kpno_mosaic_u.txt', dtype=None, \
+    if 'agave' in os.uname()[1]:
+        filter_curve_dir = figs_data_dir + 'filter_curves/'
+    elif 'firstlight' in os.uname()[1]:
+        filter_curve_dir = figs_data_dir + 'massive-galaxies/grismz_pipeline/'
+
+    uband_curve = np.genfromtxt(filter_curve_dir + 'kpno_mosaic_u.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=14)
-    f435w_filt_curve = np.genfromtxt(figs_data_dir + 'filter_curves/f435w_filt_curve.txt', \
+    f435w_filt_curve = np.genfromtxt(filter_curve_dir + 'f435w_filt_curve.txt', \
         dtype=None, names=['wav', 'trans'])
-    f606w_filt_curve = np.genfromtxt(figs_data_dir + 'filter_curves/f606w_filt_curve.txt', \
+    f606w_filt_curve = np.genfromtxt(filter_curve_dir + 'f606w_filt_curve.txt', \
         dtype=None, names=['wav', 'trans'])
-    f775w_filt_curve = np.genfromtxt(figs_data_dir + 'filter_curves/f775w_filt_curve.txt', \
+    f775w_filt_curve = np.genfromtxt(filter_curve_dir + 'f775w_filt_curve.txt', \
         dtype=None, names=['wav', 'trans'])
-    f850lp_filt_curve = np.genfromtxt(figs_data_dir + 'filter_curves/f850lp_filt_curve.txt', \
+    f850lp_filt_curve = np.genfromtxt(filter_curve_dir + 'f850lp_filt_curve.txt', \
         dtype=None, names=['wav', 'trans'])
-    f125w_filt_curve = np.genfromtxt(figs_data_dir + 'filter_curves/f125w_filt_curve.txt', \
+    f125w_filt_curve = np.genfromtxt(filter_curve_dir + 'f125w_filt_curve.txt', \
         dtype=None, names=['wav', 'trans'])
-    f140w_filt_curve = np.genfromtxt(figs_data_dir + 'filter_curves/f140w_filt_curve.txt', \
+    f140w_filt_curve = np.genfromtxt(filter_curve_dir + 'f140w_filt_curve.txt', \
         dtype=None, names=['wav', 'trans'])
-    f160w_filt_curve = np.genfromtxt(figs_data_dir + 'filter_curves/f160w_filt_curve.txt', \
+    f160w_filt_curve = np.genfromtxt(filter_curve_dir + 'f160w_filt_curve.txt', \
         dtype=None, names=['wav', 'trans'])
-    irac1_curve = np.genfromtxt(figs_data_dir + 'filter_curves/irac1.txt', dtype=None, \
+    irac1_curve = np.genfromtxt(filter_curve_dir + 'irac1.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=3)
-    irac2_curve = np.genfromtxt(figs_data_dir + 'filter_curves/irac2.txt', dtype=None, \
+    irac2_curve = np.genfromtxt(filter_curve_dir + 'irac2.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=3)
-    irac3_curve = np.genfromtxt(figs_data_dir + 'filter_curves/irac3.txt', dtype=None, \
+    irac3_curve = np.genfromtxt(filter_curve_dir + 'irac3.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=3)
-    irac4_curve = np.genfromtxt(figs_data_dir + 'filter_curves/irac4.txt', dtype=None, \
+    irac4_curve = np.genfromtxt(filter_curve_dir + 'irac4.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=3)
 
     # IRAC wavelengths are in mixrons # convert to angstroms
@@ -155,14 +168,27 @@ def main():
     print "Redshift grid for models:"
     print zrange
 
-    # Will use as many cores as filters
-    processes = [mp.Process(target=compute_filter_flam, args=(all_filters[i], all_filter_names[i], start, \
-        model_comp_spec_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange)) for i in range(len(all_filters))]
-    for p in processes:
-        p.start()
-        print "Current process ID:", p.pid
-    for p in processes:
-        p.join()
+    max_cores = 2
+
+    for i in range(int(np.ceil(len(all_filters)/max_cores))):
+
+        jmin = i*max_cores
+        jmax = (i+1)*max_cores
+
+        if jmax > len(all_filters):
+            jmax = len(all_filters)
+
+        # Will use as many cores as filters
+        processes = [mp.Process(target=compute_filter_flam, args=(all_filters[j], all_filter_names[j], start, \
+            model_comp_spec_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange)) \
+            for j in range(len(all_filters[jmin:jmax]))]
+        for p in processes:
+            p.start()
+            print "Current process ID:", p.pid
+        for p in processes:
+            p.join()
+
+        print "Finished with filters:", all_filter_names[jmin:jmax]
 
     print "All done. Total time taken:", time.time() - start
     return None
