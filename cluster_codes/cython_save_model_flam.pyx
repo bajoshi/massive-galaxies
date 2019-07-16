@@ -99,12 +99,12 @@ def compute_filter_flam(np.ndarray[DTYPE_t, ndim=1] filt_wav, np.ndarray[DTYPE_t
         filt_interp = griddata(points=filt_wav, values=filt_trans, xi=model_lam_grid_z, method='linear')
     
         # multiply model spectrum to filter curve
-        for i in xrange(total_models):
+        #for i in xrange(total_models):
     
-            num = nansum(model_comp_spec_z[i] * filt_interp)
-            den = nansum(filt_interp)
+        num = nansum(model_comp_spec_z * filt_interp)
+        den = nansum(filt_interp)
     
-            filt_flam_model[j, i] = num / den
+        filt_flam_model[j] = num / den
     
         # transverse array to make shape consistent with others
         # I did it this way so that in the above for loop each filter is looped over only once
