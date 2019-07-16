@@ -23,17 +23,16 @@ ctypedef np.float64_t DTYPE_t
 figs_data_dir = '/Users/baj/Desktop/FIGS/'
 cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
 
-speed_of_light = 299792458e10  # angsroms per second
-speed_of_light_kms = 299792.458  # km per s
+cdef float speed_of_light_kms = 299792.458  # km per s
 
 # -------- Define cosmology -------- # 
 # Planck 2018
-H0 = 67.4  # km/s/Mpc
-omega_m0 = 0.315
-omega_r0 = 8.24e-5
-omega_lam0 = 1.0 - omega_m0
+cdef float H0 = 67.4  # km/s/Mpc
+cdef float omega_m0 = 0.315
+cdef float omega_r0 = 8.24e-5
+cdef float omega_lam0 = 1.0 - omega_m0
 
-cdef proper_distance(H0, omega_m0, omega_r0, omega_lam0, ae):
+cdef proper_distance(float H0, float omega_m0, float omega_r0, float omega_lam0, float ae):
     """
     This function will integrate 1/(a*a*H)
     between scale factor at emission to scale factor of 1.0.
@@ -41,10 +40,15 @@ cdef proper_distance(H0, omega_m0, omega_r0, omega_lam0, ae):
     p = lambda a: 1/(a*a*H0*np.sqrt((omega_m0/a**3) + (omega_r0/a**4) + omega_lam0 + ((1 - omega_m0 - omega_r0 - omega_lam0)/a**2)))
     return spint.quadrature(p, ae, 1.0)
 
-cdef get_lum_dist_cy(redshift):
+cdef get_lum_dist_cy(float redshift):
     """
     Returns luminosity distance in megaparsecs for a given redshift.
     """
+
+    # Type definitions
+    cdef float scale_fac_to_z
+    cdef float dp
+    cdef float dl
 
     # Get the luminosity distance to the given redshift
     # Get proper distance and multiply by (1+z)
