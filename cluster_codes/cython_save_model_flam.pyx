@@ -82,7 +82,7 @@ def compute_filter_flam(np.ndarray[DTYPE_t, ndim=1] filt_wav, np.ndarray[DTYPE_t
     for j in range(len(zrange)):
     
         z = zrange[j]
-        #print "At z:", z
+        print "At z:", z
     
         # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
         # Redshift the base models
