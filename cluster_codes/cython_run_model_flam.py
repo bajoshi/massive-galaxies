@@ -9,6 +9,8 @@ import datetime
 
 import cython_save_model_flam as cym
 
+figs_data_dir = '/Users/baj/Desktop/FIGS/'
+
 def main():
 
     # Start time
