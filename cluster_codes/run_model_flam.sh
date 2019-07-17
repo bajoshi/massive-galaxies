@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH -N 1                         # number of computing nodes 
-#SBATCH -n 14                        # number of cores
-#SBATCH --time=05-00:00:00           # Max time for task. Format is DD-HH:MM:SS
+#SBATCH -n 16                        # number of cores
+#SBATCH --time=01-00:00:00           # Max time for task. Format is DD-HH:MM:SS
 #SBATCH -o slurm.spz.%j.out          # STDOUT (%j = JobId)
 #SBATCH -e slurm.spz.%j.err          # STDERR (%j = JobId)
 #SBATCH --mail-type=ALL              # Send a notification when the job starts, stops, or fails

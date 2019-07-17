@@ -30,7 +30,7 @@ savefits_dir = home + "/Desktop/FIGS/new_codes/bc03_fits_files_for_refining_reds
 lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 
-sys.path.append(stacking_analysis_dir + 'codes/')
+sys.path.append(stacking_analysis_dir + 'stacking_pipeline/')
 sys.path.append(massive_galaxies_dir + 'codes/')
 sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import grid_coadd as gd
@@ -458,9 +458,11 @@ def plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_i
 
 def get_data(pears_index, field, check_contam=True):
     """
-    Using code from fileprep in this function; not including 
-    everything because it does a few things that I don't 
-    actually need; also there is no contamination checking
+    Using code from fileprep (in grid_coadd_old.py) in this 
+    function; not including everything because it does a few 
+    things that I don't actually need; 
+    also there is no contamination checking in the old
+    function.
     """
 
     # read in spectrum file

@@ -26,7 +26,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
 
     print "\n", "Working on filter:", filtername
 
-    filt_flam_model = np.zeros(shape=(len(zrange), total_models), dtype=np.float32)  # np.float32 to keep the size down
+    filt_flam_model = np.zeros(shape=(len(zrange), total_models), dtype=np.float64)
 
     for j in range(len(zrange)):
     
