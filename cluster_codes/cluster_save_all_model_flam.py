@@ -10,14 +10,14 @@ import sys
 import time
 import datetime
 
-#figs_data_dir = "/home/bajoshi/models_and_photometry/"
-#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+figs_data_dir = "/home/bajoshi/models_and_photometry/"
+cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
 
 # Only when running on firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-figs_data_dir = '/Users/baj/Desktop/FIGS/'
-cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+#figs_data_dir = '/Users/baj/Desktop/FIGS/'
+#cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
@@ -31,7 +31,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
     for j in range(len(zrange)):
     
         z = zrange[j]
-        #print "At z:", z
+        print "At z:", z
     
         # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
         # Redshift the base models
@@ -44,12 +44,12 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
     
         # multiply model spectrum to filter curve
-        for i in xrange(total_models):
+        #for i in xrange(total_models):
     
-            num = nansum(model_comp_spec_z[i] * filt_interp)
-            den = nansum(filt_interp)
+        num = nansum(model_comp_spec_z * filt_interp)
+        den = nansum(filt_interp)
     
-            filt_flam_model[j, i] = num / den
+        filt_flam_model[j] = num / den
     
         # transverse array to make shape consistent with others
         # I did it this way so that in the above for loop each filter is looped over only once
@@ -62,38 +62,6 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
     print "Total time taken:", time.time() - start
 
     del filt_flam_model
-
-    return None
-
-def save_hst_filters_to_npy():
-
-    # Read in HST filter curves using pysynphot
-    f435w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f435w')
-    f606w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f606w')
-    f775w_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f775w')
-    f850lp_filt_curve = pysynphot.ObsBandpass('acs,wfc1,f850lp')
-
-    f125w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f125w')
-    f140w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f140w')
-    f160w_filt_curve = pysynphot.ObsBandpass('wfc3,ir,f160w')
-
-    # Save to simple numpy arrays
-    all_hst_filters = [f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
-    f125w_filt_curve, f140w_filt_curve, f160w_filt_curve]
-    all_hst_filternames = ['f435w', 'f606w', 'f775w', 'f850lp', 'f125w', 'f140w', 'f160w']
-
-    for i in range(len(all_hst_filters)):
-        # Get filter and name
-        filt = all_hst_filters[i]
-        filtername = all_hst_filternames[i]
-
-        # Put into numpy arrays and save
-        wav = np.array(filt.binset)
-        trans = np.array(filt(filt.binset))
-        
-        data = np.array(zip(wav, trans), dtype=[('wav', np.float64), ('trans', np.float64)])
-        np.savetxt(massive_galaxies_dir + 'grismz_pipeline/' + filtername + '_filt_curve.txt', data, \
-            fmt=['%.6f', '%.6f'], header='wav trans')
 
     return None
 
@@ -164,11 +132,11 @@ def main():
     'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
-    zrange = np.arange(0.001, 6.001, 0.001)
+    zrange = np.arange(0.005, 6.005, 0.005)
     print "Redshift grid for models:"
     print zrange
 
-    max_cores = 2
+    max_cores = len(all_filters)
 
     for i in range(int(np.ceil(len(all_filters)/max_cores))):
 

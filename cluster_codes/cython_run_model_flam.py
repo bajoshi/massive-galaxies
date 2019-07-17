@@ -80,7 +80,7 @@ def main():
     print "Redshift grid for models:"
     print zrange
 
-    max_cores = 3
+    max_cores = 12
 
     for i in range(int(np.ceil(len(all_filters)/max_cores))):
 
