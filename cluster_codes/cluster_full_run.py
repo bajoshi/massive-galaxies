@@ -204,7 +204,7 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 25
+    max_cores = 3
 
     """
     Use the following code block to run only on the 4 galaxies to be shown in
