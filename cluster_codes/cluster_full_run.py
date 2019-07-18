@@ -140,7 +140,7 @@ def main():
     run_for_full_pears = True
 
     if run_for_full_pears:
-        final_sample = np.genfromtxt(figs_data_dir + 'pears_full_sample.txt', dtype=None, names=True)
+        final_sample = np.genfromtxt(figs_data_dir + 'massive-galaxies/pears_full_sample.txt', dtype=None, names=True)
         get_grismz = False
     else:
         final_sample = np.genfromtxt(figs_data_dir + 'spz_paper_sample.txt', dtype=None, names=True)
