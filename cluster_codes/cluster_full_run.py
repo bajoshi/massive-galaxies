@@ -136,12 +136,18 @@ def main():
     print "Starting at --", dt.now()
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
+    # Flag for full sample run
+    run_for_full_pears = True
+
     if run_for_full_pears:
         final_sample = np.genfromtxt(figs_data_dir + 'pears_full_sample.txt', dtype=None, names=True)
         get_grismz = False
     else:
         final_sample = np.genfromtxt(figs_data_dir + 'spz_paper_sample.txt', dtype=None, names=True)
         get_grismz = True
+
+    # Flag for SPZ 
+    get_spz = False
 
     # ------------------------------ Get models and photometry ------------------------------ #
     # read in entire model set
@@ -235,7 +241,7 @@ def main():
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-        bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_grismz)) for u in range(len(fig3_id_list))]
+        bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_spz, get_grismz, run_for_full_pears)) for u in range(len(fig3_id_list))]
 
     print processes
 
@@ -264,7 +270,7 @@ def main():
             vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
             model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-            bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_grismz)) for j in xrange(jmin, jmax)]
+            bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_spz, get_grismz, run_for_full_pears)) for j in xrange(jmin, jmax)]
         for p in processes:
             p.start()
             print "Current process ID:", p.pid

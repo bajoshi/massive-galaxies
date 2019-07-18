@@ -388,10 +388,9 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     # --------------- Redshift model --------------- #
     redshift_factor = 1.0 + z
     model_lam_grid_z = model_lam_grid * redshift_factor
-    #dl = get_lum_dist(z)  # in Mpc
-    #dl = dl * 3.086e24  # convert Mpc to cm
-    #model_comp_spec_redshifted = model_comp_spec_lsfconv / (4 * np.pi * dl * dl * redshift_factor)
-    model_comp_spec_redshifted = model_comp_spec_lsfconv / redshift_factor
+    dl = get_lum_dist(z)  # in Mpc
+    dl = dl * 3.086e24  # convert Mpc to cm
+    model_comp_spec_redshifted = model_comp_spec_lsfconv / (4 * np.pi * dl * dl * redshift_factor)
 
     # --------------- Do resampling --------------- #
     # Define array to save modified models
@@ -413,6 +412,9 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     model_comp_spec_modified[:, -1] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
 
     # Do a quick check to confirm that flux is conserved
+    """
+    Using np.mean above conserves flux. Using np.sum will not!!
+    """
     check_conserve_flux = False
     if check_conserve_flux:
 
@@ -567,7 +569,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, start_time, obj_id, obj_field, specz, photoz, \
     log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-    use_broadband=True, single_galaxy=False, for_loop_method='sequential'):
+    run_for_full_pears, use_broadband=True, single_galaxy=False, for_loop_method='sequential'):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,
@@ -580,13 +582,14 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     savedir_grismz = spz_outdir  # Required to save p(z) curve and z_arr
 
     # Set up redshift grid to check
-    z_arr_to_check = np.arange(0.3, 1.5, 0.01)
+    if run_for_full_pears:
+        z_arr_to_check = np.arange(0.005, 6.005, 0.005)
+    else:
+        z_arr_to_check = np.arange(0.3, 1.5, 0.01)
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
-    z_model_arr = np.arange(0.001, 6.001, 0.001) 
-
-    check_model_flam_arr_shape()
+    z_model_arr = np.arange(0.005, 6.005, 0.005)
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -744,7 +747,8 @@ def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, pho
 def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, total_models, model_comp_spec, start_time,\
     obj_id, obj_field, all_model_flam, phot_fin_idx, specz, savedir, \
-    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr):
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
+    bv_col_arr, vj_col_arr, ms_arr, mgal_arr, run_for_full_pears):
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -753,11 +757,14 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     """
 
     # Set up redshift grid to check
-    z_arr_to_check = np.arange(0.3, 1.5, 0.01)
+    if run_for_full_pears:
+        z_arr_to_check = np.arange(0.005, 6.005, 0.005)
+    else:
+        z_arr_to_check = np.arange(0.3, 1.5, 0.01)
 
     # The model mags were computed on a finer redshift grid
     # So make sure to get the z_idx correct
-    z_model_arr = np.arange(0.0, 6.0, 0.005)
+    z_model_arr = np.arange(0.005, 6.005, 0.005)
 
     ####### ------------------------------------ Main loop through redshfit array ------------------------------------ #######
     # Loop over all redshifts to check
@@ -787,7 +794,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     # For now skipping all galaxies that have any NaNs in them.
     if len(np.where(np.isfinite(chi2.ravel()))[0]) != len(chi2.ravel()):
         print "Chi2 has NaNs. Skiiping galaxy for now."
-        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
+        return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
