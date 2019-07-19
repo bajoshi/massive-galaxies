@@ -30,7 +30,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
 
     for j in range(len(zrange)):
     
-        z = zrange[j]
+        z = 2.0  # zrange[j]
         print "At z:", z
     
         # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
@@ -41,6 +41,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         model_lam_grid_z = model_lam_grid * (1+z)
 
         print "Lum dist [cm]:", dl
+        print "4*pi*dl^2 :", 4 * np.pi * dl * dl
     
         # first interpolate the transmission curve to the model lam grid
         filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
@@ -57,7 +58,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
 
         print "Vectorized computation:"
         print "Numerator:", num_vec[0]
-        print "Denominator", den_vec
+        print "Denominator", den
 
         print "Explicit for loop computation:"
         print "Numerator:", nansum(model_comp_spec_z[0] * filt_interp)
