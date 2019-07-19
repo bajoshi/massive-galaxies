@@ -193,7 +193,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
 
     """
     Testing block: do not delete
-    """
+
     print phot_lam
     print phot_fluxes_arr
     print phot_errors_arr
@@ -217,6 +217,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
 
     plt.show()
     return None
+    """
 
     # ------------------------------ Now start fitting ------------------------------ #
     # --------- Force dtype for cython code --------- #
