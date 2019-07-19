@@ -50,7 +50,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
 
             num = nansum(model_comp_spec_z[i] * filt_interp)
     
-        num_vec = nansum(model_comp_spec_z * filt_interp)
+        num_vec = nansum(model_comp_spec_z * filt_interp, axis=1)
         den = nansum(filt_interp)
     
         filt_flam_model[j] = num / den
@@ -60,7 +60,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         print "Denominator", den_vec
 
         print "Explicit for loop computation:"
-        print "Numerator:", num_vec[0]
+        print "Numerator:", nansum(model_comp_spec_z[0] * filt_interp)
 
         sys.exit(0)
     
