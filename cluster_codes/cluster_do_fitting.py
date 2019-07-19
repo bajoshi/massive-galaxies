@@ -20,8 +20,10 @@ import time
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
-pears_datadir = '/Users/baj/Documents/PEARS/data_spectra_only/'
+import os
+home = os.getenv('HOME')
+spz_outdir = home + '/Desktop/FIGS/massive-galaxies/cluster_results/'
+pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
 
 speed_of_light = 299792458e10  # angsroms per second
 speed_of_light_kms = 299792.458  # km per s

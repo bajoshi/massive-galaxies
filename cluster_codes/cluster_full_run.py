@@ -135,16 +135,44 @@ def main():
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
+
+
+    figs_data_dir = '/Users/bhavinjoshi/Desktop/FIGS/'
+    threedhst_datadir = '/Volumes/Bhavins_backup/3dhst_data/'
+
+    final_sample = np.genfromtxt(figs_data_dir + 'massive-galaxies/pears_full_sample.txt', dtype=None, names=True)
+
+    log_age_arr = np.zeros(5)
+    metal_arr = np.zeros(5)
+    nlyc_arr = np.zeros(5)
+    tau_gyr_arr = np.zeros(5)
+    tauv_arr = np.zeros(5)
+    ub_col_arr = np.zeros(5)
+    bv_col_arr = np.zeros(5)
+    vj_col_arr = np.zeros(5)
+    ms_arr = np.zeros(5)
+    mgal_arr = np.zeros(5)
+
+    model_lam_grid_withlines_mmap = np.zeros(5)
+    model_comp_spec_withlines_mmap = np.zeros(5)
+    all_model_flam_mmap = np.zeros(5)
+
+    get_grismz = False
+
+
+
     # ------------------------------- Get catalog for final sample ------------------------------- #
     # Flag for full sample run
     run_for_full_pears = True
 
+    """
     if run_for_full_pears:
         final_sample = np.genfromtxt(figs_data_dir + 'massive-galaxies/pears_full_sample.txt', dtype=None, names=True)
         get_grismz = False
     else:
         final_sample = np.genfromtxt(figs_data_dir + 'spz_paper_sample.txt', dtype=None, names=True)
         get_grismz = True
+    """
 
     # Flag for SPZ 
     get_spz = False
@@ -153,6 +181,7 @@ def main():
     # read in entire model set
     total_models = 37761
 
+    """
     log_age_arr = np.load(figs_data_dir + 'log_age_arr.npy', mmap_mode='r')
     metal_arr = np.load(figs_data_dir + 'metal_arr.npy', mmap_mode='r')
     nlyc_arr = np.load(figs_data_dir + 'nlyc_arr.npy', mmap_mode='r')
@@ -172,6 +201,7 @@ def main():
     print time.time() - start, "seconds."
 
     all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam.npy', mmap_mode='r')
+    """
 
     # ------------------------------- Read in photometry catalogs ------------------------------- #
     # GOODS photometry catalogs from 3DHST
@@ -204,7 +234,7 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 3
+    max_cores = 1
 
     """
     Use the following code block to run only on the 4 galaxies to be shown in
@@ -277,10 +307,10 @@ def main():
         for p in processes:
             p.join()
 
-        print "Finished with the following galaxies:"
+        print "Finished with the following galaxies:",
         print final_sample['pearsid'][jmin:jmax], final_sample['field'][jmin:jmax]
 
-        #sys.exit(0)  # Only when testing on firstlight
+        if i == 2: sys.exit(0)  # Only when testing on firstlight
 
     print "Done with all galaxies. Exiting."
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."

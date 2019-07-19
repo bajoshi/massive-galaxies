@@ -12,16 +12,15 @@ import datetime as dt
 
 #figs_data_dir = "/home/bajoshi/models_and_photometry/"
 #cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
-#spz_outdir = "/home/bajoshi/spz_out/"
 #lsfdir = "/home/bajoshi/pears_lsfs/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-figs_data_dir = '/Users/baj/Desktop/FIGS/'
-cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
-spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
-lsfdir = '/Users/baj/Desktop/FIGS/new_codes/pears_lsfs/'
+home = os.getenv('HOME')
+figs_data_dir = home + '/Desktop/FIGS/'
+cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
+lsfdir = home + '/Desktop/FIGS/new_codes/pears_lsfs/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
@@ -33,6 +32,16 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     get_spz, get_grismz, run_for_full_pears):
 
     print "\n", "Working on:", current_field, current_id, "at", current_specz
+
+    # Get the correct directory to save results in
+    if run_for_full_pears and ('firstlight' in os.uname()[1]):
+        spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies-figures/full_pears_results/'
+    elif (not run_for_full_pears) and ('firstlight' in os.uname()[1]):
+        spz_outdir = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_results/'
+    elif run_for_full_pears and ('agave' in os.uname()[1]):
+        spz_outdir = '/home/bajoshi/full_pears_results/'
+    elif (not run_for_full_pears) and ('agave' in os.uname()[1]):
+        spz_outdir = "/home/bajoshi/spz_out/"
 
     # Check that analysis has not already been done.
     # Move to next galaxy if the fitting result file already exists.
@@ -181,6 +190,33 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
     phot_lam = np.array([3582.0, 4328.2, 5921.1, 7692.4, 9033.1, 12486.0, 13923.0, 15369.0, 
     35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
+
+    """
+    Testing block: do not delete
+    """
+    print phot_lam
+    print phot_fluxes_arr
+    print phot_errors_arr
+
+    print grism_lam_obs
+    print grism_flam_obs
+    print grism_ferr_obs
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(grism_lam_obs, grism_flam_obs, 'o-', color='k', markersize=2)
+    ax.fill_between(grism_lam_obs, grism_flam_obs + grism_ferr_obs, grism_flam_obs - grism_ferr_obs, color='lightgray')
+    ax.errorbar(phot_lam, phot_fluxes_arr, yerr=phot_errors_arr, \
+        fmt='.', color='firebrick', markeredgecolor='firebrick', \
+        capsize=2, markersize=10.0, elinewidth=2.0)
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    plt.show()
+    return None
 
     # ------------------------------ Now start fitting ------------------------------ #
     # --------- Force dtype for cython code --------- #

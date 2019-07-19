@@ -189,6 +189,11 @@ def main():
             # Get current i-band magnitude
             current_imag = float(cat['imag'][i])
 
+            # Magnitude cut
+            if current_imag > 24.0:
+                print "Skipping due to magnitude cut. Current galaxy magnitude (i_AB):", current_imag
+                continue
+
             print "PEARS ID and Field:", current_id, current_field
 
             # Get NetSig
