@@ -10,14 +10,14 @@ import sys
 import time
 import datetime
 
-figs_data_dir = "/home/bajoshi/models_and_photometry/"
-cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+#figs_data_dir = "/home/bajoshi/models_and_photometry/"
+#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
 
 # Only when running on firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-#figs_data_dir = '/Users/baj/Desktop/FIGS/'
-#cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+figs_data_dir = '/Users/baj/Desktop/FIGS/'
+cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
@@ -39,17 +39,30 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         dl = dl * 3.086e24  # convert Mpc to cm
         model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
         model_lam_grid_z = model_lam_grid * (1+z)
+
+        print "Lum dist [cm]:", dl
     
         # first interpolate the transmission curve to the model lam grid
         filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
     
         # multiply model spectrum to filter curve
-        #for i in xrange(total_models):
+        for i in xrange(total_models):
+
+            num = nansum(model_comp_spec_z[i] * filt_interp)
     
-        num = nansum(model_comp_spec_z * filt_interp)
+        num_vec = nansum(model_comp_spec_z * filt_interp)
         den = nansum(filt_interp)
     
         filt_flam_model[j] = num / den
+
+        print "Vectorized computation:"
+        print "Numerator:", num_vec[0]
+        print "Denominator", den_vec
+
+        print "Explicit for loop computation:"
+        print "Numerator:", num_vec[0]
+
+        sys.exit(0)
     
         # transverse array to make shape consistent with others
         # I did it this way so that in the above for loop each filter is looped over only once
@@ -136,7 +149,7 @@ def main():
     print "Redshift grid for models:"
     print zrange
 
-    max_cores = len(all_filters)
+    max_cores = 1 # len(all_filters)
 
     for i in range(int(np.ceil(len(all_filters)/max_cores))):
 
@@ -157,6 +170,8 @@ def main():
             p.join()
 
         print "Finished with filters:", all_filter_names[jmin:jmax]
+
+        sys.exit(0)
 
     print "All done. Total time taken:", time.time() - start
     return None
