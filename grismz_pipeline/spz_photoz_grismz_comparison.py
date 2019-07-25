@@ -884,7 +884,7 @@ def main():
     assert len(ids) == len(imag)
 
     # Cut on D4000
-    d4000_low = 1.1
+    d4000_low = 1.6
     d4000_high = 2.0
     d4000_idx = np.where((d4000 >= d4000_low) & (d4000 < d4000_high) & (d4000_err < 0.5))[0]
 
@@ -920,7 +920,7 @@ def main():
 
     # Estimate accurate fraction for paper
     # This is only to be done for the full D4000 range
-    do_frac = True
+    do_frac = False
     if do_frac:
         print "Based on SPZ:"
         two_percent_idx = np.where(abs(resid_zspz) <= 0.02)[0]
@@ -1000,9 +1000,17 @@ def main():
     # Compute catastrophic failures
     # i.e., How many galaxies are outside +-3-sigma given the sigma above?
     # Photo-z
+    #outlier_idx_zp = np.where(abs(resid_zp - mean_zphot) > 3*nmad_zphot)[0]
+    #outlier_idx_zg = np.where(abs(resid_zg - mean_zgrism) > 3*nmad_zgrism)[0]
+    #outlier_idx_zspz = np.where(abs(resid_zspz - mean_zspz) > 3*nmad_zspz)[0]
+
+    # Try computing these only using the sigma_nmad on photo-z
+    # i.e., consitent use of a single sigma to define which galaxies
+    # are outliers. This is a better way to compare the outlier fractions
+    # across the three redshift types.
     outlier_idx_zp = np.where(abs(resid_zp - mean_zphot) > 3*nmad_zphot)[0]
-    outlier_idx_zg = np.where(abs(resid_zg - mean_zgrism) > 3*nmad_zgrism)[0]
-    outlier_idx_zspz = np.where(abs(resid_zspz - mean_zspz) > 3*nmad_zspz)[0]
+    outlier_idx_zg = np.where(abs(resid_zg - mean_zgrism) > 3*nmad_zphot)[0]
+    outlier_idx_zspz = np.where(abs(resid_zspz - mean_zspz) > 3*nmad_zphot)[0]
 
     outlier_frac_zp = len(outlier_idx_zp) / len(resid_zp)
     outlier_frac_zg = len(outlier_idx_zg) / len(resid_zg)
@@ -1011,6 +1019,8 @@ def main():
     print "Outlier fraction for Photo-z:", outlier_frac_zp
     print "Outlier fraction for Grism-z:", outlier_frac_zg
     print "Outlier fraction for SPZ:", outlier_frac_zspz
+
+    sys.exit(0)
 
     make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
         mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \

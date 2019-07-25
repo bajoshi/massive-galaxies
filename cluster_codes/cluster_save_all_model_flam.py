@@ -30,7 +30,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
 
     for j in range(len(zrange)):
     
-        z = 2.0  # zrange[j]
+        z = zrange[j]
         print "At z:", z
     
         # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
@@ -41,7 +41,6 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         model_lam_grid_z = model_lam_grid * (1+z)
 
         print "Lum dist [cm]:", dl
-        print "4*pi*dl^2 :", 4 * np.pi * dl * dl
     
         # first interpolate the transmission curve to the model lam grid
         filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
@@ -89,6 +88,8 @@ def main():
     # Read in models with emission lines adn put in numpy array
     total_models = 37761
 
+    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+
     model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
     model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
 
@@ -108,6 +109,8 @@ def main():
         filter_curve_dir = figs_data_dir + 'filter_curves/'
     elif 'firstlight' in os.uname()[1]:
         filter_curve_dir = figs_data_dir + 'massive-galaxies/grismz_pipeline/'
+    else:
+        filter_curve_dir = '/Users/bhavinjoshi/Desktop/FIGS/massive-galaxies/grismz_pipeline/'
 
     uband_curve = np.genfromtxt(filter_curve_dir + 'kpno_mosaic_u.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=14)
