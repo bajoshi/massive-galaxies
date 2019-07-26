@@ -161,7 +161,7 @@ def main():
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
     # Flag for full sample run
-    run_for_full_pears = True
+    run_for_full_pears = False
 
     if run_for_full_pears:
         final_sample = np.genfromtxt(figs_data_dir + 'massive-galaxies/pears_full_sample.txt', dtype=None, names=True)
@@ -171,7 +171,7 @@ def main():
         get_grismz = True
 
     # Flag for SPZ 
-    get_spz = False
+    get_spz = True
 
     # ------------------------------ Get models and photometry ------------------------------ #
     # read in entire model set
