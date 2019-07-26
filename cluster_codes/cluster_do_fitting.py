@@ -446,6 +446,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
         print rel_err
         print rel_err[:20]
         print rel_err[-20:]
+        print np.nanmin(rel_err), np.nanmax(rel_err)
         print "\n"
 
     return model_comp_spec_modified
