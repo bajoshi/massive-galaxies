@@ -442,7 +442,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
         # ----------- Also print how close the two integrals are (i.e., relative "error") ----------- #
         print "\n"
         print "Relative error between the two integrals:"
-        rel_err = (low_res_result - high_res_result) / high_res_result
+        rel_err = abs((low_res_result - high_res_result))/ high_res_result
         print rel_err
         print rel_err[:20]
         print rel_err[-20:]
