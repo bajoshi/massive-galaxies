@@ -445,6 +445,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
         rel_err = (low_res_result - high_res_result) / high_res_result
         print rel_err
         print rel_err[:20]
+        print rel_err[-20:]
         print "\n"
 
     return model_comp_spec_modified
