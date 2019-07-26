@@ -439,6 +439,12 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
         low_res_result = simps(y=model_comp_spec_modified, x=resampling_lam_grid, axis=1)
         print "Low-resolution integral result [erg/s/cm2]:", low_res_result
 
+        # ----------- Also print how close the two integrals are (i.e., relative "error") ----------- #
+        print "\n"
+        print "Relative error between the two integrals:"
+        print (low_res_result - high_res_result) / high_res_result
+        print "\n"
+
     return model_comp_spec_modified
 
 def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
