@@ -228,7 +228,7 @@ def main():
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 3
+    max_cores = 2
 
     """
     Use the following code block to run only on the 4 galaxies to be shown in
@@ -304,7 +304,7 @@ def main():
         print "Finished with the following galaxies:",
         print final_sample['pearsid'][jmin:jmax], final_sample['field'][jmin:jmax]
 
-        #if i == 2: sys.exit(0)  # Only when testing on firstlight
+        if i == 2: sys.exit(0)  # Only when testing on firstlight
 
     print "Done with all galaxies. Exiting."
     print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."

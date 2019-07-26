@@ -1020,6 +1020,22 @@ def main():
     print "Outlier fraction for Grism-z:", outlier_frac_zg
     print "Outlier fraction for SPZ:", outlier_frac_zspz
 
+    print outlier_idx_zp
+    print outlier_idx_zspz
+
+    print len(outlier_idx_zp)
+    print len(outlier_idx_zspz)
+
+    print zs[np.array([16, 48, 58, 59])]
+    print zp[np.array([16, 48, 58, 59])]
+    print zg[np.array([16, 48, 58, 59])]
+    print zspz[np.array([16, 48, 58, 59])]
+
+    print resid_zp[np.array([16, 48, 58, 59])]
+    print resid_zg[np.array([16, 48, 58, 59])]
+    print resid_zspz[np.array([16, 48, 58, 59])]
+
+
     sys.exit(0)
 
     make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
