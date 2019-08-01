@@ -48,7 +48,20 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
 
     print "\n", "Working on filter:", filtername
 
+    if filtername == 'u':
+        filt['trans'] /= 100.0  # They've given percentages for the u-band
+
     filt_flam_model = np.zeros(shape=(len(zrange), total_models), dtype=np.float64)
+    
+    """
+    print model_comp_spec.nbytes / (1024 * 1024)
+    print model_lam_grid.nbytes / (1024 * 1024)
+    print filt_flam_model.nbytes / (1024 * 1024)
+    print zrange.nbytes / (1024 * 1024)
+    print sys.getsizeof(filt) / (1024 * 1024)
+
+    sys.exit(0)
+    """
 
     for j in range(len(zrange)):
     
@@ -60,6 +73,15 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         dl = dl_tbl['dl_cm'][j]  # has to be in cm
         print "Lum dist [cm]:", dl
 
+        """
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(filt['wav'], filt['trans'])
+        plt.show()
+        sys.exit(0)
+        """
+
         #model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
         #model_lam_grid_z = model_lam_grid * (1+z)
     
@@ -68,10 +90,14 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
     
         # multiply model spectrum to filter curve
     
-        num_vec = nansum(model_comp_spec * filt_interp / (4 * np.pi * dl * dl * (1+z)), axis=1)
+        #num_vec = nansum(model_comp_spec * filt_interp / (4 * np.pi * dl * dl * (1+z)), axis=1)
         den = nansum(filt_interp)
+        for i in range(total_models):
 
-        filt_flam_model[j] = num_vec / den
+            num = nansum(model_comp_spec[i] * filt_interp / (4 * np.pi * dl * dl * (1+z)))
+            filt_flam_model[j, i] = num / den
+            print filt_flam_model[j, i]
+            sys.exit(0)
         
         print "Done"
 
