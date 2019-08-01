@@ -22,7 +22,29 @@ cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
 
-def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid, total_models, zrange):
+def create_dl_lookup_table(zrange):
+
+    print "Creating lookup table for luminosity distances."
+
+    dl_mpc = np.zeros(len(zrange))
+    dl_cm = np.zeros(len(zrange))
+
+    for j in range(len(zrange)):
+
+        z = zrange[j]
+        print "At z:", z
+
+        dl_mpc[j] = cf.get_lum_dist(z)  # in Mpc
+        dl_cm[j] = dl_mpc[j] * 3.086e24  # convert Mpc to cm
+
+    # Save a txt file
+    data = np.array(zip(zrange, dl_mpc, dl_cm), dtype=[('zrange', float), ('dl_mpc', float), ('dl_cm', float)])
+    np.savetxt('dl_lookup_table.txt', data, fmt=['%.3f', '%.6e', '%.6e'], delimiter='  ', header='z  dl_mpc  dl_cm')
+
+    return None
+
+def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid, \
+    total_models, zrange, dl_tbl):
 
     print "\n", "Working on filter:", filtername
 
@@ -33,34 +55,25 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         z = zrange[j]
         print "At z:", z
     
-        # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
+        # ------------------------------ Now compute model filter magnitudes ------------------------------ #
         # Redshift the base models
-        dl = cf.get_lum_dist(z)  # in Mpc
-        dl = dl * 3.086e24  # convert Mpc to cm
-        model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
-        model_lam_grid_z = model_lam_grid * (1+z)
-
+        dl = dl_tbl['dl_cm'][j]  # has to be in cm
         print "Lum dist [cm]:", dl
+
+        #model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
+        #model_lam_grid_z = model_lam_grid * (1+z)
     
         # first interpolate the transmission curve to the model lam grid
-        filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, method='linear')
+        filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid * (1+z), method='linear')
     
         # multiply model spectrum to filter curve
-        for i in xrange(total_models):
-
-            num = nansum(model_comp_spec_z[i] * filt_interp)
     
-        num_vec = nansum(model_comp_spec_z * filt_interp, axis=1)
+        num_vec = nansum(model_comp_spec * filt_interp / (4 * np.pi * dl * dl * (1+z)), axis=1)
         den = nansum(filt_interp)
-    
-        filt_flam_model[j] = num / den
 
-        print "Vectorized computation:"
-        print "Numerator:", num_vec[0]
-        print "Denominator", den
-
-        print "Explicit for loop computation:"
-        print "Numerator:", nansum(model_comp_spec_z[0] * filt_interp)
+        filt_flam_model[j] = num_vec / den
+        
+        print "Done"
 
         sys.exit(0)
     
@@ -85,16 +98,32 @@ def main():
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
+    # Redshift grid for models
+    zrange = np.arange(0.005, 6.005, 0.005)
+    print "Redshift grid for models:"
+    print zrange
+
+    # Read in lookup table for luminosity distances
+    dl_tbl = np.genfromtxt('dl_lookup_table.txt', dtype=None, names=True)
+
     # Read in models with emission lines adn put in numpy array
     total_models = 37761
 
-    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+    # Get data and filter curve directories
+    if 'agave' in os.uname()[1]:
+        filter_curve_dir = figs_data_dir + 'filter_curves/'
+    elif 'firstlight' in os.uname()[1]:
+        filter_curve_dir = figs_data_dir + 'massive-galaxies/grismz_pipeline/'
+    else:  # If running this code on the laptop
+        filter_curve_dir = '/Users/bhavinjoshi/Desktop/FIGS/massive-galaxies/grismz_pipeline/'
+        figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
 
     model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
     model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
 
     # total run time up to now
-    print "All models now in numpy array and have emission lines. Total time taken up to now --", time.time() - start, "seconds."
+    print "All models now in numpy array and have emission lines. Total time taken up to now --", 
+    print time.time() - start, "seconds."
 
     # ------------------------------- Read in filter curves ------------------------------- #
     """
@@ -104,13 +133,6 @@ def main():
     can be read with genfromtxt.
     """
     #save_hst_filters_to_npy()
-
-    if 'agave' in os.uname()[1]:
-        filter_curve_dir = figs_data_dir + 'filter_curves/'
-    elif 'firstlight' in os.uname()[1]:
-        filter_curve_dir = figs_data_dir + 'massive-galaxies/grismz_pipeline/'
-    else:
-        filter_curve_dir = '/Users/bhavinjoshi/Desktop/FIGS/massive-galaxies/grismz_pipeline/'
 
     uband_curve = np.genfromtxt(filter_curve_dir + 'kpno_mosaic_u.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=14)
@@ -149,9 +171,6 @@ def main():
     'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
-    zrange = np.arange(0.005, 6.005, 0.005)
-    print "Redshift grid for models:"
-    print zrange
 
     max_cores = 1 # len(all_filters)
 
@@ -163,6 +182,10 @@ def main():
         if jmax > len(all_filters):
             jmax = len(all_filters)
 
+        compute_filter_flam(all_filters[0], all_filter_names[0], start, \
+            model_comp_spec_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange, dl_tbl)
+
+        """
         # Will use as many cores as filters
         processes = [mp.Process(target=compute_filter_flam, args=(all_filters[j], all_filter_names[j], start, \
             model_comp_spec_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange)) \
@@ -172,6 +195,7 @@ def main():
             print "Current process ID:", p.pid
         for p in processes:
             p.join()
+        """
 
         print "Finished with filters:", all_filter_names[jmin:jmax]
 
