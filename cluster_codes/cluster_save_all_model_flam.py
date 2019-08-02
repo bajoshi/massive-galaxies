@@ -4,6 +4,7 @@ import numpy as np
 from numpy import nansum
 from scipy.interpolate import griddata
 import multiprocessing as mp
+from scipy.integrate import simps
 
 import os
 import sys
@@ -32,7 +33,6 @@ def create_dl_lookup_table(zrange):
     for j in range(len(zrange)):
 
         z = zrange[j]
-        print "At z:", z
 
         dl_mpc[j] = cf.get_lum_dist(z)  # in Mpc
         dl_cm[j] = dl_mpc[j] * 3.086e24  # convert Mpc to cm
@@ -40,6 +40,9 @@ def create_dl_lookup_table(zrange):
     # Save a txt file
     data = np.array(zip(zrange, dl_mpc, dl_cm), dtype=[('zrange', float), ('dl_mpc', float), ('dl_cm', float)])
     np.savetxt('dl_lookup_table.txt', data, fmt=['%.3f', '%.6e', '%.6e'], delimiter='  ', header='z  dl_mpc  dl_cm')
+
+    print "Luminosity distance lookup table saved in txt file.",
+    print "In same folder as this code"
 
     return None
 
@@ -73,35 +76,34 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         dl = dl_tbl['dl_cm'][j]  # has to be in cm
         print "Lum dist [cm]:", dl
 
+        #model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
+        model_lam_grid_z = model_lam_grid * (1+z)
+    
+        # first interpolate the transmission curve to the model lam grid
+        filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, \
+            method='linear')
+
+        # Set nan values in interpolated filter to 0.0
+        filt_nan_idx = np.where(np.isnan(filt_interp))[0]
+        filt_interp[filt_nan_idx] = 0.0
+    
         """
         import matplotlib.pyplot as plt
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(filt['wav'], filt['trans'])
+        ax.plot(model_lam_grid_z, filt_interp)
         plt.show()
         sys.exit(0)
         """
 
-        #model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
-        #model_lam_grid_z = model_lam_grid * (1+z)
-    
-        # first interpolate the transmission curve to the model lam grid
-        filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid * (1+z), method='linear')
-    
         # multiply model spectrum to filter curve
-    
         #num_vec = nansum(model_comp_spec * filt_interp / (4 * np.pi * dl * dl * (1+z)), axis=1)
-        den = nansum(filt_interp)
+        den = simps(y=filt_interp, x=model_lam_grid_z)
         for i in range(total_models):
 
-            num = nansum(model_comp_spec[i] * filt_interp / (4 * np.pi * dl * dl * (1+z)))
+            num = simps(y=model_comp_spec[i] * filt_interp / (4 * np.pi * dl * dl * (1+z)), x=model_lam_grid_z)
             filt_flam_model[j, i] = num / den
-            print filt_flam_model[j, i]
-            sys.exit(0)
-        
-        print "Done"
-
-        sys.exit(0)
     
         # transverse array to make shape consistent with others
         # I did it this way so that in the above for loop each filter is looped over only once
@@ -130,6 +132,9 @@ def main():
     print zrange
 
     # Read in lookup table for luminosity distances
+    if not os.path.isfile('dl_lookup_table.txt'):
+        create_dl_lookup_table(zrange)
+    
     dl_tbl = np.genfromtxt('dl_lookup_table.txt', dtype=None, names=True)
 
     # Read in models with emission lines adn put in numpy array
@@ -144,8 +149,27 @@ def main():
         filter_curve_dir = '/Users/bhavinjoshi/Desktop/FIGS/massive-galaxies/grismz_pipeline/'
         figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
 
+    # Read model lambda grid # In agnstroms
     model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
-    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
+
+    if not os.path.isfile(figs_data_dir + 'model_comp_spec_llam_withlines.npy'):
+        # ---------------- This block only needs to be run once ---------------- #
+
+        model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
+
+        # Convert model spectra to correct L_lambda units i.e., erg s^-1 A^-1
+        # They are given in units of solar luminosity per angstrom
+        # Therefore they need to be multiplied by L_sol = 3.826e33 erg s^-1
+        L_sol = 3.826e33
+        model_comp_spec_llam = model_comp_spec_withlines_mmap * L_sol
+
+        np.save(figs_data_dir + 'model_comp_spec_llam_withlines.npy', model_comp_spec_llam)
+        del model_comp_spec_withlines_mmap
+
+        # ---------------- End of code block to convert to Llam ---------------- #
+
+    # Now read the model spectra # In erg s^-1 A^-1
+    model_comp_spec_llam_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_llam_withlines.npy', mmap_mode='r')
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", 
@@ -198,7 +222,7 @@ def main():
 
     # Loop over all redshifts and filters and compute magnitudes
 
-    max_cores = 1 # len(all_filters)
+    max_cores = 3 # len(all_filters)
 
     for i in range(int(np.ceil(len(all_filters)/max_cores))):
 
@@ -208,27 +232,21 @@ def main():
         if jmax > len(all_filters):
             jmax = len(all_filters)
 
-        compute_filter_flam(all_filters[0], all_filter_names[0], start, \
-            model_comp_spec_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange, dl_tbl)
-
-        """
         # Will use as many cores as filters
         processes = [mp.Process(target=compute_filter_flam, args=(all_filters[j], all_filter_names[j], start, \
-            model_comp_spec_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange)) \
+            model_comp_spec_llam_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange)) \
             for j in range(len(all_filters[jmin:jmax]))]
         for p in processes:
             p.start()
             print "Current process ID:", p.pid
         for p in processes:
             p.join()
-        """
 
         print "Finished with filters:", all_filter_names[jmin:jmax]
-
-        sys.exit(0)
 
     print "All done. Total time taken:", time.time() - start
     return None
 
 if __name__ == '__main__':
     main()
+    sys.exit(0)
