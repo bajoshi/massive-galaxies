@@ -215,8 +215,7 @@ def main():
     'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
 
     # Loop over all redshifts and filters and compute magnitudes
-
-    max_cores = 3 # len(all_filters)
+    max_cores = len(all_filters)
 
     for i in range(int(np.ceil(len(all_filters)/max_cores))):
 
@@ -228,7 +227,7 @@ def main():
 
         # Will use as many cores as filters
         processes = [mp.Process(target=compute_filter_flam, args=(all_filters[j], all_filter_names[j], start, \
-            model_comp_spec_llam_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange)) \
+            model_comp_spec_llam_withlines_mmap, model_lam_grid_withlines_mmap, total_models, zrange, dl_tbl)) \
             for j in range(len(all_filters[jmin:jmax]))]
         for p in processes:
             p.start()
