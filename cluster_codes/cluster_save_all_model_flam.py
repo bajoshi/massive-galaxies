@@ -11,16 +11,6 @@ import sys
 import time
 import datetime
 
-#figs_data_dir = "/home/bajoshi/models_and_photometry/"
-#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
-
-# Only when running on firstlight
-# Comment this out before copying code to Agave
-# Uncomment above directory paths which are correct for Agave
-figs_data_dir = '/Users/baj/Desktop/FIGS/'
-cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
-
-sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
 
 def create_dl_lookup_table(zrange):
@@ -142,8 +132,12 @@ def main():
 
     # Get data and filter curve directories
     if 'agave' in os.uname()[1]:
+        figs_data_dir = "/home/bajoshi/models_and_photometry/"
+        cluster_spz_scripts = "/home/bajoshi/spz_scripts/"   
         filter_curve_dir = figs_data_dir + 'filter_curves/'
     elif 'firstlight' in os.uname()[1]:
+        figs_data_dir = '/Users/baj/Desktop/FIGS/'
+        cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
         filter_curve_dir = figs_data_dir + 'massive-galaxies/grismz_pipeline/'
     else:  # If running this code on the laptop
         filter_curve_dir = '/Users/bhavinjoshi/Desktop/FIGS/massive-galaxies/grismz_pipeline/'
