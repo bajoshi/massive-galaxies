@@ -417,7 +417,7 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     """
     Using np.mean above conserves flux. Using np.sum will not!!
     """
-    check_conserve_flux = True
+    check_conserve_flux = False
     if check_conserve_flux:
 
         # ----------- Check for high resolution model
@@ -760,6 +760,118 @@ def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, pho
 
     return chi2_, alpha_
 
+def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+    model_lam_grid, model_comp_spec, total_models, start_time):
+
+    print "\n", "Currently at redshift:", z
+
+    # ------------------------------- Read in filter curves ------------------------------- #
+
+    # Get data and filter curve directories
+    if 'agave' in os.uname()[1]:
+        figs_data_dir = "/home/bajoshi/models_and_photometry/"
+        cluster_spz_scripts = "/home/bajoshi/spz_scripts/"   
+        filter_curve_dir = figs_data_dir + 'filter_curves/'
+    elif 'firstlight' in os.uname()[1]:
+        figs_data_dir = '/Users/baj/Desktop/FIGS/'
+        cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+        filter_curve_dir = figs_data_dir + 'massive-galaxies/grismz_pipeline/'
+    else:  # If running this code on the laptop
+        filter_curve_dir = '/Users/bhavinjoshi/Desktop/FIGS/massive-galaxies/grismz_pipeline/'
+        figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+
+    uband_curve = np.genfromtxt(filter_curve_dir + 'kpno_mosaic_u.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=14)
+    f435w_filt_curve = np.genfromtxt(filter_curve_dir + 'f435w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f606w_filt_curve = np.genfromtxt(filter_curve_dir + 'f606w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f775w_filt_curve = np.genfromtxt(filter_curve_dir + 'f775w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f850lp_filt_curve = np.genfromtxt(filter_curve_dir + 'f850lp_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f125w_filt_curve = np.genfromtxt(filter_curve_dir + 'f125w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f140w_filt_curve = np.genfromtxt(filter_curve_dir + 'f140w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    f160w_filt_curve = np.genfromtxt(filter_curve_dir + 'f160w_filt_curve.txt', \
+        dtype=None, names=['wav', 'trans'])
+    irac1_curve = np.genfromtxt(filter_curve_dir + 'irac1.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac2_curve = np.genfromtxt(filter_curve_dir + 'irac2.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac3_curve = np.genfromtxt(filter_curve_dir + 'irac3.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+    irac4_curve = np.genfromtxt(filter_curve_dir + 'irac4.txt', dtype=None, \
+        names=['wav', 'trans'], skip_header=3)
+
+    # IRAC wavelengths are in mixrons # convert to angstroms
+    irac1_curve['wav'] *= 1e4
+    irac2_curve['wav'] *= 1e4
+    irac3_curve['wav'] *= 1e4
+    irac4_curve['wav'] *= 1e4
+
+    all_filters = [uband_curve, f435w_filt_curve, f606w_filt_curve, f775w_filt_curve, f850lp_filt_curve, \
+    f125w_filt_curve, f140w_filt_curve, f160w_filt_curve, irac1_curve, irac2_curve, irac3_curve, irac4_curve]
+    all_filter_names = ['u', 'f435w', 'f606w', 'f775w', 'f850lp', \
+    'f125w', 'f140w', 'f160w', 'irac1', 'irac2', 'irac3', 'irac4']
+
+    # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
+    all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
+
+    dl_mpc[j] = get_lum_dist(z)  # in Mpc
+    dl_cm[j] = dl_mpc[j] * 3.086e24  # convert Mpc to cm
+
+    # Redshift the base models
+    #model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
+    model_lam_grid_z = model_lam_grid * (1+z)
+
+    filt_count = 0
+    for filt in all_filters:
+
+        filtername = all_filter_names[filt_count]
+
+        if filtername == 'u':
+            filt['trans'] /= 100.0  # They've given throughput percentages for the u-band
+
+        # first interpolate the transmission curve to the model lam grid
+        filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid_z, \
+            method='linear')
+
+        # Set nan values in interpolated filter to 0.0
+        filt_nan_idx = np.where(np.isnan(filt_interp))[0]
+        filt_interp[filt_nan_idx] = 0.0
+
+        # multiply model spectrum to filter curve
+        den = simps(y=filt_interp, x=model_lam_grid_z)
+        for i in xrange(total_models):
+
+            num = simps(y=model_comp_spec[i] * filt_interp / (4 * np.pi * dl * dl * (1+z)), x=model_lam_grid_z)
+            all_filt_flam_model[filt_count, i] = num / den
+
+        # This one-liner acomplishes the same thing as the small for loop above.
+        # But for some reason it is much slower. So I'm going to stick with the 
+        # explicit for loop which is ~1.6x faster.
+        # all_filt_flam_model[filt_count] = np.nansum(model_comp_spec_z * filt_interp, axis=1) / np.nansum(filt_interp)
+        filt_count += 1
+
+    # transverse array to make shape consistent with others
+    # I did it this way so that in the above for loop each filter is looped over only once
+    # i.e. minimizing the number of times each filter is gridded on to the model grid
+    all_filt_flam_model_t = all_filt_flam_model.T
+
+    print "Filter f_lam for models computed."
+    print "Total time taken up to now --", time.time() - start_time, "seconds."
+
+    # ------------------------------------ Now do the chi2 computation ------------------------------------ #
+    # compute alpha and chi2
+    alpha_ = np.sum(phot_flam_obs * all_filt_flam_model_t / (phot_ferr_obs**2), axis=1) / np.sum(all_filt_flam_model_t**2 / phot_ferr_obs**2, axis=1)
+    chi2_ = np.sum(((phot_flam_obs - (alpha_ * all_filt_flam_model).T) / phot_ferr_obs)**2, axis=1)
+
+    print "Min chi2 for redshift:", min(chi2_)
+
+    return chi2_, alpha_
+
 def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, total_models, model_comp_spec, start_time,\
     obj_id, obj_field, all_model_flam, phot_fin_idx, specz, savedir, \
@@ -791,6 +903,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     count = 0
     for z in z_arr_to_check:
 
+        """
         z_idx = np.where(z_model_arr == z)[0]
 
         # and because for some reason it does not find matches 
@@ -803,6 +916,10 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         all_filt_flam_model = all_filt_flam_model.reshape(len(phot_fin_idx), total_models)
 
         chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs)
+        """
+
+        chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
+            model_lam_grid, model_comp_spec, total_models, start_time)
 
         count += 1
 

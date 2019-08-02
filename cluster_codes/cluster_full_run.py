@@ -153,7 +153,7 @@ def main():
     mgal_arr = np.zeros(5)
 
     model_lam_grid_withlines_mmap = np.zeros(5)
-    model_comp_spec_withlines_mmap = np.zeros(5)
+    model_comp_spec_llam_withlines_mmap = np.zeros(5)
     all_model_flam_mmap = np.zeros(5)
 
     get_grismz = False
@@ -188,8 +188,10 @@ def main():
     ms_arr = np.load(figs_data_dir + 'ms_arr.npy', mmap_mode='r')
     mgal_arr = np.load(figs_data_dir + 'mgal_arr.npy', mmap_mode='r')
 
+    # Read model lambda grid # In agnstroms
     model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
-    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
+    # Now read the model spectra # In erg s^-1 A^-1
+    model_comp_spec_llam_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_llam_withlines.npy', mmap_mode='r')
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", 
@@ -263,7 +265,7 @@ def main():
         fig3_field_list[u], fig3_ra_list[u], fig3_dec_list[u], 
         fig3_zspec_list[u], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-        model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
+        model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
         bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_spz, get_grismz, run_for_full_pears)) for u in range(len(fig3_id_list))]
 
@@ -292,7 +294,7 @@ def main():
             final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
             final_sample['zspec'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
             vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-            model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, all_model_flam_mmap, total_models, start, \
+            model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
             bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_spz, get_grismz, run_for_full_pears)) for j in xrange(jmin, jmax)]
         for p in processes:
