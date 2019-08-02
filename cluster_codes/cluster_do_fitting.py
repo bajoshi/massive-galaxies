@@ -904,7 +904,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     print "Min idx 2d:", min_idx_2d
     print "Alpha for best-fit model:", bestalpha
 
-    ms = template_ms / bestalpha
+    ms = template_ms * bestalpha
     print "Template mass [normalized to 1 sol]:", template_ms
     print "Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms)
 

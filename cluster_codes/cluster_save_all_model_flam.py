@@ -32,7 +32,7 @@ def create_dl_lookup_table(zrange):
     np.savetxt('dl_lookup_table.txt', data, fmt=['%.3f', '%.6e', '%.6e'], delimiter='  ', header='z  dl_mpc  dl_cm')
 
     print "Luminosity distance lookup table saved in txt file.",
-    print "In same folder as this code"
+    print "In same folder as this code."
 
     return None
 
@@ -42,7 +42,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
     print "\n", "Working on filter:", filtername
 
     if filtername == 'u':
-        filt['trans'] /= 100.0  # They've given percentages for the u-band
+        filt['trans'] /= 100.0  # They've given throughput percentages for the u-band
 
     filt_flam_model = np.zeros(shape=(len(zrange), total_models), dtype=np.float64)
     
@@ -59,12 +59,12 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
     for j in range(len(zrange)):
     
         z = zrange[j]
-        print "At z:", z
+        #print "At z:", z
     
         # ------------------------------ Now compute model filter magnitudes ------------------------------ #
         # Redshift the base models
         dl = dl_tbl['dl_cm'][j]  # has to be in cm
-        print "Lum dist [cm]:", dl
+        #print "Lum dist [cm]:", dl
 
         #model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
         model_lam_grid_z = model_lam_grid * (1+z)
