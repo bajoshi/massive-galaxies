@@ -819,8 +819,8 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     # ------------------------------------ Now compute model filter magnitudes ------------------------------------ #
     all_filt_flam_model = np.zeros((len(all_filters), total_models), dtype=np.float64)
 
-    dl_mpc[j] = get_lum_dist(z)  # in Mpc
-    dl_cm[j] = dl_mpc[j] * 3.086e24  # convert Mpc to cm
+    dl_mpc = get_lum_dist(z)  # in Mpc
+    dl = dl_mpc * 3.086e24  # convert Mpc to cm
 
     # Redshift the base models
     #model_comp_spec_z = model_comp_spec / (4 * np.pi * dl * dl * (1+z))
