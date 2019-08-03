@@ -11,6 +11,19 @@ import sys
 import time
 import datetime
 
+# Get data and filter curve directories
+if 'agave' in os.uname()[1]:
+    figs_data_dir = "/home/bajoshi/models_and_photometry/"
+    cluster_spz_scripts = "/home/bajoshi/spz_scripts/"   
+    filter_curve_dir = figs_data_dir + 'filter_curves/'
+elif 'firstlight' in os.uname()[1]:
+    figs_data_dir = '/Users/baj/Desktop/FIGS/'
+    cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+    filter_curve_dir = figs_data_dir + 'massive-galaxies/grismz_pipeline/'
+else:  # If running this code on the laptop
+    filter_curve_dir = '/Users/bhavinjoshi/Desktop/FIGS/massive-galaxies/grismz_pipeline/'
+    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+
 import cluster_do_fitting as cf
 
 def create_dl_lookup_table(zrange):
@@ -129,19 +142,6 @@ def main():
 
     # Read in models with emission lines adn put in numpy array
     total_models = 37761
-
-    # Get data and filter curve directories
-    if 'agave' in os.uname()[1]:
-        figs_data_dir = "/home/bajoshi/models_and_photometry/"
-        cluster_spz_scripts = "/home/bajoshi/spz_scripts/"   
-        filter_curve_dir = figs_data_dir + 'filter_curves/'
-    elif 'firstlight' in os.uname()[1]:
-        figs_data_dir = '/Users/baj/Desktop/FIGS/'
-        cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
-        filter_curve_dir = figs_data_dir + 'massive-galaxies/grismz_pipeline/'
-    else:  # If running this code on the laptop
-        filter_curve_dir = '/Users/bhavinjoshi/Desktop/FIGS/massive-galaxies/grismz_pipeline/'
-        figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
 
     # Read model lambda grid # In agnstroms
     model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
