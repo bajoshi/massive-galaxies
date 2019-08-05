@@ -237,6 +237,31 @@ def main():
 
         print "Finished with filters:", all_filter_names[jmin:jmax]
 
+    print "Now combining all filter computations into a single npy file."
+
+    # Read in all individual filter flam 
+    u = np.load('all_model_flam_u.npy')
+    f435w = np.load('all_model_flam_f435w.npy')
+    f606w = np.load('all_model_flam_f606w.npy')
+    f775w = np.load('all_model_flam_f775w.npy')
+    f850lp = np.load('all_model_flam_f850lp.npy')
+    f125w = np.load('all_model_flam_f125w.npy')
+    f140w = np.load('all_model_flam_f140w.npy')
+    f160w = np.load('all_model_flam_f160w.npy')
+    irac1 = np.load('all_model_flam_irac1.npy')
+    irac2 = np.load('all_model_flam_irac2.npy')
+    irac3 = np.load('all_model_flam_irac3.npy')
+    irac4 = np.load('all_model_flam_irac4.npy')
+
+    # now loop over all and write final output
+    all_indiv_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
+    all_model_flam = np.zeros(shape=(12, 1200, 37761))
+
+    for k in range(len(all_indiv_flam)):
+        all_model_flam[k] = all_indiv_flam[k]
+
+    np.save(figs_data_dir + 'all_model_flam.npy', all_model_flam)
+
     print "All done. Total time taken:", time.time() - start
     return None
 
