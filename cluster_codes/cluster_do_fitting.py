@@ -902,7 +902,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     count = 0
     for z in z_arr_to_check:
-        
+
         z_idx = np.where(z_model_arr == z)[0]
 
         # and because for some reason it does not find matches 
@@ -972,6 +972,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     zp_minchi2 = z_arr_to_check[min_idx_2d[0]]
 
+    print "Age of Universe at best-fit z (log[Age (yr)]):", "{:.4}".format(np.log10(age_at_z))
     print "Current best fit log(age [yr]):", "{:.4}".format(age)
     print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
     print "Current best fit Tau_V:", tauv
@@ -1020,7 +1021,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     # Stellar mass
     bestalpha = alpha[min_idx_2d]
     print "Min idx 2d:", min_idx_2d
-    print "Alpha for best-fit model:", bestalpha
+    print "Alpha for best-fit model:", "{:.2e}".format(bestalpha)
 
     ms = template_ms * bestalpha
     print "Template mass [normalized to 1 sol]:", template_ms
@@ -1031,8 +1032,12 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]]
     print "Rest-frame U-B color:", ub_col
     print "Rest-frame B-V color:", bv_col
-    print "Rest-frame U-V color:", ub_col - bv_col
+    uv_col = ub_col - bv_col
+    print "Rest-frame U-V color:", uv_col
     print "Rest-frame V-J color:", vj_col
 
-    return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, model_idx, age, tau, (tauv/1.086)
+    return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, \
+    template_ms, ms, uv_col, vj_col, model_idx, age, tau, (tauv/1.086)
+
+
 

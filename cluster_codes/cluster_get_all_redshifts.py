@@ -296,7 +296,8 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     # ------------- Call fitting function for photo-z ------------- #
     print "Computing photo-z now."
     
-    zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, zp_model_idx, zp_age, zp_tau, zp_av = \
+    zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, \
+    zp_template_ms, zp_ms, zp_uv, zp_vj, zp_model_idx, zp_age, zp_tau, zp_av = \
     cf.do_photoz_fitting_lookup(phot_fluxes_arr, phot_errors_arr, phot_lam, \
         model_lam_grid_withlines, total_models, model_comp_spec_withlines, start,\
         current_id, current_field, all_model_flam, phot_fin_idx, current_specz, spz_outdir, \
@@ -338,7 +339,8 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         "  zp  zspz  zg  zp_zerr_low  zp_zerr_up  zspz_zerr_low  zspz_zerr_up  zg_zerr_low  zg_zerr_up" + \
         "  zp_min_chi2  zspz_min_chi2  zg_min_chi2  zp_bestalpha  zspz_bestalpha  zg_bestalpha" + \
         "  zp_model_idx  zspz_model_idx  zg_model_idx  zp_age  zp_tau  zp_av" + \
-        "  zspz_age  zspz_tau  zspz_av  zg_age  zg_tau  zg_av"
+        "  zspz_age  zspz_tau  zspz_av  zg_age  zg_tau  zg_av" + \
+        "  zp_template_ms  zp_ms  zp_uv  zp_vj"
 
         fh.write(hdr_line1 + '\n')
         fh.write(hdr_line2 + '\n')
@@ -348,8 +350,12 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         dec_to_write = "{:.6f}".format(current_dec)
         zspec_to_write = "{:.3f}".format(current_specz)
 
-        str_to_write1 = str(current_id) + "  " + current_field + "  " + ra_to_write + "  " + dec_to_write + "  " + zspec_to_write + "  "
+        str_to_write1 = str(current_id) + "  " + current_field + "  " + \
+        ra_to_write + "  " + dec_to_write + "  " + zspec_to_write + "  "
         str_to_write8 = "{:.2e}".format(zp_age) + "  " + "{:.2e}".format(zp_tau) + "  " + "{:.2f}".format(zp_av) + "  "
+        str_to_write11 = "{:.5f}".format(zp_template_ms) + "  " + "{:.4e}".format(zp_ms) + "  " + \
+        "{:.4f}".format(zp_uv) + "  " + "{:.4f}".format(zp_vj) + "  "
+        
 
         """
         Now write the results depending on what redshifts were computed.
@@ -406,7 +412,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
 
         # Combine hte above strings and write
         fh.write(str_to_write1 + str_to_write2 + str_to_write3 + str_to_write4 + str_to_write5 + \
-            str_to_write6 + str_to_write7 + str_to_write8 + str_to_write9 + str_to_write10)
+            str_to_write6 + str_to_write7 + str_to_write8 + str_to_write9 + str_to_write10 + str_to_write11)
 
     print "Results saved for:", current_field, current_id
 
