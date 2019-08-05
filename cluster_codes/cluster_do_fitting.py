@@ -902,8 +902,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     count = 0
     for z in z_arr_to_check:
-
-        """
+        
         z_idx = np.where(z_model_arr == z)[0]
 
         # and because for some reason it does not find matches 
@@ -916,10 +915,12 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         all_filt_flam_model = all_filt_flam_model.reshape(len(phot_fin_idx), total_models)
 
         chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs)
-        """
 
+        # Long way of doing things # keep commented out unless you need it to check intermediate results
+        """
         chi2[count], alpha[count] = get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
             model_lam_grid, model_comp_spec, total_models, start_time)
+        """
 
         count += 1
 
