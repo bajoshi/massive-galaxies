@@ -215,6 +215,9 @@ def get_arrays_to_plot_v2():
         all_netsig_list.append(netsig_chosen)
         imag_list.append(current_imag)
 
+        #print current_id, current_field, current_specz, zp[i], zg[i], zspz[i], 
+        #print d4000, d4000_err, netsig_chosen, current_imag
+
     return np.array(all_ids_list), np.array(all_fields_list), np.array(zs_list), np.array(zp_list), np.array(zg_list), np.array(zspz_list), \
     np.array(all_d4000_list), np.array(all_d4000_err_list), np.array(all_netsig_list), np.array(imag_list)
 
@@ -674,7 +677,7 @@ def make_residual_vs_imag_plots(resid_zp, resid_zg, resid_zspz, imag_for_zp, ima
 def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
     mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
     d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
-    outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz):
+    outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz, savedir):
 
     # Define figure
     fig = plt.figure(figsize=(10, 4))
@@ -862,7 +865,7 @@ def make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zsp
     transform=ax5.transAxes, color='k', size=12)
 
     # save figure and close
-    fig.savefig(massive_figures_dir + 'spz_comp_photoz_revised_' + \
+    fig.savefig(savedir + 'spz_comp_photoz_revised_' + \
         str(d4000_low).replace('.','p') + 'to' + str(d4000_high).replace('.','p') + '.pdf', \
         dpi=300, bbox_inches='tight')
 
@@ -1020,28 +1023,10 @@ def main():
     print "Outlier fraction for Grism-z:", outlier_frac_zg
     print "Outlier fraction for SPZ:", outlier_frac_zspz
 
-    print outlier_idx_zp
-    print outlier_idx_zspz
-
-    print len(outlier_idx_zp)
-    print len(outlier_idx_zspz)
-
-    print zs[np.array([16, 48, 58, 59])]
-    print zp[np.array([16, 48, 58, 59])]
-    print zg[np.array([16, 48, 58, 59])]
-    print zspz[np.array([16, 48, 58, 59])]
-
-    print resid_zp[np.array([16, 48, 58, 59])]
-    print resid_zg[np.array([16, 48, 58, 59])]
-    print resid_zspz[np.array([16, 48, 58, 59])]
-
-
-    sys.exit(0)
-
     make_plots(resid_zp, resid_zg, resid_zspz, zp, zs_for_zp, zg, zs_for_zg, zspz, zs_for_zspz, \
         mean_zphot, nmad_zphot, mean_zgrism, nmad_zgrism, mean_zspz, nmad_zspz, \
         d4000_low, d4000_high, outlier_idx_zp, outlier_idx_zg, outlier_idx_zspz, \
-        outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz)
+        outlier_frac_zp, outlier_frac_zg, outlier_frac_zspz, massive_figures_dir)
 
     sys.exit(0)
 

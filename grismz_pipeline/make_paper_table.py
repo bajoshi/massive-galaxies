@@ -71,7 +71,7 @@ def main():
     pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
 
     # Comment this print statement out if out don't want to actually print this list
-    print_tex_format = True  # toggle this on/off for printing tex/ascii table
+    print_tex_format = False  # toggle this on/off for printing tex/ascii table # also change the mag cut below
     if print_tex_format:
         print "ID    Field     RA    DEC        zspec    zphot    zgrism     zspz    NetSig    D4000    D4000_err    iABmag"
     else:
@@ -139,8 +139,8 @@ def main():
             current_imag = pears_scat['imag'][master_cat_idx]
 
         # Cut on imag # ONLY for the table that goes into the paper!!
-        if current_imag > 23.5:
-            continue
+        #if current_imag > 23.5:
+        #    continue
 
         # Get errors on redshifts   # from chi2 map NOT p(z) curve
         high_zperr = zp_high_bound_chi2[i] - zp[i]
@@ -218,11 +218,14 @@ def main():
                 print "{:.2f}".format(low_zspzerr), "  ",
                 print "{:.2f}".format(high_zspzerr), "  ",
                 print current_netsig_to_print, "  ",
-                print "{:.2f}".format(d4000), "  ",
+                print "{:.4f}".format(d4000), "  ",
                 print "{:.2f}".format(d4000_err), "  ",
                 #print current_res_zphot_to_print, "     ",
                 #print current_res_zspz_to_print, "    ",
                 print "{:.2f}".format(current_imag)
+
+            #print current_id_to_print, current_field, current_specz, zp[i], zg[i], zspz[i], 
+            #print d4000, d4000_err, current_netsig_to_print, current_imag
 
             total_galaxies += 1
 
