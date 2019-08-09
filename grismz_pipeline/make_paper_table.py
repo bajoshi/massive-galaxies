@@ -45,8 +45,8 @@ def main():
     for fl in glob.glob(spz_outdir + 'redshift_fitting_results*.txt'):
         current_result = np.genfromtxt(fl, dtype=None, names=True, skip_header=1)
 
-        all_ids.append(current_result['PearsID'])
-        all_fields.append(current_result['Field'])
+        all_ids.append(int(current_result['PearsID']))
+        all_fields.append(str(current_result['Field']))
 
         zs.append(float(current_result['zspec']))
         zp.append(float(current_result['zp_minchi2']))
@@ -71,19 +71,50 @@ def main():
     pears_ncat['pearsdec'] = pears_ncat['pearsdec'] - dec_offset_goodsn_v19
 
     # Comment this print statement out if out don't want to actually print this list
-    print_tex_format = False  # toggle this on/off for printing tex/ascii table # also change the mag cut below
+    print_tex_format = True  # toggle this on/off for printing tex/ascii table # also change the mag cut below
     if print_tex_format:
         print "ID    Field     RA    DEC        zspec    zphot    zgrism     zspz    NetSig    D4000    D4000_err    iABmag"
     else:
         print "ID    Field     RA    DEC        zspec    zphot    low_zphot_err    high_zphot_err    zg    low_zgrism_err    high_zgrism_err",
         print "    zspz    low_zspz_err    high_zspz_err    NetSig    D4000    D4000_err    iABmag"
 
+    # Updated code after paper was accepted.
+    # This change is ONLY to get the code to
+    # print 5 sig figs for the D4000 column.
+    # Added this short list, i.e., only these
+    # 49 galaxies go into the paper pdf. These 
+    # galaxies were randomly selected earlier
+    # for the revised version of the paper.
+    # But I only need to update the printed D4000
+    # value so I can't choose another random set of 
+    # galaxies to print after the paper is accepted.
+    galaxy_ids_to_print = np.array([89573    , 96475    , 66753    , 94085    , 33414    , 74987    ,\
+     83499    , 125098   , 124386   , 86522    , 76405    , 92378    , 82816    , 58856    , 70857    ,\
+      112509   , 79185    , 54598    , 121302   , 119879   , 41630    , 98997    , 86203    , 105455   ,\
+       66729    , 63902    , 81011    , 125952   , 115781   , 76592    , 26158    , 111741   , 31899    ,\
+        109151   , 132474   , 21592    , 34821    , 109794   , 118100   , 135087   , 19226    , 118459   ,\
+         108892   , 47038    , 89031    , 96844    , 113678   , 90546    , 83248    ])
+    galaxy_fields_to_print = np.array(['GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N',\
+    'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', \
+    'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-N', 'GOODS-S', \
+    'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', \
+    'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', \
+    'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S', 'GOODS-S'])
+
     total_galaxies = 0
     large_d4000_err_count = 0
 
-    for i in range(len(all_ids)):
-        current_id = all_ids[i]
-        current_field = all_fields[i]
+    # If you want to go to the original version of the code
+    # then get this for loop to loop over all_ids.
+    # Comment out the print_id_idx = np.where() line.
+    # And also replace [print_id_idx] with [i] everywhere.
+
+    for i in range(len(galaxy_ids_to_print)):
+
+        print_id_idx = int(np.where(all_ids == galaxy_ids_to_print[i])[0])
+
+        current_id = all_ids[print_id_idx]
+        current_field = all_fields[print_id_idx]
 
         sample_idx = np.where(final_sample['pearsid'] == current_id)[0]
         if not sample_idx.size:
@@ -113,7 +144,7 @@ def main():
             sys.exit(0)
 
         # Get D4000 at specz
-        current_specz = zs[i]
+        current_specz = zs[print_id_idx]
 
         lam_em = grism_lam_obs / (1 + current_specz)
         flam_em = grism_flam_obs * (1 + current_specz)
@@ -139,18 +170,18 @@ def main():
             current_imag = pears_scat['imag'][master_cat_idx]
 
         # Cut on imag # ONLY for the table that goes into the paper!!
-        #if current_imag > 23.5:
-        #    continue
+        if current_imag > 23.5:
+            continue
 
         # Get errors on redshifts   # from chi2 map NOT p(z) curve
-        high_zperr = zp_high_bound_chi2[i] - zp[i]
-        low_zperr  = zp[i] - zp_low_bound_chi2[i]
+        high_zperr = zp_high_bound_chi2[print_id_idx] - zp[print_id_idx]
+        low_zperr  = zp[print_id_idx] - zp_low_bound_chi2[print_id_idx]
 
-        high_zgerr = zg_high_bound_chi2[i] - zg[i]
-        low_zgerr  = zg[i] - zg_low_bound_chi2[i]
+        high_zgerr = zg_high_bound_chi2[print_id_idx] - zg[print_id_idx]
+        low_zgerr  = zg[print_id_idx] - zg_low_bound_chi2[print_id_idx]
 
-        high_zspzerr = zspz_high_bound_chi2[i] - zspz[i]
-        low_zspzerr  = zspz[i] - zspz_low_bound_chi2[i]
+        high_zspzerr = zspz_high_bound_chi2[print_id_idx] - zspz[print_id_idx]
+        low_zspzerr  = zspz[print_id_idx] - zspz_low_bound_chi2[print_id_idx]
 
         if d4000 >= 1.1 and d4000 < 2.0:
             # Some formatting stuff just to make it easier to read on the screen and the tex file
@@ -173,8 +204,8 @@ def main():
             if len(current_netsig_to_print) == 5:
                 current_netsig_to_print += ' '
 
-            current_res_zphot = (zp[i] - current_specz) / (1 + current_specz)
-            current_res_zspz = (zspz[i] - current_specz) / (1 + current_specz)
+            current_res_zphot = (zp[print_id_idx] - current_specz) / (1 + current_specz)
+            current_res_zspz = (zspz[print_id_idx] - current_specz) / (1 + current_specz)
 
             current_res_zphot_to_print = str("{:.3f}".format(current_res_zphot))
             if current_res_zphot_to_print[0] != '-':
@@ -189,14 +220,14 @@ def main():
                 print "{:.7f}".format(current_ra), "  &",
                 print current_dec_to_print, "  &",
                 print "{:.3f}".format(current_specz), "  &",
-                print str("{:.2f}".format(zp[i])) + \
+                print str("{:.2f}".format(zp[print_id_idx])) + \
                 "$\substack{+" + str("{:.2f}".format(high_zperr)) + " \\\\ -" + str("{:.2f}".format(low_zperr)) + "}$", "  &",
-                print str("{:.2f}".format(zg[i])) + \
+                print str("{:.2f}".format(zg[print_id_idx])) + \
                 "$\substack{+" + str("{:.2f}".format(high_zgerr)) + " \\\\ -" + str("{:.2f}".format(low_zgerr)) + "}$", "  &",
-                print str("{:.2f}".format(zspz[i])) + \
+                print str("{:.2f}".format(zspz[print_id_idx])) + \
                 "$\substack{+" + str("{:.2f}".format(high_zspzerr)) + " \\\\ -" + str("{:.2f}".format(low_zspzerr)) + "}$", "  &",
                 print current_netsig_to_print, "  &",
-                print "{:.2f}".format(d4000), "  &",
+                print "{:.4f}".format(d4000), "  &",
                 print "{:.2f}".format(d4000_err), "  &",
                 #print current_res_zphot_to_print, "     ",
                 #print current_res_zspz_to_print, "    ",
@@ -208,13 +239,13 @@ def main():
                 print "{:.7f}".format(current_ra), "  ",
                 print "{:.6f}".format(current_dec), "  ",
                 print "{:.3f}".format(current_specz), "  ",
-                print "{:.2f}".format(zp[i]), "  ",
+                print "{:.2f}".format(zp[print_id_idx]), "  ",
                 print "{:.2f}".format(low_zperr), "  ",
                 print "{:.2f}".format(high_zperr), "  ",
-                print "{:.2f}".format(zg[i]), "  ",
+                print "{:.2f}".format(zg[print_id_idx]), "  ",
                 print "{:.2f}".format(low_zgerr), "  ",
                 print "{:.2f}".format(high_zgerr), "  ",
-                print "{:.2f}".format(zspz[i]), "  ",
+                print "{:.2f}".format(zspz[print_id_idx]), "  ",
                 print "{:.2f}".format(low_zspzerr), "  ",
                 print "{:.2f}".format(high_zspzerr), "  ",
                 print current_netsig_to_print, "  ",
@@ -224,10 +255,10 @@ def main():
                 #print current_res_zspz_to_print, "    ",
                 print "{:.2f}".format(current_imag)
 
-            #print current_id_to_print, current_field, current_specz, zp[i], zg[i], zspz[i], 
+            #print current_id_to_print, current_field, current_specz, zp[print_id_idx], zg[print_id_idx], zspz[print_id_idx], 
             #print d4000, d4000_err, current_netsig_to_print, current_imag
 
-            total_galaxies += 1
+        total_galaxies += 1
 
     print "Total galaxies:", total_galaxies
     print "Galaxies with large D4000 errors (>0.5):", large_d4000_err_count

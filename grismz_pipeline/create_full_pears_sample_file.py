@@ -244,7 +244,7 @@ def main():
         dtype=[('pears_id', int), ('pears_field', '|S7'), ('pears_ra', float), ('pears_dec', float), \
         ('zspec', float), ('zspec_source', '|S10'), ('zspec_qual', '|S1'), ('netsig', float), ('imag', float)])
     np.savetxt(massive_galaxies_dir + 'pears_full_sample.txt', data, \
-        fmt=['%d', '%s', '%.6f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f'],\
+        fmt=['%d', '%s', '%.7f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f'],\
         delimiter=' ', header='pearsid  field  ra  dec  zspec  zspec_source  zspec_qual  netsig  imag')
 
     return None
