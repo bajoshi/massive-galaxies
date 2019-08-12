@@ -284,41 +284,29 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     # np.intersect1d() is correct. 
     # This is because you are selecting only the finite values that are in BOTH arrays.
 
-    print "Old phot_fin_idx", phot_fin_idx
-
     if run_for_full_pears:  # i.e., only mess with selection of IRAC photometry and IMF when running for full PEARS sample
         if ignore_irac_ch3_ch4 and ignore_irac:
-            # i.e., last TWO wavebands are to be ignored ALWAYS in this case!
+            # i.e., last FOUR wavebands are to be ignored ALWAYS in this case!
             phot_fin_idx = np.setdiff1d(phot_fin_idx, np.array([8, 9, 10, 11]))
 
             # Now fix path
-            print "Current full path for saving:", spz_outdir
             spz_outdir = spz_outdir.replace('full_pears_results', 'full_pears_results_no_irac')
-            print "New full path:", spz_outdir
             if chosen_imf == 'Chabrier':
                 spz_outdir = spz_outdir.replace('full_pears_results_no_irac', 'full_pears_results_chabrier_no_irac')
-                print "Using Chabrier IMF"
-                print "New full path:", spz_outdir
+
         elif ignore_irac_ch3_ch4 and (not ignore_irac):
-            # i.e., last FOUR wavebands are to be ignored ALWAYS in this case!
+            # i.e., last TWO wavebands are to be ignored ALWAYS in this case!
             phot_fin_idx = np.setdiff1d(phot_fin_idx, np.array([10, 11]))
 
             # Now fix path
-            print "Current full path for saving:", spz_outdir
             spz_outdir = spz_outdir.replace('full_pears_results', 'full_pears_results_no_irac_ch3_ch4')
-            print "New full path:", spz_outdir
             if chosen_imf == 'Chabrier':
                 spz_outdir = spz_outdir.replace('full_pears_results_no_irac_ch3_ch4', 'full_pears_results_chabrier_no_irac_ch3_ch4')
-                print "Using Chabrier IMF"
-                print "New full path:", spz_outdir
+
         else:
             print "Unrecognized option for ignoring IRAC photometry." 
             print "Check given IRAC photometry options. Exiting."
             sys.exit(1)
-
-    print "New phot_fin_idx", phot_fin_idx
-
-    sys.exit(0)
 
     phot_fluxes_arr = phot_fluxes_arr[phot_fin_idx]
     phot_errors_arr = phot_errors_arr[phot_fin_idx]
