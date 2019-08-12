@@ -160,8 +160,19 @@ def main():
     """
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
+    # ------------- Also set other flags ------------- #
     # Flag for full sample run
     run_for_full_pears = True
+
+    # Flag for SPZ 
+    get_spz = False
+    # Other IRAC photometry flags
+    ignore_irac = True
+    ignore_irac_ch3_ch4 = True
+
+    # CHoose IMF
+    # Either 'Salpeter' or 'Chabrier'
+    chosen_imf = 'Salpeter'
 
     if run_for_full_pears:
         final_sample = np.genfromtxt(figs_data_dir + 'massive-galaxies/pears_full_sample.txt', dtype=None, names=True)
@@ -169,9 +180,6 @@ def main():
     else:
         final_sample = np.genfromtxt(figs_data_dir + 'spz_paper_sample.txt', dtype=None, names=True)
         get_grismz = True
-
-    # Flag for SPZ 
-    get_spz = False
 
     # ------------------------------ Get models and photometry ------------------------------ #
     # read in entire model set
@@ -296,7 +304,8 @@ def main():
             vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
             model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-            bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_spz, get_grismz, run_for_full_pears)) for j in xrange(jmin, jmax)]
+            bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+            get_spz, get_grismz, run_for_full_pears, ignore_irac, ignore_irac_ch3_ch4, chosen_imf)) for j in xrange(jmin, jmax)]
         for p in processes:
             p.start()
             print "Current process ID:", p.pid

@@ -29,7 +29,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
     model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start, \
     log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-    get_spz, get_grismz, run_for_full_pears):
+    get_spz, get_grismz, run_for_full_pears, ignore_irac, ignore_irac_ch3_ch4, chosen_imf):
 
     print "\n", "Working on:", current_field, current_id, "at", current_specz
 
@@ -281,6 +281,36 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     phot_errors_finite_idx = np.where(np.isfinite(phot_errors_arr))[0]
 
     phot_fin_idx = reduce(np.intersect1d, (phot_fluxes_finite_idx, phot_errors_finite_idx))
+
+    print phot_fin_idx
+
+    if run_for_full_pears:  # i.e., only mess with selection of IRAC photometry when running for full PEARS sample
+        if ignore_irac_ch3_ch4 and ignore_irac:
+            phot_fin_idx[-4:] = False  # i.e., last TWO wavebands are to be ignored ALWAYS in this case!
+            print "Current full path for saving:", spz_outdir
+            spz_outdir = spz_outdir.replace('full_pears_results', 'full_pears_results_no_irac')
+            print "New full path:", spz_outdir
+            if chosen_imf == 'Chabrier':
+                spz_outdir = spz_outdir.replace('full_pears_results_no_irac', 'full_pears_results_chabrier_no_irac')
+                print "Using Chabrier IMF"
+                print "New full path:", spz_outdir
+        elif ignore_irac_ch3_ch4 and (not ignore_irac):
+            phot_fin_idx[-2:] = False  # i.e., last FOUR wavebands are to be ignored ALWAYS in this case!
+            print "Current full path for saving:", spz_outdir
+            spz_outdir = spz_outdir.replace('full_pears_results', 'full_pears_results_no_irac_ch3_ch4')
+            print "New full path:", spz_outdir
+            if chosen_imf == 'Chabrier':
+                spz_outdir = spz_outdir.replace('full_pears_results_no_irac_ch3_ch4', 'full_pears_results_chabrier_no_irac_ch3_ch4')
+                print "Using Chabrier IMF"
+                print "New full path:", spz_outdir
+        else:
+            print "Unrecognized option for ignoring IRAC photometry." 
+            print "Check given IRAC photometry options. Exiting."
+            sys.exit(1)
+
+    print phot_fin_idx
+
+    sys.exit(0)
 
     phot_fluxes_arr = phot_fluxes_arr[phot_fin_idx]
     phot_errors_arr = phot_errors_arr[phot_fin_idx]
