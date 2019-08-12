@@ -289,7 +289,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     if run_for_full_pears:  # i.e., only mess with selection of IRAC photometry and IMF when running for full PEARS sample
         if ignore_irac_ch3_ch4 and ignore_irac:
             # i.e., last TWO wavebands are to be ignored ALWAYS in this case!
-            phot_fin_idx = np.setdiff1d(phot_fin_idx, np.array([10, 11]))
+            phot_fin_idx = np.setdiff1d(phot_fin_idx, np.array([8, 9, 10, 11]))
 
             # Now fix path
             print "Current full path for saving:", spz_outdir
@@ -301,7 +301,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
                 print "New full path:", spz_outdir
         elif ignore_irac_ch3_ch4 and (not ignore_irac):
             # i.e., last FOUR wavebands are to be ignored ALWAYS in this case!
-            phot_fin_idx = np.setdiff1d(phot_fin_idx, np.array([8, 9, 10, 11]))
+            phot_fin_idx = np.setdiff1d(phot_fin_idx, np.array([10, 11]))
 
             # Now fix path
             print "Current full path for saving:", spz_outdir

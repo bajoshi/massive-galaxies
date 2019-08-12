@@ -167,7 +167,7 @@ def main():
     # Flag for SPZ 
     get_spz = False
     # Other IRAC photometry flags
-    ignore_irac = True
+    ignore_irac = False
     ignore_irac_ch3_ch4 = True
 
     # CHoose IMF
