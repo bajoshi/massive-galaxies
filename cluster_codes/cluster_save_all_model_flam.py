@@ -143,13 +143,21 @@ def main():
     # Read in models with emission lines adn put in numpy array
     total_models = 37761
 
-    # Read model lambda grid # In agnstroms
-    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
+    chosen_imf = 'Chabrier'
+    if chosen_imf == 'Salpeter':
+        cspout_str = ''
+    elif chosen_imf == 'Chabrier':
+        cspout_str = '_chabrier'
 
-    if not os.path.isfile(figs_data_dir + 'model_comp_spec_llam_withlines.npy'):
+    # Read model lambda grid # In agnstroms
+    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines' + cspout_str + '.npy', mmap_mode='r')
+
+    # This is already done for the chabrier models by default
+    if not os.path.isfile(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy'):
+        print "Convert models to physical units."
         # ---------------- This block only needs to be run once ---------------- #
 
-        model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
+        model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines' + cspout_str + '.npy', mmap_mode='r')
 
         # Convert model spectra to correct L_lambda units i.e., erg s^-1 A^-1
         # They are given in units of solar luminosity per angstrom
@@ -157,13 +165,13 @@ def main():
         L_sol = 3.826e33
         model_comp_spec_llam = model_comp_spec_withlines_mmap * L_sol
 
-        np.save(figs_data_dir + 'model_comp_spec_llam_withlines.npy', model_comp_spec_llam)
+        np.save(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy', model_comp_spec_llam)
         del model_comp_spec_withlines_mmap
 
         # ---------------- End of code block to convert to Llam ---------------- #
 
     # Now read the model spectra # In erg s^-1 A^-1
-    model_comp_spec_llam_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_llam_withlines.npy', mmap_mode='r')
+    model_comp_spec_llam_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy', mmap_mode='r')
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", 
@@ -236,6 +244,13 @@ def main():
             p.join()
 
         print "Finished with filters:", all_filter_names[jmin:jmax]
+
+    sys.exit(0)
+    # This is for agave because sometimes it will exit the for loop
+    # above without going through all the filters. So you don't 
+    # want agave combining them in the wrong shape.
+    # SImply comment out the above part and run the block below
+    # once the flam computation is done.
 
     print "Now combining all filter computations into a single npy file."
 
