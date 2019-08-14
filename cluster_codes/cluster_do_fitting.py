@@ -1032,7 +1032,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]]
     print "Rest-frame U-B color:", ub_col
     print "Rest-frame B-V color:", bv_col
-    uv_col = ub_col - bv_col
+    uv_col = ub_col + bv_col
     print "Rest-frame U-V color:", uv_col
     print "Rest-frame V-J color:", vj_col
 

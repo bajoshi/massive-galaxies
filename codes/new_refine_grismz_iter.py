@@ -26,12 +26,14 @@ figs_dir = home + "/Desktop/FIGS/"
 
 sys.path.append(stacking_analysis_dir + 'codes/')
 sys.path.append(massive_galaxies_dir + 'codes/')
+sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
 import grid_coadd as gd
 import dn4000_catalog as dc
 import fast_chi2_jackknife_massive_galaxies as fcjm
 import fast_chi2_jackknife as fcj
 import refine_redshifts_dn4000 as old_ref
 import create_fsps_miles_libraries as ct
+import fullfitting_grism_broadband_emlines as ff
 
 def plotspectrum(lam, flam, ferr):
 
@@ -105,27 +107,41 @@ def get_model_set():
 
     print "Running code to generate set of models for comparison."
 
-    ssp_dir = home + "/Documents/galaxev_bc03_2016update/bc03/Miles_Atlas/Salpeter_IMF/"
+    chosen_imf = 'Chabrier'
+    if chosen_imf == 'Salpeter':
+        ssp_dir = home + "/Documents/galaxev_bc03_2016update/bc03/Miles_Atlas/Salpeter_IMF/"
+        example_ssp_filename = "bc2003_hr_xmiless_m22_salp_ssp.fits"
+        example_csp_filename = "bc2003_hr_m62_tauV0_csp_tau100_salp.fits"
+        cspout_str = ''
+        fitsname_end_str = '_salp.fits'
+        final_fitsname = 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits'
+    elif chosen_imf == 'Chabrier':
+        ssp_dir = home + "/Documents/galaxev_bc03_2016update/bc03/Miles_Atlas/Chabrier_IMF/"
+        example_ssp_filename = "bc2003_hr_xmiless_m22_chab_ssp.fits"
+        example_csp_filename = "bc2003_hr_m62_tauV0_csp_tau100_chab.fits"
+        cspout_str = '_chabrier'
+        fitsname_end_str = '_chab.fits'
+        final_fitsname = 'all_comp_spectra_chabrier_bc03_ssp_and_csp_nolsf_noresample.fits'
 
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
-    example_filename = "bc2003_hr_xmiless_m22_salp_ssp.fits"
-    example = fits.open(ssp_dir + example_filename)
+    example = fits.open(ssp_dir + example_ssp_filename)
     ages = example[2].data
     age_ind = np.where((ages/1e9 > 0.01) & (ages/1e9 < 13))[0]
     total_ages = int(len(age_ind))  # 123 for SSPs and CSPs
+    print "Total valid ages in SSPs:", total_ages
 
     # FITS file where the reduced number of spectra will be saved
     hdu = fits.PrimaryHDU()
     hdulist = fits.HDUList(hdu)
     
-    for filename in glob.glob(ssp_dir + '*.fits'):        
+    for filename in glob.glob(ssp_dir + '*.fits'):
         h = fits.open(filename)
         modellam = h[1].data
 
         """
         I'm not restricting the model wav range to something like 100 A to 10 micron
-        which would be more useful because most of the model points are withing this 
-        range anyway so it doesn't help save much space.
+        which would be more useful. But because most of the model points are within 
+        this range anyway, it doesn't help save much space.
         """
 
         # Open corresponding *.*color files.
@@ -211,27 +227,31 @@ def get_model_set():
 
         h.close()
 
+    # ----------------------------- CSPs ------------------------------ #
     # ---------- Currently restricted to solar metallicity ----------- #
     # Check directories for the models
-    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout_2016updated_galaxev/"
+    #  Directory for CSPs
+    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout" + cspout_str + "_2016updated_galaxev/"
+    final_savedir = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/"
     # This is if working on the laptop. 
     # Then you must be using the external hard drive where the models are saved.
     if not os.path.isdir(cspout):
         # On firstlight
-        cspout = home + '/Documents/galaxev_bc03_2016update/bc03/src/cspout_2016updated_galaxev/'
+        cspout = home + "/Documents/galaxev_bc03_2016update/bc03/src/cspout" + cspout_str + "_2016updated_galaxev/"
+        final_savedir = figs_dir
         if not os.path.isdir(cspout):
             print "Model directory not found. Exiting..."
             sys.exit(0)
 
     # Get valid ages i.e. between 10 Myr and 13 Gyr
     # Find total ages (and their indices in the individual fitfile's extensions) that are to be used in the fits
-    example_filename = "bc2003_hr_m62_tauV0_csp_tau100_salp.fits"
     metalfolder = "m62/"
     model_dir = cspout + metalfolder
-    example = fits.open(model_dir + example_filename)
+    example = fits.open(model_dir + example_csp_filename)
     ages = example[2].data
     age_ind = np.where((ages/1e9 > 0.01) & (ages/1e9 < 13))[0]
     total_ages = int(len(age_ind))  # 123 for SSPs and CSPs
+    print "Total valid ages in CSPs:", total_ages
 
     # model grid parameters
     # they are being redefined here to be able to identify 
@@ -250,7 +270,7 @@ def get_model_set():
     # Read in each individual spectrum and append it to the FITS HDU List
     for tauVarrval in tauVarr:
         for tauval in tauarr:
-            filename = model_dir + 'bc2003_hr_m62_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + '_salp.fits'
+            filename = model_dir + 'bc2003_hr_m62_tauV' + str(int(tauVarrval*10)) + '_csp_tau' + tauval + fitsname_end_str
 
             # define and initialize fits file
             h = fits.open(filename)
@@ -320,9 +340,16 @@ def get_model_set():
 
             h.close()
 
-    final_fitsname = 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits'
-    hdulist.writeto(figs_dir + final_fitsname, overwrite=True)
-    print "All models (SSP + CSP_solar) saved to one fits file in directory:", figs_dir
+    hdulist.writeto(final_savedir + final_fitsname, overwrite=True)
+    print "All models (SSP + CSP_solar) saved to one fits file in directory:"
+    print final_savedir
+
+    print "\n", "Make sure to trash all .fits files once you are"
+    print "sure that all spectra are saved correctly. You will"
+    print "probably end up saving ~20GB space by trashing all"
+    print ".fits files that are now not needed. Do this by hand."
+    print "Simply cd to cspout folder and do >> rm -f *.fits", "\n"
+
     print "Exiting."
     sys.exit(0)
 
@@ -858,6 +885,141 @@ def test_mock_spec():
 
     return None
 
+def add_emission_lines_and_save(figs_data_dir, chosen_imf):
+    """
+    Taken from code block in fullfitting_grism_broadband_emlines.py
+    But this should basically be run right after get_model_set()
+    which is why it is defined here.
+    """
+
+    total_models = 37761
+
+    if chosen_imf == 'Salpeter':
+        final_fitsname = 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits'
+        fitsname_end_str = '_salp.fits'
+        cspout_str = ''
+    elif chosen_imf == 'Chabrier':
+        final_fitsname = 'all_comp_spectra_chabrier_bc03_ssp_and_csp_nolsf_noresample.fits'
+        fitsname_end_str = '_chab.fits'
+        cspout_str = '_chabrier'
+
+    # First read the model lam grid for models with emission lines
+    # Directory for CSPs
+    cspout = "/Volumes/Bhavins_backup/bc03_models_npy_spectra/cspout" + cspout_str + "_2016updated_galaxev/"
+    # This is if working on the laptop. 
+    # Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(cspout):
+        # On firstlight
+        cspout = home + "/Documents/galaxev_bc03_2016update/bc03/src/cspout" + cspout_str + "_2016updated_galaxev/"
+        if not os.path.isdir(cspout):
+            print "Model directory not found. Exiting..."
+            sys.exit(0)
+
+    example_filename_lamgrid = "bc2003_hr_m62_tauV0_csp_tau100" + fitsname_end_str
+    metalfolder = "m62/"
+    model_dir = cspout + metalfolder
+    example_lamgrid_hdu = fits.open(model_dir + example_filename_lamgrid)
+    model_lam_grid = example_lamgrid_hdu[1].data
+    model_lam_grid = model_lam_grid.astype(np.float64)
+    example_lamgrid_hdu.close()
+
+    # -------------------------------------------------- #
+    # read in entire model set
+    bc03_all_spec_hdulist = fits.open(figs_data_dir + final_fitsname)
+
+    total_emission_lines_to_add = 12  # Make sure that this changes if you decide to add more lines to the models
+    model_comp_spec_withlines = np.zeros((total_models, len(model_lam_grid) + total_emission_lines_to_add), dtype=np.float64)
+
+    # create fits file to save models with emission lines
+    hdu = fits.PrimaryHDU()
+    hdulist = fits.HDUList(hdu)
+
+    for j in range(total_models):
+        print "Working on emission lines for model:", j+1, "of", total_models
+        nlyc = float(bc03_all_spec_hdulist[j+1].header['NLYC'])
+        metallicity = float(bc03_all_spec_hdulist[j+1].header['METAL'])
+        model_lam_grid_withlines, model_comp_spec_withlines[j] = \
+        ff.emission_lines(metallicity, model_lam_grid, bc03_all_spec_hdulist[j+1].data, nlyc)
+        # Also checked that in every case model_lam_grid_withlines is the exact same
+        # SO i'm simply using hte output from the last model.
+        
+        # Convert model spectra to correct L_lambda units i.e., erg s^-1 A^-1
+        # They are given in units of solar luminosity per angstrom
+        # Therefore they need to be multiplied by L_sol = 3.826e33 erg s^-1
+        L_sol = 3.826e33
+        # multiplication done while saving in the line below
+
+        hdr = fits.Header()
+        hdr['NLYC'] = str(nlyc)
+        hdr['METAL'] = str(metallicity)
+        hdulist.append(fits.ImageHDU(data=model_comp_spec_withlines[j]*L_sol, header=hdr))
+
+    # Save models with emission lines
+    hdulist.writeto(figs_data_dir + final_fitsname.replace('.fits', '_withemlines.fits'), overwrite=True)
+    np.save(figs_data_dir + 'model_lam_grid_withlines' + cspout_str + '.npy', model_lam_grid_withlines)
+    hdu.close()
+    del hdu
+
+    # Now save all the spectra in fits files to npy files
+    # The fits files may be deleted after the npy files for
+    # the spectra and the header info are saved.
+    np.save(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy', model_comp_spec_withlines)
+
+    return None
+
+def do_hdr2npy(figs_data_dir, chosen_imf):
+
+    total_models = 37761
+
+    if chosen_imf == 'Salpeter':
+        final_fitsname = 'all_comp_spectra_bc03_ssp_and_csp_nolsf_noresample.fits'
+        npy_end_str = '_salp.npy'
+    elif chosen_imf == 'Chabrier':
+        final_fitsname = 'all_comp_spectra_chabrier_bc03_ssp_and_csp_nolsf_noresample.fits'
+        npy_end_str = '_chab.npy'
+
+    # Read in HDUList for header info corresponding to spectra
+    bc03_all_spec_hdulist = fits.open(figs_data_dir + final_fitsname)
+
+    # Now save header info for each HDU into numpy arrays 
+    log_age_arr = np.zeros(total_models)
+    metal_arr = np.zeros(total_models)
+    nlyc_arr = np.zeros(total_models)
+    tau_gyr_arr = np.zeros(total_models)
+    tauv_arr = np.zeros(total_models)
+    ub_col_arr = np.zeros(total_models)
+    bv_col_arr = np.zeros(total_models)
+    vj_col_arr = np.zeros(total_models)
+    ms_arr = np.zeros(total_models)
+    mgal_arr = np.zeros(total_models)
+    for k in range(total_models):
+        log_age_arr[k] = float(bc03_all_spec_hdulist[k+1].header['LOGAGE'])
+        metal_arr[k] = float(bc03_all_spec_hdulist[k+1].header['METAL'])
+        nlyc_arr[k] = float(bc03_all_spec_hdulist[k+1].header['NLYC'])
+        tau_gyr_arr[k] = float(bc03_all_spec_hdulist[k+1].header['TAUGYR'])
+        tauv_arr[k] = float(bc03_all_spec_hdulist[k+1].header['TAUV'])
+        ub_col_arr[k] = float(bc03_all_spec_hdulist[k+1].header['UBCOL'])
+        bv_col_arr[k] = float(bc03_all_spec_hdulist[k+1].header['BVCOL'])
+        vj_col_arr[k] = float(bc03_all_spec_hdulist[k+1].header['VJCOL'])
+        ms_arr[k] = float(bc03_all_spec_hdulist[k+1].header['MS'])
+        mgal_arr[k] = float(bc03_all_spec_hdulist[k+1].header['MGAL'])
+
+    np.save(figs_data_dir + 'log_age_arr' + npy_end_str, log_age_arr)
+    np.save(figs_data_dir + 'metal_arr' + npy_end_str, metal_arr)
+    np.save(figs_data_dir + 'nlyc_arr' + npy_end_str, nlyc_arr)
+    np.save(figs_data_dir + 'tau_gyr_arr' + npy_end_str, tau_gyr_arr)
+    np.save(figs_data_dir + 'tauv_arr' + npy_end_str, tauv_arr)
+    np.save(figs_data_dir + 'ub_col_arr' + npy_end_str, ub_col_arr)
+    np.save(figs_data_dir + 'bv_col_arr' + npy_end_str, bv_col_arr)
+    np.save(figs_data_dir + 'vj_col_arr' + npy_end_str, vj_col_arr)
+    np.save(figs_data_dir + 'ms_arr' + npy_end_str, ms_arr)
+    np.save(figs_data_dir + 'mgal_arr' + npy_end_str, mgal_arr)
+
+    bc03_all_spec_hdulist.close()
+    del bc03_all_spec_hdulist
+
+    return None
+
 if __name__ == '__main__':
 
     # Start time
@@ -865,7 +1027,21 @@ if __name__ == '__main__':
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
-    get_model_set()
+    # Get correct directories 
+    figs_data_dir = '/Volumes/Bhavins_backup/bc03_models_npy_spectra/'
+    # This is if working on the laptop. 
+    # Then you must be using the external hard drive where the models are saved.
+    if not os.path.isdir(figs_data_dir):
+        figs_data_dir = figs_dir  # this path only exists on firstlight
+        if not os.path.isdir(figs_data_dir):
+            print "Model files not found. Exiting..."
+            sys.exit(0)
+
+    chosen_imf = 'Chabrier'
+
+    #get_model_set()
+    add_emission_lines_and_save(figs_data_dir, chosen_imf)
+    #do_hdr2npy(figs_data_dir, chosen_imf)
     sys.exit(0)
 
     # -------------------------------------- TESTING WITH A MOCK SPECTRUM ----------------------------------------- #
