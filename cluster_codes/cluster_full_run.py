@@ -167,12 +167,19 @@ def main():
     # Flag for SPZ 
     get_spz = False
     # Other IRAC photometry flags
-    ignore_irac = True
-    ignore_irac_ch3_ch4 = True
+    ignore_irac = False
+    ignore_irac_ch3_ch4 = False
 
     # CHoose IMF
     # Either 'Salpeter' or 'Chabrier'
-    chosen_imf = 'Salpeter'
+    chosen_imf = 'Chabrier'
+
+    if chosen_imf == 'Salpeter':
+        npy_end_str = '_salp.npy'
+        csp_str = ''
+    elif chosen_imf == 'Chabrier':
+        npy_end_str = '_chab.npy'
+        csp_str = '_chabrier'
 
     if run_for_full_pears:
         final_sample = np.genfromtxt(figs_data_dir + 'massive-galaxies/pears_full_sample.txt', dtype=None, names=True)
@@ -185,27 +192,27 @@ def main():
     # read in entire model set
     total_models = 37761
 
-    log_age_arr = np.load(figs_data_dir + 'log_age_arr.npy', mmap_mode='r')
-    metal_arr = np.load(figs_data_dir + 'metal_arr.npy', mmap_mode='r')
-    nlyc_arr = np.load(figs_data_dir + 'nlyc_arr.npy', mmap_mode='r')
-    tau_gyr_arr = np.load(figs_data_dir + 'tau_gyr_arr.npy', mmap_mode='r')
-    tauv_arr = np.load(figs_data_dir + 'tauv_arr.npy', mmap_mode='r')
-    ub_col_arr = np.load(figs_data_dir + 'ub_col_arr.npy', mmap_mode='r')
-    bv_col_arr = np.load(figs_data_dir + 'bv_col_arr.npy', mmap_mode='r')
-    vj_col_arr = np.load(figs_data_dir + 'vj_col_arr.npy', mmap_mode='r')
-    ms_arr = np.load(figs_data_dir + 'ms_arr.npy', mmap_mode='r')
-    mgal_arr = np.load(figs_data_dir + 'mgal_arr.npy', mmap_mode='r')
+    log_age_arr = np.load(figs_data_dir + 'log_age_arr' + npy_end_str, mmap_mode='r')
+    metal_arr = np.load(figs_data_dir + 'metal_arr' + npy_end_str, mmap_mode='r')
+    nlyc_arr = np.load(figs_data_dir + 'nlyc_arr' + npy_end_str, mmap_mode='r')
+    tau_gyr_arr = np.load(figs_data_dir + 'tau_gyr_arr' + npy_end_str, mmap_mode='r')
+    tauv_arr = np.load(figs_data_dir + 'tauv_arr' + npy_end_str, mmap_mode='r')
+    ub_col_arr = np.load(figs_data_dir + 'ub_col_arr' + npy_end_str, mmap_mode='r')
+    bv_col_arr = np.load(figs_data_dir + 'bv_col_arr' + npy_end_str, mmap_mode='r')
+    vj_col_arr = np.load(figs_data_dir + 'vj_col_arr' + npy_end_str, mmap_mode='r')
+    ms_arr = np.load(figs_data_dir + 'ms_arr' + npy_end_str, mmap_mode='r')
+    mgal_arr = np.load(figs_data_dir + 'mgal_arr' + npy_end_str, mmap_mode='r')
 
     # Read model lambda grid # In agnstroms
-    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
+    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines' + csp_str + '.npy', mmap_mode='r')
     # Now read the model spectra # In erg s^-1 A^-1
-    model_comp_spec_llam_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_llam_withlines.npy', mmap_mode='r')
+    model_comp_spec_llam_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_llam_withlines' + csp_str + '.npy', mmap_mode='r')
 
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", 
     print time.time() - start, "seconds."
 
-    all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam.npy', mmap_mode='r')
+    all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam' + csp_str + '.npy', mmap_mode='r')
 
     # ------------------------------- Read in photometry catalogs ------------------------------- #
     # GOODS photometry catalogs from 3DHST

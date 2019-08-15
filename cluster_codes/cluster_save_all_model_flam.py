@@ -129,6 +129,7 @@ def main():
     dt = datetime.datetime
     print "Starting at --", dt.now()
 
+    """
     # Redshift grid for models
     zrange = np.arange(0.005, 6.005, 0.005)
     print "Redshift grid for models:"
@@ -176,6 +177,7 @@ def main():
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", 
     print time.time() - start, "seconds."
+    """
 
     # ------------------------------- Read in filter curves ------------------------------- #
     """
@@ -186,6 +188,7 @@ def main():
     """
     #save_hst_filters_to_npy()
 
+    """
     uband_curve = np.genfromtxt(filter_curve_dir + 'kpno_mosaic_u.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=14)
     f435w_filt_curve = np.genfromtxt(filter_curve_dir + 'f435w_filt_curve.txt', \
@@ -251,22 +254,23 @@ def main():
     # want agave combining them in the wrong shape.
     # SImply comment out the above part and run the block below
     # once the flam computation is done.
+    """
 
     print "Now combining all filter computations into a single npy file."
 
     # Read in all individual filter flam 
-    u = np.load('all_model_flam_u.npy')
-    f435w = np.load('all_model_flam_f435w.npy')
-    f606w = np.load('all_model_flam_f606w.npy')
-    f775w = np.load('all_model_flam_f775w.npy')
-    f850lp = np.load('all_model_flam_f850lp.npy')
-    f125w = np.load('all_model_flam_f125w.npy')
-    f140w = np.load('all_model_flam_f140w.npy')
-    f160w = np.load('all_model_flam_f160w.npy')
-    irac1 = np.load('all_model_flam_irac1.npy')
-    irac2 = np.load('all_model_flam_irac2.npy')
-    irac3 = np.load('all_model_flam_irac3.npy')
-    irac4 = np.load('all_model_flam_irac4.npy')
+    u = np.load(figs_data_dir + 'all_model_flam_u.npy')
+    f435w = np.load(figs_data_dir + 'all_model_flam_f435w.npy')
+    f606w = np.load(figs_data_dir + 'all_model_flam_f606w.npy')
+    f775w = np.load(figs_data_dir + 'all_model_flam_f775w.npy')
+    f850lp = np.load(figs_data_dir + 'all_model_flam_f850lp.npy')
+    f125w = np.load(figs_data_dir + 'all_model_flam_f125w.npy')
+    f140w = np.load(figs_data_dir + 'all_model_flam_f140w.npy')
+    f160w = np.load(figs_data_dir + 'all_model_flam_f160w.npy')
+    irac1 = np.load(figs_data_dir + 'all_model_flam_irac1.npy')
+    irac2 = np.load(figs_data_dir + 'all_model_flam_irac2.npy')
+    irac3 = np.load(figs_data_dir + 'all_model_flam_irac3.npy')
+    irac4 = np.load(figs_data_dir + 'all_model_flam_irac4.npy')
 
     # now loop over all and write final output
     all_indiv_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
