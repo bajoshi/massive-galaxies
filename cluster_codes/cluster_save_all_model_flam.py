@@ -128,8 +128,7 @@ def main():
     start = time.time()
     dt = datetime.datetime
     print "Starting at --", dt.now()
-
-    """
+    
     # Redshift grid for models
     zrange = np.arange(0.005, 6.005, 0.005)
     print "Redshift grid for models:"
@@ -254,7 +253,6 @@ def main():
     # want agave combining them in the wrong shape.
     # SImply comment out the above part and run the block below
     # once the flam computation is done.
-    """
 
     print "Now combining all filter computations into a single npy file."
 
