@@ -176,7 +176,6 @@ def main():
     # total run time up to now
     print "All models now in numpy array and have emission lines. Total time taken up to now --", 
     print time.time() - start, "seconds."
-    """
 
     # ------------------------------- Read in filter curves ------------------------------- #
     """
@@ -187,7 +186,6 @@ def main():
     """
     #save_hst_filters_to_npy()
 
-    """
     uband_curve = np.genfromtxt(filter_curve_dir + 'kpno_mosaic_u.txt', dtype=None, \
         names=['wav', 'trans'], skip_header=14)
     f435w_filt_curve = np.genfromtxt(filter_curve_dir + 'f435w_filt_curve.txt', \
