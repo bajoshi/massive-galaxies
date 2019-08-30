@@ -154,6 +154,7 @@ def convert_to_sci_not(n):
         exponent = '-' + exponent.lstrip('0')
     elif float(exponent) > 0:
         exponent = exponent.lstrip('0')
+        exponent = exponent.lstrip('+')  # also remove the + sign that's not required
 
     # create final string with proper TeX sci notation and return
     sci_str = decimal + r'$\times$' + r'$\mathrm{10^{' + exponent + r'}}$'
