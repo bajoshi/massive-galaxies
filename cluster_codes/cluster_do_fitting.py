@@ -1,4 +1,4 @@
-from __future__ import division,print_function
+from __future__ import division, print_function
 
 import numpy as np
 import numpy.ma as ma
@@ -20,7 +20,7 @@ spz_outdir = "/home/bajoshi/spz_out/"
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-import os
+#import os
 #home = os.getenv('HOME')
 #spz_outdir = home + '/Desktop/FIGS/massive-galaxies/cluster_results/'
 #pears_datadir = home + '/Documents/PEARS/data_spectra_only/'

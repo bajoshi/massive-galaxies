@@ -103,7 +103,7 @@ Procedure to run this code:
     
 """
 
-from __future__ import division,print_function
+from __future__ import division, print_function
 
 import numpy as np
 from astropy.io import fits
@@ -148,7 +148,7 @@ def main(arr_index):
 
     # CHoose IMF
     # Either 'Salpeter' or 'Chabrier'
-    chosen_imf = 'Salpeter'
+    chosen_imf = 'Chabrier'
 
     if chosen_imf == 'Salpeter':
         npy_end_str = '_salp.npy'
@@ -163,6 +163,9 @@ def main(arr_index):
     else:
         final_sample = np.genfromtxt(figs_data_dir + 'spz_paper_sample.txt', dtype=None, names=True)
         get_grismz = True
+
+    total_final_sample = len(final_sample)
+    print("Total number of galaxies in sample:", total_final_sample)
 
     # ------------------------------ Get models and photometry ------------------------------ #
     # read in entire model set
@@ -220,7 +223,6 @@ def main(arr_index):
     # ------------------------------ Parallel processing ------------------------------ #
     print("Starting parallel processing. Will run each galaxy on a separate core.")
     print("Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds.")
-    total_final_sample = len(final_sample)
     max_cores = 3
 
     get_all_redshifts_v2(

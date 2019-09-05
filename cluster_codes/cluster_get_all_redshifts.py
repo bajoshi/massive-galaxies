@@ -1,4 +1,4 @@
-from __future__ import division,print_function
+from __future__ import division, print_function
 
 import numpy as np
 from astropy.io import fits
@@ -17,7 +17,7 @@ lsfdir = "/home/bajoshi/pears_lsfs/"
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-home = os.getenv('HOME')
+#home = os.getenv('HOME')
 #figs_data_dir = home + '/Desktop/FIGS/'
 #cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
 #lsfdir = home + '/Desktop/FIGS/new_codes/pears_lsfs/'
