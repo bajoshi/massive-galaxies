@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division,print_function
 
 import numpy as np
 import numpy.ma as ma
@@ -14,16 +14,16 @@ import scipy.integrate as spint
 
 import time
 
-#pears_datadir = "/home/bajoshi/pears_spectra/"
-#spz_outdir = "/home/bajoshi/spz_out/"
+pears_datadir = "/home/bajoshi/pears_spectra/"
+spz_outdir = "/home/bajoshi/spz_out/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
 import os
-home = os.getenv('HOME')
-spz_outdir = home + '/Desktop/FIGS/massive-galaxies/cluster_results/'
-pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
+#home = os.getenv('HOME')
+#spz_outdir = home + '/Desktop/FIGS/massive-galaxies/cluster_results/'
+#pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
 
 speed_of_light = 299792458e10  # angsroms per second
 speed_of_light_kms = 299792.458  # km per s
@@ -90,15 +90,15 @@ def get_net_sig(*args):
 
     # Make sure that the arrays are not empty to begin with
     if not count_arr.size:
-        print "Returning -99.0 for NetSig due to empty signal and/or noise array for this object (or some PA for this object)."
+        print("Returning -99.0 for NetSig due to empty signal and/or noise array for this object (or some PA for this object).")
         return -99.0
     if not error_arr.size:
-        print "Returning -99.0 for NetSig due to empty signal and/or noise array for this object (or some PA for this object)."
+        print("Returning -99.0 for NetSig due to empty signal and/or noise array for this object (or some PA for this object).")
         return -99.0
 
     # Also check that the error array does not have ALL zeros
     if np.all(error_arr == 0.0):
-        #print "Returning -99.0 for NetSig due to noise array containing all 0 for this object (or some PA for this object)."
+        #print("Returning -99.0 for NetSig due to noise array containing all 0 for this object (or some PA for this object).")
         return -99.0
 
     try:
@@ -140,8 +140,8 @@ def get_net_sig(*args):
 
         cumsum = np.asarray(cumsum)
         if not cumsum.size:
-            print "Exiting due to empty cumsum array. More debugging needed."
-            print "Cumulative sum array:", cumsum
+            print("Exiting due to empty cumsum array. More debugging needed.")
+            print("Cumulative sum array:", cumsum)
             sys.exit(0)
         netsig = np.nanmax(cumsum)
         
@@ -149,7 +149,7 @@ def get_net_sig(*args):
             
     except ZeroDivisionError:
         logging.warning("Division by zero! The net sig here cannot be trusted. Setting Net Sig to -99.")
-        print "Exiting. This error should not have come up anymore."
+        print("Exiting. This error should not have come up anymore.")
         sys.exit(0)
         return -99.0
 
@@ -210,15 +210,15 @@ def get_data(pears_index, field, check_contam=True):
     # Check that contamination level is not too high
     if check_contam:
         if np.nansum(contam) > 0.33 * np.nansum(flam_obs):
-            print pears_index, " in ", field, " has an too high a level of contamination.",
-            print "Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped."
+            print( pears_index, " in ", field, " has an too high a level of contamination.",)
+            print("Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped.")
             return_code = 0
             fitsfile.close()
             return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Check that input wavelength array is not empty
     if not lam_obs.size:
-        print pears_index, " in ", field, " has an empty wav array. Returning empty array..."
+        print(pears_index, " in ", field, " has an empty wav array. Returning empty array...")
         return_code = 0
         fitsfile.close()
         return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
@@ -424,30 +424,30 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
         highres_x0 = np.argmin(abs(model_lam_grid_z - resampling_lam_grid[0]))
         highres_xn = np.argmin(abs(model_lam_grid_z - resampling_lam_grid[-1]))
 
-        print "Integrating high-res model over [Angstroms]:", 
-        print model_lam_grid_z[highres_x0], model_lam_grid_z[highres_xn]
+        print("Integrating high-res model over [Angstroms]:", )
+        print(model_lam_grid_z[highres_x0], model_lam_grid_z[highres_xn])
         highres_y = model_comp_spec_redshifted[:, highres_x0:highres_xn+1]
         highres_x = model_lam_grid_z[highres_x0:highres_xn+1]
         
         high_res_result = simps(y=highres_y, x=highres_x, axis=1)
-        print "High-resolution integral result [erg/s/cm2]:", high_res_result
+        print("High-resolution integral result [erg/s/cm2]:", high_res_result)
 
         # ----------- Check for resampled model
-        print "Integrating low-res model over [Angstroms]:", 
-        print resampling_lam_grid[0], resampling_lam_grid[-1]
+        print("Integrating low-res model over [Angstroms]:", )
+        print(resampling_lam_grid[0], resampling_lam_grid[-1])
 
         low_res_result = simps(y=model_comp_spec_modified, x=resampling_lam_grid, axis=1)
-        print "Low-resolution integral result [erg/s/cm2]:", low_res_result
+        print("Low-resolution integral result [erg/s/cm2]:", low_res_result)
 
         # ----------- Also print how close the two integrals are (i.e., relative "error") ----------- #
-        print "\n"
-        print "Relative error between the two integrals:"
+        print("\n")
+        print("Relative error between the two integrals:")
         rel_err = abs((low_res_result - high_res_result))/ high_res_result
-        print rel_err
-        print rel_err[:20]
-        print rel_err[-20:]
-        print np.nanmin(rel_err), np.nanmax(rel_err)
-        print "\n"
+        print(rel_err)
+        print(rel_err[:20])
+        print(rel_err[-20:])
+        print(np.nanmin(rel_err), np.nanmax(rel_err))
+        print("\n")
 
     return model_comp_spec_modified
 
@@ -462,9 +462,9 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
 
     # make sure that the arrays are the same length
     if int(model_spec_in_objlamgrid.shape[1]) != len(grism_lam_obs):
-        print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
-        print "Model spectrum array shape:", model_spec_in_objlamgrid.shape
-        print "Object spectrum length:", len(grism_lam_obs)
+        print("Arrays of unequal length. Must be fixed before moving forward. Exiting...")
+        print("Model spectrum array shape:", model_spec_in_objlamgrid.shape)
+        print("Object spectrum length:", len(grism_lam_obs))
         sys.exit(0)
 
     if use_broadband:
@@ -517,13 +517,13 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         # Get covariance matrix
         covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, lsf_covar_len)
         alpha_, chi2_ = get_alpha_chi2_covmat(total_models, combined_flam_obs, model_spec_in_objlamgrid, covmat)
-        print "Min chi2 for redshift:", min(chi2_)
+        print("Min chi2 for redshift:", min(chi2_))
 
     else:
         # Get covariance matrix
         covmat = get_covmat(grism_lam_obs, grism_flam_obs, grism_ferr_obs, lsf_covar_len)
         alpha_, chi2_ = get_alpha_chi2_covmat(total_models, grism_flam_obs, model_spec_in_objlamgrid, covmat)
-        print "Min chi2 for redshift:", min(chi2_)
+        print("Min chi2 for redshift:", min(chi2_))
 
     return chi2_, alpha_
 
@@ -550,8 +550,8 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
     # first modify the models at the current redshift to be able to compare with data
     model_comp_spec_modified = \
     redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length)
-    print "Model mods done at current z:", z
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print("Model mods done at current z:", z)
+    print("Total time taken up to now --", time.time() - start_time, "seconds.")
 
     # ------------- Now do the chi2 computation ------------- #
     if ub:
@@ -618,8 +618,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     for i in range(total_models):
         model_comp_spec_lsfconv[i] = fftconvolve(model_comp_spec[i], lsf, mode = 'same')
 
-    print "Convolution done.",
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print("Convolution done.",)
+    print("Total time taken up to now --", time.time() - start_time, "seconds.")
 
     # To get the covariance length, fit the LSF with a gaussian
     # and then the cov length is simply the best fit std dev.
@@ -631,7 +631,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     # get fit std.dev.
     lsf_std =  g.parameters[2]
     lsf_covar_len = 3*lsf_std
-    print "Grism covariance length based on fitting Gaussian to LSF is:", lsf_covar_len
+    print("Grism covariance length based on fitting Gaussian to LSF is:", lsf_covar_len)
     # i.e., if any pair of spectral elements are 3-sigma away
     # from each other then their data is uncorrelated. 
 
@@ -684,13 +684,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
             # even if the loop is broken out of in the first iteration.
             break
 
-    print "Minimum chi2 from sorted indices which also agrees with the age of the Universe:", "{:.4}".format(chi2[min_idx_2d])
-    print "Minimum chi2 from np.min():", "{:.4}".format(np.min(chi2))
+    print("Minimum chi2 from sorted indices which also agrees with the age of the Universe:", "{:.4}".format(chi2[min_idx_2d]))
+    print("Minimum chi2 from np.min():", "{:.4}".format(np.min(chi2)))
     z_grism = z_arr_to_check[min_idx_2d[0]]
 
-    print "Current best fit log(age [yr]):", "{:.4}".format(age)
-    print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
-    print "Current best fit Tau_V:", tauv
+    print("Current best fit log(age [yr]):", "{:.4}".format(age))
+    print("Current best fit Tau [Gyr]:", "{:.4}".format(tau))
+    print("Current best fit Tau_V:", tauv)
 
     ############# -------------------------- Errors on z and other derived params ----------------------------- #############
     min_chi2 = chi2[min_idx_2d]
@@ -725,8 +725,8 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     low_z_lim = np.min(z_grism_range)
     upper_z_lim = np.max(z_grism_range)
-    print "Min z_grism within 1-sigma error:", low_z_lim
-    print "Max z_grism within 1-sigma error:", upper_z_lim
+    print("Min z_grism within 1-sigma error:", low_z_lim)
+    print("Max z_grism within 1-sigma error:", upper_z_lim)
 
     # Save p(z), chi2 map, and redshift grid
     if use_broadband:
@@ -739,13 +739,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         np.save(savedir_grismz + obj_field + '_' + str(obj_id) + '_zg_pz.npy', pz)
 
     z_wt = np.sum(z_arr_to_check * pz)
-    print "Weighted z:", "{:.3}".format(z_wt)
-    print "Grism redshift:", z_grism
-    print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
-    print "Photometric redshift:", photoz
+    print("Weighted z:", "{:.3}".format(z_wt))
+    print("Grism redshift:", z_grism)
+    print("Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz)
+    print("Photometric redshift:", photoz)
 
     bestalpha = alpha[min_idx_2d]
-    print "Vertical scaling factor for best fit model:", bestalpha
+    print("Vertical scaling factor for best fit model:", bestalpha)
 
     return z_grism, z_wt, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, model_idx, age, tau, (tauv/1.086)
 
@@ -763,7 +763,7 @@ def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, pho
 def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, model_comp_spec, total_models, start_time):
 
-    print "\n", "Currently at redshift:", z
+    print("\n", "Currently at redshift:", z)
 
     # ------------------------------- Read in filter curves ------------------------------- #
 
@@ -844,7 +844,8 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
         # multiply model spectrum to filter curve
         den = simps(y=filt_interp, x=model_lam_grid_z)
-        for i in xrange(total_models):
+#       for i in xrange(total_models):
+        for i in range(total_models):
 
             num = simps(y=model_comp_spec[i] * filt_interp / (4 * np.pi * dl * dl * (1+z)), x=model_lam_grid_z)
             all_filt_flam_model[filt_count, i] = num / den
@@ -860,15 +861,15 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     # i.e. minimizing the number of times each filter is gridded on to the model grid
     all_filt_flam_model_t = all_filt_flam_model.T
 
-    print "Filter f_lam for models computed."
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print("Filter f_lam for models computed.")
+    print("Total time taken up to now --", time.time() - start_time, "seconds.")
 
     # ------------------------------------ Now do the chi2 computation ------------------------------------ #
     # compute alpha and chi2
     alpha_ = np.sum(phot_flam_obs * all_filt_flam_model_t / (phot_ferr_obs**2), axis=1) / np.sum(all_filt_flam_model_t**2 / phot_ferr_obs**2, axis=1)
     chi2_ = np.sum(((phot_flam_obs - (alpha_ * all_filt_flam_model).T) / phot_ferr_obs)**2, axis=1)
 
-    print "Min chi2 for redshift:", min(chi2_)
+    print("Min chi2 for redshift:", min(chi2_))
 
     return chi2_, alpha_
 
@@ -927,14 +928,15 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     # Check for all NaNs in chi2 array
     # For now skipping all galaxies that have any NaNs in them.
     if len(np.where(np.isfinite(chi2.ravel()))[0]) != len(chi2.ravel()):
-        print "Chi2 has NaNs. Skiiping galaxy for now."
+        print("Chi2 has NaNs. Skiiping galaxy for now.")
         return -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0
 
     ####### -------------------------------------- Min chi2 and best fit params -------------------------------------- #######
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
 
-    for k in xrange(len(chi2.ravel())):
+#   for k in xrange(len(chi2.ravel())):
+    for k in range(len(chi2.ravel())):
 
         # Find the minimum chi2
         min_idx = sortargs[k]
@@ -972,10 +974,10 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     zp_minchi2 = z_arr_to_check[min_idx_2d[0]]
 
-    print "Age of Universe at best-fit z (log[Age (yr)]):", "{:.4}".format(np.log10(age_at_z))
-    print "Current best fit log(age [yr]):", "{:.4}".format(age)
-    print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
-    print "Current best fit Tau_V:", tauv
+    print("Age of Universe at best-fit z (log[Age (yr)]):", "{:.4}".format(np.log10(age_at_z)))
+    print("Current best fit log(age [yr]):", "{:.4}".format(age))
+    print("Current best fit Tau [Gyr]:", "{:.4}".format(tau))
+    print("Current best fit Tau_V:", tauv)
 
     ############# -------------------------- Errors on z and other derived params ----------------------------- #############
     min_chi2 = chi2[min_idx_2d]
@@ -996,15 +998,15 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     chi2_red_error = np.sqrt(2/dof)
     min_chi2_red = min_chi2 / dof
     chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
-    print "Minimum chi2 (reduced):", "{:.4}".format(min_chi2_red)
+    print("Minimum chi2 (reduced):", "{:.4}".format(min_chi2_red))
 
     # use first dimension indices to get error on zphot
     z_range = z_arr_to_check[chi2_red_2didx[0]]
 
     low_z_lim = np.min(z_range)
     upper_z_lim = np.max(z_range)
-    print "Min z within 1-sigma error:", low_z_lim
-    print "Max z within 1-sigma error:", upper_z_lim
+    print("Min z within 1-sigma error:", low_z_lim)
+    print("Max z within 1-sigma error:", upper_z_lim)
 
     # Save pz and z_arr 
     np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_z_arr.npy', z_arr_to_check)
@@ -1013,28 +1015,28 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     np.save(savedir + obj_field + '_' + str(obj_id) + '_photoz_pz.npy', pz)
 
     zp = np.sum(z_arr_to_check * pz)
-    print "Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz
+    print("Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz)
     #print "Previous photometric redshift from 3DHST:", photoz
-    print "Photometric redshift from min chi2 from this code:", "{:.3f}".format(zp_minchi2)
-    print "Photometric redshift (weighted) from this code:", "{:.3f}".format(zp)
+    print("Photometric redshift from min chi2 from this code:", "{:.3f}".format(zp_minchi2))
+    print("Photometric redshift (weighted) from this code:", "{:.3f}".format(zp))
 
     # Stellar mass
     bestalpha = alpha[min_idx_2d]
-    print "Min idx 2d:", min_idx_2d
-    print "Alpha for best-fit model:", "{:.2e}".format(bestalpha)
+    print("Min idx 2d:", min_idx_2d)
+    print("Alpha for best-fit model:", "{:.2e}".format(bestalpha))
 
     ms = template_ms * bestalpha
-    print "Template mass [normalized to 1 sol]:", template_ms
-    print "Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms)
+    print("Template mass [normalized to 1 sol]:", template_ms)
+    print("Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms))
 
     # Rest frame f_lambda values
     zbest_idx = np.argmin(abs(z_model_arr - zp))
-    print "Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]]
-    print "Rest-frame U-B color:", ub_col
-    print "Rest-frame B-V color:", bv_col
+    print("Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]])
+    print("Rest-frame U-B color:", ub_col)
+    print("Rest-frame B-V color:", bv_col)
     uv_col = ub_col + bv_col
-    print "Rest-frame U-V color:", uv_col
-    print "Rest-frame V-J color:", vj_col
+    print("Rest-frame U-V color:", uv_col)
+    print("Rest-frame V-J color:", vj_col)
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, \
     template_ms, ms, uv_col, vj_col, model_idx, age, tau, (tauv/1.086)

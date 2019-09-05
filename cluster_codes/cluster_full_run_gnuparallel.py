@@ -135,30 +135,6 @@ def main(arr_index):
     dt = datetime.datetime
     print("Starting at --", dt.now())
 
-    """
-    figs_data_dir = '/Users/bhavinjoshi/Desktop/FIGS/'
-    threedhst_datadir = '/Volumes/Bhavins_backup/3dhst_data/'
-
-    final_sample = np.genfromtxt(figs_data_dir + 'massive-galaxies/pears_full_sample.txt', dtype=None, names=True)
-
-    log_age_arr = np.zeros(5)
-    metal_arr = np.zeros(5)
-    nlyc_arr = np.zeros(5)
-    tau_gyr_arr = np.zeros(5)
-    tauv_arr = np.zeros(5)
-    ub_col_arr = np.zeros(5)
-    bv_col_arr = np.zeros(5)
-    vj_col_arr = np.zeros(5)
-    ms_arr = np.zeros(5)
-    mgal_arr = np.zeros(5)
-
-    model_lam_grid_withlines_mmap = np.zeros(5)
-    model_comp_spec_llam_withlines_mmap = np.zeros(5)
-    all_model_flam_mmap = np.zeros(5)
-
-    get_grismz = False
-    """
-
     # ------------------------------- Get catalog for final sample ------------------------------- #
     # ------------- Also set other flags ------------- #
     # Flag for full sample run
@@ -246,53 +222,6 @@ def main(arr_index):
     print("Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds.")
     total_final_sample = len(final_sample)
     max_cores = 3
-
-    """
-    Use the following code block to run only on the 4 galaxies to be shown in
-    figure 3 of the paper. This should be run with 4 cores on Agave.
-    Make sure to change the number of cores in the bash script as well.
-    The results will be overwritten so make sure to save any old results 
-    that are needed.
-    Don't need to change max cores at all.
-    Comment out the code block to be used for the full sample.
-    """
-    """
-    # First get the properties of galaxies in Figure 3
-    fig3_id_list = [82267, 48189, 100543, 126769]
-    fig3_field_list = ['GOODS-N', 'GOODS-N', 'GOODS-S', 'GOODS-S']
-    fig3_ra_list = []
-    fig3_dec_list = []
-    fig3_zspec_list = []
-
-    for i in range(len(fig3_id_list)):
-
-        c_id = fig3_id_list[i]
-        c_field = fig3_field_list[i]
-
-        id_idx = np.where((final_sample['pearsid'] == c_id) & (final_sample['field'] == c_field))[0]
-
-        fig3_ra_list.append(final_sample['ra'][id_idx])
-        fig3_dec_list.append(final_sample['dec'][id_idx])
-        fig3_zspec_list.append(final_sample['zspec'][id_idx])
-        
-    # Now run the pipeline for the example galaxies
-    processes = [mp.Process(target=get_all_redshifts_v2, args=(fig3_id_list[u], \
-        fig3_field_list[u], fig3_ra_list[u], fig3_dec_list[u], 
-        fig3_zspec_list[u], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
-        vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-        model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, \
-        log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-        bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_spz, get_grismz, run_for_full_pears)) for u in range(len(fig3_id_list))]
-
-    print processes
-
-    # Run all example galaxies
-    for p in processes:
-        p.start()
-        print "Current process ID:", p.pid
-    for p in processes:
-        p.join()
-    """
 
     get_all_redshifts_v2(
         final_sample['pearsid'][arr_index], 

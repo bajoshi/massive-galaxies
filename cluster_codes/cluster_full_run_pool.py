@@ -162,7 +162,7 @@ def main():
     # ------------------------------- Get catalog for final sample ------------------------------- #
     # ------------- Also set other flags ------------- #
     # Flag for full sample run
-    run_for_full_pears = False
+    run_for_full_pears = True
 
     # Flag for SPZ 
     get_spz = True
@@ -172,7 +172,7 @@ def main():
 
     # CHoose IMF
     # Either 'Salpeter' or 'Chabrier'
-    chosen_imf = 'Salpeter'
+    chosen_imf = 'Chabrier'
 
     if chosen_imf == 'Salpeter':
         npy_end_str = '_salp.npy'
@@ -295,16 +295,16 @@ def main():
     """
 
     # Code block for full sample
-#   p = mp.Pool(processes=max_cores)
-#   p.starmap(get_all_redshifts_v2, [(final_sample['pearsid'][j], 
-#       final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
-#       final_sample['zspec'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, 
-#       vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, 
-#       model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, 
-#       log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, 
-#       bv_col_arr, vj_col_arr, ms_arr, mgal_arr, 
-#       get_spz, get_grismz, run_for_full_pears, ignore_irac, ignore_irac_ch3_ch4, chosen_imf) for j in range(total_final_sample)]
-#   )
+    #p = mp.Pool(processes=max_cores)
+    #p.starmap(get_all_redshifts_v2, [(final_sample['pearsid'][j], 
+    #    final_sample['field'][j], final_sample['ra'][j], final_sample['dec'][j], 
+    #    final_sample['zspec'][j], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, 
+    #    vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, 
+    #    model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, 
+    #    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, 
+    #    bv_col_arr, vj_col_arr, ms_arr, mgal_arr, 
+    #    get_spz, get_grismz, run_for_full_pears, ignore_irac, ignore_irac_ch3_ch4, chosen_imf) for j in range(total_final_sample)]
+    #)
     get_all_redshifts_v2(final_sample['pearsid'][0], 
         final_sample['field'][0], final_sample['ra'][0], final_sample['dec'][0], 
         final_sample['zspec'][0], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, 
@@ -314,7 +314,7 @@ def main():
         bv_col_arr, vj_col_arr, ms_arr, mgal_arr, 
         get_spz, get_grismz, run_for_full_pears, ignore_irac, ignore_irac_ch3_ch4, chosen_imf 
     )
-#   p.terminate()
+    #p.terminate()
 
     print("Done with all galaxies. Exiting.")
     print("Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds.")

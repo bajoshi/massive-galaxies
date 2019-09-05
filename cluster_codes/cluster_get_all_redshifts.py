@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division,print_function
 
 import numpy as np
 from astropy.io import fits
@@ -10,28 +10,28 @@ import os
 import time
 import datetime as dt
 
-#figs_data_dir = "/home/bajoshi/models_and_photometry/"
-#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
-#lsfdir = "/home/bajoshi/pears_lsfs/"
+figs_data_dir = "/home/bajoshi/models_and_photometry/"
+cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+lsfdir = "/home/bajoshi/pears_lsfs/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
 home = os.getenv('HOME')
-figs_data_dir = home + '/Desktop/FIGS/'
-cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
-lsfdir = home + '/Desktop/FIGS/new_codes/pears_lsfs/'
+#figs_data_dir = home + '/Desktop/FIGS/'
+#cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
+#lsfdir = home + '/Desktop/FIGS/new_codes/pears_lsfs/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
 
-def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, current_specz,\
-    goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
-    model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start, \
-    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, current_specz,
+    goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, 
+    model_lam_grid_withlines, model_comp_spec_withlines, all_model_flam, total_models, start, 
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, 
     get_spz, get_grismz, run_for_full_pears, ignore_irac, ignore_irac_ch3_ch4, chosen_imf):
 
-    print "\n", "Working on:", current_field, current_id, "at", current_specz
+    print("\n", "Working on:", current_field, current_id, "at", current_specz)
 
     # Get the correct directory to save results in
     if run_for_full_pears and ('firstlight' in os.uname()[1]):
@@ -56,7 +56,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         #    return None
 
         if os.path.isfile(results_filename):
-            print current_field, current_id, "already done. Moving to next galaxy."
+            print(current_field, current_id, "already done. Moving to next galaxy.")
             return None
 
     modify_lsf = True
@@ -73,8 +73,8 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     cf.get_data(current_id, current_field)
 
     if return_code == 0:
-        print current_id, current_field
-        print "Return code should not have been 0. Exiting."
+        print(current_id, current_field)
+        print("Return code should not have been 0. Exiting.")
         sys.exit(0)
 
     threed_ra = phot_cat_3dhst['ra']
@@ -91,7 +91,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     within 0.3 arseconds then choose the closest one.
     """
     if len(threed_phot_idx) > 1:
-        print "Multiple matches found in photmetry catalog. Choosing the closest one."
+        print("Multiple matches found in photmetry catalog. Choosing the closest one.")
 
         ra_two = current_ra
         dec_two = current_dec
@@ -112,7 +112,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         threed_phot_idx = threed_phot_idx[dist_idx]
 
     elif len(threed_phot_idx) == 0:
-        print "Match not found in Photmetry catalog. Exiting."
+        print("Match not found in Photmetry catalog. Exiting.")
         sys.exit(0)
 
     # ------------------------------- Get photometric fluxes and their errors ------------------------------- #
@@ -172,7 +172,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
 
     avg_f775w_flam_grism = num / den
     aper_corr_factor = flam_f775w / avg_f775w_flam_grism
-    print "Aperture correction factor:", "{:.3}".format(aper_corr_factor)
+    print("Aperture correction factor:", "{:.3}".format(aper_corr_factor))
 
     grism_flam_obs *= aper_corr_factor  # applying factor
 
@@ -243,7 +243,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         lsf = np.genfromtxt(lsf_filename)
         lsf = lsf.astype(np.float64)  # Force dtype for cython code
     except IOError:
-        print "LSF not found. Moving to next galaxy."
+        print("LSF not found. Moving to next galaxy.")
         return None
 
     # -------- Stetch the LSF ------- #
@@ -303,14 +303,9 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
             if chosen_imf == 'Chabrier':
                 spz_outdir = spz_outdir.replace('full_pears_results_no_irac_ch3_ch4', 'full_pears_results_chabrier_no_irac_ch3_ch4')
 
-        elif (not ignore_irac_ch3_ch4) and (not ignore_irac):
-            # i.e., don't ignore any photometry data. just change the directory for chabrier
-            if chosen_imf == 'Chabrier':
-                spz_outdir = spz_outdir.replace('full_pears_results', 'full_pears_results_chabrier')
-
         else:
-            print "Unrecognized option for ignoring IRAC photometry." 
-            print "Check given IRAC photometry options. Exiting."
+            print("Unrecognized option for ignoring IRAC photometry." )
+            print("Check given IRAC photometry options. Exiting.")
             sys.exit(1)
 
     phot_fluxes_arr = phot_fluxes_arr[phot_fin_idx]
@@ -325,7 +320,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     covmat = np.identity(len(grism_lam_obs) + len(phot_lam))
 
     # ------------- Call fitting function for photo-z ------------- #
-    print "Computing photo-z now."
+    print("Computing photo-z now.")
     
     zp_minchi2, zp, zp_zerr_low, zp_zerr_up, zp_min_chi2, zp_bestalpha, \
     zp_template_ms, zp_ms, zp_uv, zp_vj, zp_model_idx, zp_age, zp_tau, zp_av = \
@@ -337,7 +332,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
 
     # ------------- Call fitting function for SPZ ------------- #
     if get_spz:
-        print "\n", "Photo-z done. Moving on to SPZ computation now."
+        print("\n", "Photo-z done. Moving on to SPZ computation now.")
     
         zspz_minchi2, zspz, zspz_zerr_low, zspz_zerr_up, zspz_min_chi2, \
         zspz_bestalpha, zspz_model_idx, zspz_age, zspz_tau, zspz_av = \
@@ -350,7 +345,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
     if get_grismz:
-        print "\n", "SPZ done. Moving on to grism-z computation now."
+        print("\n", "SPZ done. Moving on to grism-z computation now.")
             
         zg_minchi2, zg, zg_zerr_low, zg_zerr_up, zg_min_chi2, zg_bestalpha, zg_model_idx, zg_age, zg_tau, zg_av = \
         cf.do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_fluxes_arr, phot_errors_arr, phot_lam, covmat, \
@@ -359,7 +354,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
             run_for_full_pears, use_broadband=False, single_galaxy=False, for_loop_method='sequential')
 
-    print "All redshifts computed for:", current_field, current_id, "    Will save results now."
+    print("All redshifts computed for:", current_field, current_id, "    Will save results now.")
 
     # ------------------------------ Save all fitting results to text file ------------------------------ #
     with open(spz_outdir + 'redshift_fitting_results_' + current_field + '_' + str(current_id) + '.txt', 'w') as fh:
@@ -445,6 +440,6 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         fh.write(str_to_write1 + str_to_write2 + str_to_write3 + str_to_write4 + str_to_write5 + \
             str_to_write6 + str_to_write7 + str_to_write8 + str_to_write9 + str_to_write10 + str_to_write11)
 
-    print "Results saved for:", current_field, current_id
+    print("Results saved for:", current_field, current_id)
 
     return None
