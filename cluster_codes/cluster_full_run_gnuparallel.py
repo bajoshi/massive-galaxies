@@ -138,7 +138,7 @@ def main(arr_index):
     # ------------------------------- Get catalog for final sample ------------------------------- #
     # ------------- Also set other flags ------------- #
     # Flag for full sample run
-    run_for_full_pears = False
+    run_for_full_pears = True
 
     # Flag for SPZ 
     get_spz = True
