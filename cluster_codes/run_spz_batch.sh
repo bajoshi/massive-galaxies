@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH -N 1                         # number of computing nodes 
-#SBATCH -n 3                        # number of cores
-#SBATCH --time=01-00:00:00           # Max time for task. Format is DD-HH:MM:SS
+#SBATCH --partition=fn1              # because I can only use the fat node
+#SBATCH -n 5                         # number of cores
+#SBATCH --time=00-03:00:00           # Max time for task. Format is DD-HH:MM:SS
 #SBATCH -o slurm.spz.%j.out          # STDOUT (%j = JobId)
 #SBATCH -e slurm.spz.%j.err          # STDERR (%j = JobId)
 #SBATCH --mail-type=ALL              # Send a notification when the job starts, stops, or fails
@@ -10,6 +10,9 @@
 
 module purge    # Always purge modules to ensure a consistent environment
 
-module load anaconda2/5.2.0
+module load anaconda/py2
+source activate galaxy2
 
-python cluster_full_run_pool.py
+export MKL_NUM_THREADS=1
+
+parallel -vkj5 'python cluster_full_run_gnuparallel.py {} > par_out{}.txt' ::: $(seq 0 4)

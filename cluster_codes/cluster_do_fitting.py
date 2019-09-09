@@ -844,7 +844,7 @@ def get_chi2_alpha_at_z_photoz(z, phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
         # multiply model spectrum to filter curve
         den = simps(y=filt_interp, x=model_lam_grid_z)
-#       for i in xrange(total_models):
+        #for i in xrange(total_models):
         for i in range(total_models):
 
             num = simps(y=model_comp_spec[i] * filt_interp / (4 * np.pi * dl * dl * (1+z)), x=model_lam_grid_z)
@@ -935,7 +935,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     # Sort through the chi2 and make sure that the age is physically meaningful
     sortargs = np.argsort(chi2, axis=None)  # i.e. it will use the flattened array to sort
 
-#   for k in xrange(len(chi2.ravel())):
+    #for k in xrange(len(chi2.ravel())):
     for k in range(len(chi2.ravel())):
 
         # Find the minimum chi2
