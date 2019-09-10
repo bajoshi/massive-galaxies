@@ -14,16 +14,14 @@ import scipy.integrate as spint
 
 import time
 
-pears_datadir = "/home/bajoshi/pears_spectra/"
-spz_outdir = "/home/bajoshi/spz_out/"
+#pears_datadir = "/home/bajoshi/pears_spectra/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-#import os
-#home = os.getenv('HOME')
-#spz_outdir = home + '/Desktop/FIGS/massive-galaxies/cluster_results/'
-#pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
+import os
+home = os.getenv('HOME')
+pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
 
 speed_of_light = 299792458e10  # angsroms per second
 speed_of_light_kms = 299792.458  # km per s
@@ -585,7 +583,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, start_time, obj_id, obj_field, specz, photoz, \
     log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-    run_for_full_pears, use_broadband=True, single_galaxy=False, for_loop_method='sequential'):
+    run_for_full_pears, spz_outdir, use_broadband=True, single_galaxy=False, for_loop_method='sequential'):
 
     """
     All models are redshifted to each of the redshifts in the list defined below,

@@ -114,16 +114,16 @@ import sys
 import time
 import datetime
 
-figs_data_dir = "/home/bajoshi/models_and_photometry/"
-threedhst_datadir = figs_data_dir
-cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+#figs_data_dir = "/home/bajoshi/models_and_photometry/"
+#threedhst_datadir = figs_data_dir
+#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-#figs_data_dir = '/Users/baj/Desktop/FIGS/'
-#threedhst_datadir = '/Users/baj/Desktop/3dhst_data/'
-#cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+figs_data_dir = '/Users/baj/Desktop/FIGS/'
+threedhst_datadir = '/Users/baj/Desktop/3dhst_data/'
+cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
 
 sys.path.append(cluster_spz_scripts)
 from cluster_get_all_redshifts import get_all_redshifts_v2
@@ -193,6 +193,10 @@ def main(arr_index):
 
     all_model_flam_mmap = np.load(figs_data_dir + 'all_model_flam' + csp_str + '.npy', mmap_mode='r')
 
+    #print(model_lam_grid_withlines_mmap.nbytes / 1024.0)  # in KB
+    #print(model_comp_spec_llam_withlines_mmap.nbytes / (1024.0 * 1024.0))  # in MB
+    #print(all_model_flam_mmap.nbytes / (1024.0 * 1024.0))  # in MB
+
     # ------------------------------- Read in photometry catalogs ------------------------------- #
     # GOODS photometry catalogs from 3DHST
     # The photometry and photometric redshifts are given in v4.1 (Skelton et al. 2014)
@@ -223,7 +227,6 @@ def main(arr_index):
     # ------------------------------ Parallel processing ------------------------------ #
     print("Starting parallel processing. Will run each galaxy on a separate core.")
     print("Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds.")
-    max_cores = 3
 
     get_all_redshifts_v2(
         final_sample['pearsid'][arr_index], 

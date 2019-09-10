@@ -10,17 +10,17 @@ import os
 import time
 import datetime as dt
 
-figs_data_dir = "/home/bajoshi/models_and_photometry/"
-cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
-lsfdir = "/home/bajoshi/pears_lsfs/"
+#figs_data_dir = "/home/bajoshi/models_and_photometry/"
+#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+#lsfdir = "/home/bajoshi/pears_lsfs/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-#home = os.getenv('HOME')
-#figs_data_dir = home + '/Desktop/FIGS/'
-#cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
-#lsfdir = home + '/Desktop/FIGS/new_codes/pears_lsfs/'
+home = os.getenv('HOME')
+figs_data_dir = home + '/Desktop/FIGS/'
+cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
+lsfdir = home + '/Desktop/FIGS/new_codes/pears_lsfs/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf
@@ -42,6 +42,9 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         spz_outdir = '/home/bajoshi/full_pears_results/'
     elif (not run_for_full_pears) and ('agave' in os.uname()[1]):
         spz_outdir = "/home/bajoshi/spz_out/"
+
+    print("Output dir:", spz_outdir)
+    sys.exit()
 
     # Check that analysis has not already been done.
     # Move to next galaxy if the fitting result file already exists.
@@ -341,7 +344,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
             lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
             model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-            run_for_full_pears, use_broadband=True, single_galaxy=False, for_loop_method='sequential')
+            run_for_full_pears, spz_outdir, use_broadband=True, single_galaxy=False, for_loop_method='sequential')
     
     # ------------- Call fitting function for grism-z ------------- #
     # Essentially just calls the same function as above but switches off broadband for the fit
@@ -353,7 +356,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
             lsf_to_use, resampling_lam_grid, len(resampling_lam_grid), all_model_flam, phot_fin_idx, \
             model_lam_grid_withlines, total_models, model_comp_spec_withlines, start, current_id, current_field, current_specz, zp, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
-            run_for_full_pears, use_broadband=False, single_galaxy=False, for_loop_method='sequential')
+            run_for_full_pears, spz_outdir, use_broadband=False, single_galaxy=False, for_loop_method='sequential')
 
     print("All redshifts computed for:", current_field, current_id, "    Will save results now.")
 
