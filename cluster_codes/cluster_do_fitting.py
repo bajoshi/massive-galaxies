@@ -2,15 +2,16 @@ from __future__ import division, print_function
 
 import numpy as np
 import numpy.ma as ma
-from scipy.signal import fftconvolve
 from astropy.io import fits
 from astropy.modeling import models, fitting
 from astropy.convolution import Gaussian1DKernel
 from astropy.cosmology import Planck15 as cosmo
+from scipy.signal import fftconvolve
 from scipy.interpolate import griddata, interp1d
 from scipy.signal import fftconvolve
 from scipy.integrate import simps
 import scipy.integrate as spint
+from scipy import interpolate
 
 import time
 
@@ -1038,6 +1039,36 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, \
     template_ms, ms, uv_col, vj_col, model_idx, age, tau, (tauv/1.086)
+
+def convert_to_sci_not(n):
+    """
+    I'm not sure how well this function works
+    in every possible case. Needs more testing.
+    """
+
+    # convert to python string with sci notation
+    n_str = "{:.2e}".format(n)
+
+    # split string and assign parts
+    n_splt = n_str.split('e')
+    decimal = n_splt[0]
+    exponent = n_splt[1]
+
+    # strip leading zeros in exponent
+    if float(exponent) < 0:
+        exponent = exponent.split('-')[1]
+        exponent = '-' + exponent.lstrip('0')
+    elif float(exponent) > 0:
+        exponent = exponent.lstrip('0')
+        exponent = exponent.lstrip('+')  # also remove the + sign that's not required
+
+    # create final string with proper TeX sci notation and return
+    sci_str = decimal + r'$\times$' + r'$\mathrm{10^{' + exponent + r'}}$'
+
+    return sci_str
+
+
+
 
 
 
