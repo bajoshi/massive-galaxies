@@ -583,7 +583,8 @@ def get_pz(chi2_map, z_arr_to_check):
 def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs, covmat, \
     lsf, resampling_lam_grid, resampling_lam_grid_length, all_model_flam, phot_fin_idx, \
     model_lam_grid, total_models, model_comp_spec, start_time, obj_id, obj_field, specz, photoz, \
-    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+    log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, \
+    ub_col_arr, bv_col_arr, vj_col_arr, ms_arr, mgal_arr, sfr_arr, \
     run_for_full_pears, spz_outdir, use_broadband=True, single_galaxy=False, for_loop_method='sequential'):
 
     """
@@ -662,11 +663,13 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
         current_z = z_arr_to_check[min_idx_2d[0]]
         age_at_z = cosmo.age(current_z).value * 1e9  # in yr
 
-        # Colors and stellar mass
+        # Colors, SFR, and stellar mass
         ub_col = ub_col_arr[model_idx] 
         bv_col = bv_col_arr[model_idx] 
         vj_col = vj_col_arr[model_idx] 
+
         template_ms = ms_arr[model_idx]
+        sfr = sfr_arr[model_idx]
 
         tau = tau_gyr_arr[model_idx]
         tauv = tauv_arr[model_idx]
@@ -684,9 +687,10 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
             break
 
     print("Minimum chi2 from sorted indices which also agrees with the age of the Universe:", "{:.4}".format(chi2[min_idx_2d]))
-    print("Minimum chi2 from np.min():", "{:.4}".format(np.min(chi2)))
-    z_grism = z_arr_to_check[min_idx_2d[0]]
+    #print("Minimum chi2 from np.min():", "{:.4}".format(np.min(chi2)))
+    z_grism_minchi2 = z_arr_to_check[min_idx_2d[0]]
 
+    print("Age of Universe at best-fit z (log[Age (yr)]):", "{:.4}".format(np.log10(age_at_z)))
     print("Current best fit log(age [yr]):", "{:.4}".format(age))
     print("Current best fit Tau [Gyr]:", "{:.4}".format(tau))
     print("Current best fit Tau_V:", tauv)
@@ -739,14 +743,35 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     z_wt = np.sum(z_arr_to_check * pz)
     print("Weighted z:", "{:.3}".format(z_wt))
-    print("Grism redshift:", z_grism)
+    print("SPZ/Grism redshift:", z_grism_minchi2)
     print("Ground-based spectroscopic redshift [-99.0 if it does not exist]:", specz)
     print("Photometric redshift:", photoz)
 
+    # Stellar mass
     bestalpha = alpha[min_idx_2d]
-    print("Vertical scaling factor for best fit model:", bestalpha)
+    print("Min idx 2d:", min_idx_2d)
+    print("Alpha for best-fit model:", "{:.2e}".format(bestalpha))
 
-    return z_grism, z_wt, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, model_idx, age, tau, (tauv/1.086)
+    ms = template_ms * bestalpha
+    print("Template mass [normalized to 1 sol]:", template_ms)
+    print("Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms))
+
+    # SFR
+    print("SFR for galaxy [M_sol/yr]", sfr)
+    ssfr = sfr / ms
+    print("Specific SFR for galaxy [yr^-1]", ssfr)
+
+    # Rest frame f_lambda values
+    zbest_idx = np.argmin(abs(z_model_arr - z_grism_minchi2))
+    print("Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]])
+    print("Rest-frame U-B color:", ub_col)
+    print("Rest-frame B-V color:", bv_col)
+    uv_col = ub_col + bv_col
+    print("Rest-frame U-V color:", uv_col)
+    print("Rest-frame V-J color:", vj_col)
+
+    return z_grism_minchi2, z_wt, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, \
+    template_ms, ms, sfr, uv_col, vj_col, model_idx, age, tau, (tauv/1.086)
 
 def get_chi2_alpha_at_z_photoz_lookup(z, all_filt_flam_model, phot_flam_obs, phot_ferr_obs):
 
@@ -876,7 +901,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     model_lam_grid, total_models, model_comp_spec, start_time,\
     obj_id, obj_field, all_model_flam, phot_fin_idx, specz, savedir, \
     log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-    bv_col_arr, vj_col_arr, ms_arr, mgal_arr, run_for_full_pears):
+    bv_col_arr, vj_col_arr, ms_arr, mgal_arr, sfr_arr, run_for_full_pears):
     """
     All models are redshifted to each of the redshifts in the list defined below,
     z_arr_to_check. Then the model modifications are done at that redshift.
@@ -950,11 +975,13 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
         current_z = z_arr_to_check[min_idx_2d[0]]
         age_at_z = cosmo.age(current_z).value * 1e9  # in yr
 
-        # Colors and stellar mass
+        # Colors, SFR, and stellar mass
         ub_col = ub_col_arr[model_idx] 
         bv_col = bv_col_arr[model_idx] 
-        vj_col = vj_col_arr[model_idx] 
+        vj_col = vj_col_arr[model_idx]
+
         template_ms = ms_arr[model_idx]
+        sfr = sfr_arr[model_idx]
 
         tau = tau_gyr_arr[model_idx]
         tauv = tauv_arr[model_idx]
@@ -1028,8 +1055,13 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     print("Template mass [normalized to 1 sol]:", template_ms)
     print("Stellar mass for galaxy [M_sol]:", "{:.2e}".format(ms))
 
+    # SFR
+    print("SFR for galaxy [M_sol/yr]", sfr)
+    ssfr = sfr / ms
+    print("Specific SFR for galaxy [yr^-1]", ssfr)
+
     # Rest frame f_lambda values
-    zbest_idx = np.argmin(abs(z_model_arr - zp))
+    zbest_idx = np.argmin(abs(z_model_arr - zp_minchi2))
     print("Rest-frame f_lambda values:", all_model_flam[:, zbest_idx, min_idx_2d[1]])
     print("Rest-frame U-B color:", ub_col)
     print("Rest-frame B-V color:", bv_col)
@@ -1038,7 +1070,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
     print("Rest-frame V-J color:", vj_col)
 
     return zp_minchi2, zp, low_z_lim, upper_z_lim, min_chi2_red, bestalpha, \
-    template_ms, ms, uv_col, vj_col, model_idx, age, tau, (tauv/1.086)
+    template_ms, ms, sfr, uv_col, vj_col, model_idx, age, tau, (tauv/1.086)
 
 def convert_to_sci_not(n):
     """

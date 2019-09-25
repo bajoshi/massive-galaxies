@@ -158,7 +158,7 @@ def get_model_set():
         threecolor = np.genfromtxt(filename.replace('.fits','.3color'), dtype=None, \
             names=['log_age','log_nlyc'], usecols=(0,5), skip_header=30)
         fourcolor = np.genfromtxt(filename.replace('.fits','.4color'), dtype=None, \
-            names=['log_age','ms','mgal'], usecols=(0,5,8), skip_header=30)
+            names=['log_age','ms','mgal','sfr'], usecols=(0,5,8,9), skip_header=30)
     
         # define and initialize numpy array
         current_model_set_ssp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
@@ -200,6 +200,10 @@ def get_model_set():
             # ---- Galaxy mass = Stellar mass + Gas mass
             mgalaxy = fourcolor['mgal'][color_idx]
             hdr['MGAL'] = str(mgalaxy)
+
+            # ---- SFR
+            sfr = fourcolor['sfr'][color_idx]
+            hdr['SFR'] = str(sfr)
 
             # ---- Metallicity
             if 'm22' in filename:
@@ -285,7 +289,7 @@ def get_model_set():
             threecolor = np.genfromtxt(filename.replace('.fits','.3color'), dtype=None, \
                 names=['log_age','log_nlyc'], usecols=(0,5), skip_header=30)
             fourcolor = np.genfromtxt(filename.replace('.fits','.4color'), dtype=None, \
-                names=['log_age','ms','mgal'], usecols=(0,5,8), skip_header=30)
+                names=['log_age','ms','mgal','sfr'], usecols=(0,5,8,9), skip_header=30)
 
             current_model_set_csp = np.zeros([total_ages, len(modellam)], dtype=np.float64)
             for i in range(total_ages):
@@ -334,6 +338,10 @@ def get_model_set():
                 # ---- Galaxy mass = Stellar mass + Gas mass
                 mgalaxy = fourcolor['mgal'][color_idx]
                 hdr['MGAL'] = str(mgalaxy)
+
+                # ---- SFR
+                sfr = fourcolor['sfr'][color_idx]
+                hdr['SFR'] = str(sfr)
 
                 # Append
                 hdulist.append(fits.ImageHDU(data=current_model_set_csp[i], header=hdr))
@@ -992,6 +1000,7 @@ def do_hdr2npy(figs_data_dir, chosen_imf):
     vj_col_arr = np.zeros(total_models)
     ms_arr = np.zeros(total_models)
     mgal_arr = np.zeros(total_models)
+    sfr_arr = np.zeros(total_models)
     for k in range(total_models):
         log_age_arr[k] = float(bc03_all_spec_hdulist[k+1].header['LOGAGE'])
         metal_arr[k] = float(bc03_all_spec_hdulist[k+1].header['METAL'])
@@ -1003,6 +1012,7 @@ def do_hdr2npy(figs_data_dir, chosen_imf):
         vj_col_arr[k] = float(bc03_all_spec_hdulist[k+1].header['VJCOL'])
         ms_arr[k] = float(bc03_all_spec_hdulist[k+1].header['MS'])
         mgal_arr[k] = float(bc03_all_spec_hdulist[k+1].header['MGAL'])
+        sfr_arr[k] = float(bc03_all_spec_hdulist[k+1].header['SFR'])
 
     np.save(figs_data_dir + 'log_age_arr' + npy_end_str, log_age_arr)
     np.save(figs_data_dir + 'metal_arr' + npy_end_str, metal_arr)
@@ -1014,6 +1024,7 @@ def do_hdr2npy(figs_data_dir, chosen_imf):
     np.save(figs_data_dir + 'vj_col_arr' + npy_end_str, vj_col_arr)
     np.save(figs_data_dir + 'ms_arr' + npy_end_str, ms_arr)
     np.save(figs_data_dir + 'mgal_arr' + npy_end_str, mgal_arr)
+    np.save(figs_data_dir + 'sfr_arr' + npy_end_str, sfr_arr)
 
     bc03_all_spec_hdulist.close()
     del bc03_all_spec_hdulist
@@ -1039,9 +1050,9 @@ if __name__ == '__main__':
 
     chosen_imf = 'Chabrier'
 
-    #get_model_set()
+    get_model_set()
     add_emission_lines_and_save(figs_data_dir, chosen_imf)
-    #do_hdr2npy(figs_data_dir, chosen_imf)
+    do_hdr2npy(figs_data_dir, chosen_imf)
     sys.exit(0)
 
     # -------------------------------------- TESTING WITH A MOCK SPECTRUM ----------------------------------------- #

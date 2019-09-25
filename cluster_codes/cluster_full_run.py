@@ -202,6 +202,7 @@ def main():
     vj_col_arr = np.load(figs_data_dir + 'vj_col_arr' + npy_end_str, mmap_mode='r')
     ms_arr = np.load(figs_data_dir + 'ms_arr' + npy_end_str, mmap_mode='r')
     mgal_arr = np.load(figs_data_dir + 'mgal_arr' + npy_end_str, mmap_mode='r')
+    sfr_arr = np.load(figs_data_dir + 'sfr_arr' + npy_end_str, mmap_mode='r')
 
     # Read model lambda grid # In agnstroms
     model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines' + csp_str + '.npy', mmap_mode='r')
@@ -282,7 +283,7 @@ def main():
         vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
         model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, \
         log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-        bv_col_arr, vj_col_arr, ms_arr, mgal_arr, get_spz, get_grismz, run_for_full_pears)) for u in range(len(fig3_id_list))]
+        bv_col_arr, vj_col_arr, ms_arr, mgal_arr, sfr_arr, get_spz, get_grismz, run_for_full_pears)) for u in range(len(fig3_id_list))]
 
     print processes
 
@@ -311,7 +312,7 @@ def main():
             vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
             model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, \
             log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
-            bv_col_arr, vj_col_arr, ms_arr, mgal_arr, \
+            bv_col_arr, vj_col_arr, ms_arr, mgal_arr, sfr_arr, \
             get_spz, get_grismz, run_for_full_pears, ignore_irac, ignore_irac_ch3_ch4, chosen_imf)) for j in xrange(jmin, jmax)]
         for p in processes:
             p.start()
