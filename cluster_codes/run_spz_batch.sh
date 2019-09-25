@@ -13,6 +13,6 @@ module purge    # Always purge modules to ensure a consistent environment
 module load anaconda/py2
 source activate galaxy2
 
-export MKL_NUM_THREADS=1
+export MKL_NUM_THREADS=2
 
 parallel -vkj5 'python cluster_full_run_gnuparallel.py {} > par_out{}.txt' ::: $(seq 0 4)

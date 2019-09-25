@@ -211,7 +211,7 @@ def get_test_sed():
     You can change these SED parameters within the function.
     """
     # Set the required model here 
-    age = 4e9  # in years
+    age = 3e9  # in years
     tau = 0.1  # in Gyr
     tauv = 0.0  # needs tau_v not A_v
     metallicity = 0.02  # total metal fraction
@@ -237,19 +237,19 @@ def get_test_sed():
     # This part will fail if the arrays dont already exist.
     total_models = 37761 # get_total_extensions(bc03_all_spec_hdulist)
 
-    log_age_arr = np.load(figs_data_dir + 'log_age_arr.npy', mmap_mode='r')
-    metal_arr = np.load(figs_data_dir + 'metal_arr.npy', mmap_mode='r')
-    nlyc_arr = np.load(figs_data_dir + 'nlyc_arr.npy', mmap_mode='r')
-    tau_gyr_arr = np.load(figs_data_dir + 'tau_gyr_arr.npy', mmap_mode='r')
-    tauv_arr = np.load(figs_data_dir + 'tauv_arr.npy', mmap_mode='r')
-    ub_col_arr = np.load(figs_data_dir + 'ub_col_arr.npy', mmap_mode='r')
-    bv_col_arr = np.load(figs_data_dir + 'bv_col_arr.npy', mmap_mode='r')
-    vj_col_arr = np.load(figs_data_dir + 'vj_col_arr.npy', mmap_mode='r')
-    ms_arr = np.load(figs_data_dir + 'ms_arr.npy', mmap_mode='r')
-    mgal_arr = np.load(figs_data_dir + 'mgal_arr.npy', mmap_mode='r')
+    log_age_arr = np.load(figs_data_dir + 'log_age_arr_chab.npy', mmap_mode='r')
+    metal_arr = np.load(figs_data_dir + 'metal_arr_chab.npy', mmap_mode='r')
+    nlyc_arr = np.load(figs_data_dir + 'nlyc_arr_chab.npy', mmap_mode='r')
+    tau_gyr_arr = np.load(figs_data_dir + 'tau_gyr_arr_chab.npy', mmap_mode='r')
+    tauv_arr = np.load(figs_data_dir + 'tauv_arr_chab.npy', mmap_mode='r')
+    ub_col_arr = np.load(figs_data_dir + 'ub_col_arr_chab.npy', mmap_mode='r')
+    bv_col_arr = np.load(figs_data_dir + 'bv_col_arr_chab.npy', mmap_mode='r')
+    vj_col_arr = np.load(figs_data_dir + 'vj_col_arr_chab.npy', mmap_mode='r')
+    ms_arr = np.load(figs_data_dir + 'ms_arr_chab.npy', mmap_mode='r')
+    mgal_arr = np.load(figs_data_dir + 'mgal_arr_chab.npy', mmap_mode='r')
 
-    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines.npy', mmap_mode='r')
-    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_withlines.npy', mmap_mode='r')
+    model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines_chabrier.npy', mmap_mode='r')
+    model_comp_spec_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_llam_withlines_chabrier.npy', mmap_mode='r')
 
     # Now find the model you need
     # First find the closest values to the user supplied values
@@ -295,7 +295,7 @@ def get_test_sed():
     plt.show()
     """
 
-    return lnu, nu
+    return lnu, nu, llam, model_lam_grid_withlines_mmap
 
 def get_lum_dist(redshift):
     """
