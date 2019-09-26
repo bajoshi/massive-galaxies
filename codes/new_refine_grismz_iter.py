@@ -969,7 +969,7 @@ def add_emission_lines_and_save(figs_data_dir, chosen_imf):
     # Now save all the spectra in fits files to npy files
     # The fits files may be deleted after the npy files for
     # the spectra and the header info are saved.
-    np.save(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy', model_comp_spec_withlines)
+    np.save(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy', model_comp_spec_withlines*L_sol)
 
     print "Done with adding emission lines to models."
     print "Resaved model fits file to npy array."

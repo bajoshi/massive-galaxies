@@ -758,7 +758,7 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
 
     # SFR
     print("SFR for galaxy [M_sol/yr]", sfr)
-    ssfr = sfr / ms
+    ssfr = sfr / template_ms
     print("Specific SFR for galaxy [yr^-1]", ssfr)
 
     # Rest frame f_lambda values
@@ -1057,7 +1057,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
     # SFR
     print("SFR for galaxy [M_sol/yr]", sfr)
-    ssfr = sfr / ms
+    ssfr = sfr / template_ms
     print("Specific SFR for galaxy [yr^-1]", ssfr)
 
     # Rest frame f_lambda values

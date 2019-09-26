@@ -465,7 +465,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
     print("Results saved for:", current_field, current_id)
 
     # ------------------------------ Plots ------------------------------ #
-    check_plot = True
+    check_plot = False
     if check_plot:
 
         print("\n" + "Working on plotting the results." + "\n")
