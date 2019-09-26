@@ -358,9 +358,6 @@ def get_model_set():
     print ".fits files that are now not needed. Do this by hand."
     print "Simply cd to cspout folder and do >> rm -f *.fits", "\n"
 
-    print "Exiting."
-    sys.exit(0)
-
     return None
 
 def do_model_modifications(object_lam_obs, model_lam_grid, model_comp_spec, resampling_lam_grid, total_models, lsf, z):
@@ -900,6 +897,8 @@ def add_emission_lines_and_save(figs_data_dir, chosen_imf):
     which is why it is defined here.
     """
 
+    print "\n", "Running code to add emission lines to models..."
+
     total_models = 37761
 
     if chosen_imf == 'Salpeter':
@@ -973,9 +972,14 @@ def add_emission_lines_and_save(figs_data_dir, chosen_imf):
     # the spectra and the header info are saved.
     np.save(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy', model_comp_spec_withlines)
 
+    print "Done with adding emission lines to models."
+    print "Resaved model fits file to npy array."
+
     return None
 
 def do_hdr2npy(figs_data_dir, chosen_imf):
+
+    print "\n", "Saving model parameters to npy arrays..."
 
     total_models = 37761
 
@@ -1029,6 +1033,8 @@ def do_hdr2npy(figs_data_dir, chosen_imf):
     bc03_all_spec_hdulist.close()
     del bc03_all_spec_hdulist
 
+    print "Done with saving model parameters to npy arrays."
+
     return None
 
 if __name__ == '__main__':
@@ -1050,7 +1056,7 @@ if __name__ == '__main__':
 
     chosen_imf = 'Chabrier'
 
-    get_model_set()
+    #get_model_set()
     add_emission_lines_and_save(figs_data_dir, chosen_imf)
     do_hdr2npy(figs_data_dir, chosen_imf)
     sys.exit(0)
