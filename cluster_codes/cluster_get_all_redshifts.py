@@ -314,7 +314,10 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
             if chosen_imf == 'Chabrier':
                 spz_outdir = spz_outdir.replace('full_pears_results_no_irac_ch3_ch4', 'full_pears_results_chabrier_no_irac_ch3_ch4')
 
-        #elif (not ignore_irac_ch3_ch4) and (not ignore_irac):
+        elif (not ignore_irac_ch3_ch4) and (not ignore_irac):
+            # most common case where Spitzer wavebands are NOT ignored
+            if chosen_imf == 'Chabrier':
+                spz_outdir = spz_outdir.replace('full_pears_results', 'full_pears_results_chabrier')
         #else:
         #    print("Unrecognized option for ignoring IRAC photometry." )
         #    print("Check given IRAC photometry options. Exiting.")
