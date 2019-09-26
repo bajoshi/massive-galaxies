@@ -964,8 +964,7 @@ def add_emission_lines_and_save(figs_data_dir, chosen_imf):
     # Save models with emission lines
     hdulist.writeto(figs_data_dir + final_fitsname.replace('.fits', '_withemlines.fits'), overwrite=True)
     np.save(figs_data_dir + 'model_lam_grid_withlines' + cspout_str + '.npy', model_lam_grid_withlines)
-    hdu.close()
-    del hdu
+    del hdu, hdulist
 
     # Now save all the spectra in fits files to npy files
     # The fits files may be deleted after the npy files for
