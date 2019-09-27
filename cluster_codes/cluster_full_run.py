@@ -242,11 +242,29 @@ def main():
     vega_nu = speed_of_light / vega_lam
     vega_spec_fnu = vega_lam**2 * vega_spec_flam / speed_of_light
 
+    """
+    # Block to run on a single galaxy
+    # You will need to know the exact index for it though
+    # Use this if you want to look at an individual fit
+    # Make sure to turn on plotting in the get_all_redshfits function.
+
+    get_all_redshifts_v2(final_sample['pearsid'][13], \
+            final_sample['field'][13], final_sample['ra'][13], final_sample['dec'][13], 
+            final_sample['zspec'][13], goodsn_phot_cat_3dhst, goodss_phot_cat_3dhst, \
+            vega_spec_fnu, vega_spec_flam, vega_nu, vega_lam, \
+            model_lam_grid_withlines_mmap, model_comp_spec_llam_withlines_mmap, all_model_flam_mmap, total_models, start, \
+            log_age_arr, metal_arr, nlyc_arr, tau_gyr_arr, tauv_arr, ub_col_arr, \
+            bv_col_arr, vj_col_arr, ms_arr, mgal_arr, sfr_arr, \
+            get_spz, get_grismz, run_for_full_pears, ignore_irac, ignore_irac_ch3_ch4, chosen_imf)
+
+    sys.exit(0)
+    """
+
     # ------------------------------ Parallel processing ------------------------------ #
     print "Starting parallel processing. Will run each galaxy on a separate core."
     print "Total time taken up to now --", str("{:.2f}".format(time.time() - start)), "seconds."
     total_final_sample = len(final_sample)
-    max_cores = 6
+    max_cores = 4
 
     """
     Use the following code block to run only on the 4 galaxies to be shown in

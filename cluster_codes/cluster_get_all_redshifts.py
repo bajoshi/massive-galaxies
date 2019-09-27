@@ -398,7 +398,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         ra_to_write + "  " + dec_to_write + "  " + zspec_to_write + "  "
         str_to_write8 = "{:.2e}".format(zp_age) + "  " + "{:.2e}".format(zp_tau) + "  " + "{:.2f}".format(zp_av) + "  "
         str_to_write11 = "{:.5f}".format(zp_template_ms) + "  " + "{:.4e}".format(zp_ms) + "  " + \
-        "{:.2f}".format(zp_sfr) + "  " + "{:.4f}".format(zp_uv) + "  " + "{:.4f}".format(zp_vj) + "  "
+        "{:.2e}".format(zp_sfr) + "  " + "{:.4f}".format(zp_uv) + "  " + "{:.4f}".format(zp_vj) + "  "
         
         # Now write the results depending on what redshifts were computed.
         # The photometric redshift is always computed, while there are
@@ -480,7 +480,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         # Read in the required stuff
         current_result = np.genfromtxt(results_filename, dtype=None, names=True, skip_header=1)
         # 
-        zp_model_idx = current_result['zp_model_idx']
+        zp_model_idx = int(current_result['zp_model_idx'])
         zp_minchi2 = current_result['zp_minchi2']
         zp_bestalpha = current_result['zp_bestalpha']
         zp_zerr_low = current_result['zp_zerr_low']
@@ -490,7 +490,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         zp_tau = current_result['zp_tau']
         zp_av = current_result['zp_av']
         # 
-        zspz_model_idx = current_result['zspz_model_idx']
+        zspz_model_idx = int(current_result['zspz_model_idx'])
         zspz_minchi2 = current_result['zspz_minchi2']
         zspz_bestalpha = current_result['zspz_bestalpha']
         zspz_zerr_low = current_result['zspz_zerr_low']
@@ -506,21 +506,24 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
         zp_best_fit_model_fullres = model_comp_spec_withlines[zp_model_idx]
         zp_all_filt_flam_bestmodel = get_photometry_best_fit_model(zp_minchi2, zp_model_idx, phot_fin_idx, all_model_flam, total_models)
 
-        # ------------ Get best fit model for SPZ ------------ #
-        zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_best_fit_model_fullres = \
-        get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
-            grism_lam_obs, zspz_minchi2, zspz_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
-
         # ------------------------------- Plotting ------------------------------- #
         plot_photoz_fit(phot_lam, phot_fluxes_arr, phot_errors_arr, model_lam_grid_withlines, \
         zp_best_fit_model_fullres, zp_all_filt_flam_bestmodel, zp_bestalpha, \
         current_id, current_field, current_specz, zp_minchi2, zp_zerr_low, zp_zerr_up, zp_min_chi2, \
         zp_age, zp_tau, zp_av, netsig_chosen, spz_outdir)
 
+        """
+        # ------------ Get best fit model for SPZ ------------ #
+        zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_best_fit_model_fullres = \
+        get_best_fit_model_spz(resampling_lam_grid, len(resampling_lam_grid), model_lam_grid_withlines, model_comp_spec_withlines, \
+            grism_lam_obs, zspz_minchi2, zspz_model_idx, phot_fin_idx, all_model_flam, lsf_to_use, total_models)
+
+        # ------------------------------- Plotting ------------------------------- #
         plot_spz_fit(grism_lam_obs, grism_flam_obs, grism_ferr_obs, phot_lam, phot_fluxes_arr, phot_errors_arr, \
         model_lam_grid_withlines, zspz_best_fit_model_fullres, zspz_best_fit_model_in_objlamgrid, zspz_all_filt_flam_bestmodel, zspz_bestalpha, \
         current_id, current_field, current_specz, zp_zerr_low, zp_zerr_up, zp_minchi2, zspz_zerr_low, zspz_zerr_up, zspz_minchi2, \
         zspz_min_chi2, zspz_age, zspz_tau, zspz_av, netsig_chosen, spz_outdir)
+        """
 
     return None
 
