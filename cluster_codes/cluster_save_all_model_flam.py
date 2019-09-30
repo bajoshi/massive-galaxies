@@ -114,7 +114,7 @@ def compute_filter_flam(filt, filtername, start, model_comp_spec, model_lam_grid
         #filt_flam_model_t = filt_flam_model.T
 
     # save the model flux densities
-    np.save(figs_data_dir + 'all_model_flam_' + filtername + '.npy', filt_flam_model)
+    np.save(figs_data_dir + 'all_model_flam_' + filtername + '_chab.npy', filt_flam_model)
     print "Computation done and saved for:", filtername,
     print "Total time taken:", time.time() - start
 
@@ -152,6 +152,7 @@ def main():
     # Read model lambda grid # In agnstroms
     model_lam_grid_withlines_mmap = np.load(figs_data_dir + 'model_lam_grid_withlines' + cspout_str + '.npy', mmap_mode='r')
 
+    """
     # This is already done for the chabrier models by default
     if not os.path.isfile(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy'):
         print "Convert models to physical units."
@@ -169,6 +170,7 @@ def main():
         del model_comp_spec_withlines_mmap
 
         # ---------------- End of code block to convert to Llam ---------------- #
+    """
 
     # Now read the model spectra # In erg s^-1 A^-1
     model_comp_spec_llam_withlines_mmap = np.load(figs_data_dir + 'model_comp_spec_llam_withlines' + cspout_str + '.npy', mmap_mode='r')
@@ -245,7 +247,6 @@ def main():
 
         print "Finished with filters:", all_filter_names[jmin:jmax]
 
-    sys.exit(0)
     # This is for agave because sometimes it will exit the for loop
     # above without going through all the filters. So you don't 
     # want agave combining them in the wrong shape.
@@ -255,18 +256,18 @@ def main():
     print "Now combining all filter computations into a single npy file."
 
     # Read in all individual filter flam 
-    u = np.load(figs_data_dir + 'all_model_flam_u.npy')
-    f435w = np.load(figs_data_dir + 'all_model_flam_f435w.npy')
-    f606w = np.load(figs_data_dir + 'all_model_flam_f606w.npy')
-    f775w = np.load(figs_data_dir + 'all_model_flam_f775w.npy')
-    f850lp = np.load(figs_data_dir + 'all_model_flam_f850lp.npy')
-    f125w = np.load(figs_data_dir + 'all_model_flam_f125w.npy')
-    f140w = np.load(figs_data_dir + 'all_model_flam_f140w.npy')
-    f160w = np.load(figs_data_dir + 'all_model_flam_f160w.npy')
-    irac1 = np.load(figs_data_dir + 'all_model_flam_irac1.npy')
-    irac2 = np.load(figs_data_dir + 'all_model_flam_irac2.npy')
-    irac3 = np.load(figs_data_dir + 'all_model_flam_irac3.npy')
-    irac4 = np.load(figs_data_dir + 'all_model_flam_irac4.npy')
+    u = np.load(figs_data_dir + 'all_model_flam_u_chab.npy')
+    f435w = np.load(figs_data_dir + 'all_model_flam_f435w_chab.npy')
+    f606w = np.load(figs_data_dir + 'all_model_flam_f606w_chab.npy')
+    f775w = np.load(figs_data_dir + 'all_model_flam_f775w_chab.npy')
+    f850lp = np.load(figs_data_dir + 'all_model_flam_f850lp_chab.npy')
+    f125w = np.load(figs_data_dir + 'all_model_flam_f125w_chab.npy')
+    f140w = np.load(figs_data_dir + 'all_model_flam_f140w_chab.npy')
+    f160w = np.load(figs_data_dir + 'all_model_flam_f160w_chab.npy')
+    irac1 = np.load(figs_data_dir + 'all_model_flam_irac1_chab.npy')
+    irac2 = np.load(figs_data_dir + 'all_model_flam_irac2_chab.npy')
+    irac3 = np.load(figs_data_dir + 'all_model_flam_irac3_chab.npy')
+    irac4 = np.load(figs_data_dir + 'all_model_flam_irac4_chab.npy')
 
     # now loop over all and write final output
     all_indiv_flam = [u, f435w, f606w, f775w, f850lp, f125w, f140w, f160w, irac1, irac2, irac3, irac4]
@@ -275,7 +276,7 @@ def main():
     for k in range(len(all_indiv_flam)):
         all_model_flam[k] = all_indiv_flam[k]
 
-    np.save(figs_data_dir + 'all_model_flam.npy', all_model_flam)
+    np.save(figs_data_dir + 'all_model_flam_chabrier.npy', all_model_flam)
 
     print "All done. Total time taken:", time.time() - start
     return None
