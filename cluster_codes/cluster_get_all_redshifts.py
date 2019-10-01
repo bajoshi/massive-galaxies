@@ -15,17 +15,17 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib
 
-#figs_data_dir = "/home/bajoshi/models_and_photometry/"
-#cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
-#lsfdir = "/home/bajoshi/pears_lsfs/"
+figs_data_dir = "/home/bajoshi/models_and_photometry/"
+cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+lsfdir = "/home/bajoshi/pears_lsfs/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
-home = os.getenv('HOME')
-figs_data_dir = home + '/Desktop/FIGS/'
-cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
-lsfdir = home + '/Desktop/FIGS/new_codes/pears_lsfs/'
+#home = os.getenv('HOME')
+#figs_data_dir = home + '/Desktop/FIGS/'
+#cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
+#lsfdir = home + '/Desktop/FIGS/new_codes/pears_lsfs/'
 
 sys.path.append(cluster_spz_scripts)
 import cluster_do_fitting as cf

@@ -15,14 +15,14 @@ from scipy import interpolate
 
 import time
 
-#pears_datadir = "/home/bajoshi/pears_spectra/"
+pears_datadir = "/home/bajoshi/pears_spectra/"
 
 # Only for testing with firstlight
 # Comment this out before copying code to Agave
 # Uncomment above directory paths which are correct for Agave
 import os
-home = os.getenv('HOME')
-pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
+#home = os.getenv('HOME')
+#pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
 
 speed_of_light = 299792458e10  # angsroms per second
 speed_of_light_kms = 299792.458  # km per s
