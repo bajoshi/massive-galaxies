@@ -426,9 +426,9 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
             str_to_write9 = "{:.2e}".format(zspz_age) + "  " + "{:.2e}".format(zspz_tau) + "  " + "{:.2f}".format(zspz_av) + "  "
             str_to_write10 = "{:.2e}".format(zg_age) + "  " + "{:.2e}".format(zg_tau) + "  " + "{:.2f}".format(zg_av) + "  "
             str_to_write12 = "{:.5f}".format(zspz_template_ms) + "  " + "{:.4e}".format(zspz_ms) + "  " + \
-            "{:.2f}".format(zspz_sfr) + "  " + "{:.4f}".format(zspz_uv) + "  " + "{:.4f}".format(zspz_vj) + "  "
+            "{:.2e}".format(zspz_sfr) + "  " + "{:.4f}".format(zspz_uv) + "  " + "{:.4f}".format(zspz_vj) + "  "
             str_to_write13 = "{:.5f}".format(zg_template_ms) + "  " + "{:.4e}".format(zg_ms) + "  " + \
-            "{:.2f}".format(zg_sfr) + "  " + "{:.4f}".format(zg_uv) + "  " + "{:.4f}".format(zg_vj) + "  "
+            "{:.2e}".format(zg_sfr) + "  " + "{:.4f}".format(zg_uv) + "  " + "{:.4f}".format(zg_vj) + "  "
 
         elif get_spz and (not get_grismz):  # Only photo-z and SPZ computed
 
@@ -443,7 +443,7 @@ def get_all_redshifts_v2(current_id, current_field, current_ra, current_dec, cur
             str_to_write9 = "{:.2e}".format(zspz_age) + "  " + "{:.2e}".format(zspz_tau) + "  " + "{:.2f}".format(zspz_av) + "  "
             str_to_write10 = "-99.0" + "  " + "-99.0" + "  " + "-99.0" + "  "
             str_to_write12 = "{:.5f}".format(zspz_template_ms) + "  " + "{:.4e}".format(zspz_ms) + "  " + \
-            "{:.2f}".format(zspz_sfr) + "  " + "{:.4f}".format(zspz_uv) + "  " + "{:.4f}".format(zspz_vj) + "  "
+            "{:.2e}".format(zspz_sfr) + "  " + "{:.4f}".format(zspz_uv) + "  " + "{:.4f}".format(zspz_vj) + "  "
             str_to_write13 = "-99.0" + "  " + "-99.0" + "  " + "-99.0" + "  " + "-99.0" + "  " + "-99.0" + "  "
 
         elif (not get_spz) and (not get_grismz):  # Only photo-z computed

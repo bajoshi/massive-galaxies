@@ -29,7 +29,7 @@ sbatch --comment="galaxies $BATCH_NAME" << EOF
 #SBATCH --partition=serial           # because I can only use the fat node
 #SBATCH --qos=normal                 # quality of service line
 #SBATCH --exclusive                  # empty node
-#SBATCH --time=01-00:00:00           # Max time for task. Format is DD-HH:MM:SS
+#SBATCH --time=04-00:00:00           # Max time for task. Format is DD-HH:MM:SS
 #SBATCH -o $SLURM_OUT                # STDOUT (%j = JobId)
 #SBATCH -e $SLURM_ERR                # STDERR (%j = JobId)
 #SBATCH --mail-type=ALL              # Send a notification when the job starts, stops, or fails
