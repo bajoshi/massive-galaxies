@@ -114,16 +114,15 @@ import sys
 import time
 import datetime
 
-figs_data_dir = "/home/bajoshi/models_and_photometry/"
-threedhst_datadir = figs_data_dir
-cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
-
-# Only for testing with firstlight
-# Comment this out before copying code to Agave
-# Uncomment above directory paths which are correct for Agave
-#figs_data_dir = '/Users/baj/Desktop/FIGS/'
-#threedhst_datadir = '/Users/baj/Desktop/3dhst_data/'
-#cluster_spz_scripts = '/Users/baj/Desktop/FIGS/massive-galaxies/cluster_codes/'
+if 'agave' in os.uname()[1]:
+    figs_data_dir = "/home/bajoshi/models_and_photometry/"
+    threedhst_datadir = figs_data_dir
+    cluster_spz_scripts = "/home/bajoshi/spz_scripts/"
+else:
+    home = os.getenv('HOME')
+    figs_data_dir = home + '/Desktop/FIGS/'
+    threedhst_datadir = home + '/Desktop/3dhst_data/'
+    cluster_spz_scripts = home + '/Desktop/FIGS/massive-galaxies/cluster_codes/'
 
 sys.path.append(cluster_spz_scripts)
 from cluster_get_all_redshifts import get_all_redshifts_v2
@@ -159,7 +158,7 @@ def main(arr_index):
         csp_str = '_chabrier'
 
     if run_for_full_pears:
-        final_sample = np.genfromtxt(figs_data_dir + 'pears_full_sample.txt', dtype=None, names=True)
+        final_sample = np.genfromtxt(figs_data_dir + 'pears_full_sample.txt', dtype=None, names=True, encoding='ascii')
         get_grismz = False
     else:
         final_sample = np.genfromtxt(figs_data_dir + 'spz_paper_sample.txt', dtype=None, names=True)

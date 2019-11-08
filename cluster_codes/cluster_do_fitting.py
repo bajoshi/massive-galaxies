@@ -1,3 +1,4 @@
+# coding: utf-8
 from __future__ import division, print_function
 
 import numpy as np
@@ -14,15 +15,13 @@ import scipy.integrate as spint
 from scipy import interpolate
 
 import time
-
-pears_datadir = "/home/bajoshi/pears_spectra/"
-
-# Only for testing with firstlight
-# Comment this out before copying code to Agave
-# Uncomment above directory paths which are correct for Agave
 import os
-#home = os.getenv('HOME')
-#pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
+
+if 'agave' in os.uname()[1]:
+    pears_datadir = "/home/bajoshi/pears_spectra/"
+else:
+    home = os.getenv('HOME')
+    pears_datadir = home + '/Documents/PEARS/data_spectra_only/'
 
 speed_of_light = 299792458e10  # angsroms per second
 speed_of_light_kms = 299792.458  # km per s
@@ -394,33 +393,37 @@ def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_gr
     # --------------- Redshift model --------------- #
     redshift_factor = 1.0 + z
     model_lam_grid_z = model_lam_grid * redshift_factor
-    t = np.r_[t,time.time()]; print('l0: ',np.diff(t)[-1])
+    t = np.r_[t,time.time()]; print('l0 --         Redshift wavelength: ', "{:.3e}".format(np.diff(t)[-1]))
+
     dl = get_lum_dist(z)  # in Mpc
-    t = np.r_[t,time.time()]; print('l1: ',np.diff(t)[-1])
+    t = np.r_[t,time.time()]; print('l1 --                  Compute dl: ', "{:.3e}".format(np.diff(t)[-1]))
+
     dl = dl * 3.086e24  # convert Mpc to cm
     model_comp_spec_redshifted = model_comp_spec_lsfconv / (4 * np.pi * dl * dl * redshift_factor)
-    t = np.r_[t,time.time()]; print('l2: ',np.diff(t)[-1])
+    t = np.r_[t,time.time()]; print('l2 -- Redshift luminosity to flux: ', "{:.3e}".format(np.diff(t)[-1]))
+    
     # --------------- Do resampling --------------- #
     # Define array to save modified models
     model_comp_spec_modified = np.zeros((total_models, resampling_lam_grid_length), dtype=np.float64)
-    t = np.r_[t,time.time()]; print('l3: ',np.diff(t)[-1])
+    t = np.r_[t,time.time()]; print('l3 --      Define modif model arr: ', "{:.3e}".format(np.diff(t)[-1]))
+
     ### Zeroth element
     lam_step = resampling_lam_grid[1] - resampling_lam_grid[0]
     idx = np.where((model_lam_grid_z >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_z < resampling_lam_grid[0] + lam_step))[0]
-    t = np.r_[t,time.time()]; print('l4: ',np.diff(t)[-1])
     model_comp_spec_modified[:, 0] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
-    t = np.r_[t,time.time()]; print('l5: ',np.diff(t)[-1])
+    t = np.r_[t,time.time()]; print('l4 --               Resamp 0 elem: ', "{:.3e}".format(np.diff(t)[-1]))
 
     ### all elements in between
     for i in range(1, resampling_lam_grid_length - 1):
         idx = np.where((model_lam_grid_z >= resampling_lam_grid[i-1]) & (model_lam_grid_z < resampling_lam_grid[i+1]))[0]
         model_comp_spec_modified[:, i] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
-    t = np.r_[t,time.time()]; print('l6: ',np.diff(t)[-1])
+    t = np.r_[t,time.time()]; print('l5 --       Resamp 1...(n-1) elem: ', "{:.3e}".format(np.diff(t)[-1]))
+
     ### Last element
     lam_step = resampling_lam_grid[-1] - resampling_lam_grid[-2]
     idx = np.where((model_lam_grid_z >= resampling_lam_grid[-1] - lam_step) & (model_lam_grid_z < resampling_lam_grid[-1] + lam_step))[0]
     model_comp_spec_modified[:, -1] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
-    t = np.r_[t,time.time()]; print('l7: ',np.diff(t)[-1])   
+    t = np.r_[t,time.time()]; print('l6 --            Resamp last elem: ', "{:.3e}".format(np.diff(t)[-1]))
     # Do a quick check to confirm that flux is conserved
     """
     Using np.mean above conserves flux. Using np.sum will not!!
@@ -470,15 +473,17 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     model_lam_grid_indx_low = np.argmin(np.absolute(model_resampling_lam_grid - grism_lam_obs[0]))
     model_lam_grid_indx_high = np.argmin(np.absolute(model_resampling_lam_grid - grism_lam_obs[-1]))
     model_spec_in_objlamgrid = model_comp_spec_mod[:, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
-    t = np.r_[t,time.time()]; print('c{}: {:14.7e}'.format(c,np.diff(t)[-1])); c+=1;
+    t = np.r_[t,time.time()]; print('c{} --    Chop model wav grid: {:14.3e}'.format(c,np.diff(t)[-1])); c+=1;
 
     # make sure that the arrays are the same length
+    """
     if int(model_spec_in_objlamgrid.shape[1]) != len(grism_lam_obs):
         print("Arrays of unequal length. Must be fixed before moving forward. Exiting...")
         print("Model spectrum array shape:", model_spec_in_objlamgrid.shape)
         print("Object spectrum length:", len(grism_lam_obs))
         sys.exit(0)
-    t = np.r_[t,time.time()]; print('c{}: {:14.7e}'.format(c,np.diff(t)[-1])); c+=1;
+    """
+    #t = np.r_[t,time.time()]; print('c{}   : {:14.3e}'.format(c,np.diff(t)[-1])); c+=1;
 
     if use_broadband:
         # For both data and model, combine grism+photometry into one spectrum.
@@ -495,11 +500,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         # statement to throw an error.
         ubc=0
         tub = time.time()
-        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
-        model_spec_in_objlamgrid_list = []
-        for j in range(total_models):
-            model_spec_in_objlamgrid_list.append(model_spec_in_objlamgrid[j].tolist())
-        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
+        tub = np.r_[tub,time.time()]; print('ubc{} --   Starting combining: {:14.3e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
 
         count = 0
         combined_lam_obs = grism_lam_obs
@@ -522,21 +523,23 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
             combined_ferr_obs = np.insert(combined_ferr_obs, lam_obs_idx_to_insert, phot_ferr_obs[count])
 
             # For model
-            for i in range(total_models):
-                model_spec_in_objlamgrid_list[i] = \
-                np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
+            # This is the older and much slower explicit for loop
+            #for i in range(total_models):
+            #    model_spec_in_objlamgrid_list[i] = \
+            #    np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
+
+            model_spec_in_objlamgrid = \
+            np.insert(model_spec_in_objlamgrid, lam_obs_idx_to_insert, all_filt_flam_model[:,count], axis=1)
 
             count += 1
-        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
 
-        # Convert back to numpy array
-        model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
+        tub = np.r_[tub,time.time()]; print('ubc{} --  Grism+Phot combined: {:14.3e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
 
         # Get covariance matrix
         covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, lsf_covar_len)
-        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
+        tub = np.r_[tub,time.time()]; print('ubc{} --     Covmat comp done: {:14.3e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
         alpha_, chi2_ = get_alpha_chi2_covmat(total_models, combined_flam_obs, model_spec_in_objlamgrid, covmat)
-        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
+        tub = np.r_[tub,time.time()]; print('ubc{} --  Chi2 and alpha done: {:14.3e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
         print("Min chi2 for redshift:", min(chi2_))
 
     else:
