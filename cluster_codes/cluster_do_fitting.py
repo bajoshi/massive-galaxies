@@ -367,9 +367,6 @@ def get_covmat(spec_wav, spec_flux, spec_ferr, lsf_covar_len, silent=True):
 
 def get_alpha_chi2_covmat(total_models, flam_obs, model_spec_in_objlamgrid, covmat):
 
-    t = time.time()
-    print("Starting covmat based chi2 computation at:", t)
-
     # Now use the matrix computation to get chi2
     N = len(flam_obs)
     out_prod = np.outer(flam_obs, model_spec_in_objlamgrid.T.ravel())
@@ -379,22 +376,20 @@ def get_alpha_chi2_covmat(total_models, flam_obs, model_spec_in_objlamgrid, covm
     den_vec = np.zeros(total_models)
     alpha_vec = np.zeros(total_models)
     chi2_vec = np.zeros(total_models)
-    den_tp  = covmat*np.array([ np.outer(msio,msio) for msio in model_spec_in_objlamgrid])
-    den_vec = np.sum(den_tp, axis=0)
+    #den_tp  = covmat*np.array([ np.outer(msio,msio) for msio in model_spec_in_objlamgrid])
+    #den_vec = np.sum(den_tp, axis=0)
     for i in range(total_models):  # Get rid of this for loop as well, if you can
         den_vec[i] = np.sum(np.outer(model_spec_in_objlamgrid[i], model_spec_in_objlamgrid[i]) * covmat, axis=None)
         alpha_vec[i] = num_vec[i]/den_vec[i]
         col_vector = flam_obs - alpha_vec[i] * model_spec_in_objlamgrid[i]
         chi2_vec[i] = np.matmul(col_vector, np.matmul(covmat, col_vector))
 
-    print("Finished covmat based chi2 computation in:", "{:.3f}".format(time.time() - t))
-
     return alpha_vec, chi2_vec
 
 def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length):
 
     t = time.time()
-    print("Starting redshifting and resampling at:", t)
+    print("Starting redshifting and resampling.")
 
     # --------------- Redshift model --------------- #
     redshift_factor = 1.0 + z
@@ -469,7 +464,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     total_models, lsf_covar_len, use_broadband=True):
 
     t = time.time(); c=0;
-    print("Starting chi2 setup computation at:", t)
+    print("Starting chi2 setup computation.")
 
     # chop the model to be consistent with the objects lam grid
     model_lam_grid_indx_low = np.argmin(np.absolute(model_resampling_lam_grid - grism_lam_obs[0]))
@@ -590,6 +585,7 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
 
     print("Chi2 computation done.")
     print("Total time taken up to now --", time.time() - start_time, "seconds.")
+    print("\n")
 
     return chi2_temp, alpha_temp
 
