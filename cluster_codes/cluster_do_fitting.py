@@ -367,6 +367,9 @@ def get_covmat(spec_wav, spec_flux, spec_ferr, lsf_covar_len, silent=True):
 
 def get_alpha_chi2_covmat(total_models, flam_obs, model_spec_in_objlamgrid, covmat):
 
+    t = time.time()
+    print("Starting covmat based chi2 computation at:", t)
+
     # Now use the matrix computation to get chi2
     N = len(flam_obs)
     out_prod = np.outer(flam_obs, model_spec_in_objlamgrid.T.ravel())
@@ -376,42 +379,53 @@ def get_alpha_chi2_covmat(total_models, flam_obs, model_spec_in_objlamgrid, covm
     den_vec = np.zeros(total_models)
     alpha_vec = np.zeros(total_models)
     chi2_vec = np.zeros(total_models)
+    den_tp  = covmat*np.array([ np.outer(msio,msio) for msio in model_spec_in_objlamgrid])
+    den_vec = np.sum(den_tp, axis=0)
     for i in range(total_models):  # Get rid of this for loop as well, if you can
         den_vec[i] = np.sum(np.outer(model_spec_in_objlamgrid[i], model_spec_in_objlamgrid[i]) * covmat, axis=None)
         alpha_vec[i] = num_vec[i]/den_vec[i]
         col_vector = flam_obs - alpha_vec[i] * model_spec_in_objlamgrid[i]
         chi2_vec[i] = np.matmul(col_vector, np.matmul(covmat, col_vector))
 
+    print("Finished covmat based chi2 computation in:", "{:.3f}".format(time.time() - t))
+
     return alpha_vec, chi2_vec
 
 def redshift_and_resample(model_comp_spec_lsfconv, z, total_models, model_lam_grid, resampling_lam_grid, resampling_lam_grid_length):
 
+    t = time.time()
+    print("Starting redshifting and resampling at:", t)
+
     # --------------- Redshift model --------------- #
     redshift_factor = 1.0 + z
     model_lam_grid_z = model_lam_grid * redshift_factor
+    t = np.r_[t,time.time()]; print('l0: ',np.diff(t)[-1])
     dl = get_lum_dist(z)  # in Mpc
+    t = np.r_[t,time.time()]; print('l1: ',np.diff(t)[-1])
     dl = dl * 3.086e24  # convert Mpc to cm
     model_comp_spec_redshifted = model_comp_spec_lsfconv / (4 * np.pi * dl * dl * redshift_factor)
-
+    t = np.r_[t,time.time()]; print('l2: ',np.diff(t)[-1])
     # --------------- Do resampling --------------- #
     # Define array to save modified models
     model_comp_spec_modified = np.zeros((total_models, resampling_lam_grid_length), dtype=np.float64)
-
+    t = np.r_[t,time.time()]; print('l3: ',np.diff(t)[-1])
     ### Zeroth element
     lam_step = resampling_lam_grid[1] - resampling_lam_grid[0]
     idx = np.where((model_lam_grid_z >= resampling_lam_grid[0] - lam_step) & (model_lam_grid_z < resampling_lam_grid[0] + lam_step))[0]
+    t = np.r_[t,time.time()]; print('l4: ',np.diff(t)[-1])
     model_comp_spec_modified[:, 0] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
+    t = np.r_[t,time.time()]; print('l5: ',np.diff(t)[-1])
 
     ### all elements in between
     for i in range(1, resampling_lam_grid_length - 1):
         idx = np.where((model_lam_grid_z >= resampling_lam_grid[i-1]) & (model_lam_grid_z < resampling_lam_grid[i+1]))[0]
         model_comp_spec_modified[:, i] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
-
+    t = np.r_[t,time.time()]; print('l6: ',np.diff(t)[-1])
     ### Last element
     lam_step = resampling_lam_grid[-1] - resampling_lam_grid[-2]
     idx = np.where((model_lam_grid_z >= resampling_lam_grid[-1] - lam_step) & (model_lam_grid_z < resampling_lam_grid[-1] + lam_step))[0]
     model_comp_spec_modified[:, -1] = np.mean(model_comp_spec_redshifted[:, idx], axis=1)
-
+    t = np.r_[t,time.time()]; print('l7: ',np.diff(t)[-1])   
     # Do a quick check to confirm that flux is conserved
     """
     Using np.mean above conserves flux. Using np.sum will not!!
@@ -454,10 +468,14 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
     covmat, all_filt_flam_model, model_comp_spec_mod, model_resampling_lam_grid, \
     total_models, lsf_covar_len, use_broadband=True):
 
+    t = time.time(); c=0;
+    print("Starting chi2 setup computation at:", t)
+
     # chop the model to be consistent with the objects lam grid
     model_lam_grid_indx_low = np.argmin(np.absolute(model_resampling_lam_grid - grism_lam_obs[0]))
     model_lam_grid_indx_high = np.argmin(np.absolute(model_resampling_lam_grid - grism_lam_obs[-1]))
     model_spec_in_objlamgrid = model_comp_spec_mod[:, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
+    t = np.r_[t,time.time()]; print('c{}: {:14.7e}'.format(c,np.diff(t)[-1])); c+=1;
 
     # make sure that the arrays are the same length
     if int(model_spec_in_objlamgrid.shape[1]) != len(grism_lam_obs):
@@ -465,6 +483,7 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         print("Model spectrum array shape:", model_spec_in_objlamgrid.shape)
         print("Object spectrum length:", len(grism_lam_obs))
         sys.exit(0)
+    t = np.r_[t,time.time()]; print('c{}: {:14.7e}'.format(c,np.diff(t)[-1])); c+=1;
 
     if use_broadband:
         # For both data and model, combine grism+photometry into one spectrum.
@@ -479,9 +498,13 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
         # since I'm simply using variable names to point to them but since the
         # model array is 2D I'm using indexing and that causes the np.insert()
         # statement to throw an error.
+        ubc=0
+        tub = time.time()
+        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
         model_spec_in_objlamgrid_list = []
         for j in range(total_models):
             model_spec_in_objlamgrid_list.append(model_spec_in_objlamgrid[j].tolist())
+        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
 
         count = 0
         combined_lam_obs = grism_lam_obs
@@ -509,13 +532,16 @@ def get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_
                 np.insert(model_spec_in_objlamgrid_list[i], lam_obs_idx_to_insert, all_filt_flam_model[i, count])
 
             count += 1
+        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
 
         # Convert back to numpy array
         model_spec_in_objlamgrid = np.asarray(model_spec_in_objlamgrid_list)
 
         # Get covariance matrix
         covmat = get_covmat(combined_lam_obs, combined_flam_obs, combined_ferr_obs, lsf_covar_len)
+        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
         alpha_, chi2_ = get_alpha_chi2_covmat(total_models, combined_flam_obs, model_spec_in_objlamgrid, covmat)
+        tub = np.r_[tub,time.time()]; print('ubc{}: {:14.7e}'.format(ubc,np.diff(tub)[-1])); ubc+=1;
         print("Min chi2 for redshift:", min(chi2_))
 
     else:
@@ -561,6 +587,9 @@ def get_chi2_alpha_at_z(z, grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_f
         chi2_temp, alpha_temp = get_chi2(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, phot_ferr_obs, phot_lam_obs,\
             covmat, all_filt_flam_model_t, model_comp_spec_modified, resampling_lam_grid, \
             total_models, lsf_covar_len, use_broadband=False)
+
+    print("Chi2 computation done.")
+    print("Total time taken up to now --", time.time() - start_time, "seconds.")
 
     return chi2_temp, alpha_temp
 

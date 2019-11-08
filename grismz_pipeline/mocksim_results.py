@@ -20,6 +20,7 @@ figs_dir = home + "/Desktop/FIGS/"
 def line_func(x, slope, intercept):
     return slope*x + intercept
 
+"""
 def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
     mock_zgrism_lowerr_arr, mock_zgrism_uperr_arr, d4000_range_lowlim):
 
@@ -133,6 +134,7 @@ def plot_panel(ax_main, ax_resid, test_redshift_arr, mock_zgrism_arr, \
             color='r', markeredgecolor='r', capsize=0, markersize=1.5, elinewidth=0.6)
 
     return ax_main, ax_resid
+"""
 
 def convert_to_sci_not(n):
     """
@@ -286,6 +288,7 @@ def dummy_func_code_for9panelplot():
 
     return None
 
+"""
 def model_d4000_vs_fluxerr(new_d4000, new_d4000_err, chosen_err):
 
     # Check D4000 vs avg err
@@ -336,6 +339,7 @@ def model_d4000_vs_fluxerr(new_d4000, new_d4000_err, chosen_err):
     plt.show()
 
     return None
+"""
 
 if __name__ == '__main__':
 
