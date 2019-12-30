@@ -625,9 +625,24 @@ def do_fitting(grism_flam_obs, grism_ferr_obs, grism_lam_obs, phot_flam_obs, pho
     savedir_spz = spz_outdir  # Required to save p(z) curve and z_arr
     savedir_grismz = spz_outdir  # Required to save p(z) curve and z_arr
 
-    # Set up redshift grid to check
     if run_for_full_pears:
-        z_arr_to_check = np.arange(0.005, 6.005, 0.005)
+        # Define photometric redshift as the redshift prior 
+        # for search and then define a redshift grid to check    
+        rem = (photoz % 0.005)  # division remainder
+        # I have to do this unusual divisibility check because 
+        # I'm not entirely sure if the photoz given will always
+        # fall on the redshift grid that corresponds to the model photometry
+        # i.e., always make sure that the zprior given is divisible by 0.005
+        if rem <= (0.005/2.0):
+            zprior = photoz - (photoz % 0.005)
+        elif rem > (0.005/2.0):
+            zprior = photoz + abs(rem - 0.005)
+
+        z_arr_to_check = np.arange(zprior - 0.250, zprior + 0.250, 0.005)
+        if z_arr_to_check[0] <= 0.0:
+            z_arr_to_check = np.arange(0.005, zprior + 0.250, 0.005)
+        elif z_arr_to_check[-1] > 6.0:
+            z_arr_to_check = np.arange(zprior - 0.250, 6.005, 0.005)
     else:
         z_arr_to_check = np.arange(0.3, 1.5, 0.01)
 
