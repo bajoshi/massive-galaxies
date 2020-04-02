@@ -24,13 +24,6 @@ pears_spectra_dir = home + "/Documents/PEARS/data_spectra_only/"
 massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 newcodes_dir = home + "/Desktop/FIGS/new_codes/"
 
-sys.path.append(stacking_analysis_dir + 'codes/')
-sys.path.append(massive_galaxies_dir + 'codes/')
-sys.path.append(massive_galaxies_dir + 'grism_pipeline/')
-import grid_coadd as gd
-import fast_chi2_jackknife as fcj
-import new_refine_grismz_gridsearch_parallel as ngp
-
 """
 I think this code should also have the same contamination tolerances that grid_coadd has.
 """
@@ -274,9 +267,9 @@ def refine_redshift_old():
 
         d4000_arr.append(get_d4000(lam, spec, spec_err))  
     """  
-    print "Deprecated function!"
-    print "This function is no longer used. Use refine_redshift() to get the refined refined redshifts."
-    print "Exiting..."
+    print("Deprecated function!")
+    print("This function is no longer used. Use refine_redshift() to get the refined refined redshifts.")
+    print("Exiting...")
     sys.exit(0)
 
     return None
@@ -300,7 +293,7 @@ def refine_redshift(pearsid, z_old, fname, use_index='narrow'):
 
         count += 1
 
-    print np.argmax(dn4000_pot_arr), np.argmax(d4000_pot_arr)
+    print(np.argmax(dn4000_pot_arr), np.argmax(d4000_pot_arr))
 
     z_arg = np.argmax(dn4000_pot_arr)
     z_new = z_pot_arr[z_arg]
@@ -492,7 +485,7 @@ def get_figs_dn4000(field, threed_cat, field_match, field_spc):
         except KeyError as e:
             continue
 
-    print count_valid, "galaxies included in dn4000 catalog for", field
+    print(count_valid, "galaxies included in dn4000 catalog for", field)
 
     dn4000_arr = np.asarray(dn4000_arr)
     dn4000_err_arr = np.asarray(dn4000_err_arr)
@@ -531,10 +524,10 @@ if __name__ == '__main__':
 
         if catcount == 0:
             fieldname = 'GOODS-N'
-            print 'Starting with', len(cat), 'matched objects in', fieldname
+            print('Starting with', len(cat), 'matched objects in', fieldname)
         elif catcount == 1:
             fieldname = 'GOODS-S'
-            print 'Starting with', len(cat), 'matched objects in', fieldname
+            print('Starting with', len(cat), 'matched objects in', fieldname)
 
         if topcat:
             redshift_indices = np.where((cat['z_peak'] >= 0.6) & (cat['z_peak'] <= 1.235))[0]
@@ -545,7 +538,7 @@ if __name__ == '__main__':
             pears_id = cat['pearsid'][redshift_indices]
             photz = cat['zphot'][redshift_indices]
 
-        print len(np.unique(pears_id)), "unique objects within", fieldname, "in redshift range"
+        print(len(np.unique(pears_id)), "unique objects within", fieldname, "in redshift range")
 
         # create lists to write final data in and 
         # loop over all galaxies
@@ -572,12 +565,12 @@ if __name__ == '__main__':
             #    continue
 
             redshift = photz[count]
-            print "At object", current_pears_index, "in", fieldname  # Line useful for debugging. Do not remove. Just uncomment.
+            print("At object", current_pears_index, "in", fieldname)  # Line useful for debugging. Do not remove. Just uncomment.
             # get data and then d4000
             lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = ngp.get_data(current_pears_index, fieldname)
 
             if return_code == 0:
-                print 'Got return code 0. Skipping galaxy.', current_pears_index, fieldname
+                print('Got return code 0. Skipping galaxy.', current_pears_index, fieldname)
                 continue
 
             lam_em = lam_obs / (1 + redshift)
@@ -591,9 +584,9 @@ if __name__ == '__main__':
             #    # so that if there isn't an flux measurement at the exact end point wavelengths
             #    # but there is one nearby then the galaxy isn't skipped
             #    # skipping galaxy because there are too few or no flux measurements at the required wavelengths
-            #    print "Skipping", current_pears_index, "in", fieldname,\
+            #    print("Skipping", current_pears_index, "in", fieldname,\
             #     "due to too few or no flux measurements at the required wavelengths. The end points of the wavelength array are",\
-            #     lam_em[0], lam_em[-1]
+            #     lam_em[0], lam_em[-1])
             #    continue
 
             arg3750 = np.argmin(abs(lam_em - 3750))
@@ -603,9 +596,9 @@ if __name__ == '__main__':
 
             if (len(lam_em[arg3750:arg3950+1]) == 0) or (len(lam_em[arg4050:arg4250+1]) == 0):
                 # based on d4000 instead of dn4000
-                print "Skipping", current_pears_index, "in", fieldname,\
+                print("Skipping", current_pears_index, "in", fieldname,\
                  "due to no flux measurements at the required wavelengths. The end points of the wavelength array are",\
-                 lam_em[0], lam_em[-1]
+                 lam_em[0], lam_em[-1])
                 continue
 
             if topcat:
@@ -668,12 +661,12 @@ if __name__ == '__main__':
                 'the \'zphot_source\' column indicates the source of the photometric redshift.' + '\n' + \
                 'pearsid field redshift zphot_source ra dec dn4000 dn4000_err d4000 d4000_err')
 
-        print len(np.isfinite(dn4000_arr)), len(np.isfinite(dn4000_err_arr)), len(np.isfinite(d4000_arr)), \
-        len(np.isfinite(d4000_err_arr))
+        print(len(np.isfinite(dn4000_arr)), len(np.isfinite(dn4000_err_arr)), len(np.isfinite(d4000_arr)), \
+        len(np.isfinite(d4000_err_arr)))
 
         catcount += 1
 
-        print "Total", high_netsig_sample, "galaxies with high netsig in", fieldname
+        print("Total", high_netsig_sample, "galaxies with high netsig in", fieldname)
 
     """
     # Read in FIGS spc files

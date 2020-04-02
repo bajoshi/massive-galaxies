@@ -208,7 +208,7 @@ def get_data(pears_index, field, check_contam=True):
     # Check that contamination level is not too high
     if check_contam:
         if np.nansum(contam) > 0.33 * np.nansum(flam_obs):
-            print( pears_index, " in ", field, " has an too high a level of contamination.",)
+            print( pears_index, " in ", field, " has too high a level of contamination.",)
             print("Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped.")
             return_code = 0
             fitsfile.close()
@@ -1119,7 +1119,7 @@ def do_photoz_fitting_lookup(phot_flam_obs, phot_ferr_obs, phot_lam_obs, \
 
 def convert_to_sci_not(n):
     """
-    I'm not sure how well this function works
+    BAJ: I'm not sure how well this function works
     in every possible case. Needs more testing.
     """
 
@@ -1136,16 +1136,16 @@ def convert_to_sci_not(n):
         exponent = exponent.split('-')[1]
         exponent = '-' + exponent.lstrip('0')
     elif float(exponent) > 0:
-        exponent = exponent.lstrip('0')
         exponent = exponent.lstrip('+')  # also remove the + sign that's not required
-
+        exponent = exponent.lstrip('0')
+    
     # create final string with proper TeX sci notation and return
-    sci_str = decimal + r'$\times$' + r'$\mathrm{10^{' + exponent + r'}}$'
+    if float(exponent) == 0.0:
+        sci_str = decimal
+    else:
+        sci_str = decimal + r'$\times$' + r'$\mathrm{10^{' + exponent + r'}}$'
 
     return sci_str
-
-
-
 
 
 

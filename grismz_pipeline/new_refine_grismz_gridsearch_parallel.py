@@ -31,13 +31,7 @@ lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 
 sys.path.append(stacking_analysis_dir + 'stacking_pipeline/')
-sys.path.append(massive_galaxies_dir + 'codes/')
-sys.path.append(home + '/Desktop/test-codes/cython_test/cython_profiling/')
 import grid_coadd as gd
-#import fast_chi2_jackknife_massive_galaxies as fcjm
-#import new_refine_grismz_iter as ni
-import refine_redshifts_dn4000 as old_ref
-#import model_mods_cython_copytoedit as model_mods_cython
 import dn4000_catalog as dc
 import mocksim_results as mr
 
@@ -84,9 +78,9 @@ def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_
 
     # make sure that the arrays are the same length
     if int(model_spec_in_objlamgrid.shape[1]) != len(object_lam_grid):
-        print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
-        print "Model spectrum array shape:", model_spec_in_objlamgrid.shape
-        print "Object spectrum length:", len(object_lam_grid)
+        print("Arrays of unequal length. Must be fixed before moving forward. Exiting...")
+        print("Model spectrum array shape:", model_spec_in_objlamgrid.shape)
+        print("Object spectrum length:", len(object_lam_grid))
         sys.exit(0)
 
     alpha_ = np.sum(flam * model_spec_in_objlamgrid / (ferr**2), axis=1) / np.sum(model_spec_in_objlamgrid**2 / ferr**2, axis=1)
@@ -97,7 +91,7 @@ def get_chi2(flam, ferr, object_lam_grid, model_comp_spec_mod, model_resampling_
 def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_comp_spec, \
     resampling_lam_grid, total_models, lsf, start_time):
 
-    print "\n", "Currently at redshift:", z
+    print("\n", "Currently at redshift:", z)
 
     # make sure the types are correct before passing to cython code
     #lam_obs = lam_obs.astype(np.float64)
@@ -111,8 +105,8 @@ def get_chi2_alpha_at_z(z, flam_obs, ferr_obs, lam_obs, model_lam_grid, model_co
     model_comp_spec_modified = \
     model_mods_cython.do_model_modifications(model_lam_grid, model_comp_spec, \
         resampling_lam_grid, total_models, lsf, z)
-    print "Model mods done at current z:", z
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print("Model mods done at current z:", z)
+    print("Total time taken up to now --", time.time() - start_time, "seconds.")
 
     # Mask emission lines
     line_mask = get_line_mask(lam_obs, z)
@@ -139,7 +133,7 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     z_arr_to_check = np.linspace(start=starting_z - search_range, stop=starting_z + search_range, num=81, dtype=np.float64)
     z_idx = np.where((z_arr_to_check >= 0.6) & (z_arr_to_check <= 1.235))
     z_arr_to_check = z_arr_to_check[z_idx]
-    print "Will check the following redshifts:", z_arr_to_check
+    print("Will check the following redshifts:", z_arr_to_check)
     if not z_arr_to_check.size:
         return -99.0, -99.0, -99.0, -99.0, -99.0
 
@@ -208,13 +202,13 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
             # even if the loop is broken out of in the first iteration.
             break
 
-    print "Minimum chi2:", "{:.4}".format(chi2[min_idx_2d])
+    print("Minimum chi2:", "{:.4}".format(chi2[min_idx_2d]))
     z_grism = z_arr_to_check[min_idx_2d[0]]
-    print "New redshift:", z_grism
+    print("New redshift:", z_grism)
 
-    print "Current best fit log(age [yr]):", "{:.4}".format(age)
-    print "Current best fit Tau [Gyr]:", "{:.4}".format(tau)
-    print "Current best fit Tau_V:", tauv
+    print("Current best fit log(age [yr]):", "{:.4}".format(age))
+    print("Current best fit Tau [Gyr]:", "{:.4}".format(tau))
+    print("Current best fit Tau_V:", tauv)
 
     ############# -------------------------- Errors on z and other derived params ----------------------------- #############
     min_chi2 = chi2[min_idx_2d]
@@ -233,16 +227,16 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     chi2_red = chi2 / dof
     chi2_red_error = np.sqrt(2/dof)
     min_chi2_red = min_chi2 / dof
-    print "Error in reduced chi-square:", chi2_red_error
+    print("Error in reduced chi-square:", chi2_red_error)
     chi2_red_2didx = np.where((chi2_red >= min_chi2_red - chi2_red_error) & (chi2_red <= min_chi2_red + chi2_red_error))
-    print "Indices within 1-sigma of reduced chi-square:", chi2_red_2didx
+    print("Indices within 1-sigma of reduced chi-square:", chi2_red_2didx)
     # use first dimension indices to get error on grism-z
     z_grism_range = z_arr_to_check[chi2_red_2didx[0]]
-    print "z_grism range", z_grism_range
+    print("z_grism range", z_grism_range)
     low_z_lim = np.min(z_grism_range)
     upper_z_lim = np.max(z_grism_range)
-    print "Min z_grism within 1-sigma error:", low_z_lim
-    print "Max z_grism within 1-sigma error:", upper_z_lim
+    print("Min z_grism within 1-sigma error:", low_z_lim)
+    print("Max z_grism within 1-sigma error:", upper_z_lim)
 
     # Simply the minimum chi2 might not be right
     # Should check if the minimum is global or local
@@ -252,14 +246,14 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     # out the spread in chi2 but otherwise not too enlightening.
     # I'm keeping these lines in here for now.
     #low_chi2_idx = np.where((chi2 < min_chi2 + 0.5*min_chi2) & (chi2 > min_chi2 - 0.5*min_chi2))[0]
-    #print len(low_chi2_idx.ravel())
-    #print low_chi2_idx
+    #print(len(low_chi2_idx.ravel()))
+    #print(low_chi2_idx)
 
     ####### ------------------------------------------ Plotting ------------------------------------------ #######
     #### -------- Plot spectrum: Data, best fit model, and the residual --------- ####
     # get things needed to plot and plot
     bestalpha = alpha[min_idx_2d]
-    print "Vertical scaling factor for best fit model:", bestalpha
+    print("Vertical scaling factor for best fit model:", bestalpha)
     # chop model again to get the part within objects lam obs grid
     model_lam_grid_indx_low = np.argmin(abs(resampling_lam_grid - lam_obs[0]))
     model_lam_grid_indx_high = np.argmin(abs(resampling_lam_grid - lam_obs[-1]))
@@ -280,14 +274,14 @@ def do_fitting(flam_obs, ferr_obs, lam_obs, lsf, starting_z, resampling_lam_grid
     model_comp_spec_modified = \
     model_mods_cython.do_model_modifications(model_lam_grid, model_comp_spec, \
         resampling_lam_grid, total_models, lsf, z_grism)
-    print "Model mods done (only for plotting purposes) at the new grism z:", z_grism
-    print "Total time taken up to now --", time.time() - start_time, "seconds."
+    print("Model mods done (only for plotting purposes) at the new grism z:", z_grism)
+    print("Total time taken up to now --", time.time() - start_time, "seconds.")
 
     best_fit_model_in_objlamgrid = model_comp_spec_modified[model_idx, model_lam_grid_indx_low:model_lam_grid_indx_high+1]
 
     # again make sure that the arrays are the same length
     if int(best_fit_model_in_objlamgrid.shape[0]) != len(lam_obs):
-        print "Arrays of unequal length. Must be fixed before moving forward. Exiting..."
+        print("Arrays of unequal length. Must be fixed before moving forward. Exiting...")
         sys.exit(0)
     # plot
     plot_fit_and_residual_withinfo(lam_obs, flam_obs, ferr_obs, best_fit_model_in_objlamgrid, bestalpha,\
@@ -321,8 +315,8 @@ def plot_chi2(chi2_map, dof, redshift_arr, grismz, specz, obj_id, obj_field, tot
         elif redshift_idx > len(redshift_arr):
             redshift_ticklabels.append('')
 
-    #print "Original Y tick labels:", y_ticks
-    #print "New Y tick labels corresponding to redshift:", redshift_ticklabels
+    #print("Original Y tick labels:", y_ticks)
+    #print("New Y tick labels corresponding to redshift:", redshift_ticklabels)
     ax.set_yticklabels(redshift_ticklabels, size=8)
 
     ax.set_xscale('log')
@@ -482,12 +476,12 @@ def get_data(pears_index, field, check_contam=True):
         netsiglist = []
         palist = []
         for count in range(n_ext):
-            #print "At PA", fitsfile[count+1].header['POSANG']  # Line useful for debugging. Do not remove. Just uncomment.
+            #print("At PA", fitsfile[count+1].header['POSANG']  # Line useful for debugging. Do not remove. Just uncomment.)
             fitsdata = fitsfile[count+1].data
             netsig = gd.get_net_sig(fitsdata)
             netsiglist.append(netsig)
             palist.append(fitsfile[count+1].header['POSANG'])
-            #print "At PA", fitsfile[count+1].header['POSANG'], "with NetSig", netsig  
+            #print("At PA", fitsfile[count+1].header['POSANG'], "with NetSig", netsig  )
             # Above line also useful for debugging. Do not remove. Just uncomment.
         netsiglist = np.array(netsiglist)
         maxnetsigarg = np.argmax(netsiglist)
@@ -515,15 +509,15 @@ def get_data(pears_index, field, check_contam=True):
     # Check that contamination level is not too high
     if check_contam:
         if np.nansum(contam) > 0.33 * np.nansum(flam_obs):
-            print pears_index, " in ", field, " has an too high a level of contamination.",
-            print "Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped."
+            print(pears_index, " in ", field, " has an too high a level of contamination.",)
+            print("Contam =", np.nansum(contam) / np.nansum(flam_obs), " * F_lam. This galaxy will be skipped.")
             return_code = 0
             fitsfile.close()
             return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Check that input wavelength array is not empty
     if not lam_obs.size:
-        print pears_index, " in ", field, " has an empty wav array. Returning empty array..."
+        print(pears_index, " in ", field, " has an empty wav array. Returning empty array...")
         return_code = 0
         fitsfile.close()
         return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
@@ -549,7 +543,7 @@ if __name__ == '__main__':
     # Start time
     start = time.time()
     dt = datetime.datetime
-    print "Starting at --", dt.now()
+    print("Starting at --", dt.now())
 
     # ---------------------------------------------- MODELS ----------------------------------------------- #
     # put all models into one single fits file
@@ -569,7 +563,7 @@ if __name__ == '__main__':
         model_comp_spec[j] = bc03_all_spec_hdulist[j+1].data
 
     # total run time up to now
-    print "All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds."
+    print("All models put in numpy array. Total time taken up to now --", time.time() - start, "seconds.")
 
     # ----------------------------------------- READ IN CATALOGS ----------------------------------------- #
     # read in matched files to get photo-z
@@ -633,14 +627,14 @@ if __name__ == '__main__':
                 redshift = float(cat['zphot'][i])
                 starting_z = redshift
             else:
-                print "Got other than 1 or 0 matches for the specz for ID", current_id, "in", current_field
-                print "This much be fixed. Check why it happens. Exiting now."
+                print("Got other than 1 or 0 matches for the specz for ID", current_id, "in", current_field)
+                print("This much be fixed. Check why it happens. Exiting now.")
                 sys.exit(0)
 
             # Check that the starting redshfit is within the required range
             if (starting_z < 0.6) or (starting_z > 1.235):
-                print "Current galaxy", current_id, current_field, "at starting_z", starting_z, "not within redshift range.",
-                print "Moving to the next galaxy."
+                print("Current galaxy", current_id, current_field, "at starting_z", starting_z, "not within redshift range.",)
+                print("Moving to the next galaxy.")
                 continue
 
             # If you want to run it for a single galaxy then 
@@ -652,13 +646,13 @@ if __name__ == '__main__':
             #current_specz = 0.931
             #starting_z = current_specz
 
-            print "At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift
+            print("At ID", current_id, "in", current_field, "with specz and photo-z:", current_specz, redshift)
 
             lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
 
             if return_code == 0:
-                print "Skipping due to an error with the obs data. See the error message just above this one.",
-                print "Moving to the next galaxy."
+                print("Skipping due to an error with the obs data. See the error message just above this one.",)
+                print("Moving to the next galaxy.")
                 continue
 
             # Force dtype for cython code
@@ -675,7 +669,7 @@ if __name__ == '__main__':
             # --------------------------------------------- Quality checks ------------------------------------------- #
             # Netsig check
             if netsig_chosen < 10:
-                print "Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen
+                print("Skipping", current_id, "in", current_field, "due to low NetSig:", netsig_chosen)
                 continue
 
             # D4000 check # accept only if D4000 greater than 1.2
@@ -691,19 +685,19 @@ if __name__ == '__main__':
             # I don't want the D4000 code extrapolating too much.
             # I'm choosing this limit to be 50A
             if np.max(lam_em) < 4200:
-                print "Skipping because lambda array is incomplete by too much."
-                print "i.e. the max val in rest-frame lambda is less than 4200A."
+                print("Skipping because lambda array is incomplete by too much.")
+                print("i.e. the max val in rest-frame lambda is less than 4200A.")
                 continue
 
             d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
             if d4000 < 1.1:
-                print "Skipping", current_id, "in", current_field, "due to low D4000:", d4000
+                print("Skipping", current_id, "in", current_field, "due to low D4000:", d4000)
                 continue
 
             # Overall error check. Suppressed for now.
             """
             if np.sum(abs(ferr_obs)) > 0.2 * np.sum(abs(flam_obs)):
-                print "Skipping", current_id, "in", current_field, "because of overall error."
+                print("Skipping", current_id, "in", current_field, "because of overall error.")
                 continue
             """
 
@@ -719,7 +713,7 @@ if __name__ == '__main__':
                 lsf = np.genfromtxt(lsf_filename)
                 lsf = lsf.astype(np.float64)  # Force dtype for cython code
             except IOError:
-                print "LSF not found. Moving to next galaxy."
+                print("LSF not found. Moving to next galaxy.")
                 continue
 
             # -------- Broaden the LSF ------- #
@@ -783,7 +777,7 @@ if __name__ == '__main__':
 
         catcount += 1
 
-    print "Total galaxies considered:", galaxy_count
+    print("Total galaxies considered:", galaxy_count)
     sys.exit(0)
 
     id_list = np.asarray(id_list)
@@ -817,5 +811,5 @@ if __name__ == '__main__':
     np.save(figs_dir + 'massive-galaxies-figures/large_diff_specz_sample/d4000_err_list.npy', d4000_err_list)
 
     # Total time taken
-    print "Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds."
+    print("Total time taken --", str("{:.2f}".format(time.time() - start)), "seconds.")
     sys.exit(0)

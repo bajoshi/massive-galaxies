@@ -25,17 +25,17 @@ massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
 figs_dir = home + "/Desktop/FIGS/"
 
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
+sys.path.append(massive_galaxies_dir + 'cluster_codes/')
 import dn4000_catalog as dc
-import new_refine_grismz_gridsearch_parallel as ngp
+import cluster_do_fitting as cf
 
 def main():
 
     # Get correct directories 
-    threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
+    #threedhst_datadir = "/Volumes/Bhavins_backup/3dhst_data/"
     # This is if working on the laptop. 
-    # Then you must be using the external hard drive where the models are saved.
-    if not os.path.isdir(threedhst_datadir):
-        threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
+    #if not os.path.isdir(threedhst_datadir):
+    threedhst_datadir = home + "/Desktop/3dhst_data/"  # this path only exists on firstlight
 
     # ------------------------------- Read PEARS cats ------------------------------- #
     pears_ncat = np.genfromtxt(home + '/Documents/PEARS/master_catalogs/h_pears_north_master.cat', dtype=None,\
@@ -65,9 +65,9 @@ def main():
     # ------------------------------- Read in ground-based spectroscopic redshift compilation ------------------------------- #
     # read Nimish's specz catalogs
     goods_n_specz_cat = np.genfromtxt(massive_galaxies_dir + 'goods_n_specz_0117.txt', \
-        dtype=None, names=['ra','dec','z_spec','z_qual','catname','duplicate'], skip_header=13)
+        dtype=None, names=['ra','dec','z_spec','z_qual','catname','duplicate'], skip_header=13, encoding=None)
     goods_s_specz_cat = np.genfromtxt(massive_galaxies_dir + 'cdfs_specz_0117.txt', \
-        dtype=None, names=['ra','dec','z_spec','z_qual','catname','duplicate'], skip_header=13)
+        dtype=None, names=['ra','dec','z_spec','z_qual','catname','duplicate'], skip_header=13, encoding=None)
 
     # ------------------------------- Now match the three ------------------------------- #
     # Preliminary prep before matching
@@ -106,7 +106,7 @@ def main():
 
         for i in range(len(cat)):
 
-            current_id = cat['id'][i]
+            current_id = int(cat['id'][i])
 
             # find grism obj ra,dec
             current_ra = float(cat['pearsra'][i])
@@ -120,11 +120,18 @@ def main():
             spec_idx = np.where((spec_ra >= current_ra - ra_lim) & (spec_ra <= current_ra + ra_lim) & \
                 (spec_dec >= current_dec - dec_lim) & (spec_dec <= current_dec + dec_lim))[0]
 
-            """
-            If there are multiple matches within 0.5 arseconds then choose the closest one.
-            """
-            if len(spec_idx) > 1:
-                print "Found multiple matches in ground-based spectroscopic catalog. Picking closest one."
+            # If exactly one match is found
+            if len(spec_idx) == 1:
+                # Make sure you pass an integer index
+                spec_idx = int(spec_idx)
+
+                current_zspec = float(spec_cat['z_spec'][spec_idx])
+                current_zspec_source = spec_cat['catname'][spec_idx]
+                current_zspec_qual = spec_cat['z_qual'][spec_idx]
+
+            # If there are multiple matches within 0.5 arseconds then choose the closest one.
+            elif len(spec_idx) > 1:
+                print("Found multiple matches in ground-based spectroscopic catalog. Picking closest one.")
 
                 ra_two = current_ra
                 dec_two = current_dec
@@ -143,26 +150,31 @@ def main():
                 dist_list = np.asarray(dist_list)
                 dist_idx = np.argmin(dist_list)
                 spec_idx = spec_idx[dist_idx]
-                
+
                 current_zspec = float(spec_cat['z_spec'][spec_idx])
                 current_zspec_source = spec_cat['catname'][spec_idx]
                 current_zspec_qual = spec_cat['z_qual'][spec_idx]
 
-            else:
+            elif len(spec_idx) == 0:
                 current_zspec = -99.0
                 current_zspec_source = -99.0
                 current_zspec_qual = -99.0
 
             # ------------------------- Now match with photometry ------------------------- #
-            # Uses exact same procedure as above
+            # Uses a similar procedure to above
             threed_phot_idx = np.where((threed_ra >= current_ra - ra_lim) & (threed_ra <= current_ra + ra_lim) & \
                 (threed_dec >= current_dec - dec_lim) & (threed_dec <= current_dec + dec_lim))[0]
+
+            # If exactly one match is found then there isn't anything to do
+            # Just continue... that just means that we have a match in the 
+            # photometry catalog.
+            # Although I'm not doing anything with the matching index ... ?
 
             """
             If there are multiple matches within 0.5 arseconds then choose the closest one.
             """
             if len(threed_phot_idx) > 1:
-                print "Found multiple matches in photometry catalog. Picking closest one."
+                print("Found multiple matches in photometry catalog. Picking closest one.")
 
                 ra_two = current_ra
                 dec_two = current_dec
@@ -183,32 +195,33 @@ def main():
                 threed_phot_idx = threed_phot_idx[dist_idx]
 
             elif len(threed_phot_idx) == 0:
-                print "Match not found in Photmetry catalog. Skipping."
+                print("Match not found in Photmetry catalog. Skipping.")
                 continue
 
+            # ------------------------- Moving on to the grism spectrum and other quality checks ------------------------- #
             # Get current i-band magnitude
             current_imag = float(cat['imag'][i])
 
             # Magnitude cut
             #if current_imag > 24.0:
-            #    print "Skipping due to magnitude cut. Current galaxy magnitude (i_AB):", current_imag
+            #    print("Skipping due to magnitude cut. Current galaxy magnitude (i_AB):", current_imag)
             #    continue
 
-            print "PEARS ID and Field:", current_id, current_field
+            print("PEARS ID and Field:", current_id, current_field)
 
             # Get NetSig
             grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = \
-            ngp.get_data(current_id, current_field)
+            cf.get_data(current_id, current_field)
 
             if return_code == 0:
-                print current_field, current_id,
-                print "Skipping due to an error with the obs data. See the error message just above this one.",
-                print "Moving to the next galaxy."
+                print(current_field, current_id,)
+                print("Skipping due to an error with the obs data. See the error message just above this one.",)
+                print("Moving to the next galaxy.")
                 continue
 
             if netsig_chosen < 10:
-                print current_field, current_id,
-                print "Skipping due to low NetSig:", netsig_chosen
+                print(current_field, current_id,)
+                print("Skipping due to low NetSig:", netsig_chosen)
                 continue
 
             pears_id_list.append(current_id)
@@ -225,10 +238,10 @@ def main():
 
         catcount += 1
 
-    print "Total galaxies in sample:", match_count
+    print("Total galaxies in sample:", match_count)
 
     # Save final sample
-    # Convertt to numpy arrays and save
+    # Convert to numpy arrays and save
     pears_id = np.asarray(pears_id_list)
     pears_field = np.asarray(pears_field_list)
     pears_ra = np.asarray(pears_ra_list)
@@ -240,9 +253,12 @@ def main():
     imag = np.asarray(imag_list)
 
     # Save to ASCII file
-    data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, zspec, zspec_source, zspec_qual, netsig, imag),\
-        dtype=[('pears_id', int), ('pears_field', '|S7'), ('pears_ra', float), ('pears_dec', float), \
-        ('zspec', float), ('zspec_source', '|S10'), ('zspec_qual', '|S1'), ('netsig', float), ('imag', float)])
+    #data = np.array(zip(pears_id, pears_field, pears_ra, pears_dec, zspec, zspec_source, zspec_qual, netsig, imag), \
+    #    dtype=[('pears_id', int), ('pears_field', '|S7'), ('pears_ra', float), ('pears_dec', float), ('zspec', float), \
+    #    ('zspec_source', '|S10'), ('zspec_qual', '|S1'), ('netsig', float), ('imag', float)])
+    data = np.column_stack((pears_id, pears_field, pears_ra, pears_dec, zspec, zspec_source, zspec_qual, netsig, imag))
+    print(data)
+    print(type(data))
     np.savetxt(massive_galaxies_dir + 'pears_full_sample.txt', data, \
         fmt=['%d', '%s', '%.7f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f'],\
         delimiter=' ', header='pearsid  field  ra  dec  zspec  zspec_source  zspec_qual  netsig  imag')
