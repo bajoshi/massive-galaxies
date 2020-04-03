@@ -260,8 +260,7 @@ def main():
     print(data)
     print(type(data))
     np.savetxt(massive_galaxies_dir + 'pears_full_sample.txt', data, \
-        fmt=['%d', '%s', '%.7f', '%.6f', '%.4f', '%s', '%s', '%.2f', '%.2f'],\
-        delimiter=' ', header='pearsid  field  ra  dec  zspec  zspec_source  zspec_qual  netsig  imag')
+        fmt='%s', delimiter=' ', header='pearsid  field  ra  dec  zspec  zspec_source  zspec_qual  netsig  imag')
 
     return None
 
