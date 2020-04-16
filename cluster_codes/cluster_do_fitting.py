@@ -222,7 +222,7 @@ def get_data(pears_index, field, check_contam=True):
         return lam_obs, flam_obs, ferr_obs, pa_chosen, netsig_chosen, return_code
 
     # Now chop off the ends and only look at the observed spectrum from 6000A to 9500A
-    arg6500 = np.argmin(abs(lam_obs - 6000))
+    arg6500 = np.argmin(abs(lam_obs - 6500))
     arg9000 = np.argmin(abs(lam_obs - 9500))
         
     lam_obs = lam_obs[arg6500:arg9000]
