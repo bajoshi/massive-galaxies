@@ -14,14 +14,15 @@ zp_results_dir = massive_figures_dir + 'photoz_run_jan2019/'
 zg_results_dir = massive_figures_dir + 'grismz_run_jan2019/'
 
 sys.path.append(massive_galaxies_dir + 'grismz_pipeline/')
-import spz_photoz_grismz_comparison as comp
-from new_refine_grismz_gridsearch_parallel import get_data
+sys.path.append(massive_galaxies_dir + 'cluster_codes/')
 import dn4000_catalog as dc
+import cluster_do_fitting as cf
 
 def main():
 
     # ------------------------------- Get catalog for final sample ------------------------------- #
-    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', dtype=None, names=True)
+    final_sample = np.genfromtxt(massive_galaxies_dir + 'spz_paper_sample.txt', \
+        dtype=None, names=True, encoding=None)
 
     spz_outdir = massive_figures_dir + 'cluster_results_covmat_3lsfsigma_June2019/'
 
@@ -43,7 +44,7 @@ def main():
 
     # Loop over all result files and save to the empty lists defined above
     for fl in glob.glob(spz_outdir + 'redshift_fitting_results*.txt'):
-        current_result = np.genfromtxt(fl, dtype=None, names=True, skip_header=1)
+        current_result = np.genfromtxt(fl, dtype=None, names=True, skip_header=1, encoding=None)
 
         all_ids.append(int(current_result['PearsID']))
         all_fields.append(str(current_result['Field']))
@@ -73,10 +74,10 @@ def main():
     # Comment this print statement out if out don't want to actually print this list
     print_tex_format = True  # toggle this on/off for printing tex/ascii table # also change the mag cut below
     if print_tex_format:
-        print "ID    Field     RA    DEC        zspec    zphot    zgrism     zspz    NetSig    D4000    D4000_err    iABmag"
+        print("ID    Field     RA    DEC        zspec    zphot    zgrism     zspz    NetSig    D4000    D4000_err    iABmag")
     else:
-        print "ID    Field     RA    DEC        zspec    zphot    low_zphot_err    high_zphot_err    zg    low_zgrism_err    high_zgrism_err",
-        print "    zspz    low_zspz_err    high_zspz_err    NetSig    D4000    D4000_err    iABmag"
+        print("ID    Field     RA    DEC        zspec    zphot    low_zphot_err    high_zphot_err    zg    low_zgrism_err    high_zgrism_err",)
+        print("    zspz    low_zspz_err    high_zspz_err    NetSig    D4000    D4000_err    iABmag")
 
     # Updated code after paper was accepted.
     # This change is ONLY to get the code to
@@ -108,13 +109,21 @@ def main():
     # then get this for loop to loop over all_ids.
     # Comment out the print_id_idx = np.where() line.
     # And also replace [print_id_idx] with [i] everywhere.
+    # Comment out the mag cut below
 
-    for i in range(len(galaxy_ids_to_print)):
+    # If you want to print only those ids that were in the 
+    # short version of the table in the paper, then loop
+    # over galaxy_ids_to_print. 
+    # Uncomment the the print_id_idx = np.where() line.
+    # Replace [i] with [print_id_idx]
+    # Uncomment mag cut
 
-        print_id_idx = int(np.where(all_ids == galaxy_ids_to_print[i])[0])
+    for i in range(len(all_ids)):
 
-        current_id = all_ids[print_id_idx]
-        current_field = all_fields[print_id_idx]
+        #print_id_idx = int(np.where(all_ids == galaxy_ids_to_print[i])[0])
+
+        current_id = all_ids[i]
+        current_field = all_fields[i]
 
         sample_idx = np.where(final_sample['pearsid'] == current_id)[0]
         if not sample_idx.size:
@@ -136,15 +145,16 @@ def main():
             continue
 
         # Get data
-        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = get_data(current_id, current_field)
+        grism_lam_obs, grism_flam_obs, grism_ferr_obs, pa_chosen, netsig_chosen, return_code = \
+        cf.get_data(current_id, current_field)
 
         if return_code == 0:
-            print current_id, current_field
-            print "Return code should not have been 0. Exiting."
+            print(current_id, current_field)
+            print("Return code should not have been 0. Exiting.")
             sys.exit(0)
 
         # Get D4000 at specz
-        current_specz = zs[print_id_idx]
+        current_specz = zs[i]
 
         lam_em = grism_lam_obs / (1 + current_specz)
         flam_em = grism_flam_obs * (1 + current_specz)
@@ -153,9 +163,9 @@ def main():
         d4000, d4000_err = dc.get_d4000(lam_em, flam_em, ferr_em)
 
         # Cut on large D4000 error
-        if d4000_err > 0.5:
-            large_d4000_err_count += 1
-            continue
+        #if d4000_err > 0.5:
+        #    large_d4000_err_count += 1
+        #    continue
 
         # Get ra, dec, i_mag
         if current_field == 'GOODS-N':
@@ -170,18 +180,18 @@ def main():
             current_imag = pears_scat['imag'][master_cat_idx]
 
         # Cut on imag # ONLY for the table that goes into the paper!!
-        if current_imag > 23.5:
-            continue
+        #if current_imag > 23.5:
+        #    continue
 
         # Get errors on redshifts   # from chi2 map NOT p(z) curve
-        high_zperr = zp_high_bound_chi2[print_id_idx] - zp[print_id_idx]
-        low_zperr  = zp[print_id_idx] - zp_low_bound_chi2[print_id_idx]
+        high_zperr = zp_high_bound_chi2[i] - zp[i]
+        low_zperr  = zp[i] - zp_low_bound_chi2[i]
 
-        high_zgerr = zg_high_bound_chi2[print_id_idx] - zg[print_id_idx]
-        low_zgerr  = zg[print_id_idx] - zg_low_bound_chi2[print_id_idx]
+        high_zgerr = zg_high_bound_chi2[i] - zg[i]
+        low_zgerr  = zg[i] - zg_low_bound_chi2[i]
 
-        high_zspzerr = zspz_high_bound_chi2[print_id_idx] - zspz[print_id_idx]
-        low_zspzerr  = zspz[print_id_idx] - zspz_low_bound_chi2[print_id_idx]
+        high_zspzerr = zspz_high_bound_chi2[i] - zspz[i]
+        low_zspzerr  = zspz[i] - zspz_low_bound_chi2[i]
 
         if d4000 >= 1.1 and d4000 < 2.0:
             # Some formatting stuff just to make it easier to read on the screen and the tex file
@@ -204,8 +214,8 @@ def main():
             if len(current_netsig_to_print) == 5:
                 current_netsig_to_print += ' '
 
-            current_res_zphot = (zp[print_id_idx] - current_specz) / (1 + current_specz)
-            current_res_zspz = (zspz[print_id_idx] - current_specz) / (1 + current_specz)
+            current_res_zphot = (zp[i] - current_specz) / (1 + current_specz)
+            current_res_zspz = (zspz[i] - current_specz) / (1 + current_specz)
 
             current_res_zphot_to_print = str("{:.3f}".format(current_res_zphot))
             if current_res_zphot_to_print[0] != '-':
@@ -215,53 +225,53 @@ def main():
                 current_res_zspz_to_print = '+' + current_res_zspz_to_print
 
             if print_tex_format:
-                print current_id_to_print, "  &",
-                print current_field, "  &",
-                print "{:.7f}".format(current_ra), "  &",
-                print current_dec_to_print, "  &",
-                print "{:.3f}".format(current_specz), "  &",
-                print str("{:.2f}".format(zp[print_id_idx])) + \
-                "$\substack{+" + str("{:.2f}".format(high_zperr)) + " \\\\ -" + str("{:.2f}".format(low_zperr)) + "}$", "  &",
-                print str("{:.2f}".format(zg[print_id_idx])) + \
-                "$\substack{+" + str("{:.2f}".format(high_zgerr)) + " \\\\ -" + str("{:.2f}".format(low_zgerr)) + "}$", "  &",
-                print str("{:.2f}".format(zspz[print_id_idx])) + \
-                "$\substack{+" + str("{:.2f}".format(high_zspzerr)) + " \\\\ -" + str("{:.2f}".format(low_zspzerr)) + "}$", "  &",
-                print current_netsig_to_print, "  &",
-                print "{:.4f}".format(d4000), "  &",
-                print "{:.2f}".format(d4000_err), "  &",
-                #print current_res_zphot_to_print, "     ",
-                #print current_res_zspz_to_print, "    ",
-                print "{:.2f}".format(current_imag), "\\\\"
+                print(current_id_to_print, "  &", end='  ')
+                print(current_field, "  &", end='  ')
+                print("{:.7f}".format(current_ra), "  &", end='  ')
+                print(current_dec_to_print, "  &", end='  ')
+                print("{:.3f}".format(current_specz), "  &", end='  ')
+                print(str("{:.2f}".format(zp[i])) + \
+                "$\substack{+" + str("{:.2f}".format(high_zperr)) + " \\\\ -" + str("{:.2f}".format(low_zperr)) + "}$", "  &", end='  ')
+                print(str("{:.2f}".format(zg[i])) + \
+                "$\substack{+" + str("{:.2f}".format(high_zgerr)) + " \\\\ -" + str("{:.2f}".format(low_zgerr)) + "}$", "  &", end='  ')
+                print(str("{:.2f}".format(zspz[i])) + \
+                "$\substack{+" + str("{:.2f}".format(high_zspzerr)) + " \\\\ -" + str("{:.2f}".format(low_zspzerr)) + "}$", "  &", end='  ')
+                print(current_netsig_to_print, "  &", end='  ')
+                print("{:.4f}".format(d4000), "  &", end='  ')
+                print("{:.2f}".format(d4000_err), "  &", end='  ')
+                #print(current_res_zphot_to_print, "     ",)
+                #print(current_res_zspz_to_print, "    ",)
+                print("{:.2f}".format(current_imag), "\\\\")
 
             else:  # print the ascii table which can just be copy pasted into a text file
-                print current_id_to_print, "  ",
-                print current_field, "  ",
-                print "{:.7f}".format(current_ra), "  ",
-                print "{:.6f}".format(current_dec), "  ",
-                print "{:.3f}".format(current_specz), "  ",
-                print "{:.2f}".format(zp[print_id_idx]), "  ",
-                print "{:.2f}".format(low_zperr), "  ",
-                print "{:.2f}".format(high_zperr), "  ",
-                print "{:.2f}".format(zg[print_id_idx]), "  ",
-                print "{:.2f}".format(low_zgerr), "  ",
-                print "{:.2f}".format(high_zgerr), "  ",
-                print "{:.2f}".format(zspz[print_id_idx]), "  ",
-                print "{:.2f}".format(low_zspzerr), "  ",
-                print "{:.2f}".format(high_zspzerr), "  ",
-                print current_netsig_to_print, "  ",
-                print "{:.4f}".format(d4000), "  ",
-                print "{:.2f}".format(d4000_err), "  ",
-                #print current_res_zphot_to_print, "     ",
-                #print current_res_zspz_to_print, "    ",
-                print "{:.2f}".format(current_imag)
+                print(current_id_to_print, "  ",)
+                print(current_field, "  ",)
+                print("{:.7f}".format(current_ra), "  ",)
+                print("{:.6f}".format(current_dec), "  ",)
+                print("{:.3f}".format(current_specz), "  ",)
+                print("{:.2f}".format(zp[i]), "  ",)
+                print("{:.2f}".format(low_zperr), "  ",)
+                print("{:.2f}".format(high_zperr), "  ",)
+                print("{:.2f}".format(zg[i]), "  ",)
+                print("{:.2f}".format(low_zgerr), "  ",)
+                print("{:.2f}".format(high_zgerr), "  ",)
+                print("{:.2f}".format(zspz[i]), "  ",)
+                print("{:.2f}".format(low_zspzerr), "  ",)
+                print("{:.2f}".format(high_zspzerr), "  ",)
+                print(current_netsig_to_print, "  ",)
+                print("{:.4f}".format(d4000), "  ",)
+                print("{:.2f}".format(d4000_err), "  ",)
+                #print(current_res_zphot_to_print, "     ",)
+                #print(current_res_zspz_to_print, "    ",)
+                print("{:.2f}".format(current_imag))
 
-            #print current_id_to_print, current_field, current_specz, zp[print_id_idx], zg[print_id_idx], zspz[print_id_idx], 
+            #print current_id_to_print, current_field, current_specz, zp[i], zg[i], zspz[i], 
             #print d4000, d4000_err, current_netsig_to_print, current_imag
 
         total_galaxies += 1
 
-    print "Total galaxies:", total_galaxies
-    print "Galaxies with large D4000 errors (>0.5):", large_d4000_err_count
+    print("Total galaxies:", total_galaxies)
+    print("Galaxies with large D4000 errors (>0.5):", large_d4000_err_count)
 
     return None
 

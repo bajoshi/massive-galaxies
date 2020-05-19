@@ -31,9 +31,11 @@ lsfdir = home + "/Desktop/FIGS/new_codes/pears_lsfs/"
 figs_dir = home + "/Desktop/FIGS/"
 
 sys.path.append(stacking_analysis_dir + 'stacking_pipeline/')
+sys.path.append(massive_galaxies_dir + 'cluster_codes/')
 import grid_coadd as gd
 import dn4000_catalog as dc
 import mocksim_results as mr
+import cluster_do_fitting as cf
 
 def get_line_mask(lam_grid, z):
 
@@ -478,7 +480,7 @@ def get_data(pears_index, field, check_contam=True):
         for count in range(n_ext):
             #print("At PA", fitsfile[count+1].header['POSANG']  # Line useful for debugging. Do not remove. Just uncomment.)
             fitsdata = fitsfile[count+1].data
-            netsig = gd.get_net_sig(fitsdata)
+            netsig = cf.get_net_sig(fitsdata)
             netsiglist.append(netsig)
             palist.append(fitsfile[count+1].header['POSANG'])
             #print("At PA", fitsfile[count+1].header['POSANG'], "with NetSig", netsig  )
@@ -491,7 +493,7 @@ def get_data(pears_index, field, check_contam=True):
     elif n_ext == 1:
         spec_toadd = fitsfile[1].data
         pa_chosen = fitsfile[1].header['POSANG']
-        netsig_chosen = gd.get_net_sig(fitsfile[1].data)
+        netsig_chosen = cf.get_net_sig(fitsfile[1].data)
         
     # Now get the spectrum to be added
     lam_obs = spec_toadd['LAMBDA']
