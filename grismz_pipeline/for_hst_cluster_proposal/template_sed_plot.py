@@ -4,7 +4,7 @@ import numpy as np
 from astropy.io import fits
 from scipy.interpolate import griddata
 from numpy import nansum
-import pysynphot
+#import pysynphot
 from functools import reduce
 
 import os
