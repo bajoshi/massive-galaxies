@@ -4,25 +4,20 @@ import numpy as np
 from astropy.io import fits
 from scipy.interpolate import griddata
 from numpy import nansum
-#import pysynphot
+
 from functools import reduce
 
 import os
 import sys
-import time
-import datetime
 
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import matplotlib
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib.patches import Rectangle
 
 home = os.getenv('HOME')
-massive_galaxies_dir = home + "/Desktop/FIGS/massive-galaxies/"
-figs_dir = home + "/Desktop/FIGS/"
+massive_galaxies_dir = home + "/Documents/GitHub/massive-galaxies/"
 
-sys.path.append(massive_galaxies_dir + 'cluster_codes/')
-from cluster_do_fitting import get_avg_dlam
 
 def get_klambda(wav):
     # Calzetti law
@@ -31,25 +26,31 @@ def get_klambda(wav):
     rv = 4.05
 
     if wav > 0.63:
-        klam = 2.659 * (-1.857 + 1.040/wav) + rv
+        klam = 2.659 * (-1.857 + 1.040 / wav) + rv
 
     elif wav < 0.63:
-        klam = 2.659 * (-2.156 + 1.509/wav - 0.198/wav**2 + 0.011/wav**3) + rv
+        klam = 2.659 \
+            * (-2.156 + 1.509 / wav - 0.198 / wav**2 + 0.011 / wav**3) + rv
 
     elif wav == 0.63:
         klam = 3.49
-        # Since the curves dont exactly meet at 0.63 micron, I've taken the average of the two.
-        # They're close though. One gives me klam=3.5 and the other klam=3.48
+        # Since the curves dont exactly meet at 0.63 micron,
+        # I've taken the average of the two.
+        # They're close though. One gives me klam=3.5
+        # and the other klam=3.48
 
     return klam
+
 
 def get_ebv(av):
     return av / 4.05
 
+
 def get_model_photometry(model_lam_grid, model_flux_arr, filt):
 
     # first interpolate the transmission curve to the model lam grid
-    filt_interp = griddata(points=filt['wav'], values=filt['trans'], xi=model_lam_grid, method='linear')
+    filt_interp = griddata(points=filt['wav'], values=filt['trans'],
+                           xi=model_lam_grid, method='linear')
 
     # multiply model spectrum to filter curve
     num = nansum(model_flux_arr * filt_interp)
@@ -59,7 +60,9 @@ def get_model_photometry(model_lam_grid, model_flux_arr, filt):
 
     return model_flam
 
-def get_model_grism_spec(model_lam_grid, model_flux_arr, grism_resamp_grid, grism_curve):
+
+def get_model_grism_spec(model_lam_grid, model_flux_arr,
+                         grism_resamp_grid, grism_curve):
 
     # Resample the model spectrum to a finer grid (?)
 
@@ -67,9 +70,10 @@ def get_model_grism_spec(model_lam_grid, model_flux_arr, grism_resamp_grid, gris
     # Define array to save modified models
     model_grism_spec = np.zeros(len(grism_resamp_grid), dtype=np.float64)
 
-    ### Zeroth element
+    # Zeroth element
     lam_step = grism_resamp_grid[1] - grism_resamp_grid[0]
-    idx = np.where((model_lam_grid >= grism_resamp_grid[0] - lam_step) & (model_lam_grid < grism_resamp_grid[0] + lam_step))[0]
+    idx = np.where((model_lam_grid >= grism_resamp_grid[0] - lam_step)
+                   & (model_lam_grid < grism_resamp_grid[0] + lam_step))[0]
 
     model_grism_spec[0] = np.mean(model_flux_arr[idx])
 
@@ -97,6 +101,7 @@ def get_model_grism_spec(model_lam_grid, model_flux_arr, grism_resamp_grid, gris
 
     return model_grism_spec
 
+
 def chop_grism_spec(grism_curve, resampling_lam_grid, grism_spec):
 
     # Now chop the grism curve to where the transmission is above 10%
@@ -112,13 +117,14 @@ def chop_grism_spec(grism_curve, resampling_lam_grid, grism_spec):
 
     return resampling_lam_grid, grism_spec
 
+
 def get_dust_atten_model(model_wav_arr, model_flux_arr, av):
     """
     This function will apply the Calzetti dust extinction law 
     to the given model using the supplied value of Av.
 
     It assumes that the model it is being given is dust-free.
-    It assumes that the model wavelengths it is given are in Angstroms.
+    It assumes that the model wavelengths it is given are in microns.
 
     It returns the dust-attenuated flux array at the same wavelengths as before.
     """
@@ -129,7 +135,7 @@ def get_dust_atten_model(model_wav_arr, model_flux_arr, av):
     dust_atten_model_flux = np.zeros(len(model_wav_arr), dtype=np.float64)
     for i in range(len(model_wav_arr)):
 
-        current_wav = model_wav_arr[i] / 1e4  # because this has to be in microns
+        current_wav = model_wav_arr[i]  # assumes given wav in microns
 
         # The calzetti law is only valid up to 2.2 micron so beyond 
         # 2.2 micron this function just replaces the old values
@@ -142,6 +148,7 @@ def get_dust_atten_model(model_wav_arr, model_flux_arr, av):
             dust_atten_model_flux[i] = model_flux_arr[i]
 
     return dust_atten_model_flux
+
 
 def tau(lam_obs, redshift):
     # lam_obs in angstroms
@@ -179,10 +186,12 @@ def tau(lam_obs, redshift):
 
     return (tau_line + tau_c)
 
-def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_lam_grid, model_grism_spec, \
-    all_filters, filter_names, grism_name):
 
-    # --------- Plot --------- # 
+def plot_template_sed(model, model_name, phot_lam, model_photometry,
+                      resampling_lam_grid, model_grism_spec,
+                      all_filters, filter_names, grism_name):
+
+    # --------- Plot --------- #
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -346,7 +355,9 @@ def plot_template_sed(model, model_name, phot_lam, model_photometry, resampling_
 
     return None
 
-def do_all_mods_plot(template, template_name, all_filters, filter_names, phot_lam, grism_curve, grism_name):
+
+def do_all_mods_plot(template, template_name, all_filters,
+                     filter_names, phot_lam, grism_curve, grism_name):
 
     if 'DSFG' in template_name:
         template_flux = get_dust_atten_model(template['wav'], template['flam_norm'], 2.0)
@@ -395,9 +406,11 @@ def do_all_mods_plot(template, template_name, all_filters, filter_names, phot_la
 
     return None
 
-def get_template(age, tau, tauv, metallicity, \
-    log_age_arr, metal_arr, tau_gyr_arr, tauv_arr, \
-    model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap, plotcheck=False):
+
+def get_template(age, tau, tauv, metallicity,
+                 log_age_arr, metal_arr, tau_gyr_arr, tauv_arr,
+                 model_lam_grid_withlines_mmap, model_comp_spec_withlines_mmap,
+                 plotcheck=False):
 
     print("\n", "Finding closest model to --")
     print("Age [Gyr]:", 10**age / 1e9)
@@ -461,29 +474,39 @@ def get_template(age, tau, tauv, metallicity, \
 
     return model_flam
 
+
 def plot_for_pclusters_Cy28_2020():
 
-    # ---------------------------------- Read in the filters from Seth ---------------------------------- #
-    f435w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/F435W_ACS.res', \
-        dtype=None, names=['wav', 'trans'])
-    f606w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/F606W_ACS.res', \
-        dtype=None, names=['wav', 'trans'])
-    f814w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/F814W_ACS.txt', \
-        dtype=None, names=['wav', 'trans'])
-    g141  = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/g141l_tot.txt', \
-        dtype=None, names=['wav', 'trans'])
-    f140w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f140w_filt_curve.txt', \
-        dtype=None, names=['wav', 'trans'])
+    # ----------- Read in the filters from Seth--------- #
+    f435w = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/for_hst_cluster_proposal/F435W_ACS.res',
+                          dtype=None, names=['wav', 'trans'])
+    f606w = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/for_hst_cluster_proposal/F606W_ACS.res',
+                          dtype=None, names=['wav', 'trans'])
+    f814w = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/for_hst_cluster_proposal/F814W_ACS.txt',
+                          dtype=None, names=['wav', 'trans'])
+    g141 = np.genfromtxt(massive_galaxies_dir
+                         + 'grismz_pipeline/for_hst_cluster_proposal/g141l_tot.txt',
+                         dtype=None, names=['wav', 'trans'])
+    f140w = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/f140w_filt_curve.txt',
+                          dtype=None, names=['wav', 'trans'])
 
     # Spitzer/IRAC channels
-    irac1 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac2 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac3 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac4 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
+    irac1 = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/irac1.txt', dtype=None,
+                          names=['wav', 'trans'], skip_header=3)
+    irac2 = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/irac2.txt', dtype=None,
+                          names=['wav', 'trans'], skip_header=3)
+    irac3 = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/irac3.txt', dtype=None,
+                          names=['wav', 'trans'], skip_header=3)
+    irac4 = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/irac4.txt', dtype=None,
+                          names=['wav', 'trans'], skip_header=3)
 
     # IRAC wavelengths are in microns # convert to angstroms
     irac1['wav'] *= 1e4
@@ -576,17 +599,22 @@ def plot_for_pclusters_Cy28_2020():
 
     # NEwer templates 
     # AGN, SF galaxy, and sub-mm galaxy
-    ell2gyr = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/Ell2Gyr_template.tbl', \
-        dtype=None, names=['wav', 'flam_norm'], skip_header=2)
-    agn_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/QSO1_template.sed', \
-        dtype=None, names=['wav', 'flam_norm'], skip_header=3)
-    sfg_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/M82_starburst_template.sed', \
-        dtype=None, names=['wav', 'flam_norm'], skip_header=3)
-    smg_template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/aless_SMG_template.sed', \
-        dtype=None, names=['wav', 'flam_norm'], skip_header=3)
+    basedir = massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/'  # noqa
+    ell2gyr = np.genfromtxt(basedir + 'Ell2Gyr_template.tbl',
+                            dtype=None, names=['wav', 'flam_norm'],
+                            skip_header=2)
+    agn_template = np.genfromtxt(basedir + 'QSO1_template.sed',
+                                 dtype=None, names=['wav', 'flam_norm'],
+                                 skip_header=3)
+    sfg_template = np.genfromtxt(basedir + 'M82_starburst_template.sed',
+                                 dtype=None, names=['wav', 'flam_norm'],
+                                 skip_header=3)
+    smg_template = np.genfromtxt(basedir + 'aless_SMG_template.sed',
+                                 dtype=None, names=['wav', 'flam_norm'],
+                                 skip_header=3)
 
-    #all_templates = [ell2gyr, agn_template, sfg_template, smg_template]
-    #all_template_names = ['Ell 2 Gyr', 'AGN', 'SFG', 'DSFG']
+    # all_templates = [ell2gyr, agn_template, sfg_template, smg_template]
+    # all_template_names = ['Ell 2 Gyr', 'AGN', 'SFG', 'DSFG']
 
     all_templates = [ell2gyr, smg_template]
     all_template_names = ['Ell 2 Gyr', 'DSFG']
@@ -594,7 +622,7 @@ def plot_for_pclusters_Cy28_2020():
     # Define redshift for templates
     z = 2.6
 
-    # ---------------------------------- Convolve templates with filters ---------------------------------- #
+    # -------------------- Convolve templates with filters --------------- #
     for count in range(len(all_templates)):
         template = all_templates[count]
         template_name = all_template_names[count]
@@ -602,20 +630,25 @@ def plot_for_pclusters_Cy28_2020():
         # Redshift templates
         template['wav'] *= (1+z)
 
-        dl_tbl = np.genfromtxt(massive_galaxies_dir + 'cluster_codes/dl_lookup_table.txt', dtype=None, names=True)
-        z_idx = np.argmin(abs(dl_tbl['z'] - z))
-        dl = dl_tbl['dl_cm'][z_idx]  # in cm
+        # dl_tbl = np.genfromtxt(massive_galaxies_dir + 
+        # 'cluster_codes/dl_lookup_table.txt', dtype=None, names=True)
+        # z_idx = np.argmin(abs(dl_tbl['z'] - z))
+        # dl = dl_tbl['dl_cm'][z_idx]  # in cm
 
         # Convert to realistic fluxes
         # assume a stellar mass 
-        stellar_mass = 10**9  # solar masses
-        L_sun = 3.84e33  # in erg per sec
-        #template['flam_norm'] = (template['flam_norm'] * L_sun * stellar_mass) / (4 * np.pi * dl**2 * (1 + z))
+        # stellar_mass = 10**9  # solar masses
+        # L_sun = 3.84e33  # in erg per sec
+        # template['flam_norm'] = (template['flam_norm'] 
+        #                          * L_sun * stellar_mass)
+        #                          / (4 * np.pi * dl**2 * (1 + z))
         template['flam_norm'] /= (1+z)
 
-        do_all_mods_plot(template, template_name, all_filters, filter_names, phot_lam, g141, 'G141')
+        do_all_mods_plot(template, template_name, all_filters,
+                         filter_names, phot_lam, g141, 'G141')
 
     return None
+
 
 def plot_for_g165():
 
@@ -786,26 +819,37 @@ def plot_for_g165():
 
     return None
 
+
 def plot_for_g165_Cy28_2020():
 
     # Optical and near-IR filters
     # More to be added # Ask Brenda
-    f110w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/wfc3_ir_filters/F110W_IR_throughput.csv', \
-        dtype=None, names=['wav', 'trans'], usecols=(1,2), delimiter=',', skip_header=1)
-    f160w = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/f160w_filt_curve.txt', \
-        dtype=None, names=['wav', 'trans'])
-    lbt_luci_k = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/LBT_LUCIFER.K_ED059.dat', \
-        dtype=None, names=['wav', 'trans'])
+    f110w = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/wfc3_ir_filters/'
+                          + 'F110W_IR_throughput.csv',
+                          dtype=None, names=['wav', 'trans'],
+                          usecols=(1, 2), delimiter=',', skip_header=1)
+    f160w = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/f160w_filt_curve.txt',
+                          dtype=None, names=['wav', 'trans'])
+    lbt_luci_k = np.genfromtxt(massive_galaxies_dir
+                               + 'grismz_pipeline/for_hst_cluster_proposal/'
+                               + 'LBT_LUCIFER.K_ED059.dat',
+                               dtype=None, names=['wav', 'trans'])
 
     # Spitzer/IRAC channels
-    irac1 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac1.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac2 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac2.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac3 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac3.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
-    irac4 = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/irac4.txt', dtype=None, \
-        names=['wav', 'trans'], skip_header=3)
+    irac1 = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/irac1.txt', dtype=None,
+                          names=['wav', 'trans'], skip_header=3)
+    irac2 = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/irac2.txt', dtype=None,
+                          names=['wav', 'trans'], skip_header=3)
+    irac3 = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/irac3.txt', dtype=None,
+                          names=['wav', 'trans'], skip_header=3)
+    irac4 = np.genfromtxt(massive_galaxies_dir
+                          + 'grismz_pipeline/irac4.txt', dtype=None,
+                          names=['wav', 'trans'], skip_header=3)
 
     # IRAC wavelengths are in microns # convert to angstroms
     irac1['wav'] *= 1e4
@@ -813,7 +857,8 @@ def plot_for_g165_Cy28_2020():
     irac3['wav'] *= 1e4
     irac4['wav'] *= 1e4
 
-    # Multiply by scale factor to make the curves look like those in the handbook
+    # Multiply by scale factor to make the curves
+    # look like those in the handbook
     # See the comments in the plot_for_pclusters() function above
     f110w_scalefac = 0.56 / max(f110w['trans'])
     f160w_scalefac = 0.555 / max(f160w['trans'])
@@ -832,19 +877,22 @@ def plot_for_g165_Cy28_2020():
     irac4['trans'] *= irac4_scalefac
 
     all_filters = [f110w, f160w, lbt_luci_k, irac1, irac2, irac3, irac4]
-    filter_names = ['F110W', 'F160W', 'K', 'IRAC_CH1', 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4']
+    # filter_names = ['F110W', 'F160W', 'K', 'IRAC_CH1',
+    #                 'IRAC_CH2', 'IRAC_CH3', 'IRAC_CH4']
 
     # Pivot wavelengths
     # From here --
     # ACS: http://www.stsci.edu/hst/acs/analysis/bandwidths/
-    # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352
-    # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283
-    phot_lam = np.array([11534.0, 15369.0, 21860.85, \
-    35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
+    # WFC3: http://www.stsci.edu/hst/wfc3/documents/handbooks/currentIHB/c07_ir06.html#400352  # noqa
+    # Spitzer IRAC channels: http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/iracinstrumenthandbook/6/#_Toc410728283  # noqa
+    phot_lam = np.array([11534.0, 15369.0, 21860.85,
+                         35500.0, 44930.0, 57310.0, 78720.0])  # angstroms
 
     # ---- Now read the templates back in from the ascii files
-    template = np.genfromtxt(massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/SF_50Myr_z2.txt', \
-        dtype=None, names=True)
+    template = np.genfromtxt(massive_galaxies_dir
+                             + 'grismz_pipeline/for_hst_cluster_proposal/'
+                             + 'SF_50Myr_z2.txt',
+                             dtype=None, names=True)
 
     # ---- Now plot
     fig = plt.figure()
@@ -855,23 +903,30 @@ def plot_for_g165_Cy28_2020():
     ax.set_xlabel(r'$\mathrm{Wavelength\, [\AA]}$', fontsize=15)
 
     # Get dust attenuated model and plot
-    dust_atten_model_flux = get_dust_atten_model(template['wav'], template['flam_norm'], 2.0)
+    dust_atten_model_flux = get_dust_atten_model(template['wav'],
+                                                 template['flam_norm'], 2.0)
 
     # ---- Now get photometry for dust-attenuated model
     template_flam_list = []
     for i in range(len(all_filters)):
-        template_flam_list.append(get_model_photometry(template['wav'], dust_atten_model_flux, all_filters[i]))
+        template_flam_list.append(get_model_photometry(template['wav'],
+                                                       dust_atten_model_flux,
+                                                       all_filters[i]))
 
-    ax.plot(template['wav'], template['flam_norm'], color='blue', zorder=2)
-    ax.plot(template['wav'], dust_atten_model_flux, color='firebrick', zorder=4)
+    ax.plot(template['wav'], template['flam_norm'],
+            color='blue', zorder=2)
+    ax.plot(template['wav'], dust_atten_model_flux,
+            color='firebrick', zorder=4)
 
     wav_arr_for_shading_idx = np.where(template['wav'] <= 2.2e4)[0]
-    ax.fill_between(template['wav'][wav_arr_for_shading_idx], \
-        template['flam_norm'][wav_arr_for_shading_idx], dust_atten_model_flux[wav_arr_for_shading_idx], \
-        color='gray', alpha=0.25)
+    ax.fill_between(template['wav'][wav_arr_for_shading_idx],
+                    template['flam_norm'][wav_arr_for_shading_idx],
+                    dust_atten_model_flux[wav_arr_for_shading_idx],
+                    color='gray', alpha=0.25)
 
     # plot template photometry
-    ax.plot(phot_lam, template_flam_list, 'o', color='k', markersize=6, zorder=6)
+    ax.plot(phot_lam, template_flam_list, 'o', color='k',
+            markersize=6, zorder=6)
 
     # Plot all filters
     # need twinx first
@@ -898,13 +953,244 @@ def plot_for_g165_Cy28_2020():
 
     return None
 
-def main():
-
-    plot_for_pclusters_Cy28_2020()
-    #plot_for_g165_Cy28_2020()
-
-    return None
 
 if __name__ == '__main__':
-    main()
+
+    # Plot for Cy 30
+
+    # JWST NIRCAM throughputs
+    jwst_nircam = home + '/Documents/jwst/nircam_throughputs/'
+    throughput_dir = jwst_nircam + 'modAB_mean/nrc_plus_ote/'
+
+    # Read in required filters
+    nrc_f090w = throughput_dir + 'F090W_NRC_and_OTE_ModAB_mean.txt'
+    nrc_f115w = throughput_dir + 'F115W_NRC_and_OTE_ModAB_mean.txt'
+    nrc_f150w = throughput_dir + 'F150W_NRC_and_OTE_ModAB_mean.txt'
+    nrc_f200w = throughput_dir + 'F200W_NRC_and_OTE_ModAB_mean.txt'
+    nrc_f277w = throughput_dir + 'F277W_NRC_and_OTE_ModAB_mean.txt'
+    nrc_f356w = throughput_dir + 'F356W_NRC_and_OTE_ModAB_mean.txt'
+    nrc_f410m = throughput_dir + 'F410M_NRC_and_OTE_ModAB_mean.txt'
+    nrc_f444w = throughput_dir + 'F444W_NRC_and_OTE_ModAB_mean.txt'
+
+    all_nircam_paths = [nrc_f090w, nrc_f115w, nrc_f150w, nrc_f200w,
+                        nrc_f277w, nrc_f356w, nrc_f410m, nrc_f444w]
+
+    # ----------- Read in the filters from Seth--------- #
+    basedir = massive_galaxies_dir + 'grismz_pipeline/for_hst_cluster_proposal/'  # noqa
+    f435w = np.genfromtxt(basedir + 'HST_ACS_WFC.F435W.dat',
+                          dtype=None, names=['wav', 'trans'])
+    f606w = np.genfromtxt(basedir + 'HST_ACS_WFC.F606W.dat',
+                          dtype=None, names=['wav', 'trans'])
+    f775w = np.genfromtxt(basedir + 'HST_ACS_WFC.F775W.dat',
+                          dtype=None, names=['wav', 'trans'])
+
+    f435w['wav'] /= 1e4
+    f606w['wav'] /= 1e4
+    f775w['wav'] /= 1e4
+
+    # Scaling to get throughput
+    # f435w_scalefac = 0.37 / max(f435w['trans'])
+    # f606w_scalefac = 0.465 / max(f606w['trans'])
+    # f435w['trans'] *= f435w_scalefac
+    # f606w['trans'] *= f606w_scalefac
+
+    # NEwer templates 
+    # AGN, SF galaxy, and sub-mm galaxy
+    ell2gyr = np.genfromtxt(basedir + 'Ell2Gyr_template.tbl',
+                            dtype=None, names=['wav', 'flam_norm'],
+                            skip_header=2)
+    agn_template = np.genfromtxt(basedir + 'QSO1_template.sed',
+                                 dtype=None, names=['wav', 'flam_norm'],
+                                 skip_header=3)
+    sfg_template = np.genfromtxt(basedir + 'M82_starburst_template.sed',
+                                 dtype=None, names=['wav', 'flam_norm'],
+                                 skip_header=3)
+    smg_template = np.genfromtxt(basedir + 'aless_SMG_template.sed',
+                                 dtype=None, names=['wav', 'flam_norm'],
+                                 skip_header=3)
+
+    all_templates = [agn_template, ell2gyr, smg_template]
+    all_template_names = ['AGN', 'Ell 2 Gyr', 'DSFG']
+
+    all_filters = [f435w, f606w, f775w]
+    for pth in all_nircam_paths:
+        f = np.genfromtxt(pth, dtype=None, names=['wav', 'trans'],
+                          encoding='ascii', skip_header=1)
+        all_filters.append(f)
+
+    filter_names = ['ACS F435W', 'ACS F606W', 'ACS F775W',
+                    'F090W', 'F115W', 'F150W',
+                    'F200W', 'F277W', 'F356W',
+                    'F410M', 'F444W']
+
+    # Define redshift for templates
+    z = 2.6
+
+    # Pivot wavelengths
+    phot_lam = np.array([0.433,
+                         0.592,
+                         0.765,
+                         0.902,
+                         1.154,
+                         1.501,
+                         1.989,
+                         2.762,
+                         3.568,
+                         4.082,
+                         4.408])
+
+    # ------- Convolve templates with filters -------- #
+    for count in range(len(all_templates)):
+        template = all_templates[count]
+        template_name = all_template_names[count]
+
+        # Redshift templates
+        template['wav'] /= 1e4  # convert to microns
+        template['wav'] *= (1+z)
+        template_flux = template['flam_norm'] / (1+z)
+
+        template_flam_list = []
+
+        fig = plt.figure(figsize=(8, 5))
+        ax = fig.add_subplot(111)
+
+        # Labels
+        ax.set_ylabel(r'$\mathrm{f_\lambda\ [Arbitrary\ scale]}$', fontsize=20)
+        ax.set_xlabel(r'$\mathrm{Wavelength\, [\mu m]}$', fontsize=20)
+
+        # Plot all filters
+        # need twinx first
+        ax1 = ax.twinx()
+
+        # Twin axis related stuff
+        ax1.set_ylabel(r'$\mathrm{Throughput}$', fontsize=20)
+        ax1.set_ylim(0, 1.05)
+
+        # Plot spectrum and photometry
+        ax.plot(template['wav'], template_flux, color='k')
+
+        # POsitions for the JWST filters
+        if template_name == 'AGN':
+            high_pos = 0.15  # 0.18
+            low_pos = 0.15  # 0.1
+        if template_name == 'Ell 2 Gyr':
+            high_pos = 0.15  # 0.16
+            low_pos = 0.15  # 0.1
+        if template_name == 'DSFG':
+            high_pos = 0.15  # 0.16
+            low_pos = 0.15  # 0.1
+
+        for i in range(len(all_filters)):
+            if i >= 3:
+                # ax1.plot(all_filters[i]['wav'], all_filters[i]['trans'],
+                #          zorder=4, label=filter_names[i],
+                #          color='gray', lw=2.2)
+                trans_idx = np.where(all_filters[i]['trans'] > 0.02)[0]
+
+                dummy_y_high = high_pos\
+                    * np.ones(len(all_filters[i]['wav'][trans_idx]))
+                dummy_y_low = low_pos\
+                    * np.ones(len(all_filters[i]['wav'][trans_idx]))
+
+                if filter_names[i] == 'F090W':
+                    wav_idx = np.where(all_filters[i]['wav'] > 0.8)[0]
+                    trans_idx = np.intersect1d(wav_idx, trans_idx)
+
+                    dummy_y_high = high_pos\
+                        * np.ones(len(all_filters[i]['wav'][trans_idx]))
+                    dummy_y_low = low_pos\
+                        * np.ones(len(all_filters[i]['wav'][trans_idx]))
+
+                if i % 2 != 0:
+                    ax1.text(x=phot_lam[i]-0.22, y=high_pos+0.1,
+                             s=filter_names[i], verticalalignment='top',
+                             horizontalalignment='left',
+                             transform=ax1.transData, color='sienna', size=12)
+
+                else:
+                    ax1.text(x=phot_lam[i]-0.22, y=low_pos-0.01,
+                             s=filter_names[i], verticalalignment='top',
+                             horizontalalignment='left',
+                             transform=ax1.transData, color='sienna', size=12)
+
+                rect_x_anchor = np.min(all_filters[i]['wav'][trans_idx])
+                rect_width = np.max(all_filters[i]['wav'][trans_idx])\
+                    - rect_x_anchor
+                filt_rect = Rectangle((rect_x_anchor, low_pos),
+                                      width=rect_width,
+                                      height=0.05,
+                                      color='orange', alpha=0.5,
+                                      transform=ax1.transData)
+
+                ax1.add_patch(filt_rect)
+
+                print('Edges for', filter_names[i], ':')
+                print(np.min(all_filters[i]['wav'][trans_idx]),
+                      np.max(all_filters[i]['wav'][trans_idx]))
+
+            else:
+                ax1.plot(all_filters[i]['wav'], all_filters[i]['trans'],
+                         zorder=4, label=filter_names[i],
+                         color='dodgerblue', lw=2.0)
+                ax1.fill_between(all_filters[i]['wav'],
+                                 np.zeros(len(all_filters[i]['wav'])),
+                                 all_filters[i]['trans'],
+                                 alpha=0.3,
+                                 color='dodgerblue')
+
+            photometry = get_model_photometry(template['wav'],
+                                              template_flux, all_filters[i])
+            template_flam_list.append(photometry)
+
+        ax.plot(phot_lam, template_flam_list, 'o', color='r',
+                markersize=6, zorder=6)
+
+        # Also plot dust attenuated spectrum
+        if template_name == 'AGN':
+            atten_flux = get_dust_atten_model(template['wav'],
+                                              template_flux, 1.0)
+            ax.plot(template['wav'], atten_flux, color='mediumseagreen',
+                    label=r'$\mathrm{A_v} = 1.0$')
+
+            atten_flux = get_dust_atten_model(template['wav'],
+                                              template_flux, 5.0)
+            ax.plot(template['wav'], atten_flux, color='crimson',
+                    label=r'$\mathrm{A_v} = 5.0$')
+
+            wav_arr_for_shading_idx = np.where(template['wav'] <= 2.2)[0]
+            ax.fill_between(template['wav'][wav_arr_for_shading_idx],
+                            template_flux[wav_arr_for_shading_idx],
+                            atten_flux[wav_arr_for_shading_idx],
+                            color='gray', alpha=0.2)
+        elif template_name == 'DSFG':
+            atten_flux = get_dust_atten_model(template['wav'],
+                                              template_flux, 2.0)
+            ax.plot(template['wav'], atten_flux, color='crimson',
+                    label=r'$\mathrm{A_v} = 2.0$')
+
+            wav_arr_for_shading_idx = np.where(template['wav'] <= 2.2)[0]
+            ax.fill_between(template['wav'][wav_arr_for_shading_idx],
+                            template_flux[wav_arr_for_shading_idx],
+                            atten_flux[wav_arr_for_shading_idx],
+                            color='gray', alpha=0.2)            
+
+        ax.text(0.42, 0.95, template_name + ' template',
+                verticalalignment='top', horizontalalignment='left',
+                transform=ax.transAxes, color='k', size=23)
+
+        # Limits
+        ax.set_xlim(0.1, 5.3)
+        # ax1.legend(loc='upper right', frameon=False, fontsize=11)
+        ax.legend(loc='upper left', frameon=False, fontsize=20)
+
+        # Ticklabel sizes
+        ax.tick_params(which='both', labelsize=18)
+        ax1.tick_params(labelsize=18)
+
+        fig.savefig(basedir + 'Cy30_' + template_name + '.pdf',
+                    dpi=200, bbox_inches='tight')
+
+        fig.clear()
+        plt.close(fig)
+
     sys.exit(0)
